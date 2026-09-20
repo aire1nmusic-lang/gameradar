@@ -17,8 +17,8 @@ export default function Games() {
           <div className="mb-3 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">Игры на GameRadar</div>
           <h1 className="text-[30px] leading-tight sm:text-[40px]">Каталоги по играм</h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-300">
-            Для каждой игры — свои фильтры: версии и хроники, режимы, рейты, регионы. Онлайн проверяется тем способом,
-            который поддерживает конкретная игра.
+            У каждой игры свой мир на GameRadar: собственное оформление, рейтинг и открытия. Хроники и платформы —
+            отдельные разделы со своей темой.
           </p>
         </div>
 
@@ -75,13 +75,31 @@ export default function Games() {
                       </div>
                     </div>
                     <Link
-                      to={`/catalog?game=${game.id}`}
+                      to={`/${game.slug}`}
                       className="group inline-flex items-center gap-1.5 text-[12.5px] text-ink-300 hover:text-ink-50"
                     >
-                      Каталог
+                      Открыть мир
                       <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
                     </Link>
                   </div>
+
+                  {game.chronicles.length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-1.5">
+                      {game.chronicles.map((chronicle) => (
+                        <Link
+                          key={chronicle.id}
+                          to={`/${game.slug}/${chronicle.slug}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[12px] text-ink-300 transition-colors hover:border-white/18 hover:text-ink-50"
+                          title={chronicle.themeId ? 'Своё оформление' : undefined}
+                        >
+                          {chronicle.label}
+                          {chronicle.themeId && (
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: game.accent }} />
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
                     {servers.map((server, index) => (

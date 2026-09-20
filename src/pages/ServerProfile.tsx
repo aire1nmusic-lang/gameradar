@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Users,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, hashSeed } from '@/lib/utils'
 import {
   formatAge,
   formatCountdown,
@@ -24,7 +24,8 @@ import {
   formatRelativeDays,
   plural,
 } from '@/lib/format'
-import { getGame } from '@/data/games'
+import { chronicleOfVersion, getGame } from '@/data/games'
+import { themeForGame } from '@/data/themes'
 import { getServer, similarServers } from '@/data/servers'
 import type { ChartRange, GameServer } from '@/data/types'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -39,6 +40,15 @@ import { Modal } from '@/components/ui/overlays'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { AreaChart } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
+import { ServerMedia } from '@/components/profile/ServerMedia'
+import { ProceduralShot } from '@/components/art/ProceduralShot'
+import {
+  ThemeHorizon,
+  ThemeParticles,
+  ThemePattern,
+  ThemeScope,
+  ThemedButton,
+} from '@/theme'
 import { ServerCard } from '@/components/server/ServerCard'
 
 export default function ServerProfile() {
@@ -63,18 +73,28 @@ export default function ServerProfile() {
 
 function Profile({ server }: { server: GameServer }) {
   const game = getGame(server.gameId)
+  const chronicle = chronicleOfVersion(server.gameId, server.version)
+  const theme = themeForGame(server.gameId, chronicle?.themeId)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
   const similar = similarServers(server, 3)
 
   return (
-    <div className="pb-28 lg:pb-16">
-      {/* cover */}
-      <div className="relative h-[150px] overflow-hidden sm:h-[210px]">
-        <div className="absolute inset-0" style={{ background: `linear-gradient(115deg, ${game.from}, ${game.to})` }} />
-        <div className="absolute inset-0 texture-lines opacity-35" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/55 to-ink-950/15" />
+    <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
+      {/* hero: art of the server's world */}
+      <div className="relative h-[200px] overflow-hidden sm:h-[300px]">
+        <div className="absolute inset-0">
+          <ProceduralShot seed={hashSeed(server.slug)} kind="landscape" />
+        </div>
+        <div className="gt-hero absolute inset-0 opacity-65" />
+        <ThemePattern opacity={0.12} />
+        <ThemeParticles />
+        <ThemeHorizon />
+        <div
+          className="absolute inset-0"
+          style={{ background: `linear-gradient(to top, ${theme.colors.bgDeep} 3%, transparent 72%)` }}
+        />
         <Container className="relative flex h-full items-start pt-4">
           <nav className="flex items-center gap-1.5 text-[12.5px] text-white/60">
             <Link to="/" className="transition-colors hover:text-white">
@@ -108,7 +128,7 @@ function Profile({ server }: { server: GameServer }) {
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-300">
                 <span className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: game.accent }} />
-                  {game.name} · {server.version}
+                  {game.name} · {chronicle?.label ?? server.version}
                 </span>
                 <span className="text-ink-600">•</span>
                 <span>
@@ -139,13 +159,13 @@ function Profile({ server }: { server: GameServer }) {
             </button>
             <span className="hidden lg:block">
               {server.online.status === 'pending' ? (
-                <Button variant="primary" size="lg" icon={<BellRing size={16} />}>
+                <ThemedButton size="lg" icon={<BellRing size={16} />}>
                   Напомнить об открытии
-                </Button>
+                </ThemedButton>
               ) : (
-                <Button variant="primary" size="lg" icon={<Play size={16} />}>
-                  Играть
-                </Button>
+                <ThemedButton size="lg" icon={<Play size={16} fill="currentColor" />}>
+                  Играть на сервере
+                </ThemedButton>
               )}
             </span>
           </div>
@@ -160,6 +180,7 @@ function Profile({ server }: { server: GameServer }) {
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="min-w-0 space-y-6">
             <OnlineSection server={server} />
+            <ServerMedia server={server} />
             <InfoSection server={server} />
             <HistorySection server={server} />
             <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />
@@ -239,7 +260,7 @@ function Profile({ server }: { server: GameServer }) {
           30 минут за последние 30 дней.
         </Notice>
       </Modal>
-    </div>
+    </ThemeScope>
   )
 }
 

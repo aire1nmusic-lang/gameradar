@@ -77,7 +77,7 @@ function Motif({ kind }: { kind: GameMotif }) {
 export function GameTile({ game, className, compact }: { game: Game; className?: string; compact?: boolean }) {
   return (
     <Link
-      to={`/catalog?game=${game.id}`}
+      to={`/${game.slug}`}
       className={cn(
         'group relative overflow-hidden rounded-xl border border-white/7 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/16',
         compact ? 'h-[104px]' : 'h-[148px]',
@@ -105,7 +105,7 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
           {!compact && <p className="clamp-1 mt-1 max-w-[70%] text-[12.5px] text-white/60">{game.tagline}</p>}
         </div>
 
-        <div className="flex items-center gap-3 text-[11.5px]">
+        <div className="flex items-center gap-2.5 text-[11.5px]">
           <span className="num rounded-full border border-white/12 bg-ink-1000/45 px-2 py-[3px] text-white/85 backdrop-blur-sm">
             {formatNumber(game.serversCount)} {plural(game.serversCount, ['сервер', 'сервера', 'серверов'])}
           </span>

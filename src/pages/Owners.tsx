@@ -12,6 +12,7 @@ import {
   Sparkles,
   Star,
   Users,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PROMO_PRODUCTS } from '@/data/dashboard'
@@ -263,6 +264,10 @@ export default function Owners() {
               места отмечены для игроков.
             </p>
           </div>
+
+          <Button to="/boost" variant="promo" size="lg" icon={<Zap size={15} />}>
+            Рассчитать продвижение
+          </Button>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -3,15 +3,16 @@ import { NavLink } from 'react-router-dom'
 import { Plus, Search, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Container } from './Container'
+import { GamesMenu } from './GamesMenu'
 import { Logo } from './Logo'
 import { Button } from '@/components/ui/Button'
 
 const NAV = [
-  { to: '/games', label: 'Игры' },
   { to: '/catalog', label: 'Серверы' },
   { to: '/openings', label: 'Открытия' },
   { to: '/rating', label: 'Рейтинг' },
-  { to: '/owners', label: 'Для владельцев' },
+  { to: '/boost', label: 'Продвижение' },
+  { to: '/owners', label: 'Владельцам' },
 ]
 
 export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: () => void }) {
@@ -35,6 +36,7 @@ export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: (
         <Logo />
 
         <nav className="hidden items-center gap-0.5 lg:flex">
+          <GamesMenu />
           {NAV.map((item) => (
             <NavLink
               key={item.to}

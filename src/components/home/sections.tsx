@@ -17,7 +17,7 @@ export function GamesSection() {
         <SectionHeader
           eyebrow={<>Популярные игры</>}
           title="Выберите игру"
-          description="Каждая игра — свой каталог серверов с отдельными фильтрами: версии, хроники, режимы и рейты."
+          description="У каждой игры свой мир на GameRadar: собственное оформление, рейтинг, открытия и хроники."
           action="Все игры"
           actionTo="/games"
         />

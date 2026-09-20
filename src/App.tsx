@@ -10,8 +10,10 @@ import Favorites from '@/pages/Favorites'
 import Owners from '@/pages/Owners'
 import AddServer from '@/pages/AddServer'
 import Dashboard from '@/pages/Dashboard'
+import Boost from '@/pages/Boost'
 import UiStates from '@/pages/UiStates'
 import NotFound from '@/pages/NotFound'
+import GameWorld from '@/pages/GameWorld'
 
 export default function App() {
   return (
@@ -27,7 +29,16 @@ export default function App() {
         <Route path="owners" element={<Owners />} />
         <Route path="add-server" element={<AddServer />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="boost" element={<Boost />} />
         <Route path="states" element={<UiStates />} />
+
+        {/*
+          Themed game worlds. React Router ranks static segments above dynamic
+          ones, so every route above still wins over /:gameSlug.
+        */}
+        <Route path=":gameSlug" element={<GameWorld />} />
+        <Route path=":gameSlug/:chronicleSlug" element={<GameWorld />} />
+
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

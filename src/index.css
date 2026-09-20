@@ -353,3 +353,190 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+/* ============================================================
+   Theme Engine layer.
+   Every rule below consumes --gt-* custom properties published by
+   <ThemeScope>. Outside a themed world the core fallbacks apply, so
+   these classes are safe to use anywhere.
+   ============================================================ */
+
+@keyframes gt-float {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.35; }
+  50% { transform: translate3d(6px, -14px, 0); opacity: 0.7; }
+}
+@keyframes gt-rise {
+  0% { transform: translate3d(0, 10px, 0) scale(0.8); opacity: 0; }
+  35% { opacity: 0.8; }
+  100% { transform: translate3d(-10px, -60px, 0) scale(1.1); opacity: 0; }
+}
+@keyframes gt-fall {
+  0% { transform: translate3d(0, -20px, 0); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translate3d(-8px, 120px, 0); opacity: 0; }
+}
+@keyframes gt-twinkle {
+  0%, 100% { transform: scale(0.6); opacity: 0.2; }
+  50% { transform: scale(1.4); opacity: 0.9; }
+}
+@keyframes gt-scan {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(100%, 0, 0); }
+}
+
+@layer components {
+  .gt-scope {
+    --gt-primary: var(--color-signal-400);
+    --gt-primary-soft: color-mix(in oklab, var(--color-signal-400) 14%, transparent);
+    --gt-text: var(--color-ink-50);
+    --gt-text-muted: var(--color-ink-200);
+    --gt-text-faint: var(--color-ink-300);
+    color: var(--gt-text);
+    font-family: var(--gt-font-body, var(--font-sans));
+  }
+
+  .gt-display {
+    font-family: var(--gt-font-display, var(--font-display));
+    color: var(--gt-text);
+    letter-spacing: -0.015em;
+    line-height: 1.08;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .gt-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--gt-primary);
+    text-transform: var(--gt-accent-transform, uppercase);
+    letter-spacing: var(--gt-accent-spacing, 0.16em);
+    font-weight: var(--gt-accent-weight, 600);
+  }
+
+  .gt-card {
+    position: relative;
+    border-radius: var(--gt-card-radius, 14px);
+    background: var(--gt-card-bg, var(--gt-surface));
+    border: var(--gt-card-border, 1px solid var(--gt-border));
+    box-shadow: var(--gt-card-shadow);
+    color: var(--gt-text);
+    transition:
+      transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.24s ease,
+      border-color 0.24s ease;
+  }
+  .gt-card--interactive:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: var(--gt-card-shadow-hover);
+    border-color: var(--gt-border-strong);
+  }
+
+  .gt-panel {
+    position: relative;
+    border-radius: calc(var(--gt-card-radius, 14px) + 4px);
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    box-shadow: var(--gt-glow-soft);
+  }
+
+  .gt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    border-radius: var(--gt-btn-radius, 10px);
+    font-weight: var(--gt-btn-weight, 500);
+    letter-spacing: var(--gt-btn-spacing, 0);
+    text-transform: var(--gt-btn-transform, none);
+    transition:
+      transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease,
+      color 0.22s ease;
+  }
+  .gt-btn:active { transform: scale(0.985); }
+
+  .gt-btn--primary {
+    background: var(--gt-btn-bg);
+    color: var(--gt-btn-color);
+    border: var(--gt-btn-border);
+    box-shadow: var(--gt-btn-shadow);
+  }
+  .gt-btn--primary:hover { background: var(--gt-btn-bg-hover); }
+
+  .gt-btn--outline {
+    background: transparent;
+    color: var(--gt-text);
+    border: 1px solid var(--gt-border-strong);
+  }
+  .gt-btn--outline:hover {
+    background: var(--gt-primary-soft);
+    border-color: var(--gt-primary);
+  }
+
+  .gt-btn--ghost {
+    background: transparent;
+    color: var(--gt-text-muted);
+    border: 1px solid transparent;
+  }
+  .gt-btn--ghost:hover {
+    color: var(--gt-text);
+    background: var(--gt-primary-soft);
+  }
+
+  .gt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    line-height: 18px;
+    font-weight: 500;
+    border-radius: var(--gt-badge-radius, 999px);
+    background: var(--gt-badge-bg);
+    color: var(--gt-badge-color);
+    border: var(--gt-badge-border);
+  }
+
+  .gt-muted { color: var(--gt-text-muted); }
+  .gt-faint { color: var(--gt-text-faint); }
+  .gt-accent { color: var(--gt-primary); }
+
+  .gt-hero {
+    background: var(--gt-grad-hero);
+  }
+
+  .gt-art {
+    background: var(--gt-grad-card);
+  }
+
+  /* Advertising slots are always visually declared, never disguised. */
+  .ad-slot {
+    position: relative;
+    border: 1px dashed color-mix(in oklab, var(--color-promo-400) 28%, transparent);
+    border-radius: 14px;
+    background: color-mix(in oklab, var(--color-promo-900) 45%, transparent);
+  }
+  .ad-slot::before {
+    content: attr(data-ad-label);
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    z-index: 5;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-promo-200) 80%, transparent);
+    background: color-mix(in oklab, var(--color-ink-1000) 70%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-promo-400) 30%, transparent);
+    border-radius: 4px;
+    padding: 2px 6px;
+    pointer-events: none;
+  }
+}

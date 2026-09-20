@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowUpDown, ArrowUpRight, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { ArrowUpDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
@@ -20,6 +20,9 @@ import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
+import { ThemeScope } from '@/theme'
+import { themeForGame } from '@/data/themes'
+import { InlinePromo, SidebarBanner } from '@/components/ads/AdSlots'
 
 const PAGE_SIZE = 12
 
@@ -35,6 +38,7 @@ export default function Catalog() {
     verifiedOnly: params.get('verified') === '1',
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
+  const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [loading, setLoading] = useState(true)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -127,7 +131,9 @@ export default function Catalog() {
           <aside className="hidden lg:block">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 pb-6">
               <FilterPanel filters={filters} onChange={setFilters} onReset={reset} />
-              <AdSlot />
+              <ThemeScope theme={adTheme} as="div" className="mt-6">
+                <SidebarBanner gameId={filters.games[0]} />
+              </ThemeScope>
             </div>
           </aside>
 
@@ -187,8 +193,15 @@ export default function Catalog() {
             ) : (
               <>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {results.slice(0, visible).map((server) => (
-                    <ServerCard key={server.slug} server={server} />
+                  {results.slice(0, visible).map((server, index) => (
+                    <Fragment key={server.slug}>
+                      {index === 6 && (
+                        <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
+                          <InlinePromo gameId={filters.games[0]} />
+                        </ThemeScope>
+                      )}
+                      <ServerCard server={server} />
+                    </Fragment>
                   ))}
                 </div>
 
@@ -251,29 +264,6 @@ export default function Catalog() {
 }
 
 /** Future banner inventory, shown honestly as a labelled placeholder. */
-function AdSlot() {
-  return (
-    <Link
-      to="/owners#promo"
-      className="mt-6 block overflow-hidden rounded-xl border border-promo-500/20 bg-promo-900/20 p-4 transition-colors hover:border-promo-500/35"
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold tracking-[0.12em] text-promo-300/80 uppercase">
-          Рекламное место
-        </span>
-        <span className="text-[10px] tracking-[0.08em] text-ink-500 uppercase">Banner</span>
-      </div>
-      <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-200">
-        Здесь может быть ваш сервер. Баннерные размещения всегда помечены и не влияют на рейтинг.
-      </p>
-      <span className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] text-promo-200">
-        Узнать о продвижении
-        <ArrowUpRight size={13} />
-      </span>
-    </Link>
-  )
-}
-
 function buildChips(filters: CatalogFilters, setFilters: (next: CatalogFilters) => void) {
   const chips: Array<{ key: string; label: string; remove: () => void }> = []
 

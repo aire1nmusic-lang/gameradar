@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
 const SIZES = {
@@ -21,11 +22,14 @@ export function ServerLogo({
   hue,
   size = 'md',
   className,
+  style,
 }: {
   name: string
   hue: number
   size?: keyof typeof SIZES
   className?: string
+  /** extra style — themed worlds use it to paint a ring in the world colour */
+  style?: CSSProperties
 }) {
   return (
     <div
@@ -37,6 +41,7 @@ export function ServerLogo({
       style={{
         background: `linear-gradient(145deg, hsl(${hue} 62% 40%), hsl(${(hue + 42) % 360} 58% 22%))`,
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.08)',
+        ...style,
       }}
       aria-hidden
     >

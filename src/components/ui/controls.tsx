@@ -232,6 +232,7 @@ export function RangeSlider({
   min = 0,
   max = 3000,
   step = 50,
+  label = 'Минимальный онлайн',
   formatValue,
 }: {
   value: number
@@ -239,13 +240,14 @@ export function RangeSlider({
   min?: number
   max?: number
   step?: number
+  label?: string
   formatValue?: (value: number) => string
 }) {
   const percent = ((value - min) / (max - min)) * 100
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-[12.5px]">
-        <span className="text-ink-400">Минимальный онлайн</span>
+        <span className="text-ink-400">{label}</span>
         <span className="num font-medium text-ink-100">{formatValue ? formatValue(value) : value}</span>
       </div>
       <input

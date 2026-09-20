@@ -6,8 +6,28 @@ export type ChartRange = '24h' | '7d' | '30d'
 
 export type GameMotif = 'cubes' | 'skyline' | 'spire' | 'barrel' | 'crosshair' | 'leaf' | 'signal' | 'rune'
 
+/**
+ * A chronicle is a sub-world of a game: an L2 chronicle, a GTA RP platform,
+ * a Minecraft edition. It filters servers and may carry its own theme.
+ */
+export interface Chronicle {
+  id: string
+  /** url segment under the game: /lineage-2/interlude */
+  slug: string
+  label: string
+  tagline: string
+  /** key in CHRONICLE_THEMES; when absent the game theme is used as-is */
+  themeId?: string
+  /** GameServer.version values that belong to this chronicle */
+  versions: string[]
+  serversCount: number
+  playersOnline: number
+}
+
 export interface Game {
   id: string
+  /** url segment of the game world: /minecraft, /lineage-2 */
+  slug: string
   name: string
   shortName: string
   tagline: string
@@ -19,6 +39,8 @@ export interface Game {
   playersOnline: number
   versions: string[]
   modes: string[]
+  /** sub-worlds; empty when the game has no meaningful split */
+  chronicles: Chronicle[]
   /** games we haven't launched coverage for yet */
   upcoming?: boolean
 }

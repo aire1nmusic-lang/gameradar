@@ -299,8 +299,8 @@ export default function Dashboard() {
         description="Выберите формат — оплата появится на следующем этапе разработки"
         width="max-w-lg"
         footer={
-          <Button variant="primary" full onClick={() => setPromoOpen(false)}>
-            Оставить заявку
+          <Button variant="primary" full to="/boost">
+            Открыть продвижение
           </Button>
         }
       >
@@ -316,7 +316,8 @@ export default function Dashboard() {
           ))}
         </div>
         <Notice tone="info" className="mt-4">
-          Платёжные системы в прототипе не подключены. Кнопка не списывает средства.
+          Полный расчёт позиции, пакеты бустов и рекламные форматы — на странице продвижения. Платёжные системы в
+          прототипе не подключены.
         </Notice>
       </Modal>
     </div>

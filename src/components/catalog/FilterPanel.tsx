@@ -1,0 +1,216 @@
+import { useMemo } from 'react'
+import { RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { formatNumber } from '@/lib/format'
+import { GAMES } from '@/data/games'
+import { ALL_LANGUAGES, ALL_MODES, ALL_REGIONS, ALL_VERSIONS, type CatalogFilters } from '@/data/catalog'
+import { SERVERS } from '@/data/servers'
+import { Checkbox, ChipToggle, RangeSlider, Select, Toggle } from '@/components/ui/controls'
+import { StatusBadge } from '@/components/trust/status'
+
+function toggleValue(list: string[], value: string): string[] {
+  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
+}
+
+function Group({
+  title,
+  children,
+  className,
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('border-t border-white/6 py-5 first:border-t-0 first:pt-0', className)}>
+      <h4 className="mb-3 text-[11px] font-medium tracking-[0.12em] text-ink-500 uppercase">{title}</h4>
+      {children}
+    </div>
+  )
+}
+
+export function FilterPanel({
+  filters,
+  onChange,
+  onReset,
+  showReset = true,
+}: {
+  filters: CatalogFilters
+  onChange: (next: CatalogFilters) => void
+  onReset: () => void
+  showReset?: boolean
+}) {
+  const gameCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const server of SERVERS) counts[server.gameId] = (counts[server.gameId] ?? 0) + 1
+    return counts
+  }, [])
+
+  const versions = useMemo(() => {
+    if (!filters.games.length) return ALL_VERSIONS
+    const set = new Set(SERVERS.filter((s) => filters.games.includes(s.gameId)).map((s) => s.version))
+    return ALL_VERSIONS.filter((v) => set.has(v))
+  }, [filters.games])
+
+  const patch = (next: Partial<CatalogFilters>) => onChange({ ...filters, ...next })
+
+  return (
+    <div>
+      <div className="rounded-xl border border-signal-500/18 bg-signal-500/[0.05] p-3.5">
+        <Toggle
+          checked={filters.verifiedOnly}
+          onChange={(verifiedOnly) => patch({ verifiedOnly })}
+          label={
+            <span className="flex items-center gap-2">
+              Только проверенный онлайн
+              <StatusBadge status="verified" size="sm" withDot={false} className="hidden sm:inline-flex" />
+            </span>
+          }
+          description="Серверы, онлайн которых GameRadar проверяет самостоятельно"
+        />
+      </div>
+
+      <div className="mt-2">
+        <Group title="Игра">
+          <div className="-mx-2 space-y-0.5">
+            {GAMES.filter((game) => gameCounts[game.id]).map((game) => (
+              <Checkbox
+                key={game.id}
+                checked={filters.games.includes(game.id)}
+                onChange={() => patch({ games: toggleValue(filters.games, game.id), versions: [] })}
+                count={gameCounts[game.id]}
+                label={
+                  <span className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: game.accent }} />
+                    {game.shortName}
+                  </span>
+                }
+              />
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Версия / хроники">
+          <div className="flex flex-wrap gap-2">
+            {versions.map((version) => (
+              <ChipToggle
+                key={version}
+                active={filters.versions.includes(version)}
+                onClick={() => patch({ versions: toggleValue(filters.versions, version) })}
+              >
+                {version}
+              </ChipToggle>
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Режим">
+          <div className="flex max-h-[184px] flex-wrap gap-2 overflow-y-auto pr-1">
+            {ALL_MODES.map((mode) => (
+              <ChipToggle
+                key={mode}
+                active={filters.modes.includes(mode)}
+                onClick={() => patch({ modes: toggleValue(filters.modes, mode) })}
+              >
+                {mode}
+              </ChipToggle>
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Регион">
+          <div className="flex flex-wrap gap-2">
+            {ALL_REGIONS.map((region) => (
+              <ChipToggle
+                key={region}
+                active={filters.regions.includes(region)}
+                onClick={() => patch({ regions: toggleValue(filters.regions, region) })}
+              >
+                {region}
+              </ChipToggle>
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Язык">
+          <div className="flex flex-wrap gap-2">
+            {ALL_LANGUAGES.map((language) => (
+              <ChipToggle
+                key={language}
+                active={filters.languages.includes(language)}
+                onClick={() => patch({ languages: toggleValue(filters.languages, language) })}
+              >
+                {language}
+              </ChipToggle>
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Онлайн">
+          <RangeSlider
+            value={filters.minOnline}
+            onChange={(minOnline) => patch({ minOnline })}
+            min={0}
+            max={2500}
+            step={50}
+            formatValue={(value) => (value === 0 ? 'любой' : `от ${formatNumber(value)}`)}
+          />
+        </Group>
+
+        <Group title="Рейтинг">
+          <div className="flex flex-wrap gap-2">
+            {[0, 4, 4.5].map((value) => (
+              <ChipToggle
+                key={value}
+                active={filters.minRating === value}
+                onClick={() => patch({ minRating: value })}
+              >
+                {value === 0 ? 'Любой' : `от ${value.toFixed(1).replace('.', ',')}`}
+              </ChipToggle>
+            ))}
+          </div>
+        </Group>
+
+        <Group title="Дата открытия">
+          <Select
+            value={filters.openedWithin}
+            onChange={(value) => patch({ openedWithin: value as CatalogFilters['openedWithin'] })}
+            options={[
+              { value: 'any', label: 'Любая' },
+              { value: '30d', label: 'За последние 30 дней' },
+              { value: '90d', label: 'За последние 3 месяца' },
+              { value: '365d', label: 'За последний год' },
+            ]}
+          />
+        </Group>
+
+        <Group title="Дополнительно">
+          <div className="space-y-3">
+            <Toggle
+              checked={filters.wipeSoon}
+              onChange={(wipeSoon) => patch({ wipeSoon })}
+              label="Скоро вайп"
+              description="Вайп в ближайшие 10 дней"
+            />
+            <Toggle
+              checked={filters.hideOffline}
+              onChange={(hideOffline) => patch({ hideOffline })}
+              label="Скрыть offline"
+              description="Не показывать серверы, которые не отвечают"
+            />
+          </div>
+        </Group>
+      </div>
+
+      {showReset && (
+        <button
+          onClick={onReset}
+          className="mt-2 inline-flex items-center gap-2 text-[13px] text-ink-400 transition-colors hover:text-ink-100"
+        >
+          <RotateCcw size={13} />
+          Сбросить фильтры
+        </button>
+      )}
+    </div>
+  )
+}

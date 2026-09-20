@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, Search, ShieldCheck, Trophy } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber } from '@/lib/format'
+import { worldArt } from '@/data/themeMedia'
 import type { Chronicle, Game } from '@/data/types'
 import { Container } from '@/components/layout/Container'
+import { WorldArtSurface } from '@/components/media/WorldArt'
 import {
   ThemeAura,
   ThemeHorizon,
@@ -35,6 +38,7 @@ export function GameHero({
   const theme = useGameTheme()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const art = worldArt('hero', game.id, chronicle?.id)
 
   const title = chronicle ? `${game.shortName} ${chronicle.label}` : game.name
   const subtitle = chronicle?.tagline ?? game.tagline
@@ -47,17 +51,34 @@ export function GameHero({
   }
 
   return (
-    <section className="gt-hero relative overflow-hidden">
-      <ThemePattern />
-      <ThemeAura className="-top-40 left-1/2 h-[30rem] w-[52rem] -translate-x-1/2 opacity-45" />
-      <ThemeParticles />
-      <ThemeHorizon />
+    <section
+      className={cn(
+        'relative overflow-hidden',
+        art ? 'min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]' : 'gt-hero',
+      )}
+    >
+      {art ? (
+        <>
+          {/* key art of the world — the first thing a player sees */}
+          <WorldArtSurface art={art} scrim="hero" sizes="100vw" priority width={1600} />
+          <ThemePattern opacity={0.05} />
+          <ThemeParticles />
+        </>
+      ) : (
+        <>
+          <ThemePattern />
+          <ThemeAura className="-top-40 left-1/2 h-[30rem] w-[52rem] -translate-x-1/2 opacity-45" />
+          <ThemeParticles />
+          <ThemeHorizon />
+        </>
+      )}
+
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
         style={{ background: `linear-gradient(to top, ${theme.colors.bg}, transparent)` }}
       />
 
-      <Container className="relative pt-8 pb-12 sm:pt-12 sm:pb-16 lg:pt-16 lg:pb-20">
+      <Container className="relative flex min-h-[inherit] flex-col justify-end pt-8 pb-12 sm:pt-12 sm:pb-16 lg:pt-20 lg:pb-20">
         <nav
           className="mb-6 flex items-center gap-1.5 text-[12px]"
           style={{ color: theme.colors.textFaint }}

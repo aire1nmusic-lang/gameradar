@@ -6,6 +6,8 @@ import { chronicleOfVersion, getGame } from '@/data/games'
 import type { RankedServer } from '@/data/boost'
 import { ThemedButton, ThemedCard, useGameTheme } from '@/theme'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
+import { WorldArtSurface } from '@/components/media/WorldArt'
+import { serverArt } from '@/data/themeMedia'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { Sparkline } from '@/components/charts/AreaChart'
@@ -44,10 +46,14 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
             <Link to={`/server/${server.slug}`} className="absolute inset-0 z-[1]" aria-label={server.name} />
 
             <div className={cn('relative overflow-hidden', isFirst ? 'h-[132px]' : 'h-[104px]')}>
-              <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-                <ProceduralShot seed={hashSeed(server.slug)} kind={isFirst ? 'combat' : 'landscape'} />
-              </div>
-              <div className="absolute inset-0" style={{ background: 'var(--gt-card-overlay)' }} />
+              <WorldArtSurface
+                art={serverArt(server)}
+                fallback={<ProceduralShot seed={hashSeed(server.slug)} kind={isFirst ? 'combat' : 'landscape'} />}
+                scrim="card"
+                zoom
+                width={800}
+                sizes="(min-width: 640px) 33vw, 100vw"
+              />
 
               <div className="absolute top-2.5 left-2.5 z-[2] flex items-center gap-2">
                 <TierBadge rank={entry.rank} />

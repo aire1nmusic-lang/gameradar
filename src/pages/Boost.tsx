@@ -8,7 +8,9 @@ import { AD_PRODUCTS } from '@/data/ads'
 import { OWNER_PROJECTS } from '@/data/dashboard'
 import { getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
+import { worldArt } from '@/data/themeMedia'
 import { Container } from '@/components/layout/Container'
+import { WorldArtSurface } from '@/components/media/WorldArt'
 import { ThemeScope, ThemedButton, useGameTheme } from '@/theme'
 import { Button } from '@/components/ui/Button'
 import { RangeSlider, Segmented } from '@/components/ui/controls'
@@ -44,11 +46,16 @@ export default function Boost() {
 
   return (
     <ThemeScope theme={theme} as="div">
-      <section className="relative overflow-hidden pt-10 pb-10 sm:pt-14">
-        <div
-          className="pointer-events-none absolute inset-x-0 -top-40 h-[520px] opacity-40"
-          style={{ background: 'var(--gt-grad-hero)' }}
-        />
+      <section className="relative overflow-hidden pt-10 pb-10 sm:pt-16 sm:pb-14">
+        <div className="pointer-events-none absolute inset-x-0 -top-14 h-[560px]">
+          <WorldArtSurface
+            art={worldArt('stage', server.gameId)}
+            scrim="stage"
+            priority
+            width={1600}
+            sizes="100vw"
+          />
+        </div>
         <Container className="relative">
           <div className="max-w-2xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-promo-400/30 bg-promo-500/10 px-3 py-1.5 text-[12px] text-promo-200">
@@ -309,8 +316,14 @@ export default function Boost() {
           </div>
         </section>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/7 bg-white/[0.02] p-5">
-          <div className="flex items-start gap-3">
+        <div className="relative mt-10 flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-xl border border-white/7 p-5">
+          <WorldArtSurface
+            art={worldArt('promo', server.gameId)}
+            scrim="banner"
+            width={1600}
+            sizes="(min-width: 1280px) 1200px, 100vw"
+          />
+          <div className="relative flex items-start gap-3">
             <Rocket size={16} className="mt-0.5 shrink-0 gt-accent" />
             <div>
               <div className="text-[14px] font-medium text-ink-50">Открываете новый сервер?</div>
@@ -319,7 +332,9 @@ export default function Boost() {
               </p>
             </div>
           </div>
-          <ThemedButton to="/owners">Узнать про Launch Promotion</ThemedButton>
+          <ThemedButton to="/owners" className="relative">
+            Узнать про Launch Promotion
+          </ThemedButton>
         </div>
       </Container>
 

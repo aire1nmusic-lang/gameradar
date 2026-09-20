@@ -515,6 +515,114 @@
     background: var(--gt-grad-card);
   }
 
+  /* ── world key art ──────────────────────────────────────────────────────
+     Bitmap layer of the Theme Engine. The image never sits under text
+     without a scrim, and the scrim is mixed from the world's own background
+     so every game keeps its colour even where the art is dimmed.
+     ──────────────────────────────────────────────────────────────────── */
+  .gt-art-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--art-pos-m, 50% 50%);
+    opacity: 0;
+    transition: opacity 0.55s ease;
+    user-select: none;
+  }
+  .gt-art-img.is-loaded {
+    opacity: 1;
+  }
+  @media (min-width: 640px) {
+    .gt-art-img {
+      object-position: var(--art-pos-d, 50% 50%);
+    }
+  }
+
+  .gt-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-color: color-mix(in oklab, var(--gt-bg-deep, #05060a) var(--art-dim, 0%), transparent);
+  }
+
+  /* Hero: readable headline on the left, world visible on the right. */
+  .gt-scrim[data-preset='hero'] {
+    background-image:
+      linear-gradient(
+        to top,
+        var(--gt-bg, #08090d) 0%,
+        color-mix(in oklab, var(--gt-bg, #08090d) 88%, transparent) 18%,
+        color-mix(in oklab, var(--gt-bg, #08090d) 35%, transparent) 52%,
+        transparent 88%
+      ),
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 88%, transparent) 0%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 58%, transparent) 38%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 12%, transparent) 72%,
+        transparent 100%
+      ),
+      radial-gradient(130% 80% at 50% 0%, transparent 35%, color-mix(in oklab, var(--gt-bg-deep, #05060a) 62%, transparent) 100%);
+  }
+  @media (max-width: 639px) {
+    /* one-handed reading: dim the whole frame instead of one side */
+    .gt-scrim[data-preset='hero'] {
+      background-image:
+        linear-gradient(
+          to top,
+          var(--gt-bg, #08090d) 0%,
+          color-mix(in oklab, var(--gt-bg, #08090d) 90%, transparent) 26%,
+          color-mix(in oklab, var(--gt-bg, #08090d) 55%, transparent) 62%,
+          color-mix(in oklab, var(--gt-bg-deep, #05060a) 35%, transparent) 100%
+        );
+    }
+  }
+
+  /* Card cover: title and badges live on the bottom edge. */
+  .gt-scrim[data-preset='card'] {
+    background-image:
+      linear-gradient(
+        to top,
+        var(--gt-surface-raised, #14171f) 0%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 72%, transparent) 34%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 26%, transparent) 68%,
+        transparent 100%
+      ),
+      linear-gradient(to right, color-mix(in oklab, var(--gt-bg-deep, #05060a) 45%, transparent), transparent 55%);
+  }
+
+  /* Banner: copy on the left half, art breathing on the right. */
+  .gt-scrim[data-preset='banner'] {
+    background-image: linear-gradient(
+      to right,
+      color-mix(in oklab, var(--gt-bg-deep, #05060a) 92%, transparent) 0%,
+      color-mix(in oklab, var(--gt-bg-deep, #05060a) 72%, transparent) 42%,
+      color-mix(in oklab, var(--gt-bg-deep, #05060a) 18%, transparent) 78%,
+      transparent 100%
+    );
+  }
+
+  /* Stage: dark centre for CTA blocks, art only at the edges. */
+  .gt-scrim[data-preset='stage'] {
+    background-image:
+      radial-gradient(100% 120% at 50% 55%, color-mix(in oklab, var(--gt-bg-deep, #05060a) 88%, transparent) 30%, transparent 100%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--gt-bg, #08090d) 55%, transparent), color-mix(in oklab, var(--gt-bg, #08090d) 92%, transparent));
+  }
+
+  /* Tile: small surface, needs the heaviest protection. */
+  .gt-scrim[data-preset='tile'] {
+    background-image:
+      linear-gradient(
+        to top,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 94%, transparent) 0%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 62%, transparent) 45%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 22%, transparent) 100%
+      ),
+      linear-gradient(120deg, color-mix(in oklab, var(--gt-bg-deep, #05060a) 55%, transparent), transparent 70%);
+  }
+
   /* Advertising slots are always visually declared, never disguised. */
   .ad-slot {
     position: relative;

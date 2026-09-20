@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
+import { worldArt } from '@/data/themeMedia'
+import { themeForGame } from '@/data/themes'
+import { ThemeScope } from '@/theme'
+import { WorldArtSurface } from '@/components/media/WorldArt'
 import type { Game, GameMotif } from '@/data/types'
 
 /** Abstract geometric motifs — a hint of the genre, never literal game art. */
@@ -74,8 +78,18 @@ function Motif({ kind }: { kind: GameMotif }) {
   }
 }
 
+/**
+ * Entry tile of a game world.
+ *
+ * Wrapped in the game's own ThemeScope (display:contents, so no layout cost)
+ * so the art scrim is mixed from that world's palette — the tile is a small
+ * preview of the world it opens.
+ */
 export function GameTile({ game, className, compact }: { game: Game; className?: string; compact?: boolean }) {
+  const art = worldArt('hero', game.id)
+
   return (
+    <ThemeScope theme={themeForGame(game.id)} as="div" className="contents">
     <Link
       to={`/${game.slug}`}
       className={cn(
@@ -84,16 +98,31 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
         className,
       )}
     >
-      <div
-        className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"
-        style={{ background: `linear-gradient(135deg, ${game.from}, ${game.to})` }}
-      />
-      <div className="absolute inset-0 texture-lines opacity-40" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-ink-950 via-ink-950/72 to-ink-950/25" />
+      {art ? (
+        <WorldArtSurface
+          art={art}
+          scrim="tile"
+          zoom
+          width={800}
+          sizes="(min-width: 1024px) 420px, 50vw"
+        />
+      ) : (
+        <>
+          <div
+            className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"
+            style={{ background: `linear-gradient(135deg, ${game.from}, ${game.to})` }}
+          />
+          <div className="absolute inset-0 texture-lines opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-ink-950 via-ink-950/72 to-ink-950/25" />
+        </>
+      )}
 
       <svg
         viewBox="0 0 80 80"
-        className="absolute -right-2 -bottom-3 h-[118px] w-[118px] text-white opacity-[0.13] transition-all duration-500 group-hover:opacity-[0.2] group-hover:-translate-y-1"
+        className={cn(
+          'absolute -right-2 -bottom-3 h-[118px] w-[118px] text-white transition-all duration-500 group-hover:-translate-y-1',
+          art ? 'opacity-[0.10] group-hover:opacity-[0.16]' : 'opacity-[0.13] group-hover:opacity-[0.2]',
+        )}
         aria-hidden
       >
         <Motif kind={game.motif} />
@@ -116,5 +145,6 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
         </div>
       </div>
     </Link>
+    </ThemeScope>
   )
 }

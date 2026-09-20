@@ -5,6 +5,10 @@ import { formatAge, formatCountdown, formatNumber, formatRating } from '@/lib/fo
 import { getGame } from '@/data/games'
 import type { GameServer } from '@/data/types'
 import { useFavorites } from '@/hooks/useFavorites'
+import { serverArt } from '@/data/themeMedia'
+import { themeForGame } from '@/data/themes'
+import { ThemeScope } from '@/theme'
+import { ArtImage } from '@/components/media/WorldArt'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { PromoLabel, Tag, TrendChip } from '@/components/ui/Badge'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
@@ -48,16 +52,45 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
   const { status, current, max, change24h } = server.online
   const capacity = max > 0 ? Math.min(100, (current / max) * 100) : 0
   const isVip = server.promo === 'vip'
+  const art = serverArt(server)
 
   return (
+    <ThemeScope theme={themeForGame(server.gameId)} as="div" className="contents">
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'surface interactive group relative flex h-full flex-col rounded-xl p-4',
+        'surface interactive group relative isolate flex h-full flex-col overflow-hidden rounded-xl p-4',
         isVip && 'border-promo-500/25 bg-promo-900/20',
         className,
       )}
     >
+      {/*
+        Dense info card: the world art is a corner bloom only. It is masked
+        into the top-right — away from the name, the description and the
+        trust line — so no text ever loses contrast against bright artwork.
+      */}
+      {art && (
+        <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <ArtImage
+            art={art}
+            sizes="(min-width: 1280px) 400px, (min-width: 640px) 50vw, 100vw"
+            width={400}
+            className="opacity-[0.22] transition-opacity duration-500 group-hover:opacity-[0.32]"
+          />
+          <span
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(200deg, color-mix(in oklab, var(--color-ink-900) 25%, transparent) 0%, var(--color-ink-900) 58%)',
+              maskImage:
+                'radial-gradient(135% 115% at 100% 0%, transparent 0%, rgba(0,0,0,0.45) 34%, #000 66%)',
+              WebkitMaskImage:
+                'radial-gradient(135% 115% at 100% 0%, transparent 0%, rgba(0,0,0,0.45) 34%, #000 66%)',
+            }}
+          />
+        </span>
+      )}
+
       {isVip && (
         <span className="pointer-events-none absolute inset-x-0 -top-px mx-4 h-px bg-gradient-to-r from-transparent via-promo-400/60 to-transparent" />
       )}
@@ -171,6 +204,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         </span>
       </div>
     </Link>
+    </ThemeScope>
   )
 }
 

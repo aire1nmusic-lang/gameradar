@@ -1,5 +1,7 @@
 import { ArrowRight, BarChart3, BadgeCheck, Radar, Repeat2, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
+import { WorldArtSurface } from '@/components/media/WorldArt'
+import { worldArt } from '@/data/themeMedia'
 import { Button } from '@/components/ui/Button'
 import { StatusBadge, STATUS_META } from '@/components/trust/status'
 import type { OnlineStatus } from '@/data/types'
@@ -145,6 +147,8 @@ export function OwnerBand() {
     <section className="py-12 sm:py-16">
       <Container>
         <div className="surface relative overflow-hidden rounded-2xl px-6 py-10 sm:px-10 sm:py-12">
+          {/* shared key art — the platform's own world behind the owner pitch */}
+          <WorldArtSurface art={worldArt('stage')} scrim="stage" width={1600} sizes="100vw" />
           <div className="absolute inset-0 texture-grid opacity-40 [mask-image:linear-gradient(to_right,black,transparent_70%)]" />
           <div
             className="pointer-events-none absolute -right-20 -bottom-24 h-72 w-72 rounded-full opacity-[0.18] blur-[90px]"

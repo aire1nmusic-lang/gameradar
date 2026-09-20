@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 import { mediaFor } from '@/data/media'
 import type { GameServer } from '@/data/types'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
+import { WorldArtSurface } from '@/components/media/WorldArt'
+import { serverArt } from '@/data/themeMedia'
 import { ThemedBadge, useGameTheme } from '@/theme'
 import { Notice } from '@/components/ui/feedback'
 import { Modal } from '@/components/ui/overlays'
@@ -17,6 +19,7 @@ import { Modal } from '@/components/ui/overlays'
 export function ServerMedia({ server }: { server: GameServer }) {
   const theme = useGameTheme()
   const media = mediaFor(server)
+  const cover = serverArt(server)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [videoOpen, setVideoOpen] = useState(false)
 
@@ -41,10 +44,14 @@ export function ServerMedia({ server }: { server: GameServer }) {
             className="group relative aspect-video overflow-hidden rounded-lg border text-left"
             style={{ borderColor: theme.colors.border }}
           >
-            <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-              <ProceduralShot seed={media.video.seed} kind="combat" />
-            </div>
-            <div className="absolute inset-0" style={{ background: 'var(--gt-card-overlay)' }} />
+            <WorldArtSurface
+              art={cover}
+              fallback={<ProceduralShot seed={media.video.seed} kind="combat" />}
+              scrim="card"
+              zoom
+              width={800}
+              sizes="(min-width: 1024px) 520px, 100vw"
+            />
 
             <span className="absolute inset-0 grid place-items-center">
               <span

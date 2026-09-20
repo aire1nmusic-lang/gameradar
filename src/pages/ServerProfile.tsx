@@ -42,6 +42,8 @@ import { AreaChart } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
+import { WorldArtSurface } from '@/components/media/WorldArt'
+import { serverArt } from '@/data/themeMedia'
 import {
   ThemeHorizon,
   ThemeParticles,
@@ -75,6 +77,7 @@ function Profile({ server }: { server: GameServer }) {
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
+  const cover = serverArt(server)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -83,17 +86,26 @@ function Profile({ server }: { server: GameServer }) {
   return (
     <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
       {/* hero: art of the server's world */}
-      <div className="relative h-[200px] overflow-hidden sm:h-[300px]">
-        <div className="absolute inset-0">
-          <ProceduralShot seed={hashSeed(server.slug)} kind="landscape" />
-        </div>
-        <div className="gt-hero absolute inset-0 opacity-65" />
-        <ThemePattern opacity={0.12} />
+      <div className="relative h-[220px] overflow-hidden sm:h-[320px]">
+        <WorldArtSurface
+          art={cover}
+          fallback={
+            <>
+              <ProceduralShot seed={hashSeed(server.slug)} kind="landscape" />
+              <div className="gt-hero absolute inset-0 opacity-65" />
+              <ThemeHorizon />
+            </>
+          }
+          scrim="hero"
+          priority
+          width={1600}
+          sizes="100vw"
+        />
+        <ThemePattern opacity={cover ? 0.05 : 0.12} />
         <ThemeParticles />
-        <ThemeHorizon />
         <div
-          className="absolute inset-0"
-          style={{ background: `linear-gradient(to top, ${theme.colors.bgDeep} 3%, transparent 72%)` }}
+          className="pointer-events-none absolute inset-0"
+          style={{ background: `linear-gradient(to top, ${theme.colors.bgDeep} 2%, transparent 68%)` }}
         />
         <Container className="relative flex h-full items-start pt-4">
           <nav className="flex items-center gap-1.5 text-[12.5px] text-white/60">

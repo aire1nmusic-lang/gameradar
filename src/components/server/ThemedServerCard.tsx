@@ -7,6 +7,8 @@ import { activeBoosts } from '@/data/boost'
 import type { GameServer } from '@/data/types'
 import { ThemedBadge, ThemedButton, ThemedCard, useGameTheme } from '@/theme'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
+import { WorldArtSurface } from '@/components/media/WorldArt'
+import { serverArt } from '@/data/themeMedia'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { TrendChip } from '@/components/ui/Badge'
@@ -37,6 +39,7 @@ export function ThemedServerCard({
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const boosts = activeBoosts(server)
+  const art = serverArt(server)
   const { status, current, max, change24h } = server.online
   const capacity = max > 0 ? Math.min(100, (current / max) * 100) : 0
 
@@ -50,11 +53,14 @@ export function ThemedServerCard({
       />
 
       <div className={cn('relative overflow-hidden', compact ? 'h-[92px]' : 'h-[124px]')}>
-        <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.06]">
-          <ProceduralShot seed={hashSeed(server.slug)} kind={server.promo ? 'combat' : 'landscape'} />
-        </div>
-        <div className="absolute inset-0" style={{ background: 'var(--gt-card-overlay)' }} />
-        <div className="absolute inset-0 gt-art opacity-60" />
+        <WorldArtSurface
+          art={art}
+          fallback={<ProceduralShot seed={hashSeed(server.slug)} kind={server.promo ? 'combat' : 'landscape'} />}
+          scrim="card"
+          zoom
+          width={800}
+          sizes="(min-width: 1280px) 400px, (min-width: 640px) 50vw, 100vw"
+        />
 
         <div className="absolute top-2.5 left-2.5 z-[2] flex flex-wrap items-center gap-1.5">
           <StatusBadge status={status} size="sm" />

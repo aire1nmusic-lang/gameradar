@@ -3,6 +3,10 @@ import { ArrowRight, BellRing, Timer, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatCountdown, formatLaunch } from '@/lib/format'
 import { getGame } from '@/data/games'
+import { serverArt } from '@/data/themeMedia'
+import { themeForGame } from '@/data/themes'
+import { ThemeScope } from '@/theme'
+import { WorldArtSurface } from '@/components/media/WorldArt'
 import type { GameServer } from '@/data/types'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { PromoLabel, TrendChip } from '@/components/ui/Badge'
@@ -18,11 +22,13 @@ export function LaunchCard({
 }) {
   const game = getGame(server.gameId)
   const launch = server.launch
+  const art = serverArt(server)
   if (!launch) return null
 
   const soon = new Date(launch.at).getTime() - Date.now() < 12 * 3_600_000
 
   return (
+    <ThemeScope theme={themeForGame(server.gameId)} as="div" className="contents">
     <Link
       to={`/server/${server.slug}`}
       className={cn(
@@ -32,11 +38,17 @@ export function LaunchCard({
       )}
     >
       <div
-        className="relative h-[92px] overflow-hidden"
-        style={{ background: `linear-gradient(120deg, ${game.from}, ${game.to})` }}
+        className="relative h-[104px] overflow-hidden"
+        style={art ? undefined : { background: `linear-gradient(120deg, ${game.from}, ${game.to})` }}
       >
-        <div className="absolute inset-0 texture-lines opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-850 via-ink-850/25 to-transparent" />
+        {art ? (
+          <WorldArtSurface art={art} scrim="tile" zoom width={400} sizes="340px" />
+        ) : (
+          <>
+            <div className="absolute inset-0 texture-lines opacity-50" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink-850 via-ink-850/25 to-transparent" />
+          </>
+        )}
 
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <span
@@ -102,5 +114,6 @@ export function LaunchCard({
         </div>
       </div>
     </Link>
+    </ThemeScope>
   )
 }

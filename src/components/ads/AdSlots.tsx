@@ -7,6 +7,8 @@ import { adFor, adServer, type AdSlotId } from '@/data/ads'
 import { getGame } from '@/data/games'
 import { ThemedBadge, ThemedButton, useGameTheme } from '@/theme'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
+import { ArtImage, WorldArtSurface } from '@/components/media/WorldArt'
+import { promoArt, serverArt } from '@/data/themeMedia'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { BoostBadge, PremiumBadge } from '@/components/boost/BoostBadge'
@@ -48,10 +50,14 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
   return (
     <AdSlot id="top-banner" className={cn('group', className)}>
       <Link to={creative.href} className="relative flex min-h-[132px] items-center gap-5 overflow-hidden p-4 sm:min-h-[150px] sm:p-5">
-        <div className="absolute inset-0 opacity-60 transition-transform duration-700 group-hover:scale-[1.04]">
-          <ProceduralShot seed={hashSeed(creative.id)} kind="landscape" />
-        </div>
-        <div className="absolute inset-0" style={{ background: 'var(--gt-card-overlay)' }} />
+        <WorldArtSurface
+          art={server ? serverArt(server) : promoArt(gameId, creative.id)}
+          fallback={<ProceduralShot seed={hashSeed(creative.id)} kind="landscape" />}
+          scrim="banner"
+          zoom
+          width={1600}
+          sizes="(min-width: 1280px) 1200px, 100vw"
+        />
 
         {server && (
           <div className="relative hidden shrink-0 sm:block">
@@ -101,10 +107,14 @@ export function SidebarBanner({ gameId, className }: { gameId?: string; classNam
     <AdSlot id="sidebar" className={cn('group', className)}>
       <Link to={creative.href} className="relative flex h-[420px] flex-col overflow-hidden">
         <div className="relative h-[190px] overflow-hidden">
-          <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
-            <ProceduralShot seed={hashSeed(creative.id)} kind="combat" />
-          </div>
-          <div className="absolute inset-0" style={{ background: 'var(--gt-card-overlay)' }} />
+          <WorldArtSurface
+            art={server ? serverArt(server) : promoArt(gameId, `${creative.id}-side`)}
+            fallback={<ProceduralShot seed={hashSeed(creative.id)} kind="combat" />}
+            scrim="card"
+            zoom
+            width={400}
+            sizes="320px"
+          />
           {server && (
             <div className="absolute -bottom-5 left-4">
               <ServerLogo name={server.name} hue={server.hue} size="md" />
@@ -148,12 +158,17 @@ export function SidebarBanner({ gameId, className }: { gameId?: string; classNam
  */
 export function BackgroundTakeover({ gameId }: { gameId?: string }) {
   const creative = adFor('takeover', gameId)
+  const takeoverArt = promoArt(gameId, `${creative?.id ?? 'x'}-bg`)
   if (!creative) return null
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[820px] overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.22]">
-        <ProceduralShot seed={hashSeed(`${creative.id}-bg`)} kind="landscape" detail={false} />
+      <div className="absolute inset-0 opacity-[0.28]">
+        {takeoverArt ? (
+          <ArtImage art={takeoverArt} sizes="100vw" width={1600} />
+        ) : (
+          <ProceduralShot seed={hashSeed(`${creative.id}-bg`)} kind="landscape" detail={false} />
+        )}
       </div>
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent, var(--gt-bg) 78%)' }} />
       <div className="pointer-events-auto absolute top-3 right-4 z-10">
@@ -181,12 +196,14 @@ export function FeaturedServerCard({ gameId, className }: { gameId?: string; cla
     <AdSlot id="featured" label="Featured · продвижение" className={cn('group', className)}>
       <div className="relative grid overflow-hidden md:grid-cols-[1.1fr_1fr]">
         <div className="relative min-h-[200px] overflow-hidden">
-          <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.04]">
-            <ProceduralShot seed={hashSeed(server.slug)} kind="landscape" />
-          </div>
-          <div
-            className="absolute inset-0 md:hidden"
-            style={{ background: 'var(--gt-card-overlay)' }}
+          <WorldArtSurface
+            art={serverArt(server)}
+            fallback={<ProceduralShot seed={hashSeed(server.slug)} kind="landscape" />}
+            scrim="card"
+            zoom
+            width={800}
+            sizes="(min-width: 768px) 560px, 100vw"
+            className="md:[&_.gt-scrim]:opacity-55"
           />
           <div
             className="absolute inset-y-0 right-0 hidden w-32 md:block"
@@ -246,7 +263,13 @@ export function InlinePromo({ gameId, className }: { gameId?: string; className?
     <AdSlot id="inline" label="Продвижение" className={cn('group', className)}>
       <Link to={creative.href} className="flex items-center gap-4 p-4">
         <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md">
-          <ProceduralShot seed={hashSeed(`${creative.id}-inline`)} kind="map" detail={false} />
+          <WorldArtSurface
+            art={promoArt(gameId, `${creative.id}-inline`)}
+            fallback={<ProceduralShot seed={hashSeed(`${creative.id}-inline`)} kind="map" detail={false} />}
+            scrim="tile"
+            width={400}
+            sizes="80px"
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CornerDownLeft, Gamepad2, Search, Server, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { buildSuggestions, QUICK_SEARCHES, type Suggestion } from '@/data/catalog'
+import { buildSuggestions, QUICK_SEARCHES, type Suggestion } from '@/services'
+import { useAsync } from '@/hooks/data'
 import { useLockBodyScroll } from '@/hooks/useUi'
 
 const ICONS = {
@@ -19,7 +20,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const navigate = useNavigate()
   useLockBodyScroll(open)
 
-  const suggestions = useMemo(() => buildSuggestions(query), [query])
+  const { data: suggestions = [] } = useAsync(() => buildSuggestions(query), [query], true)
 
   useEffect(() => {
     if (open) {

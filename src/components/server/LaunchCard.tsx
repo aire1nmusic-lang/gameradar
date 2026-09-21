@@ -7,7 +7,7 @@ import { serverArt } from '@/data/themeMedia'
 import { themeForGame } from '@/data/themes'
 import { ThemeScope } from '@/theme'
 import { WorldArtSurface } from '@/components/media/WorldArt'
-import type { GameServer } from '@/data/types'
+import type { GameServer } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { PromoLabel, TrendChip } from '@/components/ui/Badge'
 
@@ -64,7 +64,7 @@ export function LaunchCard({
           </span>
         </div>
 
-        {launch.promoted && <PromoLabel kind="featured" className="absolute top-3 right-3 backdrop-blur-sm" />}
+        {launch.promoted && <PromoLabel kind="FEATURED" className="absolute top-3 right-3 backdrop-blur-sm" />}
 
         <div className="absolute -bottom-5 left-4">
           <ServerLogo name={server.name} hue={server.hue} size="md" className="ring-4 ring-ink-850" />

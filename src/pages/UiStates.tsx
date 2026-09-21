@@ -1,6 +1,6 @@
 import { CloudOff, Heart, RefreshCw, SearchX } from 'lucide-react'
-import { SERVERS_BY_SLUG } from '@/data/servers'
-import type { GameServer, OnlineStatus } from '@/data/types'
+import { useServers } from '@/hooks/data'
+import type { GameServer, OnlineStatus } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
 import { StatusBadge, STATUS_META, VerifiedLine } from '@/components/trust/status'
@@ -11,18 +11,26 @@ function withStatus(server: GameServer, status: OnlineStatus): GameServer {
   return { ...server, online: { ...server.online, status } }
 }
 
-const STATUSES: OnlineStatus[] = ['verified', 'reported', 'offline', 'anomaly', 'pending', 'checking']
+const STATUSES: OnlineStatus[] = ['VERIFIED', 'OWNER_REPORTED', 'OFFLINE', 'ANOMALY', 'PENDING', 'CHECKING']
 
 export default function UiStates() {
-  const holysky = SERVERS_BY_SLUG['holysky']
-  const cards: Array<{ status: OnlineStatus; server: GameServer }> = [
-    { status: 'verified', server: SERVERS_BY_SLUG['holysky'] },
-    { status: 'reported', server: SERVERS_BY_SLUG['azure-realms'] },
-    { status: 'offline', server: SERVERS_BY_SLUG['pixelforge'] },
-    { status: 'anomaly', server: SERVERS_BY_SLUG['northgate'] },
-    { status: 'pending', server: SERVERS_BY_SLUG['frostpeak'] },
-    { status: 'checking', server: withStatus(holysky, 'checking') },
-  ]
+  const { data: servers = [] } = useServers({ limit: 500 })
+  const bySlug = (slug: string) => servers.find((server) => server.slug === slug)
+  const holysky = bySlug('holysky')
+
+  const cards: Array<{ status: OnlineStatus; server: GameServer }> = holysky
+    ? (
+        [
+          { status: 'VERIFIED', server: bySlug('holysky') },
+          { status: 'LIVE', server: withStatus(bySlug('asterion') ?? holysky, 'LIVE') },
+          { status: 'OWNER_REPORTED', server: bySlug('azure-realms') },
+          { status: 'OFFLINE', server: bySlug('pixelforge') },
+          { status: 'ANOMALY', server: bySlug('northgate') },
+          { status: 'PENDING', server: bySlug('frostpeak') },
+          { status: 'CHECKING', server: withStatus(holysky, 'CHECKING') },
+        ] as Array<{ status: OnlineStatus; server?: GameServer }>
+      ).filter((card): card is { status: OnlineStatus; server: GameServer } => Boolean(card.server))
+    : []
 
   return (
     <div className="pb-16">

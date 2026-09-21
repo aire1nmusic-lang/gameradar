@@ -4,7 +4,7 @@ import { WorldArtSurface } from '@/components/media/WorldArt'
 import { worldArt } from '@/data/themeMedia'
 import { Button } from '@/components/ui/Button'
 import { StatusBadge, STATUS_META } from '@/components/trust/status'
-import type { OnlineStatus } from '@/data/types'
+import type { OnlineStatus } from '@/models'
 import { useTicker } from '@/hooks/useUi'
 import { formatNumber } from '@/lib/format'
 
@@ -26,7 +26,7 @@ const STEPS = [
   },
 ]
 
-const LEGEND: OnlineStatus[] = ['verified', 'reported', 'offline', 'anomaly']
+const LEGEND: OnlineStatus[] = ['VERIFIED', 'OWNER_REPORTED', 'OFFLINE', 'ANOMALY']
 
 export function TrustBand() {
   return (
@@ -107,7 +107,7 @@ function LiveCheckCard() {
             <span className="num text-[14px] text-ink-500">/ 3 000</span>
           </div>
         </div>
-        <StatusBadge status="verified" />
+        <StatusBadge status="VERIFIED" />
       </div>
 
       <div className="relative mt-5 space-y-3 border-t border-white/6 pt-4 font-mono text-[11.5px]">

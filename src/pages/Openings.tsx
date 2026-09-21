@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
 import { formatNumber, plural } from '@/lib/format'
-import { openingServers } from '@/data/servers'
+import { useOpenings } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { LaunchCard } from '@/components/server/LaunchCard'
 import { Segmented } from '@/components/ui/controls'
@@ -13,7 +13,7 @@ const DAY = 86_400_000
 
 export default function Openings() {
   const [window, setWindow] = useState<Window>('all')
-  const all = useMemo(() => openingServers(20), [])
+  const { data: all = [] } = useOpenings(undefined, 20)
 
   const filtered = useMemo(() => {
     const now = Date.now()

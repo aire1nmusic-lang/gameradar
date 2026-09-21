@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import type { PromoKind } from '@/models'
 
 export type BadgeTone = 'neutral' | 'signal' | 'promo' | 'warn' | 'danger' | 'outline'
 
@@ -54,8 +55,8 @@ export function Tag({ children, className }: { children: ReactNode; className?: 
   )
 }
 
-export function PromoLabel({ kind, className }: { kind: 'top' | 'vip' | 'featured'; className?: string }) {
-  const label = kind === 'top' ? 'TOP' : kind === 'vip' ? 'VIP' : 'FEATURED'
+export function PromoLabel({ kind, className }: { kind: PromoKind; className?: string }) {
+  const label = kind
   return (
     <span
       className={cn(

@@ -3,8 +3,8 @@ import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
 import { GAMES } from '@/data/games'
-import { ALL_LANGUAGES, ALL_MODES, ALL_REGIONS, ALL_VERSIONS, type CatalogFilters } from '@/data/catalog'
-import { SERVERS } from '@/data/servers'
+import type { CatalogFilters } from '@/services'
+import { useFacets, useServers } from '@/hooks/data'
 import { Checkbox, ChipToggle, RangeSlider, Select, Toggle } from '@/components/ui/controls'
 import { StatusBadge } from '@/components/trust/status'
 
@@ -40,17 +40,23 @@ export function FilterPanel({
   onReset: () => void
   showReset?: boolean
 }) {
+  // Facets come from the catalogue itself, so the panel never has to know
+  // which values exist — the API answers that.
+  const { data: facets } = useFacets()
+  const { data: allServers = [] } = useServers({ limit: 500 })
+
   const gameCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    for (const server of SERVERS) counts[server.gameId] = (counts[server.gameId] ?? 0) + 1
+    for (const server of allServers) counts[server.gameId] = (counts[server.gameId] ?? 0) + 1
     return counts
-  }, [])
+  }, [allServers])
 
   const versions = useMemo(() => {
-    if (!filters.games.length) return ALL_VERSIONS
-    const set = new Set(SERVERS.filter((s) => filters.games.includes(s.gameId)).map((s) => s.version))
-    return ALL_VERSIONS.filter((v) => set.has(v))
-  }, [filters.games])
+    const all = facets?.versions ?? []
+    if (!filters.games.length) return all
+    const set = new Set(allServers.filter((s) => filters.games.includes(s.gameId)).map((s) => s.version))
+    return all.filter((v) => set.has(v))
+  }, [facets, allServers, filters.games])
 
   const patch = (next: Partial<CatalogFilters>) => onChange({ ...filters, ...next })
 
@@ -63,7 +69,7 @@ export function FilterPanel({
           label={
             <span className="flex items-center gap-2">
               Только проверенный онлайн
-              <StatusBadge status="verified" size="sm" withDot={false} className="hidden sm:inline-flex" />
+              <StatusBadge status="VERIFIED" size="sm" withDot={false} className="hidden sm:inline-flex" />
             </span>
           }
           description="Серверы, онлайн которых GameRadar проверяет самостоятельно"
@@ -106,7 +112,7 @@ export function FilterPanel({
 
         <Group title="Режим">
           <div className="flex max-h-[184px] flex-wrap gap-2 overflow-y-auto pr-1">
-            {ALL_MODES.map((mode) => (
+            {(facets?.modes ?? []).map((mode) => (
               <ChipToggle
                 key={mode}
                 active={filters.modes.includes(mode)}
@@ -120,7 +126,7 @@ export function FilterPanel({
 
         <Group title="Регион">
           <div className="flex flex-wrap gap-2">
-            {ALL_REGIONS.map((region) => (
+            {(facets?.regions ?? []).map((region) => (
               <ChipToggle
                 key={region}
                 active={filters.regions.includes(region)}
@@ -134,7 +140,7 @@ export function FilterPanel({
 
         <Group title="Язык">
           <div className="flex flex-wrap gap-2">
-            {ALL_LANGUAGES.map((language) => (
+            {(facets?.languages ?? []).map((language) => (
               <ChipToggle
                 key={language}
                 active={filters.languages.includes(language)}

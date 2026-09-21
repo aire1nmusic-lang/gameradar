@@ -1,11 +1,8 @@
-import { useMemo } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
 import { ArrowRight, CalendarClock, Flame, Plus, Trophy, Zap } from 'lucide-react'
-import { chronicleOfVersion } from '@/data/games'
 import { resolveWorld } from '@/data/themes'
-import { SERVERS } from '@/data/servers'
-import { leaderboard, organicLeaderboard } from '@/data/boost'
+import { useRating, useServers } from '@/hooks/data'
 import { formatCountdown } from '@/lib/format'
 import { Container } from '@/components/layout/Container'
 import { ThemeScope, ThemedButton, ThemedDivider, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
@@ -43,23 +40,15 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
 
-  const servers = useMemo(() => {
-    if (!game) return []
-    return SERVERS.filter((server) => {
-      if (server.gameId !== game.id) return false
-      if (!chronicle) return true
-      return chronicleOfVersion(game.id, server.version)?.id === chronicle.id
-    })
-  }, [game, chronicle])
-
-  const entries = useMemo(() => leaderboard(game?.id, chronicle?.id), [game, chronicle])
-  const organic = useMemo(() => organicLeaderboard(game?.id, chronicle?.id), [game, chronicle])
+  const { data: servers = [] } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
+  const { data: entries = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id, sponsored: true })
+  const { data: organic = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id })
 
   if (!game) return null
 
-  const live = servers.filter((server) => server.online.status !== 'pending')
+  const live = servers.filter((server) => server.online.status !== 'PENDING')
   const openings = servers.filter((server) => server.launch)
-  const verifiedShare = live.length ? live.filter((s) => s.online.status === 'verified').length / live.length : 0
+  const verifiedShare = live.length ? live.filter((s) => s.online.status === 'VERIFIED').length / live.length : 0
   const topOnline = [...live].sort((a, b) => b.online.current - a.online.current).slice(0, 6)
 
   return (

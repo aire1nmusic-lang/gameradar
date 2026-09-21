@@ -1,7 +1,7 @@
 import { Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { TIER_LABEL, tierOf } from '@/data/boost'
+import { TIER_LABEL, tierOf } from '@/services'
 
 /**
  * Paid-placement markers.

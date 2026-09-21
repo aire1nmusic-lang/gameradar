@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Crown, Sparkles, Trophy, Zap } from 'lucide-react'
 import { GAMES, getGame } from '@/data/games'
-import { leaderboard, organicLeaderboard } from '@/data/boost'
+import { useRating } from '@/hooks/data'
 import { themeForGame } from '@/data/themes'
 import { formatNumber } from '@/lib/format'
 import { Container } from '@/components/layout/Container'
@@ -25,8 +25,8 @@ export default function RatingPage() {
   const [view, setView] = useState<View>('organic')
 
   const scope = gameId === 'all' ? undefined : gameId
-  const organic = useMemo(() => organicLeaderboard(scope), [scope])
-  const combined = useMemo(() => leaderboard(scope), [scope])
+  const { data: organic = [] } = useRating({ gameId: scope })
+  const { data: combined = [] } = useRating({ gameId: scope, sponsored: true })
   const entries = view === 'organic' ? organic : combined
 
   const theme = useMemo(() => themeForGame(gameId === 'all' ? 'core' : gameId), [gameId])

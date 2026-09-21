@@ -1,18 +1,12 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowUpDown, Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
-import {
-  countActiveFilters,
-  EMPTY_FILTERS,
-  filterServers,
-  sortServers,
-  SORT_OPTIONS,
-  type CatalogFilters,
-  type SortKey,
-} from '@/data/catalog'
+import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, type CatalogFilters } from '@/services'
+import { useServerPage } from '@/hooks/data'
+import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
 import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
@@ -40,29 +34,56 @@ export default function Catalog() {
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
   const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
-  const [loading, setLoading] = useState(true)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
 
-  const results = useMemo(() => sortServers(filterServers(filters), sort), [filters, sort])
+  const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
+  const { data: page, loading } = useServerPage(query)
+  const results = page?.items ?? []
+  const total = page?.total ?? 0
   const activeCount = countActiveFilters(filters)
 
   useEffect(() => {
-    setLoading(true)
     setVisible(PAGE_SIZE)
-    const timer = window.setTimeout(() => setLoading(false), 320)
-    return () => window.clearTimeout(timer)
   }, [filters, sort])
+
+  /*
+   * URL ⇄ state stays two-way.
+   *
+   * We write the params we own, and remember what we wrote. When the address
+   * changes for any other reason — a link from a game world, the back button,
+   * a pasted url — we re-hydrate the filters from it instead of ignoring it.
+   */
+  const ownWrite = useRef('')
 
   useEffect(() => {
     const next = new URLSearchParams()
     if (filters.query) next.set('q', filters.query)
     if (filters.games.length === 1) next.set('game', filters.games[0])
+    if (filters.modes.length === 1) next.set('mode', filters.modes[0])
+    if (filters.versions.length === 1) next.set('version', filters.versions[0])
     if (filters.verifiedOnly) next.set('verified', '1')
     if (sort !== 'recommended') next.set('sort', sort)
+    ownWrite.current = next.toString()
     setParams(next, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.query, filters.games, filters.verifiedOnly, sort])
+  }, [filters.query, filters.games, filters.modes, filters.versions, filters.verifiedOnly, sort])
+
+  useEffect(() => {
+    const current = params.toString()
+    if (current === ownWrite.current) return
+    ownWrite.current = current
+    setFilters((prev) => ({
+      ...prev,
+      query: params.get('q') ?? '',
+      games: params.get('game') ? [params.get('game')!] : [],
+      modes: params.get('mode') ? [params.get('mode')!] : [],
+      versions: params.get('version') ? [params.get('version')!] : [],
+      verifiedOnly: params.get('verified') === '1',
+    }))
+    setSort((params.get('sort') as SortKey) ?? 'recommended')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   const reset = () => setFilters({ ...EMPTY_FILTERS, query: filters.query })
 
@@ -75,7 +96,7 @@ export default function Catalog() {
           <div>
             <h1 className="text-[28px] leading-tight sm:text-[34px]">Каталог серверов</h1>
             <p className="mt-2 max-w-xl text-[14px] text-ink-300">
-              {formatNumber(results.length)} {plural(results.length, ['сервер', 'сервера', 'серверов'])} по вашему
+              {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])} по вашему
               запросу. Онлайн у отмеченных проектов проверяет GameRadar.
             </p>
           </div>
@@ -158,8 +179,7 @@ export default function Catalog() {
                   </>
                 ) : (
                   <span className="text-[13px] text-ink-400">
-                    Найдено {formatNumber(results.length)}{' '}
-                    {plural(results.length, ['сервер', 'сервера', 'серверов'])}
+                    Найдено {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])}
                   </span>
                 )}
               </div>
@@ -193,7 +213,7 @@ export default function Catalog() {
             ) : (
               <>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {results.slice(0, visible).map((server, index) => (
+                  {results.map((server, index) => (
                     <Fragment key={server.slug}>
                       {index === 6 && (
                         <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
@@ -205,13 +225,13 @@ export default function Catalog() {
                   ))}
                 </div>
 
-                {visible < results.length && (
+                {visible < total && (
                   <div className="mt-8 flex flex-col items-center gap-3">
                     <Button variant="secondary" size="lg" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-                      Показать ещё {Math.min(PAGE_SIZE, results.length - visible)}
+                      Показать ещё {Math.min(PAGE_SIZE, total - visible)}
                     </Button>
                     <span className="num text-[12.5px] text-ink-500">
-                      {Math.min(visible, results.length)} из {results.length}
+                      {results.length} из {formatNumber(total)}
                     </span>
                   </div>
                 )}
@@ -231,7 +251,7 @@ export default function Catalog() {
               Сбросить
             </Button>
             <Button variant="primary" onClick={() => setFiltersOpen(false)} className="flex-[2]">
-              Показать {formatNumber(results.length)}
+              Показать {formatNumber(total)}
             </Button>
           </div>
         }
@@ -304,7 +324,7 @@ function buildChips(filters: CatalogFilters, setFilters: (next: CatalogFilters) 
   }
   if (filters.verifiedOnly) {
     chips.push({
-      key: 'verified',
+      key: 'VERIFIED',
       label: 'Verified online',
       remove: () => setFilters({ ...filters, verifiedOnly: false }),
     })
@@ -327,7 +347,7 @@ function buildChips(filters: CatalogFilters, setFilters: (next: CatalogFilters) 
     chips.push({ key: 'wipe', label: 'Скоро вайп', remove: () => setFilters({ ...filters, wipeSoon: false }) })
   }
   if (filters.hideOffline) {
-    chips.push({ key: 'offline', label: 'Без offline', remove: () => setFilters({ ...filters, hideOffline: false }) })
+    chips.push({ key: 'OFFLINE', label: 'Без offline', remove: () => setFilters({ ...filters, hideOffline: false }) })
   }
   if (filters.openedWithin !== 'any') {
     chips.push({

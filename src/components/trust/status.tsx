@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { AlertTriangle, CalendarClock, Loader2, PowerOff, ShieldCheck, Upload } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Loader2, PowerOff, Radio, ShieldCheck, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatSeconds } from '@/lib/format'
-import type { OnlineStatus } from '@/data/types'
+import { OnlineStatus } from '@/models'
 
 interface StatusMeta {
   label: string
@@ -14,8 +14,14 @@ interface StatusMeta {
   caption: string
 }
 
+/**
+ * The trust vocabulary of the platform.
+ *
+ * These labels and colours are identical in every game world — a player must
+ * be able to read them the same way everywhere, so themes never touch them.
+ */
 export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
-  verified: {
+  [OnlineStatus.Verified]: {
     label: 'VERIFIED ONLINE',
     short: 'Verified',
     icon: <ShieldCheck size={12} strokeWidth={2.4} />,
@@ -24,16 +30,25 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     dot: 'bg-signal-400',
     caption: 'Онлайн получен и проверен GameRadar',
   },
-  reported: {
+  [OnlineStatus.Live]: {
+    label: 'LIVE',
+    short: 'Live',
+    icon: <Radio size={12} strokeWidth={2.4} />,
+    pill: 'border-signal-500/18 bg-signal-500/[0.06]',
+    text: 'text-signal-200/85',
+    dot: 'bg-signal-300',
+    caption: 'Сервер отвечает, но точный онлайн подтвердить нельзя',
+  },
+  [OnlineStatus.OwnerReported]: {
     label: 'REPORTED ONLINE',
     short: 'Reported',
     icon: <Upload size={12} strokeWidth={2.4} />,
     pill: 'border-white/10 bg-white/[0.04]',
     text: 'text-ink-300',
     dot: 'bg-ink-400',
-    caption: 'Данные предоставлены сервером',
+    caption: 'Данные предоставлены владельцем сервера',
   },
-  offline: {
+  [OnlineStatus.Offline]: {
     label: 'OFFLINE',
     short: 'Offline',
     icon: <PowerOff size={12} strokeWidth={2.4} />,
@@ -42,7 +57,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     dot: 'bg-danger-400',
     caption: 'GameRadar не получает ответ от сервера',
   },
-  anomaly: {
+  [OnlineStatus.Anomaly]: {
     label: 'DATA ANOMALY',
     short: 'Аномалия',
     icon: <AlertTriangle size={12} strokeWidth={2.4} />,
@@ -51,7 +66,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     dot: 'bg-warn-400',
     caption: 'Обнаружены подозрительные данные',
   },
-  pending: {
+  [OnlineStatus.Pending]: {
     label: 'СКОРО ОТКРЫТИЕ',
     short: 'Скоро',
     icon: <CalendarClock size={12} strokeWidth={2.4} />,
@@ -60,7 +75,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     dot: 'bg-promo-400',
     caption: 'Проверка онлайна начнётся после запуска',
   },
-  checking: {
+  [OnlineStatus.Checking]: {
     label: 'ПРОВЕРЯЕМ ОНЛАЙН',
     short: 'Проверка',
     icon: <Loader2 size={12} className="animate-spin" strokeWidth={2.4} />,
@@ -78,7 +93,7 @@ export function LiveDot({ status, className }: { status: OnlineStatus; className
       className={cn(
         'inline-block h-[6px] w-[6px] rounded-full',
         meta.dot,
-        status === 'verified' && 'animate-pulse-dot',
+        (status === OnlineStatus.Verified || status === OnlineStatus.Live) && 'animate-pulse-dot',
         className,
       )}
     />
@@ -108,7 +123,7 @@ export function StatusBadge({
       )}
       title={meta.caption}
     >
-      {withDot && status === 'verified' ? <LiveDot status={status} /> : meta.icon}
+      {withDot && status === OnlineStatus.Verified ? <LiveDot status={status} /> : meta.icon}
       {meta.label}
     </span>
   )
@@ -130,25 +145,32 @@ export function VerifiedLine({
 }) {
   const base = cn('flex items-center gap-1.5 font-mono', size === 'xs' ? 'text-[10.5px]' : 'text-[11.5px]', className)
 
-  if (status === 'verified') {
-    return (
-      <span className={cn(base, 'text-signal-500/90')}>
-        <ShieldCheck size={12} />
-        Проверено GameRadar {formatSeconds(seconds)}
-      </span>
-    )
+  switch (status) {
+    case OnlineStatus.Verified:
+      return (
+        <span className={cn(base, 'text-signal-500/90')}>
+          <ShieldCheck size={12} />
+          Проверено GameRadar {formatSeconds(seconds)}
+        </span>
+      )
+    case OnlineStatus.Live:
+      return (
+        <span className={cn(base, 'text-signal-500/70')}>
+          <Radio size={11} />
+          Сервер отвечает · {formatSeconds(seconds)}
+        </span>
+      )
+    case OnlineStatus.OwnerReported:
+      return <span className={cn(base, 'text-ink-500')}>{source ?? 'Данные предоставлены сервером'}</span>
+    case OnlineStatus.Offline:
+      return (
+        <span className={cn(base, 'text-danger-400/80')}>Последняя удачная проверка — {formatSeconds(seconds)}</span>
+      )
+    case OnlineStatus.Anomaly:
+      return <span className={cn(base, 'text-warn-400/85')}>Данные на перепроверке GameRadar</span>
+    case OnlineStatus.Checking:
+      return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
+    default:
+      return <span className={cn(base, 'text-ink-500')}>Проверка начнётся после запуска</span>
   }
-  if (status === 'reported') {
-    return <span className={cn(base, 'text-ink-500')}>{source ?? 'Данные предоставлены сервером'}</span>
-  }
-  if (status === 'offline') {
-    return <span className={cn(base, 'text-danger-400/80')}>Последняя удачная проверка — {formatSeconds(seconds)}</span>
-  }
-  if (status === 'anomaly') {
-    return <span className={cn(base, 'text-warn-400/85')}>Данные на перепроверке GameRadar</span>
-  }
-  if (status === 'checking') {
-    return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
-  }
-  return <span className={cn(base, 'text-ink-500')}>Проверка начнётся после запуска</span>
 }

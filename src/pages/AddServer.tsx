@@ -13,8 +13,9 @@ import {
   Server,
 } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
+import { ProbeMethod, ServerStatus } from '@/models'
 import { GAMES, getGame } from '@/data/games'
-import type { GameServer } from '@/data/types'
+import type { GameServer } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, ChipToggle, Field, Input, Select, Textarea } from '@/components/ui/controls'
@@ -86,14 +87,14 @@ const INITIAL: FormState = {
 export default function AddServer() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormState>(INITIAL)
-  const [checkState, setCheckState] = useState<'idle' | 'checking' | 'done'>('idle')
-  const [ownerState, setOwnerState] = useState<'idle' | 'checking' | 'done'>('idle')
+  const [checkState, setCheckState] = useState<'idle' | 'probing' | 'done'>('idle')
+  const [ownerState, setOwnerState] = useState<'idle' | 'probing' | 'done'>('idle')
 
   const game = getGame(form.gameId)
   const patch = (next: Partial<FormState>) => setForm((prev) => ({ ...prev, ...next }))
 
   const preview = useMemo(
-    () => draftServer(form, checkState === 'done' ? 'verified' : 'reported'),
+    () => draftServer(form, checkState === 'done' ? 'VERIFIED' : 'OWNER_REPORTED'),
     [form, checkState],
   )
 
@@ -365,8 +366,8 @@ function StepConnect({
 }: {
   form: FormState
   patch: (next: Partial<FormState>) => void
-  state: 'idle' | 'checking' | 'done'
-  setState: (state: 'idle' | 'checking' | 'done') => void
+  state: 'idle' | 'probing' | 'done'
+  setState: (state: 'idle' | 'probing' | 'done') => void
 }) {
   const method = CONNECT_METHODS.find((item) => item.id === form.connect)!
 
@@ -435,19 +436,19 @@ function StepConnect({
           <Button
             variant="secondary"
             onClick={() => {
-              setState('checking')
+              setState('probing')
               window.setTimeout(() => setState('done'), 1800)
             }}
-            disabled={state === 'checking'}
-            icon={state === 'checking' ? <Loader2 size={15} className="animate-spin" /> : undefined}
+            disabled={state === 'probing'}
+            icon={state === 'probing' ? <Loader2 size={15} className="animate-spin" /> : undefined}
           >
-            {state === 'checking' ? 'Проверяем подключение…' : 'Проверить подключение'}
+            {state === 'probing' ? 'Проверяем подключение…' : 'Проверить подключение'}
           </Button>
-          {state === 'checking' && <StatusBadge status="checking" />}
-          {state === 'done' && <StatusBadge status="verified" />}
+          {state === 'probing' && <StatusBadge status="CHECKING" />}
+          {state === 'done' && <StatusBadge status="VERIFIED" />}
         </div>
 
-        {state === 'checking' && (
+        {state === 'probing' && (
           <Notice tone="info" className="mt-4">
             Отправляем тестовый запрос к серверу. Обычно это занимает до 30 секунд.
           </Notice>
@@ -477,8 +478,8 @@ function StepOwnership({
   setState,
 }: {
   form: FormState
-  state: 'idle' | 'checking' | 'done'
-  setState: (state: 'idle' | 'checking' | 'done') => void
+  state: 'idle' | 'probing' | 'done'
+  setState: (state: 'idle' | 'probing' | 'done') => void
 }) {
   const code = `gameradar-verify=${hashSeed(form.name || 'demo').toString(16).slice(0, 10)}`
 
@@ -518,14 +519,14 @@ function StepOwnership({
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button
           variant="secondary"
-          disabled={state === 'checking'}
+          disabled={state === 'probing'}
           onClick={() => {
-            setState('checking')
+            setState('probing')
             window.setTimeout(() => setState('done'), 1600)
           }}
-          icon={state === 'checking' ? <Loader2 size={15} className="animate-spin" /> : undefined}
+          icon={state === 'probing' ? <Loader2 size={15} className="animate-spin" /> : undefined}
         >
-          {state === 'checking' ? 'Проверяем запись…' : 'Проверить владение'}
+          {state === 'probing' ? 'Проверяем запись…' : 'Проверить владение'}
         </Button>
         {state === 'done' && (
           <span className="flex items-center gap-1.5 text-[13px] text-signal-300">
@@ -591,7 +592,7 @@ function StepDone({ form, verified }: { form: FormState; verified: boolean }) {
 }
 
 /** Builds a preview card from the form so owners see exactly what players will see. */
-function draftServer(form: FormState, status: 'verified' | 'reported'): GameServer {
+function draftServer(form: FormState, status: 'VERIFIED' | 'OWNER_REPORTED'): GameServer {
   const max = Math.max(10, Number(form.maxPlayers) || 1000)
   const current = Math.round(max * 0.42)
   const tags = form.tags
@@ -619,9 +620,9 @@ function draftServer(form: FormState, status: 'verified' | 'reported'): GameServ
       avg7d: Math.round(current * 0.9),
       peak30d: Math.round(current * 1.5),
       checkedAgoSec: 12,
-      source: status === 'verified' ? 'GameRadar Direct Query' : 'Данные сервера',
-      method: status === 'verified' ? 'Прямой игровой протокол' : 'Owner-reported',
-      uptime24h: status === 'verified' ? 100 : 0,
+      source: status === 'VERIFIED' ? 'GameRadar Direct Query' : 'Данные сервера',
+      method: status === 'VERIFIED' ? ProbeMethod.GameProtocol : ProbeMethod.OwnerSubmitted,
+      uptime24h: status === 'VERIFIED' ? 100 : 0,
       checksPerDay: 1440,
     },
     rating: 0,
@@ -635,6 +636,9 @@ function draftServer(form: FormState, status: 'verified' | 'reported'): GameServ
     addedAt: new Date().toISOString(),
     trendScore: 12,
     favorites: 0,
+    votes: 0,
+    moderation: ServerStatus.Draft,
+    demo: true,
     links: { site: form.site || 'example.gg', discord: form.discord || 'discord.gg/example' },
     highlights: [],
     history: {

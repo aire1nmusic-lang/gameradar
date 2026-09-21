@@ -15,7 +15,8 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PROMO_PRODUCTS } from '@/data/dashboard'
+import { promoProducts } from '@/services'
+import { useAsync } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -101,6 +102,8 @@ const FAQ = [
 ]
 
 export default function Owners() {
+  const { data: promos = [] } = useAsync(() => promoProducts(), [])
+
   return (
     <div className="pb-16">
       {/* hero */}
@@ -146,7 +149,7 @@ export default function Owners() {
                 <div className="mt-4 rounded-xl border border-white/8 bg-ink-900/70 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[15px] font-medium text-ink-50">Ваш сервер</span>
-                    <StatusBadge status="verified" size="sm" />
+                    <StatusBadge status="VERIFIED" size="sm" />
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
                     <span className="num font-display text-[30px] leading-none font-semibold text-ink-50">1 284</span>
@@ -205,7 +208,7 @@ export default function Owners() {
                 Выберите способ, который поддерживает ваша игра. Проверка бесплатна и выполняется каждые 60 секунд.
               </p>
             </div>
-            <StatusBadge status="verified" size="lg" />
+            <StatusBadge status="VERIFIED" size="lg" />
           </div>
 
           <div className="mt-7 grid gap-4 lg:grid-cols-3">
@@ -271,12 +274,12 @@ export default function Owners() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PROMO_PRODUCTS.map((product) => (
+          {promos.map((product) => (
             <div
               key={product.id}
               className={cn(
                 'relative flex flex-col overflow-hidden rounded-xl border p-5',
-                product.accent === 'featured'
+                product.accent === 'FEATURED'
                   ? 'border-promo-500/30 bg-promo-900/25'
                   : 'border-white/7 bg-white/[0.02]',
               )}

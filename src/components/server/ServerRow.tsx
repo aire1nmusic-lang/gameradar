@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
 import { getGame } from '@/data/games'
-import type { GameServer } from '@/data/types'
+import type { GameServer } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { Tag, TrendChip } from '@/components/ui/Badge'
 import { LiveDot, VerifiedLine } from '@/components/trust/status'
@@ -63,7 +63,7 @@ export function ServerRow({
         <Sparkline
           data={server.history['24h']}
           width={64}
-          accent={status === 'verified' ? 'var(--color-signal-400)' : 'var(--color-ink-300)'}
+          accent={status === 'VERIFIED' ? 'var(--color-signal-400)' : 'var(--color-ink-300)'}
         />
       </div>
 

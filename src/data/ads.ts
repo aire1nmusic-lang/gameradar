@@ -1,5 +1,5 @@
 import { SERVERS_BY_SLUG } from './servers'
-import type { GameServer } from './types'
+import type { GameServer } from '@/models'
 
 /**
  * Advertising inventory.
@@ -158,7 +158,7 @@ export const AD_PRODUCTS = [
     priceLabel: 'от 24 900 ₽ / неделя',
   },
   {
-    id: 'featured',
+    id: 'FEATURED',
     name: 'Featured server card',
     place: 'Блок над рейтингом',
     size: 'Крупная карточка',

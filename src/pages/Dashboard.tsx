@@ -13,7 +13,9 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { OWNER_ALERTS, OWNER_PROJECTS, PROMO_PRODUCTS, type OwnerMetric } from '@/data/dashboard'
+import { OWNER_ALERTS, type OwnerMetric } from '@/data/dashboard'
+import { promoProducts } from '@/services'
+import { useAsync, useOwnerAnalytics } from '@/hooks/data'
 import { getGame } from '@/data/games'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
@@ -21,7 +23,7 @@ import { Badge, TrendChip } from '@/components/ui/Badge'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
-import { Notice } from '@/components/ui/feedback'
+import { Notice, Skeleton } from '@/components/ui/feedback'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { BarSeries } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
@@ -31,7 +33,26 @@ export default function Dashboard() {
   const [range, setRange] = useState<'7' | '30'>('30')
   const [promoOpen, setPromoOpen] = useState(false)
 
-  const project = OWNER_PROJECTS[projectIndex]
+  const { data: projects = [], loading } = useOwnerAnalytics()
+  const { data: promos = [] } = useAsync(() => promoProducts(), [])
+  const project = projects[projectIndex]
+
+  if (loading || !project) {
+    return (
+      <Container className="py-24">
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64 rounded" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-28 rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-72 rounded-xl" />
+        </div>
+      </Container>
+    )
+  }
+
   const { server } = project
   const game = getGame(server.gameId)
   const views = range === '7' ? project.views.slice(-7) : project.views
@@ -58,7 +79,7 @@ export default function Dashboard() {
 
         {/* project switcher */}
         <div className="mt-6 flex gap-2 overflow-x-auto no-scrollbar">
-          {OWNER_PROJECTS.map((item, index) => (
+          {projects.map((item, index) => (
             <button
               key={item.server.slug}
               onClick={() => setProjectIndex(index)}
@@ -93,7 +114,7 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-2.5 flex flex-wrap items-center gap-3">
                   <span className="num text-[15px] font-medium text-ink-50">
-                    {server.online.status === 'pending' ? '—' : formatNumber(server.online.current)}
+                    {server.online.status === 'PENDING' ? '—' : formatNumber(server.online.current)}
                     <span className="text-[12.5px] text-ink-500"> / {formatNumber(server.online.max)}</span>
                   </span>
                   <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} />
@@ -242,7 +263,7 @@ export default function Dashboard() {
                 Платные форматы повышают видимость карточки. На независимый рейтинг и проверку онлайна они не влияют.
               </p>
               <div className="mt-4 space-y-2">
-                {PROMO_PRODUCTS.slice(0, 3).map((product) => (
+                {promos.slice(0, 3).map((product) => (
                   <button
                     key={product.id}
                     onClick={() => setPromoOpen(true)}
@@ -305,7 +326,7 @@ export default function Dashboard() {
         }
       >
         <div className="space-y-3">
-          {PROMO_PRODUCTS.map((product) => (
+          {promos.map((product) => (
             <div key={product.id} className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
               <div className="flex items-center justify-between">
                 <span className="font-display text-[15px] font-semibold text-ink-50">{product.name}</span>

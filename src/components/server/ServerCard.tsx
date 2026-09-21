@@ -3,7 +3,7 @@ import { ArrowRight, Heart, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatAge, formatCountdown, formatNumber, formatRating } from '@/lib/format'
 import { getGame } from '@/data/games'
-import type { GameServer } from '@/data/types'
+import type { GameServer } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
 import { serverArt } from '@/data/themeMedia'
 import { themeForGame } from '@/data/themes'
@@ -51,7 +51,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
   const game = getGame(server.gameId)
   const { status, current, max, change24h } = server.online
   const capacity = max > 0 ? Math.min(100, (current / max) * 100) : 0
-  const isVip = server.promo === 'vip'
+  const isVip = server.promo === 'VIP'
   const art = serverArt(server)
 
   return (
@@ -115,7 +115,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
 
       <div className="mt-3.5 flex items-center justify-between gap-2">
         <StatusBadge status={status} size="sm" />
-        {server.promo && server.promo !== 'vip' && <PromoLabel kind={server.promo} />}
+        {server.promo && server.promo !== 'VIP' && <PromoLabel kind={server.promo} />}
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-3">
@@ -124,10 +124,10 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
             <span
               className={cn(
                 'num font-display text-[26px] leading-none font-semibold tracking-tight',
-                status === 'offline' ? 'text-ink-500' : 'text-ink-50',
+                status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {status === 'pending' ? '—' : formatNumber(current)}
+              {status === 'PENDING' ? '—' : formatNumber(current)}
             </span>
             <span className="num text-[13px] text-ink-500">/ {formatNumber(max)}</span>
           </div>
@@ -136,14 +136,14 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          {status !== 'pending' && status !== 'offline' && <TrendChip value={change24h} />}
+          {status !== 'PENDING' && status !== 'OFFLINE' && <TrendChip value={change24h} />}
           {server.history['24h'].length > 1 && (
             <Sparkline
               data={server.history['24h']}
               accent={
-                status === 'verified'
+                status === 'VERIFIED'
                   ? 'var(--color-signal-400)'
-                  : status === 'offline'
+                  : status === 'OFFLINE'
                     ? 'var(--color-danger-400)'
                     : 'var(--color-ink-300)'
               }
@@ -156,7 +156,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-700',
-            status === 'verified' ? 'bg-signal-500/70' : status === 'offline' ? 'bg-danger-500/50' : 'bg-ink-400/60',
+            status === 'VERIFIED' ? 'bg-signal-500/70' : status === 'OFFLINE' ? 'bg-danger-500/50' : 'bg-ink-400/60',
           )}
           style={{ width: `${capacity}%` }}
         />

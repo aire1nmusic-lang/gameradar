@@ -1,7 +1,7 @@
-import { hashSeed, rng } from '@/lib/utils'
+import { activeBoosts, organicScore } from '@/services/scoring'
 import { chronicleOfVersion } from './games'
 import { SERVERS } from './servers'
-import type { GameServer } from './types'
+import type { GameServer } from '@/models'
 
 /**
  * Boost economy.
@@ -66,25 +66,7 @@ export const BOOST_PACKAGES: BoostPackage[] = [
   },
 ]
 
-/** Points a server earns on its own. Never affected by payments. */
-export function organicScore(server: GameServer): number {
-  const online = server.online.current * 0.6
-  const rating = server.rating * 80
-  const reviews = Math.log10(server.reviewsCount + 10) * 120
-  const trust = server.online.status === 'verified' ? 150 : server.online.status === 'reported' ? 40 : 0
-  const growth = Math.max(-40, Math.min(80, server.trendScore)) * 1.5
-  return Math.round(online + rating + reviews + trust + growth)
-}
-
-/** Boosts currently paid for by the owner. Deterministic demo values. */
-export function activeBoosts(server: GameServer): number {
-  const random = rng(hashSeed(`${server.slug}-boost`))
-  if (server.promo === 'top') return 800 + Math.round(random() * 400)
-  if (server.promo === 'featured') return 500 + Math.round(random() * 200)
-  if (server.promo === 'vip') return 300 + Math.round(random() * 150)
-  // a handful of servers run small campaigns
-  return random() > 0.72 ? 40 + Math.round(random() * 180) : 0
-}
+export { activeBoosts, organicScore }
 
 export interface RankedServer {
   server: GameServer
@@ -99,7 +81,7 @@ export interface RankedServer {
 }
 
 function scope(gameId?: string, chronicleId?: string): GameServer[] {
-  let list = SERVERS.filter((server) => server.online.status !== 'pending')
+  let list = SERVERS.filter((server) => server.online.status !== 'PENDING')
   if (gameId) list = list.filter((server) => server.gameId === gameId)
   if (gameId && chronicleId) {
     list = list.filter((server) => chronicleOfVersion(gameId, server.version)?.id === chronicleId)
@@ -141,7 +123,7 @@ export function leaderboard(gameId?: string, chronicleId?: string): RankedServer
  */
 export function organicLeaderboard(gameId?: string, chronicleId?: string): RankedServer[] {
   return leaderboard(gameId, chronicleId)
-    .filter((entry) => entry.server.online.status !== 'anomaly')
+    .filter((entry) => entry.server.online.status !== 'ANOMALY')
     .sort((a, b) => b.organic - a.organic)
     .map((entry, index) => ({ ...entry, rank: index + 1 }))
 }

@@ -26,15 +26,15 @@ import {
 } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
-import { getServer, similarServers } from '@/data/servers'
-import type { ChartRange, GameServer } from '@/data/types'
+import { useServer, useSimilarServers } from '@/hooks/data'
+import type { ChartRange, GameServer } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Badge, PromoLabel, Tag, TrendChip } from '@/components/ui/Badge'
 import { Rating } from '@/components/ui/Rating'
 import { ServerLogo } from '@/components/ui/ServerLogo'
-import { EmptyState, Notice } from '@/components/ui/feedback'
+import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
@@ -55,7 +55,28 @@ import { ServerCard } from '@/components/server/ServerCard'
 
 export default function ServerProfile() {
   const { slug } = useParams()
-  const server = getServer(slug)
+  const { data: server, loading } = useServer(slug)
+
+  if (loading) {
+    return (
+      <div className="pb-20">
+        <Skeleton className="h-[220px] w-full rounded-none sm:h-[320px]" />
+        <Container className="relative -mt-12">
+          <div className="flex items-end gap-4">
+            <Skeleton className="h-[88px] w-[88px] rounded-xl" />
+            <div className="space-y-3 pb-2">
+              <Skeleton className="h-7 w-52 rounded" />
+              <Skeleton className="h-4 w-72 rounded" />
+            </div>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+            <Skeleton className="h-72 rounded-xl" />
+            <Skeleton className="h-72 rounded-xl" />
+          </div>
+        </Container>
+      </div>
+    )
+  }
 
   if (!server) {
     return (
@@ -81,7 +102,7 @@ function Profile({ server }: { server: GameServer }) {
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
-  const similar = similarServers(server, 3)
+  const { data: similar = [] } = useSimilarServers(server.slug, 3)
 
   return (
     <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
@@ -170,7 +191,7 @@ function Profile({ server }: { server: GameServer }) {
               <Share2 size={16} />
             </button>
             <span className="hidden lg:block">
-              {server.online.status === 'pending' ? (
+              {server.online.status === 'PENDING' ? (
                 <ThemedButton size="lg" icon={<BellRing size={16} />}>
                   Напомнить об открытии
                 </ThemedButton>
@@ -237,14 +258,14 @@ function Profile({ server }: { server: GameServer }) {
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="num text-[15px] font-semibold text-ink-50">
-              {server.online.status === 'pending' ? formatCountdown(server.launch!.at) : formatNumber(server.online.current)}
-              {server.online.status !== 'pending' && (
+              {server.online.status === 'PENDING' ? formatCountdown(server.launch!.at) : formatNumber(server.online.current)}
+              {server.online.status !== 'PENDING' && (
                 <span className="text-[12px] font-normal text-ink-500"> / {formatNumber(server.online.max)}</span>
               )}
             </div>
             <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
           </div>
-          {server.online.status === 'pending' ? (
+          {server.online.status === 'PENDING' ? (
             <Button variant="primary" icon={<BellRing size={15} />}>
               Напомнить
             </Button>
@@ -281,7 +302,7 @@ function OnlineSection({ server }: { server: GameServer }) {
   const { status, current, max, change24h, peak24h, avg7d, peak30d } = server.online
   const data = server.history[range]
 
-  if (status === 'pending' && server.launch) {
+  if (status === 'PENDING' && server.launch) {
     return (
       <section className="surface rounded-xl p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -327,18 +348,18 @@ function OnlineSection({ server }: { server: GameServer }) {
             <span
               className={cn(
                 'num font-display text-[40px] leading-none font-semibold tracking-tight sm:text-[48px]',
-                status === 'offline' ? 'text-ink-500' : 'text-ink-50',
+                status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
               {formatNumber(current)}
             </span>
             <span className="pb-1.5 text-[14px] text-ink-400">
-              {status === 'offline' ? 'сервер не отвечает' : `игроков сейчас · из ${formatNumber(max)}`}
+              {status === 'OFFLINE' ? 'сервер не отвечает' : `игроков сейчас · из ${formatNumber(max)}`}
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-3">
             <VerifiedLine status={status} seconds={server.online.checkedAgoSec} source={server.online.source} />
-            {status !== 'offline' && <TrendChip value={change24h} />}
+            {status !== 'OFFLINE' && <TrendChip value={change24h} />}
           </div>
         </div>
 
@@ -354,17 +375,17 @@ function OnlineSection({ server }: { server: GameServer }) {
         />
       </div>
 
-      {status === 'offline' && server.online.note && (
+      {status === 'OFFLINE' && server.online.note && (
         <Notice tone="danger" title="Сервер не отвечает" className="mt-5">
           {server.online.note}
         </Notice>
       )}
-      {status === 'anomaly' && server.online.note && (
+      {status === 'ANOMALY' && server.online.note && (
         <Notice tone="warn" title="Обнаружена аномалия данных" className="mt-5">
           {server.online.note} До завершения перепроверки сервер не участвует в рейтинге и блоках роста.
         </Notice>
       )}
-      {status === 'reported' && (
+      {status === 'OWNER_REPORTED' && (
         <Notice tone="info" title="Онлайн не подтверждён независимо" className="mt-5">
           Число передано владельцем сервера. GameRadar не может его проверить — подключение Verified Online доступно
           владельцу бесплатно.
@@ -376,11 +397,11 @@ function OnlineSection({ server }: { server: GameServer }) {
           data={data}
           range={range}
           accent={
-            status === 'verified'
+            status === 'VERIFIED'
               ? 'var(--color-signal-400)'
-              : status === 'offline'
+              : status === 'OFFLINE'
                 ? 'var(--color-danger-400)'
-                : status === 'anomaly'
+                : status === 'ANOMALY'
                   ? 'var(--color-warn-400)'
                   : 'var(--color-ink-300)'
           }
@@ -388,7 +409,7 @@ function OnlineSection({ server }: { server: GameServer }) {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Сейчас" value={formatNumber(current)} accent={status === 'verified'} />
+        <StatTile label="Сейчас" value={formatNumber(current)} accent={status === 'VERIFIED'} />
         <StatTile label="Пик за 24 часа" value={formatNumber(peak24h)} />
         <StatTile label="Среднее за 7 дней" value={formatNumber(avg7d)} />
         <StatTile label="Пик за 30 дней" value={formatNumber(peak30d)} />

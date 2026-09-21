@@ -1,16 +1,27 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, CalendarClock, Flame, Sparkles, TrendingUp } from 'lucide-react'
-import { GAMES } from '@/data/games'
-import { highOnline, openingServers, promotedServers, recentlyAdded, risingServers } from '@/data/servers'
+import { useGames, useHighOnline, useOpenings, usePromoted, useRecentlyAdded, useRisingServers } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { GameTile } from './GameTile'
-import { ServerCard } from '@/components/server/ServerCard'
+import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
 import { ServerRow } from '@/components/server/ServerRow'
 import { LaunchCard } from '@/components/server/LaunchCard'
 import { Button } from '@/components/ui/Button'
 
+/** Shared placeholder so every rail reserves its space while loading. */
+function CardGrid({ count, className }: { count: number; className?: string }) {
+  return (
+    <div className={className}>
+      {Array.from({ length: count }).map((_, index) => (
+        <ServerCardSkeleton key={index} />
+      ))}
+    </div>
+  )
+}
+
 export function GamesSection() {
+  const { data: games } = useGames()
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -22,7 +33,7 @@ export function GamesSection() {
           actionTo="/games"
         />
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {GAMES.slice(0, 6).map((game) => (
+          {(games ?? []).slice(0, 6).map((game) => (
             <GameTile key={game.id} game={game} />
           ))}
         </div>
@@ -37,7 +48,7 @@ export function GamesSection() {
 }
 
 export function OpeningsSection() {
-  const servers = openingServers(5)
+  const { data: servers = [] } = useOpenings(undefined, 5)
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -77,7 +88,7 @@ export function OpeningsSection() {
 }
 
 export function HighOnlineSection() {
-  const servers = highOnline(6)
+  const { data: servers, loading } = useHighOnline(undefined, 6)
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -92,18 +103,22 @@ export function HighOnlineSection() {
           action="Смотреть каталог"
           actionTo="/catalog?sort=online&verified=1"
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {servers.map((server) => (
-            <ServerCard key={server.slug} server={server} />
-          ))}
-        </div>
+        {loading ? (
+          <CardGrid count={6} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(servers ?? []).map((server) => (
+              <ServerCard key={server.slug} server={server} />
+            ))}
+          </div>
+        )}
       </Container>
     </section>
   )
 }
 
 export function RisingSection() {
-  const servers = risingServers(5)
+  const { data: servers = [] } = useRisingServers(undefined, 5)
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -131,7 +146,7 @@ export function RisingSection() {
 }
 
 export function PromotedSection() {
-  const servers = promotedServers(3)
+  const { data: servers = [] } = usePromoted(undefined, 3)
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -175,7 +190,7 @@ export function PromotedSection() {
 }
 
 export function RecentlyAddedSection() {
-  const servers = recentlyAdded(4)
+  const { data: servers, loading } = useRecentlyAdded(undefined, 4)
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -185,11 +200,15 @@ export function RecentlyAddedSection() {
           action="Все новые"
           actionTo="/catalog?sort=new"
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {servers.map((server) => (
-            <ServerCard key={server.slug} server={server} />
-          ))}
-        </div>
+        {loading ? (
+          <CardGrid count={4} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {(servers ?? []).map((server) => (
+              <ServerCard key={server.slug} server={server} />
+            ))}
+          </div>
+        )}
       </Container>
     </section>
   )

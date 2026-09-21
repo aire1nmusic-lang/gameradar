@@ -1,5 +1,5 @@
 import { hashSeed, rng } from '@/lib/utils'
-import type { GameServer } from './types'
+import type { GameServer } from '@/models'
 
 /**
  * Server media.
@@ -63,7 +63,7 @@ export function mediaFor(server: GameServer): ServerMedia {
     seed: hashSeed(`${server.slug}-${index}`),
   }))
 
-  const hasVideo = server.online.status !== 'pending' ? random() > 0.25 : true
+  const hasVideo = server.online.status !== 'PENDING' ? random() > 0.25 : true
 
   return {
     shots,

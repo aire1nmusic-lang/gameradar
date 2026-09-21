@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { formatCompact } from '@/lib/format'
-import type { Chronicle, Game } from '@/data/types'
+import type { Chronicle, Game } from '@/models'
 import { useGameTheme } from '@/theme'
 import { worldArt } from '@/data/themeMedia'
 import { ArtImage } from '@/components/media/WorldArt'

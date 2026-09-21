@@ -1,5 +1,6 @@
 import { hashSeed, rng } from '@/lib/utils'
-import type { ChartRange, GameServer, HistoryEvent, OnlineStatus, PromoKind, Review } from './types'
+import { ProbeMethod, ServerStatus } from '@/models'
+import type { ChartRange, GameServer, HistoryEvent, OnlineStatus, PromoKind, Review } from '@/models'
 
 /**
  * Demo dataset for the GameRadar prototype.
@@ -59,7 +60,7 @@ interface RawServer {
   uptime24h?: number
   checkedAgoSec?: number
   source?: string
-  method?: string
+  method?: ProbeMethod
   note?: string
 }
 
@@ -77,7 +78,7 @@ const RAW: RawServer[] = [
     languages: ['Русский', 'English'],
     current: 1284,
     max: 3000,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 14,
     rating: 4.8,
     reviewsCount: 428,
@@ -108,7 +109,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 2841,
     max: 4000,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 18,
     rating: 4.6,
     reviewsCount: 1210,
@@ -117,7 +118,7 @@ const RAW: RawServer[] = [
     summary: 'Крупнейший русскоязычный скайблок с еженедельными ивентами и биржей ресурсов.',
     description:
       'Craftoria строит скайблок вокруг живой экономики: биржа ресурсов, контракты между игроками, еженедельные ивенты с рейтингом островов. Сервер поддерживает кроссплей Java и Bedrock.',
-    promo: 'top',
+    promo: 'TOP',
     favorites: 24_910,
     addedDaysAgo: 1620,
     updatedDaysAgo: 1,
@@ -140,7 +141,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 712,
     max: 1500,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 42,
     rating: 4.3,
     reviewsCount: 190,
@@ -170,7 +171,7 @@ const RAW: RawServer[] = [
     languages: ['Русский', 'Українська'],
     current: 418,
     max: 1000,
-    status: 'reported',
+    status: 'OWNER_REPORTED',
     change24h: 3,
     rating: 4.1,
     reviewsCount: 96,
@@ -186,7 +187,7 @@ const RAW: RawServer[] = [
     site: 'azurerealms.gg',
     discord: 'discord.gg/azurerealms',
     source: 'Данные сервера',
-    method: 'Owner-reported',
+    method: ProbeMethod.OwnerSubmitted,
   },
   {
     slug: 'pixelforge',
@@ -200,7 +201,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Polski'],
     current: 0,
     max: 600,
-    status: 'offline',
+    status: 'OFFLINE',
     change24h: -100,
     rating: 3.9,
     reviewsCount: 64,
@@ -231,7 +232,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 1960,
     max: 2500,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 6,
     rating: 4.9,
     reviewsCount: 812,
@@ -240,7 +241,7 @@ const RAW: RawServer[] = [
     summary: 'Ванильное выживание без доната. Семь лет одной карты и репутация лучшего комьюнити.',
     description:
       'Voxelia — ванильный сервер, который принципиально не продаёт преимущества. Вся монетизация — добровольная поддержка. Карта ведётся с 2018 года, есть музей построек и собственная динамическая карта.',
-    promo: 'vip',
+    promo: 'VIP',
     favorites: 31_640,
     addedDaysAgo: 2400,
     updatedDaysAgo: 7,
@@ -263,7 +264,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 534,
     max: 1200,
-    status: 'anomaly',
+    status: 'ANOMALY',
     change24h: 96,
     rating: 4.0,
     reviewsCount: 141,
@@ -294,7 +295,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 0,
     max: 1500,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -328,7 +329,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 1120,
     max: 1500,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 9,
     rating: 4.7,
     reviewsCount: 980,
@@ -359,7 +360,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 2310,
     max: 3000,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 11,
     rating: 4.5,
     reviewsCount: 1640,
@@ -368,7 +369,7 @@ const RAW: RawServer[] = [
     summary: 'Один из самых населённых RageMP-городов: мэрия, выборы и криминальные синдикаты.',
     description:
       'Vertex RP — большой ролевой город с политической системой: выборы мэра, бюджет города, лицензии на бизнес и криминальные синдикаты, которые делят районы.',
-    promo: 'top',
+    promo: 'TOP',
     favorites: 29_140,
     addedDaysAgo: 2050,
     updatedDaysAgo: 5,
@@ -391,7 +392,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 860,
     max: 1200,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: -4,
     rating: 4.4,
     reviewsCount: 410,
@@ -421,7 +422,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 640,
     max: 1000,
-    status: 'reported',
+    status: 'OWNER_REPORTED',
     change24h: 5,
     rating: 4.2,
     reviewsCount: 233,
@@ -437,7 +438,7 @@ const RAW: RawServer[] = [
     site: 'majesticbay.eu',
     discord: 'discord.gg/majesticbay',
     source: 'Данные сервера',
-    method: 'Owner-reported',
+    method: ProbeMethod.OwnerSubmitted,
   },
   {
     slug: 'redline-rp',
@@ -451,7 +452,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 380,
     max: 800,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 61,
     rating: 4.0,
     reviewsCount: 88,
@@ -481,7 +482,7 @@ const RAW: RawServer[] = [
     languages: ['English'],
     current: 0,
     max: 1200,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -497,7 +498,7 @@ const RAW: RawServer[] = [
     launchType: 'Открытие · Serious RP',
     preRegistrations: 11_940,
     interestChange: 46,
-    promo: 'featured',
+    promo: 'FEATURED',
     highlights: ['Медицинская система', 'Диспетчерская 112', 'Whitelist с первого дня'],
     site: 'harborcityrp.eu',
     discord: 'discord.gg/harborcity',
@@ -514,7 +515,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 0,
     max: 900,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -548,7 +549,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 1490,
     max: 2500,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 12,
     rating: 4.6,
     reviewsCount: 520,
@@ -580,7 +581,7 @@ const RAW: RawServer[] = [
     languages: ['Русский', 'English'],
     current: 1740,
     max: 3000,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 4,
     rating: 4.7,
     reviewsCount: 690,
@@ -590,7 +591,7 @@ const RAW: RawServer[] = [
     description:
       'Asterion — низкие рейты и максимально приближённая к оригиналу механика Interlude. Прокачка занимает месяцы, экономика держится на игроках, а не на донате.',
     rates: 'EXP x5 · SP x5 · Adena x3 · Drop x3',
-    promo: 'vip',
+    promo: 'VIP',
     favorites: 14_320,
     addedDaysAgo: 1480,
     updatedDaysAgo: 11,
@@ -612,7 +613,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 980,
     max: 2000,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 7,
     rating: 4.4,
     reviewsCount: 302,
@@ -643,7 +644,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 2040,
     max: 2500,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 27,
     rating: 4.2,
     reviewsCount: 448,
@@ -674,7 +675,7 @@ const RAW: RawServer[] = [
     languages: ['Русский', 'Українська'],
     current: 610,
     max: 1500,
-    status: 'reported',
+    status: 'OWNER_REPORTED',
     change24h: -8,
     rating: 3.8,
     reviewsCount: 121,
@@ -691,7 +692,7 @@ const RAW: RawServer[] = [
     site: 'elmoreden.ua',
     discord: 'discord.gg/elmoreden',
     source: 'Данные сервера',
-    method: 'Owner-reported',
+    method: ProbeMethod.OwnerSubmitted,
   },
   {
     slug: 'drakonis-x50',
@@ -705,7 +706,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 0,
     max: 3000,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -722,7 +723,7 @@ const RAW: RawServer[] = [
     launchType: 'Открытие · Сезон 1',
     preRegistrations: 18_420,
     interestChange: 64,
-    promo: 'featured',
+    promo: 'FEATURED',
     highlights: ['Призовой фонд за первый замок', 'Трансляция старта', 'Античит на старте'],
     site: 'drakonis.gg',
     discord: 'discord.gg/drakonis',
@@ -740,7 +741,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 0,
     max: 2000,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -775,7 +776,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 264,
     max: 400,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 16,
     rating: 4.5,
     reviewsCount: 176,
@@ -807,7 +808,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 198,
     max: 250,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 3,
     rating: 4.3,
     reviewsCount: 92,
@@ -839,7 +840,7 @@ const RAW: RawServer[] = [
     languages: ['English'],
     current: 0,
     max: 300,
-    status: 'offline',
+    status: 'OFFLINE',
     change24h: -100,
     rating: 4.1,
     reviewsCount: 58,
@@ -872,7 +873,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 176,
     max: 300,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 33,
     rating: 4.1,
     reviewsCount: 58,
@@ -904,7 +905,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 0,
     max: 500,
-    status: 'pending',
+    status: 'PENDING',
     change24h: 0,
     rating: 0,
     reviewsCount: 0,
@@ -938,7 +939,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 1120,
     max: 1600,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 8,
     rating: 4.6,
     reviewsCount: 700,
@@ -969,7 +970,7 @@ const RAW: RawServer[] = [
     languages: ['English'],
     current: 640,
     max: 900,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 21,
     rating: 4.4,
     reviewsCount: 260,
@@ -999,7 +1000,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 380,
     max: 640,
-    status: 'reported',
+    status: 'OWNER_REPORTED',
     change24h: -2,
     rating: 4.0,
     reviewsCount: 130,
@@ -1015,7 +1016,7 @@ const RAW: RawServer[] = [
     site: 'dustrepublic.ru',
     discord: 'discord.gg/dustrepublic',
     source: 'Данные сервера',
-    method: 'Owner-reported',
+    method: ProbeMethod.OwnerSubmitted,
   },
   {
     slug: 'aimzone',
@@ -1029,7 +1030,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Polski'],
     current: 210,
     max: 400,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 24,
     rating: 4.2,
     reviewsCount: 76,
@@ -1061,7 +1062,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 148,
     max: 200,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 11,
     rating: 4.5,
     reviewsCount: 64,
@@ -1092,7 +1093,7 @@ const RAW: RawServer[] = [
     languages: ['Русский'],
     current: 96,
     max: 150,
-    status: 'reported',
+    status: 'OWNER_REPORTED',
     change24h: 6,
     rating: 3.9,
     reviewsCount: 41,
@@ -1109,7 +1110,7 @@ const RAW: RawServer[] = [
     site: 'arkforge.ru',
     discord: 'discord.gg/arkforge',
     source: 'Данные сервера',
-    method: 'Owner-reported',
+    method: ProbeMethod.OwnerSubmitted,
   },
   {
     slug: 'chernarus-signal',
@@ -1123,7 +1124,7 @@ const RAW: RawServer[] = [
     languages: ['English', 'Русский'],
     current: 84,
     max: 120,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 5,
     rating: 4.4,
     reviewsCount: 52,
@@ -1153,7 +1154,7 @@ const RAW: RawServer[] = [
     languages: ['English'],
     current: 46,
     max: 60,
-    status: 'verified',
+    status: 'VERIFIED',
     change24h: 9,
     rating: 4.8,
     reviewsCount: 30,
@@ -1187,7 +1188,7 @@ function buildSeries(seed: number, range: ChartRange, current: number, trend: nu
   const base = current > 0 ? current : 0
   const reference = current > 0 ? current : 0
 
-  if (status === 'pending') return []
+  if (status === 'PENDING') return []
 
   const values: number[] = []
   for (let i = 0; i < shape.points; i++) {
@@ -1203,7 +1204,7 @@ function buildSeries(seed: number, range: ChartRange, current: number, trend: nu
 
   const result = values.map((v) => Math.max(0, Math.round(v * scale)))
 
-  if (status === 'offline') {
+  if (status === 'OFFLINE') {
     // plateau at the last known level, then fall to zero
     const lastKnown = Math.round((result[Math.floor(result.length * 0.6)] || 120) * 1.15)
     const cut = Math.floor(result.length * 0.86)
@@ -1212,7 +1213,7 @@ function buildSeries(seed: number, range: ChartRange, current: number, trend: nu
     }
   }
 
-  if (status === 'anomaly' && range === '24h') {
+  if (status === 'ANOMALY' && range === '24h') {
     const spikeAt = Math.floor(result.length * 0.9)
     for (let i = spikeAt; i < result.length; i++) {
       result[i] = Math.round(result[i] * 1.95)
@@ -1353,11 +1354,11 @@ function buildEvents(raw: RawServer, openedAt: string): HistoryEvent[] {
     events.push({ label: 'Следующий вайп', date: iso(raw.nextWipeInDays * DAY), kind: 'season' })
   }
   events.push({ label: 'Последнее обновление', date: iso(-raw.updatedDaysAgo * DAY), kind: 'update' })
-  if (raw.status === 'verified') {
+  if (raw.status === 'VERIFIED') {
     events.push({ label: 'Подключён Verified Online', date: iso(-Math.min(raw.addedDaysAgo, 240) * DAY), kind: 'verify' })
   }
   events.push({ label: 'Добавлен в GameRadar', date: iso(-raw.addedDaysAgo * DAY), kind: 'open' })
-  if (raw.status !== 'pending') {
+  if (raw.status !== 'PENDING') {
     events.push({ label: 'Открытие проекта', date: openedAt, kind: 'open' })
   }
   return events
@@ -1404,7 +1405,7 @@ function build(raw: RawServer): GameServer {
         : 0,
       checkedAgoSec: raw.checkedAgoSec ?? 64,
       source: raw.source ?? 'GameRadar Direct Query',
-      method: raw.method ?? 'Прямой игровой протокол',
+      method: raw.method ?? ProbeMethod.GameProtocol,
       uptime24h: raw.uptime24h ?? 0,
       checksPerDay: 1440,
       note: raw.note,
@@ -1427,12 +1428,15 @@ function build(raw: RawServer): GameServer {
           type: raw.launchType ?? 'Открытие',
           preRegistrations: raw.preRegistrations ?? 0,
           interestChange: raw.interestChange ?? 0,
-          promoted: raw.promo === 'featured',
+          promoted: raw.promo === 'FEATURED',
         }
       : undefined,
     addedAt: iso(-raw.addedDaysAgo * DAY),
     trendScore: raw.change24h,
     favorites: raw.favorites,
+    votes: Math.round(raw.favorites * 0.18 + Math.abs(raw.change24h) * 12),
+    moderation: ServerStatus.Published,
+    demo: true,
     links: { site: raw.site, discord: raw.discord, telegram: raw.telegram },
     highlights: raw.highlights,
     history,
@@ -1451,20 +1455,20 @@ export function getServer(slug: string | undefined): GameServer | undefined {
 
 // ─── selectors ──────────────────────────────────────────────────────────────
 
-const live = (s: GameServer) => s.online.status !== 'pending'
+const live = (s: GameServer) => s.online.status !== 'PENDING'
 
 export const liveServers = SERVERS.filter(live)
 
 export function highOnline(limit = 6): GameServer[] {
   return [...liveServers]
-    .filter((s) => s.online.status === 'verified')
+    .filter((s) => s.online.status === 'VERIFIED')
     .sort((a, b) => b.online.current - a.online.current)
     .slice(0, limit)
 }
 
 export function risingServers(limit = 5): GameServer[] {
   return [...liveServers]
-    .filter((s) => s.online.status !== 'offline' && s.online.status !== 'anomaly' && s.trendScore > 10)
+    .filter((s) => s.online.status !== 'OFFLINE' && s.online.status !== 'ANOMALY' && s.trendScore > 10)
     .sort((a, b) => b.trendScore - a.trendScore)
     .slice(0, limit)
 }
@@ -1504,7 +1508,7 @@ export function similarServers(server: GameServer, limit = 3): GameServer[] {
       if (s.version === server.version) score += 3
       score += s.modes.filter((m) => server.modes.includes(m)).length * 2
       if (s.region === server.region) score += 1
-      if (s.online.status === 'verified') score += 1
+      if (s.online.status === 'VERIFIED') score += 1
       return { s, score }
     })
     .sort((a, b) => b.score - a.score || b.s.online.current - a.s.online.current)

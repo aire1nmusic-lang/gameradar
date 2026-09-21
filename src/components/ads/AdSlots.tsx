@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Play } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { adFor, adServer, type AdSlotId } from '@/data/ads'
+
+import { useAd, useServer } from '@/hooks/data'
 import { getGame } from '@/data/games'
 import { ThemedBadge, ThemedButton, useGameTheme } from '@/theme'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
@@ -28,7 +29,8 @@ export function AdSlot({
   className,
   children,
 }: {
-  id: AdSlotId
+  /** slot identifier, published in the DOM for the future ad server */
+  id: 'top-banner' | 'sidebar' | 'takeover' | 'featured' | 'inline'
   label?: string
   className?: string
   children: ReactNode
@@ -43,9 +45,9 @@ export function AdSlot({
 /** Full-width banner at the top of a game world. */
 export function TopBanner({ gameId, className }: { gameId?: string; className?: string }) {
   const theme = useGameTheme()
-  const creative = adFor('top-banner', gameId)
+  const { data: creative } = useAd('TOP_BANNER', gameId)
+  const { data: server } = useServer(creative?.serverId)
   if (!creative) return null
-  const server = adServer(creative)
 
   return (
     <AdSlot id="top-banner" className={cn('group', className)}>
@@ -79,7 +81,7 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
         </div>
 
         <div className="relative hidden shrink-0 flex-col items-end gap-2 sm:flex">
-          {server && server.online.status !== 'pending' && (
+          {server && server.online.status !== 'PENDING' && (
             <div className="text-right">
               <div className="num gt-display text-[22px] leading-none">{formatNumber(server.online.current)}</div>
               <div className="mt-1">
@@ -99,9 +101,9 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
 /** Sticky 300×600-style rail unit. */
 export function SidebarBanner({ gameId, className }: { gameId?: string; className?: string }) {
   const theme = useGameTheme()
-  const creative = adFor('sidebar', gameId)
+  const { data: creative } = useAd('SIDEBAR', gameId)
+  const { data: server } = useServer(creative?.serverId)
   if (!creative) return null
-  const server = adServer(creative)
 
   return (
     <AdSlot id="sidebar" className={cn('group', className)}>
@@ -157,7 +159,7 @@ export function SidebarBanner({ gameId, className }: { gameId?: string; classNam
  * a floating label, and always dimmed enough to keep content readable.
  */
 export function BackgroundTakeover({ gameId }: { gameId?: string }) {
-  const creative = adFor('takeover', gameId)
+  const { data: creative } = useAd('TAKEOVER', gameId)
   const takeoverArt = promoArt(gameId, `${creative?.id ?? 'x'}-bg`)
   if (!creative) return null
 
@@ -186,8 +188,8 @@ export function BackgroundTakeover({ gameId }: { gameId?: string }) {
 /** Large paid card shown above the organic rating. */
 export function FeaturedServerCard({ gameId, className }: { gameId?: string; className?: string }) {
   const theme = useGameTheme()
-  const creative = adFor('takeover', gameId)
-  const server = adServer(creative)
+  const { data: creative } = useAd('TAKEOVER', gameId)
+  const { data: server } = useServer(creative?.serverId)
   if (!creative || !server) return null
 
   const game = getGame(server.gameId)
@@ -256,7 +258,7 @@ export function FeaturedServerCard({ gameId, className }: { gameId?: string; cla
 /** Compact in-list promo unit, used between organic results. */
 export function InlinePromo({ gameId, className }: { gameId?: string; className?: string }) {
   const theme = useGameTheme()
-  const creative = adFor('sidebar', gameId)
+  const { data: creative } = useAd('SIDEBAR', gameId)
   if (!creative) return null
 
   return (

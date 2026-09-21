@@ -1,6 +1,6 @@
 import { Heart } from 'lucide-react'
 import { formatNumber, plural } from '@/lib/format'
-import { SERVERS_BY_SLUG } from '@/data/servers'
+import { useServers } from '@/hooks/data'
 import { useFavorites } from '@/hooks/useFavorites'
 import { Container } from '@/components/layout/Container'
 import { ServerCard } from '@/components/server/ServerCard'
@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/Button'
 
 export default function Favorites() {
   const { favorites, clear } = useFavorites()
-  const servers = favorites.map((slug) => SERVERS_BY_SLUG[slug]).filter(Boolean)
+  const { data: all = [] } = useServers({ limit: 500 })
+  const servers = favorites.map((slug) => all.find((server) => server.slug === slug)).filter(Boolean) as typeof all
   const totalOnline = servers.reduce((sum, server) => sum + server.online.current, 0)
 
   return (

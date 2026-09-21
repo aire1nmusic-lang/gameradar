@@ -1,6 +1,6 @@
 import { hashSeed, rng } from '@/lib/utils'
 import { SERVERS_BY_SLUG } from './servers'
-import type { GameServer } from './types'
+import type { GameServer } from '@/models'
 
 export interface OwnerMetric {
   key: string
@@ -172,36 +172,36 @@ export interface PromoProduct {
   description: string
   bullets: string[]
   priceLabel: string
-  accent: 'top' | 'vip' | 'featured' | 'banner' | 'launch'
+  accent: 'TOP' | 'VIP' | 'FEATURED' | 'banner' | 'launch'
 }
 
 export const PROMO_PRODUCTS: PromoProduct[] = [
   {
-    id: 'top',
+    id: 'TOP',
     name: 'TOP',
     tag: 'Позиция в каталоге',
     description: 'Ваш сервер занимает верхнюю позицию в выдаче по выбранной игре.',
     bullets: ['Закреплённое место в каталоге', 'Метка «Продвижение»', 'До 5 позиций на игру'],
     priceLabel: 'от 4 900 ₽ / неделя',
-    accent: 'top',
+    accent: 'TOP',
   },
   {
-    id: 'vip',
+    id: 'VIP',
     name: 'VIP',
     tag: 'Выделенная карточка',
     description: 'Карточка получает акцентную рамку и увеличенный формат в списках.',
     bullets: ['Акцентное оформление', 'Увеличенный формат', 'Логотип большего размера'],
     priceLabel: 'от 2 900 ₽ / неделя',
-    accent: 'vip',
+    accent: 'VIP',
   },
   {
-    id: 'featured',
+    id: 'FEATURED',
     name: 'Featured',
     tag: 'Главная страница',
     description: 'Размещение в подборке на главной странице GameRadar.',
     bullets: ['Блок на главной', 'Ротация каждые 15 минут', 'Отдельная статистика'],
     priceLabel: 'от 7 900 ₽ / неделя',
-    accent: 'featured',
+    accent: 'FEATURED',
   },
   {
     id: 'banner',

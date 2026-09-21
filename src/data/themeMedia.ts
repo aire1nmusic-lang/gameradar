@@ -1,6 +1,6 @@
 import { hashSeed } from '@/lib/utils'
 import { chronicleOfVersion } from './games'
-import type { GameServer } from './types'
+import type { GameServer } from '@/models'
 
 /**
  * World art registry — the bitmap layer of the Theme Engine.

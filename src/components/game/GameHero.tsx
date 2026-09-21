@@ -4,7 +4,7 @@ import { ChevronRight, Search, ShieldCheck, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber } from '@/lib/format'
 import { worldArt } from '@/data/themeMedia'
-import type { Chronicle, Game } from '@/data/types'
+import type { Chronicle, Game } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { WorldArtSurface } from '@/components/media/WorldArt'
 import {

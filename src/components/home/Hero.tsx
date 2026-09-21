@@ -1,16 +1,17 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Radar, Search, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { buildSuggestions, QUICK_SEARCHES } from '@/data/catalog'
-import { PLATFORM_STATS } from '@/data/servers'
+import { buildSuggestions, QUICK_SEARCHES } from '@/services'
+import { useAsync, usePlatformStats } from '@/hooks/data'
 import { useCountUp } from '@/hooks/useUi'
 import { Container } from '@/components/layout/Container'
 import { SuggestionList } from '@/components/search/SearchOverlay'
 
 export function Hero() {
-  const players = useCountUp(PLATFORM_STATS.playersOnline, 1400)
+  const { data: stats } = usePlatformStats()
+  const players = useCountUp(stats?.playersOnline ?? 0, 1400)
 
   return (
     <section className="relative overflow-hidden pt-10 pb-12 sm:pt-16 lg:pt-20 lg:pb-16">
@@ -52,7 +53,7 @@ export function Hero() {
         <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-px overflow-hidden rounded-xl border border-white/7 bg-white/6 sm:grid-cols-3">
           <TrustStat
             icon={<ShieldCheck size={15} className="text-signal-400" />}
-            value={formatNumber(PLATFORM_STATS.verifiedServers)}
+            value={formatNumber(stats?.verifiedServers ?? 0)}
             label="серверов с проверенным онлайном"
           />
           <TrustStat
@@ -62,7 +63,7 @@ export function Hero() {
           />
           <TrustStat
             icon={<Search size={15} className="text-ink-300" />}
-            value={formatNumber(PLATFORM_STATS.servers)}
+            value={formatNumber(stats?.servers ?? 0)}
             label="серверов в каталоге"
           />
         </div>
@@ -90,7 +91,7 @@ function HeroSearch() {
   const navigate = useNavigate()
   const wrapRef = useRef<HTMLDivElement>(null)
 
-  const suggestions = useMemo(() => buildSuggestions(query, 6), [query])
+  const { data: suggestions = [] } = useAsync(() => buildSuggestions(query, 6), [query], true)
 
   const go = (to: string) => {
     setOpen(false)

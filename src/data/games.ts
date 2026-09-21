@@ -1,4 +1,4 @@
-import type { Chronicle, Game } from './types'
+import type { Chronicle, Game } from '@/models'
 
 export const GAMES: Game[] = [
   {

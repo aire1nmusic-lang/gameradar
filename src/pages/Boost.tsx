@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, Check, Crown, Info, Rocket, ShieldOff, Sparkles, Trophy, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { BOOST_PACKAGES, boostForecast, leaderboard, type BoostPackage } from '@/data/boost'
-import { AD_PRODUCTS } from '@/data/ads'
-import { OWNER_PROJECTS } from '@/data/dashboard'
+import type { BoostPackage, RankedServer } from '@/models'
+import { adProducts, boostForecast, boostPackages, NOT_FOR_SALE } from '@/services'
+import { useAsync, useBoostForecast, useOwnedServers, useRating } from '@/hooks/data'
 import { getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
 import { worldArt } from '@/data/themeMedia'
@@ -29,20 +29,35 @@ import { ScoreBar } from '@/components/rating/RatingBoard'
  * the independent rating.
  */
 export default function Boost() {
-  const projects = OWNER_PROJECTS
-  const [slug, setSlug] = useState(projects[0].server.slug)
+  const { data: projects = [] } = useOwnedServers()
+  const [slug, setSlug] = useState<string | undefined>(undefined)
   const [pack, setPack] = useState<BoostPackage['id'] | 'custom'>('pro')
   const [custom, setCustom] = useState(250)
   const [checkout, setCheckout] = useState<BoostPackage | null>(null)
 
-  const server = projects.find((project) => project.server.slug === slug)?.server ?? projects[0].server
-  const game = getGame(server.gameId)
-  const theme = useMemo(() => themeForGame(server.gameId), [server.gameId])
+  const { data: packages = [] } = useAsync(() => boostPackages(), [])
+  const { data: products = [] } = useAsync(() => adProducts(), [])
 
-  const extra = pack === 'custom' ? custom : (BOOST_PACKAGES.find((item) => item.id === pack)?.boosts ?? 0)
-  const forecast = useMemo(() => boostForecast(server.slug, extra, server.gameId), [server.slug, extra, server.gameId])
-  const board = useMemo(() => leaderboard(server.gameId), [server.gameId])
-  const ranked = forecast.currentRank > 0
+  const server = projects.find((item) => item.slug === slug) ?? projects[0]
+  const game = getGame(server?.gameId ?? 'minecraft')
+  const theme = useMemo(() => themeForGame(server?.gameId ?? 'core'), [server?.gameId])
+
+  const extra = pack === 'custom' ? custom : (packages.find((item) => item.id === pack)?.boosts ?? 0)
+  const { data: forecast } = useBoostForecast(server?.slug, extra, server?.gameId)
+  const { data: board = [] } = useRating({ gameId: server?.gameId, sponsored: true })
+
+  /** Per-package previews, resolved in one pass so each card can show a rank. */
+  const { data: previews = {} } = useAsync(async () => {
+    if (!server) return {}
+    const pairs = await Promise.all(
+      packages.map(async (item) => [item.id, await boostForecast(server.slug, item.boosts, server.gameId)] as const),
+    )
+    return Object.fromEntries(pairs)
+  }, [server?.slug, server?.gameId, packages.length])
+
+  const ranked = (forecast?.currentRank ?? 0) > 0
+
+  if (!server) return null
 
   return (
     <ThemeScope theme={theme} as="div">
@@ -84,10 +99,10 @@ export default function Boost() {
               </div>
               {projects.length > 1 && (
                 <Segmented
-                  value={slug}
+                  value={server.slug}
                   onChange={setSlug}
                   size="sm"
-                  options={projects.map((project) => ({ value: project.server.slug, label: project.server.name }))}
+                  options={projects.map((project) => ({ value: project.slug, label: project.name }))}
                 />
               )}
             </div>
@@ -117,14 +132,14 @@ export default function Boost() {
             {ranked ? (
               <>
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <Metric label="Позиция сейчас" value={`#${forecast.currentRank}`} />
+                  <Metric label="Позиция сейчас" value={`#${forecast?.currentRank ?? 0}`} />
                   <Metric
                     label="После покупки"
-                    value={`#${forecast.projectedRank}`}
-                    accent={forecast.projectedRank < forecast.currentRank}
+                    value={`#${forecast?.projectedRank ?? 0}`}
+                    accent={(forecast?.projectedRank ?? 0) < (forecast?.currentRank ?? 0)}
                   />
-                  <Metric label="Обгоните серверов" value={formatNumber(forecast.overtakes)} />
-                  <Metric label="Очков после" value={formatNumber(forecast.projectedTotal)} />
+                  <Metric label="Обгоните серверов" value={formatNumber(forecast?.overtakes ?? 0)} />
+                  <Metric label="Очков после" value={formatNumber(forecast?.projectedTotal ?? 0)} />
                 </div>
 
                 <div className="mt-6">
@@ -148,13 +163,13 @@ export default function Boost() {
 
                 <div className="mt-6 space-y-2.5">
                   <TierGoal
-                    label={`До позиции #${Math.max(1, forecast.currentRank - 1)}`}
-                    need={forecast.toNext}
+                    label={`До позиции #${Math.max(1, (forecast?.currentRank ?? 1) - 1)}`}
+                    need={forecast?.toNext ?? 0}
                     icon={<ArrowUpRight size={13} />}
                   />
-                  <TierGoal label="До TOP-10" need={forecast.toTop10} icon={<Trophy size={13} />} />
-                  <TierGoal label="До TOP-3" need={forecast.toTop3} icon={<Sparkles size={13} />} />
-                  <TierGoal label="До TOP-1" need={forecast.toTop1} icon={<Crown size={13} />} />
+                  <TierGoal label="До TOP-10" need={forecast?.toTop10 ?? 0} icon={<Trophy size={13} />} />
+                  <TierGoal label="До TOP-3" need={forecast?.toTop3 ?? 0} icon={<Sparkles size={13} />} />
+                  <TierGoal label="До TOP-1" need={forecast?.toTop1 ?? 0} icon={<Crown size={13} />} />
                 </div>
               </>
             ) : (
@@ -171,7 +186,7 @@ export default function Boost() {
             <p className="mt-1 mb-4 text-[12.5px] text-ink-400">
               Подсветка — ваш сервер после покупки {formatNumber(extra)} бустов
             </p>
-            <Ladder board={board} slug={server.slug} projectedRank={forecast.projectedRank} extra={extra} />
+            <Ladder board={board} slug={server.slug} projectedRank={forecast?.projectedRank ?? 0} extra={extra} />
           </div>
         </div>
 
@@ -186,8 +201,8 @@ export default function Boost() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            {BOOST_PACKAGES.map((item) => {
-              const preview = boostForecast(server.slug, item.boosts, server.gameId)
+            {packages.map((item) => {
+              const preview = previews[item.id]
               const active = pack === item.id
               return (
                 <div
@@ -216,14 +231,14 @@ export default function Boost() {
                     <span className="num text-[13px] text-ink-400">/ {formatNumber(item.boosts)} бустов</span>
                   </div>
 
-                  {ranked && (
+                  {ranked && preview && (
                     <div className="mt-4 rounded-lg border border-white/7 bg-white/[0.03] px-3 py-2.5">
                       <div className="text-[11px] tracking-[0.1em] text-ink-500 uppercase">Прогноз позиции</div>
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="num text-[15px] text-ink-400 line-through">#{forecast.currentRank}</span>
+                        <span className="num text-[15px] text-ink-400 line-through">#{forecast?.currentRank ?? 0}</span>
                         <ArrowUpRight size={14} className="text-signal-400" />
-                        <span className="num text-[17px] font-semibold text-ink-50">#{preview.projectedRank}</span>
-                        <TierBadge rank={preview.projectedRank} className="ml-auto" />
+                        <span className="num text-[17px] font-semibold text-ink-50">#{preview?.projectedRank ?? '—'}</span>
+                        {preview && <TierBadge rank={preview.projectedRank} className="ml-auto" />}
                       </div>
                     </div>
                   )}
@@ -269,7 +284,7 @@ export default function Boost() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {AD_PRODUCTS.map((product) => (
+            {products.map((product) => (
               <div key={product.id} className="surface flex flex-col rounded-xl p-4">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="text-[15px] font-medium text-ink-50">{product.name}</h3>
@@ -301,12 +316,7 @@ export default function Boost() {
             </div>
 
             <ul className="grid gap-3 sm:grid-cols-2">
-              {[
-                'Статус VERIFIED ONLINE — только по результатам проверки',
-                'Позиция в независимом рейтинге',
-                'Значения онлайна и история графика',
-                'Отзывы и оценки игроков',
-              ].map((item) => (
+              {NOT_FOR_SALE.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 rounded-lg border border-white/7 bg-ink-950/40 p-3.5">
                   <ShieldOff size={14} className="mt-0.5 shrink-0 text-signal-400" />
                   <span className="text-[13px] leading-relaxed text-ink-200">{item}</span>
@@ -410,7 +420,7 @@ function Ladder({
   projectedRank,
   extra,
 }: {
-  board: ReturnType<typeof leaderboard>
+  board: RankedServer[]
   slug: string
   projectedRank: number
   extra: number
@@ -419,8 +429,25 @@ function Ladder({
   const me = board.find((entry) => entry.server.slug === slug)
   const others = board.filter((entry) => entry.server.slug !== slug)
 
-  const projected = { ...me!, total: (me?.total ?? 0) + extra, boosts: (me?.boosts ?? 0) + extra, rank: projectedRank }
-  const list = me ? [...others] : others
+  // The board arrives asynchronously; until the server is in it there is
+  // nothing to project onto.
+  if (!me) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="skeleton h-[52px] rounded-lg" />
+        ))}
+      </div>
+    )
+  }
+
+  const projected: RankedServer = {
+    ...me,
+    total: me.total + extra,
+    boosts: me.boosts + extra,
+    rank: projectedRank,
+  }
+  const list = [...others]
   list.splice(Math.max(0, projectedRank - 1), 0, projected)
 
   const window = list.slice(0, Math.max(8, Math.min(list.length, projectedRank + 3)))

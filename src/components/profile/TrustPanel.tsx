@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, formatSeconds, formatTime } from '@/lib/format'
-import type { OnlineData } from '@/data/types'
+import type { OnlineData } from '@/models'
 import { useTicker } from '@/hooks/useUi'
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: 'signal' | 'warn' | 'danger' }) {
@@ -29,7 +29,7 @@ function Row({ label, value, tone }: { label: string; value: string; tone?: 'sig
 
 export function TrustPanel({ online, className }: { online: OnlineData; className?: string }) {
   const seconds = useTicker(online.checkedAgoSec, 90)
-  const verified = online.status === 'verified'
+  const verified = online.status === 'VERIFIED'
   const uptimeTone = online.uptime24h >= 99 ? 'signal' : online.uptime24h >= 90 ? 'warn' : 'danger'
 
   return (

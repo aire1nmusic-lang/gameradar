@@ -2,7 +2,7 @@ import { GAMES, getChronicle, getGameBySlug } from './games'
 import { resolveTheme } from '@/theme/registry'
 import { coreTheme } from '@/theme/core/tokens'
 import type { GameTheme } from '@/theme/core/types'
-import type { Chronicle, Game } from './types'
+import type { Chronicle, Game } from '@/models'
 
 /**
  * Data-side view of the Theme Engine.

@@ -5,7 +5,7 @@ import { worldArt } from '@/data/themeMedia'
 import { themeForGame } from '@/data/themes'
 import { ThemeScope } from '@/theme'
 import { WorldArtSurface } from '@/components/media/WorldArt'
-import type { Game, GameMotif } from '@/data/types'
+import type { Game, GameMotif } from '@/models'
 
 /** Abstract geometric motifs — a hint of the genre, never literal game art. */
 function Motif({ kind }: { kind: GameMotif }) {

@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { GAMES } from '@/data/games'
-import { serversByGame } from '@/data/servers'
+import { useServers } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { GameTile } from '@/components/home/GameTile'
 import { ServerRow } from '@/components/server/ServerRow'
 
 export default function Games() {
+  const { data: allServers = [] } = useServers({ limit: 500 })
+  const serversByGame = (gameId: string) => allServers.filter((server) => server.gameId === gameId)
   const covered = GAMES.filter((game) => serversByGame(game.id).length > 0)
 
   return (
@@ -53,7 +55,7 @@ export default function Games() {
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
             {covered.map((game) => {
               const servers = serversByGame(game.id)
-                .filter((server) => server.online.status !== 'pending')
+                .filter((server) => server.online.status !== 'PENDING')
                 .sort((a, b) => b.online.current - a.online.current)
                 .slice(0, 3)
 

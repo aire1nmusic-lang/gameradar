@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber } from '@/lib/format'
-import type { ChartRange } from '@/data/types'
+import type { ChartRange } from '@/models'
 
 const W = 1000
 

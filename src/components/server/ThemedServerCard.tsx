@@ -3,8 +3,8 @@ import { Play, Star, Users } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
 import { formatNumber, formatRating } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
-import { activeBoosts } from '@/data/boost'
-import type { GameServer } from '@/data/types'
+import { activeBoosts } from '@/services'
+import type { GameServer } from '@/models'
 import { ThemedBadge, ThemedButton, ThemedCard, useGameTheme } from '@/theme'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
@@ -112,9 +112,9 @@ export function ThemedServerCard({
             <div className="flex items-baseline gap-1.5">
               <span
                 className="num gt-display text-[24px] leading-none"
-                style={{ color: status === 'offline' ? theme.colors.textFaint : theme.colors.text }}
+                style={{ color: status === 'OFFLINE' ? theme.colors.textFaint : theme.colors.text }}
               >
-                {status === 'pending' ? '—' : formatNumber(current)}
+                {status === 'PENDING' ? '—' : formatNumber(current)}
               </span>
               <span className="num text-[12.5px]" style={{ color: theme.colors.textFaint }}>
                 / {formatNumber(max)}
@@ -126,12 +126,12 @@ export function ThemedServerCard({
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
-            {status !== 'pending' && status !== 'offline' && <TrendChip value={change24h} />}
+            {status !== 'PENDING' && status !== 'OFFLINE' && <TrendChip value={change24h} />}
             {server.history['24h'].length > 1 && (
               <Sparkline
                 data={server.history['24h']}
                 width={70}
-                accent={status === 'offline' ? 'var(--color-danger-400)' : theme.colors.primary}
+                accent={status === 'OFFLINE' ? 'var(--color-danger-400)' : theme.colors.primary}
               />
             )}
           </div>
@@ -142,7 +142,7 @@ export function ThemedServerCard({
             className="h-full rounded-full transition-[width] duration-700"
             style={{
               width: `${capacity}%`,
-              background: status === 'offline' ? 'var(--color-danger-500)' : theme.colors.primary,
+              background: status === 'OFFLINE' ? 'var(--color-danger-500)' : theme.colors.primary,
               opacity: 0.8,
             }}
           />

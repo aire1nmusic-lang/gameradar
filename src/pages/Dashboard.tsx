@@ -13,7 +13,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
-import { OWNER_ALERTS, type OwnerMetric } from '@/data/dashboard'
+import type { OwnerMetric } from '@/models'
+import { alertsFor } from '@/services/ownerAlerts'
 import { promoProducts } from '@/services'
 import { useAsync, useOwnerAnalytics } from '@/hooks/data'
 import { getGame } from '@/data/games'
@@ -54,6 +55,7 @@ export default function Dashboard() {
   }
 
   const { server } = project
+  const alerts = alertsFor(server)
   const game = getGame(server.gameId)
   const views = range === '7' ? project.views.slice(-7) : project.views
 
@@ -215,7 +217,7 @@ export default function Dashboard() {
             <section className="surface rounded-xl p-5">
               <h3 className="text-[15px]">Уведомления</h3>
               <div className="mt-4 space-y-3">
-                {OWNER_ALERTS.map((alert) => (
+                {alerts.map((alert) => (
                   <div
                     key={alert.id}
                     className="flex items-start gap-3 rounded-lg border border-white/6 bg-white/[0.02] p-3.5"

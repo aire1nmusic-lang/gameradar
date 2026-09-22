@@ -114,7 +114,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-2">
-        <StatusBadge status={status} size="sm" />
+        <StatusBadge status={status} size="sm" launching={!!server.launch} />
         {server.promo && server.promo !== 'VIP' && <PromoLabel kind={server.promo} />}
       </div>
 

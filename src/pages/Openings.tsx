@@ -18,7 +18,7 @@ export default function Openings() {
   const filtered = useMemo(() => {
     const now = Date.now()
     return all.filter((server) => {
-      const diff = new Date(server.launch!.at).getTime() - now
+      const diff = new Date(server.launch?.at ?? 0).getTime() - now
       if (window === 'today') return diff < DAY
       if (window === 'week') return diff < 7 * DAY
       return true
@@ -28,7 +28,7 @@ export default function Openings() {
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>()
     for (const server of filtered) {
-      const date = new Date(server.launch!.at)
+      const date = new Date(server.launch?.at ?? Date.now())
       const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
       map.set(key, [...(map.get(key) ?? []), server])
     }
@@ -85,7 +85,7 @@ export default function Openings() {
             />
           ) : (
             groups.map(([key, servers]) => {
-              const date = new Date(servers[0].launch!.at)
+              const date = new Date(servers[0].launch?.at ?? Date.now())
               const today = new Date()
               const isToday = date.toDateString() === today.toDateString()
               const isTomorrow = date.toDateString() === new Date(today.getTime() + DAY).toDateString()

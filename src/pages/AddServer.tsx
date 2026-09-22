@@ -13,6 +13,8 @@ import {
   Server,
 } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
+import { submitServer } from '@/services'
+import { useAuth } from '@/hooks/useAuth'
 import { ProbeMethod, ServerStatus } from '@/models'
 import { GAMES, getGame } from '@/data/games'
 import type { GameServer } from '@/models'
@@ -62,6 +64,7 @@ interface FormState {
   tags: string
   site: string
   discord: string
+  country: string
   connect: string
   address: string
   agreeRules: boolean
@@ -79,6 +82,7 @@ const INITIAL: FormState = {
   tags: '',
   site: '',
   discord: '',
+  country: 'RU',
   connect: 'protocol',
   address: '',
   agreeRules: false,
@@ -89,6 +93,39 @@ export default function AddServer() {
   const [form, setForm] = useState<FormState>(INITIAL)
   const [checkState, setCheckState] = useState<'idle' | 'probing' | 'done'>('idle')
   const [ownerState, setOwnerState] = useState<'idle' | 'probing' | 'done'>('idle')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [created, setCreated] = useState<GameServer | null>(null)
+  const { user } = useAuth()
+
+  /**
+   * Sends the card to the API. The server assigns the id, the slug and
+   * PENDING_MODERATION status, so nothing here guesses them.
+   */
+  async function submit() {
+    setSaving(true)
+    setSaveError('')
+    try {
+      const saved = await submitServer({
+        name: form.name.trim(),
+        gameId: form.gameId,
+        version: form.version.trim() || undefined,
+        description: form.summary.trim(),
+        summary: form.summary.trim().slice(0, 180),
+        links: { site: form.site.trim(), discord: form.discord.trim() || undefined },
+        country: form.country.trim(),
+        region: form.region,
+        languages: form.languages,
+        modes: form.modes,
+      } as never)
+      setCreated(saved)
+      setStep(3)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Не удалось отправить карточку')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const game = getGame(form.gameId)
   const patch = (next: Partial<FormState>) => setForm((prev) => ({ ...prev, ...next }))
@@ -134,8 +171,22 @@ export default function AddServer() {
             {step === 1 && (
               <StepConnect form={form} patch={patch} state={checkState} setState={setCheckState} />
             )}
-            {step === 2 && <StepOwnership state={ownerState} setState={setOwnerState} form={form} />}
-            {step === 3 && <StepDone form={form} verified={checkState === 'done'} />}
+            {step === 2 && (
+              <>
+                <StepOwnership state={ownerState} setState={setOwnerState} form={form} />
+                {!user && (
+                  <Notice tone="warn" title="Нужен вход" className="mt-4">
+                    Карточка сохраняется за вашей учётной записью — войдите, чтобы отправить её на модерацию.
+                  </Notice>
+                )}
+                {saveError && (
+                  <Notice tone="danger" title="Карточка не отправлена" className="mt-4">
+                    {saveError}
+                  </Notice>
+                )}
+              </>
+            )}
+            {step === 3 && <StepDone form={form} verified={checkState === 'done'} created={created} />}
 
             {step < 3 && (
               <div className="mt-8 flex items-center justify-between gap-3 border-t border-white/6 pt-6">
@@ -154,11 +205,12 @@ export default function AddServer() {
                   <Button
                     variant="primary"
                     size="lg"
-                    disabled={!canContinue}
-                    onClick={() => setStep((s) => Math.min(3, s + 1))}
-                    iconRight={<ArrowRight size={16} />}
+                    disabled={!canContinue || saving || (step === 2 && !user)}
+                    onClick={() => (step === 2 ? void submit() : setStep((s) => Math.min(3, s + 1)))}
+                    icon={saving ? <Loader2 size={16} className="animate-spin" /> : undefined}
+                    iconRight={saving ? undefined : <ArrowRight size={16} />}
                   >
-                    {step === 2 ? 'Отправить на модерацию' : 'Продолжить'}
+                    {step === 2 ? (saving ? 'Отправляем…' : 'Отправить на модерацию') : 'Продолжить'}
                   </Button>
                 </div>
               </div>
@@ -548,13 +600,13 @@ function StepOwnership({
   )
 }
 
-function StepDone({ form, verified }: { form: FormState; verified: boolean }) {
+function StepDone({ form, verified, created }: { form: FormState; verified: boolean; created: GameServer | null }) {
   return (
     <Panel title="Сервер отправлен на модерацию">
       <div className="flex items-start gap-3 rounded-lg border border-signal-500/22 bg-signal-500/[0.06] p-4">
         <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-signal-400" />
         <div>
-          <div className="text-[14px] font-medium text-ink-50">{form.name || 'Ваш сервер'} добавлен</div>
+          <div className="text-[14px] font-medium text-ink-50">{created?.name ?? form.name ?? 'Ваш сервер'} добавлен</div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-300">
             Модерация занимает до 24 часов. После публикации карточка появится в каталоге и поиске.
             {verified && ' Проверка онлайна уже настроена и запустится автоматически.'}
@@ -584,9 +636,13 @@ function StepDone({ form, verified }: { form: FormState; verified: boolean }) {
         </Button>
       </div>
 
-      <Notice tone="info" className="mt-6">
-        Прототип: данные формы никуда не отправляются и не сохраняются между сессиями.
-      </Notice>
+      {created && (
+        <Notice tone="signal" title="Карточка сохранена" className="mt-6">
+          Идентификатор <span className="font-mono">{created.id}</span>, адрес{' '}
+          <span className="font-mono">/server/{created.slug}</span>, статус {created.moderation}. Запись остаётся в
+          базе после перезагрузки страницы.
+        </Notice>
+      )}
     </Panel>
   )
 }

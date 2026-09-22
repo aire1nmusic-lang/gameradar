@@ -1,4 +1,3 @@
-import type { OwnerProject } from '@/data/dashboard'
 import type {
   AdProduct,
   Advertisement,
@@ -9,6 +8,7 @@ import type {
   Game,
   GameServer,
   Owner,
+  OwnerProject,
   OnlineSample,
   Page,
   RankedServer,

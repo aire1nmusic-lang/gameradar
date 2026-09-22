@@ -63,7 +63,7 @@ export function ThemedServerCard({
         />
 
         <div className="absolute top-2.5 left-2.5 z-[2] flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={status} size="sm" />
+          <StatusBadge status={status} size="sm" launching={!!server.launch} />
           {boosts > 0 && <BoostBadge boosts={boosts} />}
         </div>
 

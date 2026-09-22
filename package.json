@@ -17,7 +17,8 @@
     "dev:publish": "node scripts/publish.mjs",
     "dev:site": "node scripts/dev-site.mjs",
     "test:bundle": "node scripts/check-bundle.mjs",
-    "test:api": "node tests/api.mjs"
+    "test:api": "node tests/api.mjs",
+    "test:monitoring": "node tests/monitoring.mjs"
   },
   "dependencies": {
     "hono": "^4.13.8",

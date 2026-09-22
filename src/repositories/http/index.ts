@@ -1,4 +1,4 @@
-import type { Game, GameServer, OnlineSample, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
+import type { Game, GameServer, OnlineSample, OwnerProject, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
 import type { Repositories } from '../types'
 import { hydrateGames } from '@/data/games'
 
@@ -102,8 +102,39 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     },
     owners: {
       current: async () => { const user = await current(); return user ? { id: user.id, userId: user.id, serverIds: [], createdAt: user.createdAt } : undefined },
-      serversOf: () => request<GameServer[]>('/owners/me/servers'),
-      analytics: unsupported,
+      serversOf: async () => (await request<Page<GameServer>>('/owners/me/servers')).items,
+      /**
+       * Card analytics.
+       *
+       * Only numbers the platform actually stores are reported. Views, clicks
+       * and referrers are not collected yet, so they are returned as zero with
+       * an explicit hint instead of being invented.
+       */
+      analytics: async (): Promise<OwnerProject[]> => {
+        const [page, ranking] = await Promise.all([
+          request<Page<GameServer>>('/owners/me/servers'),
+          leaderboard().catch(() => [] as RankedServer[]),
+        ])
+        return page.items.map(server => {
+          const position = ranking.findIndex(row => row.server.id === server.id)
+          return {
+            server,
+            metrics: [
+              { key: 'votes', label: 'Голоса', value: server.votes, change: 0, format: 'number' as const, hint: 'Голоса игроков, полученные через GameScout' },
+              { key: 'online', label: 'Игроков сейчас', value: server.online.current, change: server.online.change24h, format: 'number' as const, hint: 'По последней проверке мониторинга' },
+              { key: 'views', label: 'Просмотры карточки', value: 0, change: 0, format: 'number' as const, hint: 'Сбор статистики просмотров ещё не включён' },
+              { key: 'clicks', label: 'Переходы на сервер', value: 0, change: 0, format: 'number' as const, hint: 'Сбор статистики переходов ещё не включён' },
+            ],
+            views: [],
+            clicks: [],
+            rankPosition: position >= 0 ? position + 1 : 0,
+            rankTotal: ranking.length,
+            rankChange: 0,
+            sources: [],
+            countries: [],
+          }
+        })
+      },
       claim: input => send<ServerClaim>('/claims', { serverId: input.serverId, method: input.method }),
       claims: () => request<ServerClaim[]>('/owners/me/claims'),
       claimById: id => request<ServerClaim>('/claims/' + encodeURIComponent(id)),

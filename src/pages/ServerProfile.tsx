@@ -154,7 +154,7 @@ function Profile({ server }: { server: GameServer }) {
             />
             <div className="pb-1">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <StatusBadge status={server.online.status} />
+                <StatusBadge status={server.online.status} launching={!!server.launch} />
                 {server.promo && <PromoLabel kind={server.promo} />}
               </div>
               <h1 className="text-[26px] leading-tight sm:text-[34px]">{server.name}</h1>
@@ -191,7 +191,7 @@ function Profile({ server }: { server: GameServer }) {
               <Share2 size={16} />
             </button>
             <span className="hidden lg:block">
-              {server.online.status === 'PENDING' ? (
+              {server.online.status === 'PENDING' && server.launch ? (
                 <ThemedButton size="lg" icon={<BellRing size={16} />}>
                   Напомнить об открытии
                 </ThemedButton>
@@ -258,14 +258,18 @@ function Profile({ server }: { server: GameServer }) {
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="num text-[15px] font-semibold text-ink-50">
-              {server.online.status === 'PENDING' ? formatCountdown(server.launch!.at) : formatNumber(server.online.current)}
+              {server.online.status === 'PENDING'
+                ? server.launch
+                  ? formatCountdown(server.launch.at)
+                  : '—'
+                : formatNumber(server.online.current)}
               {server.online.status !== 'PENDING' && (
                 <span className="text-[12px] font-normal text-ink-500"> / {formatNumber(server.online.max)}</span>
               )}
             </div>
             <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
           </div>
-          {server.online.status === 'PENDING' ? (
+          {server.online.status === 'PENDING' && server.launch ? (
             <Button variant="primary" icon={<BellRing size={15} />}>
               Напомнить
             </Button>

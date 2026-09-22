@@ -1,27 +1,7 @@
 import { hashSeed, rng } from '@/lib/utils'
 import { SERVERS_BY_SLUG } from './servers'
-import type { GameServer } from '@/models'
-
-export interface OwnerMetric {
-  key: string
-  label: string
-  value: number
-  change: number
-  format: 'number' | 'percent'
-  hint: string
-}
-
-export interface OwnerProject {
-  server: GameServer
-  metrics: OwnerMetric[]
-  views: number[]
-  clicks: number[]
-  rankPosition: number
-  rankTotal: number
-  rankChange: number
-  sources: Array<{ label: string; value: number }>
-  countries: Array<{ label: string; flag: string; value: number }>
-}
+import type { OwnerAlert, OwnerMetric, OwnerProject } from '@/models'
+export type { OwnerAlert, OwnerMetric, OwnerProject }
 
 function seriesFor(slug: string, base: number, trend: number, points = 30): number[] {
   const random = rng(hashSeed(slug))
@@ -133,13 +113,6 @@ export const OWNER_PROJECTS: OwnerProject[] = [
   }),
 ]
 
-export interface OwnerAlert {
-  id: string
-  kind: 'ok' | 'info' | 'warn'
-  title: string
-  body: string
-  at: string
-}
 
 export const OWNER_ALERTS: OwnerAlert[] = [
   {
@@ -165,60 +138,5 @@ export const OWNER_ALERTS: OwnerAlert[] = [
   },
 ]
 
-export interface PromoProduct {
-  id: string
-  name: string
-  tag: string
-  description: string
-  bullets: string[]
-  priceLabel: string
-  accent: 'TOP' | 'VIP' | 'FEATURED' | 'banner' | 'launch'
-}
-
-export const PROMO_PRODUCTS: PromoProduct[] = [
-  {
-    id: 'TOP',
-    name: 'TOP',
-    tag: 'Позиция в каталоге',
-    description: 'Ваш сервер занимает верхнюю позицию в выдаче по выбранной игре.',
-    bullets: ['Закреплённое место в каталоге', 'Метка «Продвижение»', 'До 5 позиций на игру'],
-    priceLabel: 'от 4 900 ₽ / неделя',
-    accent: 'TOP',
-  },
-  {
-    id: 'VIP',
-    name: 'VIP',
-    tag: 'Выделенная карточка',
-    description: 'Карточка получает акцентную рамку и увеличенный формат в списках.',
-    bullets: ['Акцентное оформление', 'Увеличенный формат', 'Логотип большего размера'],
-    priceLabel: 'от 2 900 ₽ / неделя',
-    accent: 'VIP',
-  },
-  {
-    id: 'FEATURED',
-    name: 'Featured',
-    tag: 'Главная страница',
-    description: 'Размещение в подборке на главной странице GameScout.',
-    bullets: ['Блок на главной', 'Ротация каждые 15 минут', 'Отдельная статистика'],
-    priceLabel: 'от 7 900 ₽ / неделя',
-    accent: 'FEATURED',
-  },
-  {
-    id: 'banner',
-    name: 'Banner',
-    tag: 'Рекламные блоки',
-    description: 'Баннерные места в каталоге и на страницах игр — всегда с пометкой «Реклама».',
-    bullets: ['Каталог и страницы игр', 'Не более 1 блока на экран', 'Отчёт по показам и кликам'],
-    priceLabel: 'от 5 900 ₽ / неделя',
-    accent: 'banner',
-  },
-  {
-    id: 'launch',
-    name: 'Launch Promotion',
-    tag: 'Перед открытием',
-    description: 'Продвижение сервера до старта: предрегистрации и напоминание игрокам.',
-    bullets: ['Блок «Открываются сегодня»', 'Push-напоминание игрокам', 'Счётчик предрегистраций'],
-    priceLabel: 'от 9 900 ₽ / запуск',
-    accent: 'launch',
-  },
-]
+export type { PromoProduct } from '@/models'
+export { PROMO_PRODUCTS } from '@/services/promoCatalog'

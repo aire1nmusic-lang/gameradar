@@ -110,7 +110,7 @@ export async function resolvePublicHost(input: string, options: NetworkOptions =
     try {
       const results = await withDeadline(Promise.all(['A', 'AAAA'].map(async type => {
         const response = await (options.fetcher ?? fetch)(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`, {
-          headers: { Accept: 'application/dns-json' }, redirect: 'error', signal: controller.signal,
+          headers: { Accept: 'application/dns-json' }, redirect: 'manual', signal: controller.signal,
         })
         if (!response.ok) throw new AdapterError('dns_failed', 'DNS lookup failed')
         return JSON.parse(await readBoundedText(response, 16384)) as { Status?: number; Answer?: { type: number; data: string }[] }
@@ -143,10 +143,16 @@ export async function fetchPublicText(input: string, options: NetworkOptions & {
   const controller = new AbortController()
   try {
     return await withDeadline((async () => {
+      // 'manual' is the only non-following mode workerd implements; a 3xx is
+      // then rejected here so a redirect can never pivot us to a private host.
       const response = await (options.fetcher ?? fetch)(url, {
-        redirect: 'error', signal: controller.signal,
+        redirect: 'manual', signal: controller.signal,
         headers: { Accept: 'application/json, text/plain', 'User-Agent': 'GameScout/1.0 (+https://gamescout.online)' },
       })
+      if (response.status >= 300 && response.status < 400) {
+        void response.body?.cancel().catch(() => {})
+        throw new AdapterError('redirect_refused', 'Remote endpoint answered with a redirect')
+      }
       if (!response.ok) {
         void response.body?.cancel().catch(() => {})
         throw new AdapterError(`http_${response.status}`, 'Remote endpoint did not return a successful response')

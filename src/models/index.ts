@@ -323,6 +323,49 @@ export interface Advertisement {
   activeTo?: string
 }
 
+/** One headline number on the owner dashboard. */
+export interface OwnerMetric {
+  key: string
+  label: string
+  value: number
+  change: number
+  format: 'number' | 'percent'
+  hint: string
+}
+
+/** Card analytics for one owned server. */
+export interface OwnerProject {
+  server: GameServer
+  metrics: OwnerMetric[]
+  views: number[]
+  clicks: number[]
+  rankPosition: number
+  rankTotal: number
+  rankChange: number
+  sources: Array<{ label: string; value: number }>
+  countries: Array<{ label: string; flag: string; value: number }>
+}
+
+/** A notice shown in the owner dashboard. */
+export interface OwnerAlert {
+  id: string
+  kind: 'ok' | 'info' | 'warn'
+  title: string
+  body: string
+  at: string
+}
+
+/** A promotion package an owner can buy. Configuration, not catalogue data. */
+export interface PromoProduct {
+  id: string
+  name: string
+  tag: string
+  description: string
+  bullets: string[]
+  priceLabel: string
+  accent: 'TOP' | 'VIP' | 'FEATURED' | 'banner' | 'launch'
+}
+
 export interface AdProduct {
   id: string
   name: string

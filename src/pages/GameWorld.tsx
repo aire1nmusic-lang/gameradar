@@ -128,7 +128,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                           color: theme.colors.text,
                         }}
                       >
-                        старт {formatCountdown(server.launch!.at)}
+                        старт {server.launch ? formatCountdown(server.launch.at) : '—'}
                       </span>
                     </div>
                   ))}

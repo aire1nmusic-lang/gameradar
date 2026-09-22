@@ -100,18 +100,32 @@ export function LiveDot({ status, className }: { status: OnlineStatus; className
   )
 }
 
+/**
+ * PENDING covers two different situations, and a player must be able to tell
+ * them apart: a card that announced an opening date, and a card whose online
+ * simply has not been measured yet. Only the first one is "opens soon".
+ */
+function pendingCopy(launching: boolean | undefined): { label: string; caption: string } | undefined {
+  if (launching !== false) return undefined
+  return { label: 'ОНЛАЙН НЕ ИЗМЕРЯЛСЯ', caption: 'GameScout ещё не выполнял проверку этого сервера' }
+}
+
 export function StatusBadge({
   status,
   size = 'md',
   withDot = true,
+  launching,
   className,
 }: {
   status: OnlineStatus
   size?: 'sm' | 'md' | 'lg'
   withDot?: boolean
+  /** false when the card has no announced opening date */
+  launching?: boolean
   className?: string
 }) {
   const meta = STATUS_META[status]
+  const pending = status === OnlineStatus.Pending ? pendingCopy(launching) : undefined
   return (
     <span
       className={cn(
@@ -121,10 +135,10 @@ export function StatusBadge({
         meta.text,
         className,
       )}
-      title={meta.caption}
+      title={pending?.caption ?? meta.caption}
     >
       {withDot && status === OnlineStatus.Verified ? <LiveDot status={status} /> : meta.icon}
-      {meta.label}
+      {pending?.label ?? meta.label}
     </span>
   )
 }
@@ -134,11 +148,14 @@ export function VerifiedLine({
   status,
   seconds,
   source,
+  launching,
   className,
   size = 'sm',
 }: {
   status: OnlineStatus
   seconds: number
+  /** false when the card has no announced opening date */
+  launching?: boolean
   source?: string
   className?: string
   size?: 'xs' | 'sm'
@@ -171,6 +188,10 @@ export function VerifiedLine({
     case OnlineStatus.Checking:
       return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
     default:
-      return <span className={cn(base, 'text-ink-500')}>Проверка начнётся после запуска</span>
+      return (
+        <span className={cn(base, 'text-ink-500')}>
+          {launching === false ? 'Онлайн ещё не измерялся' : 'Проверка начнётся после запуска'}
+        </span>
+      )
   }
 }

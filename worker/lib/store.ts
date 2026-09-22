@@ -1,38 +1,46 @@
-import { parseList, now } from './core'
+import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.source, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known FROM servers s LEFT JOIN server_online o ON o.server_id=s.id`
+const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known FROM servers s LEFT JOIN server_online o ON o.server_id=s.id`
+/** A number counts only while it is fresh; an old one is history, not "online". */
+const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
+const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`
+/** Trust weight of a player count: our own measurement outranks what others report. */
+const TRUST = `(CASE o.status WHEN 'VERIFIED' THEN 1.0 WHEN 'LIVE' THEN 0.6 WHEN 'EXTERNAL' THEN 0.4 WHEN 'OWNER_REPORTED' THEN 0.25 ELSE 0 END)`
 export class Store {
-  constructor(readonly db: D1Database) {}
+  /** DEMO fixtures exist only for development; everywhere else they do not exist at all. */
+  constructor(readonly db: D1Database, readonly showDemo = false) {}
+  private get live() { return this.showDemo ? '' : ' AND s.is_demo=0' }
   async health() { return this.db.prepare('SELECT 1 AS ok').first() }
-  async games() { return (await this.db.prepare(`SELECT g.*, (SELECT COUNT(*) FROM servers s WHERE s.game_id=g.id AND s.moderation='PUBLISHED') AS servers_count, (SELECT COALESCE(SUM(o.current),0) FROM server_online o JOIN servers s ON s.id=o.server_id WHERE s.game_id=g.id AND s.moderation='PUBLISHED' AND o.status IN ('LIVE','VERIFIED') AND o.players_known=1) AS players_online FROM games g ORDER BY sort_order,name`).all<Row>()).results }
+  async games() { return (await this.db.prepare(`SELECT g.*, (SELECT COUNT(*) FROM servers s WHERE s.game_id=g.id AND s.moderation='PUBLISHED'${this.live}) AS servers_count, (SELECT COALESCE(SUM(o.current),0) FROM server_online o JOIN servers s ON s.id=o.server_id WHERE s.game_id=g.id AND s.moderation='PUBLISHED'${this.live} AND ${ONLINE_STATUSES} AND ${FRESH}) AS players_online FROM games g ORDER BY sort_order,name`).bind(freshSince()).all<Row>()).results }
   game(key: string) { return this.db.prepare('SELECT * FROM games WHERE id=? OR slug=?').bind(key,key).first<Row>() }
-  async chronicles(gameId?: string) { return (await this.db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM servers s WHERE s.chronicle_id=c.id AND s.moderation='PUBLISHED') AS servers_count, (SELECT COALESCE(SUM(o.current),0) FROM server_online o JOIN servers s ON s.id=o.server_id WHERE s.chronicle_id=c.id AND s.moderation='PUBLISHED' AND o.status IN ('LIVE','VERIFIED') AND o.players_known=1) AS players_online FROM chronicles c ${gameId ? 'WHERE c.game_id=?' : ''} ORDER BY sort_order,label`).bind(...(gameId ? [gameId] : [])).all<Row>()).results }
+  async chronicles(gameId?: string) { return (await this.db.prepare(`SELECT c.*, (SELECT COUNT(*) FROM servers s WHERE s.chronicle_id=c.id AND s.moderation='PUBLISHED'${this.live}) AS servers_count, (SELECT COALESCE(SUM(o.current),0) FROM server_online o JOIN servers s ON s.id=o.server_id WHERE s.chronicle_id=c.id AND s.moderation='PUBLISHED'${this.live} AND ${ONLINE_STATUSES} AND ${FRESH}) AS players_online FROM chronicles c ${gameId ? 'WHERE c.game_id=?' : ''} ORDER BY sort_order,label`).bind(freshSince(),...(gameId ? [gameId] : [])).all<Row>()).results }
   async chronicleVersions() { return (await this.db.prepare('SELECT * FROM chronicle_versions').all<Row>()).results }
   chronicle(key: string) { return this.db.prepare('SELECT * FROM chronicles WHERE id=?').bind(key).first<Row>() }
   async servers(q: Filters) {
-    const where = ["s.moderation='PUBLISHED'"]; const values: unknown[] = []
+    const where = ["s.moderation='PUBLISHED'" + this.live]; const values: unknown[] = []
     const add = (sql: string, ...v: unknown[]) => { where.push(sql); values.push(...v) }
     if (q.query) add("(s.name LIKE ? ESCAPE '\\' OR s.summary LIKE ? ESCAPE '\\')", ...Array(2).fill('%'+q.query.replace(/[\\%_]/g,'\\$&')+'%'))
     if (q.gameId) add('s.game_id=?',q.gameId)
     if (q.chronicleId) add('s.chronicle_id=?',q.chronicleId)
     for (const [column,list] of [['game_id',q.gameIds],['version',q.versions],['region',q.regions]] as const) if (list?.length) add(`s.${column} IN (${list.map(()=>'?').join(',')})`,...list)
     for (const [column,list] of [['modes',q.modes],['languages',q.languages]] as const) if (list?.length) add(`EXISTS (SELECT 1 FROM json_each(s.${column}) WHERE value IN (${list.map(()=>'?').join(',')}))`,...list)
-    if (q.minOnline !== undefined) add('COALESCE(o.current,0)>=? AND o.players_known=1',q.minOnline)
+    if (q.minOnline !== undefined) add(`COALESCE(o.current,0)>=? AND ${FRESH}`,q.minOnline,freshSince())
     if (q.minRating !== undefined) add('s.rating>=?',q.minRating)
     if (q.verifiedOnly) add("o.status='VERIFIED'")
     if (q.hideOffline) add("COALESCE(o.status,'PENDING')<>'OFFLINE'")
     if (q.onlyLaunching) add('s.launch_at>?',now())
     if (q.wipeSoon) add('s.next_wipe_at BETWEEN ? AND ?',now(),new Date(Date.now()+7*86400000).toISOString())
     if (q.openedWithin && q.openedWithin !== 'any') add('s.opened_at>=?',new Date(Date.now()-Number(q.openedWithin.replace('d',''))*86400000).toISOString())
-    const sorts: Record<string,string> = { online:'COALESCE(o.current,0) DESC', growth:'COALESCE(o.change_24h,0) DESC',rating:'s.rating DESC',new:'s.added_at DESC',launch:'s.launch_at ASC',votes:'s.votes_count DESC',recommended:`(CASE WHEN o.status IN ('LIVE','VERIFIED') AND o.players_known=1 THEN MIN(COALESCE(o.current,0),100000)/100.0 ELSE 0 END + s.votes_count*2 + CASE WHEN s.owner_id IS NOT NULL THEN 10 ELSE 0 END + COALESCE(o.uptime_24h,0)/10.0) DESC` }
+    const fresh = `(CASE WHEN ${FRESH.replace('?',"'"+freshSince()+"'")} THEN COALESCE(o.current,0) ELSE 0 END)`
+    const sorts: Record<string,string> = { online:`${fresh} DESC`, growth:'COALESCE(o.change_24h,0) DESC',rating:'s.rating DESC',new:'s.added_at DESC',launch:'s.launch_at ASC',votes:'s.votes_count DESC',recommended:`(MIN(${fresh},100000)*${TRUST}/100.0 + s.votes_count*2 + CASE WHEN s.owner_id IS NOT NULL THEN 10 ELSE 0 END + COALESCE(o.uptime_24h,0)/10.0) DESC` }
     const clause = where.join(' AND ')
     const rows = await this.db.prepare(`${serverSelect} WHERE ${clause} ORDER BY ${sorts[q.sort ?? 'recommended'] ?? sorts.recommended},s.id LIMIT ? OFFSET ?`).bind(...values,q.limit,q.offset).all<Row>()
     const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM servers s LEFT JOIN server_online o ON o.server_id=s.id WHERE ${clause}`).bind(...values).first<Row>()
     return { items:rows.results,total:Number(count?.total ?? 0),limit:q.limit,offset:q.offset }
   }
-  server(key: string) { return this.db.prepare(`${serverSelect} WHERE s.id=? OR s.slug=?`).bind(key,key).first<Row>() }
+  server(key: string) { return this.db.prepare(`${serverSelect} WHERE (s.id=? OR s.slug=?)${this.live}`).bind(key,key).first<Row>() }
   async ownerServers(userId: string) { return (await this.db.prepare(`${serverSelect} WHERE s.owner_id=? OR s.submitted_by=? ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
   async insertServer(row: Row) {
     const fields = Object.keys(row)
@@ -77,19 +85,42 @@ export class Store {
     ])
     return result[0].meta.changes > 0
   }
+  /** Inserts unless the same visitor sent the same kind for this card since `since`. */
+  async recordEvent(serverId:string,kind:string,source:string|null,visitor:string,since:string) {
+    const result = await this.db.prepare('INSERT INTO server_events(server_id,kind,at,source,visitor_hash) SELECT ?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM server_events WHERE server_id=? AND kind=? AND visitor_hash=? AND at>?)').bind(serverId,kind,now(),source,visitor,serverId,kind,visitor,since).run()
+    return result.meta.changes > 0
+  }
+  async serverStats(serverId:string,since:string,days:number) {
+    const totals = (await this.db.prepare('SELECT kind, COUNT(*) AS n FROM server_events WHERE server_id=? AND at>? GROUP BY kind').bind(serverId,since).all<Row>()).results
+    const daily = (await this.db.prepare("SELECT substr(at,1,10) AS day, COUNT(*) AS n FROM server_events WHERE server_id=? AND kind='VIEW' AND at>? GROUP BY day ORDER BY day").bind(serverId,since).all<Row>()).results
+    const votes = await this.db.prepare("SELECT COUNT(*) AS total, SUM(status='PENDING') AS pending, SUM(status='CLAIMED') AS claimed, SUM(created_at>?) AS recent FROM votes WHERE server_id=?").bind(since,serverId).first<Row>()
+    const sources = (await this.db.prepare("SELECT COALESCE(source,'direct') AS source, COUNT(*) AS n FROM server_events WHERE server_id=? AND kind='VIEW' AND at>? GROUP BY 1 ORDER BY n DESC LIMIT 6").bind(serverId,since).all<Row>()).results
+    const byDay = new Map(daily.map(row => [row.day, Number(row.n)]))
+    const views = Array.from({ length: days }, (_, i) => { const day = new Date(Date.now() - (days - 1 - i) * 86400000).toISOString().slice(0, 10); return { day, value: byDay.get(day) ?? 0 } })
+    const count = (kind:string) => Number(totals.find(row => row.kind === kind)?.n ?? 0)
+    return { since, views, totals: { views: count('VIEW'), websiteClicks: count('WEBSITE_CLICK'), playClicks: count('PLAY_CLICK'), voteClicks: count('VOTE_CLICK'), claimStarts: count('CLAIM_START') }, votes: { total: Number(votes?.total ?? 0), pending: Number(votes?.pending ?? 0), claimed: Number(votes?.claimed ?? 0), inRange: Number(votes?.recent ?? 0) }, sources: sources.map(row => ({ source: row.source, count: Number(row.n) })) }
+  }
+  async recentVotes(serverId:string,limit:number) { return (await this.db.prepare('SELECT * FROM votes WHERE server_id=? ORDER BY created_at DESC LIMIT ?').bind(serverId,limit).all<Row>()).results }
   lastVote(serverId:string,key:string) { return this.db.prepare('SELECT * FROM votes WHERE server_id=? AND voter_key=? ORDER BY created_at DESC LIMIT 1').bind(serverId,key).first<Row>() }
   vote(voteId:string) { return this.db.prepare('SELECT * FROM votes WHERE id=?').bind(voteId).first<Row>() }
   async pendingVotes(serverId:string,limit:number,offset:number) { const items=(await this.db.prepare("SELECT * FROM votes WHERE server_id=? AND status='PENDING' ORDER BY created_at,id LIMIT ? OFFSET ?").bind(serverId,limit,offset).all<Row>()).results; const count=await this.db.prepare("SELECT COUNT(*) AS total FROM votes WHERE server_id=? AND status='PENDING'").bind(serverId).first<Row>();return {items,total:Number(count?.total ?? 0),limit,offset} }
   async claimVotes(serverId:string,ids:string[]) { return (await this.db.prepare(`UPDATE votes SET status='CLAIMED',claimed_at=?,delivered_at=? WHERE server_id=? AND status='PENDING' AND id IN (${ids.map(()=>'?').join(',')}) RETURNING *`).bind(now(),now(),serverId,...ids).all<Row>()).results }
-  async onlineHistory(serverId:string,since:string,limit:number) { return (await this.db.prepare('SELECT server_id,at,players,status,latency_ms,players_known FROM online_samples WHERE server_id=? AND at>=? ORDER BY at DESC,id DESC LIMIT ?').bind(serverId,since,limit).all<Row>()).results.reverse() }
+  async onlineHistory(serverId:string,since:string,limit:number) { return (await this.db.prepare('SELECT server_id,at,players,status,latency_ms,players_known,source_tier,source_name FROM online_samples WHERE server_id=? AND at>=? ORDER BY at DESC,id DESC LIMIT ?').bind(serverId,since,limit).all<Row>()).results.reverse() }
   target(serverId:string) { return this.db.prepare('SELECT * FROM monitoring_targets WHERE server_id=?').bind(serverId).first<Row>() }
   async setTarget(serverId:string,target:Row) { await this.db.prepare(`INSERT INTO monitoring_targets(server_id,method,host,port,api_url,enabled) VALUES (?,?,?,?,?,?) ON CONFLICT(server_id) DO UPDATE SET method=excluded.method,host=excluded.host,port=excluded.port,api_url=excluded.api_url,enabled=excluded.enabled`).bind(serverId,target.method,target.host ?? null,target.port ?? null,target.apiUrl ?? null,target.enabled === false ? 0 : 1).run();return this.target(serverId) }
-  async targets(limit=25) { return (await this.db.prepare("SELECT t.*,g.slug AS game_slug FROM monitoring_targets t JOIN servers s ON s.id=t.server_id JOIN games g ON g.id=s.game_id WHERE t.enabled=1 AND s.moderation='PUBLISHED' ORDER BY COALESCE((SELECT checked_at FROM server_online WHERE server_id=t.server_id),'') LIMIT ?").bind(limit).all<Row>()).results }
+  /** Published cards with a direct target or an online source, least recently checked first. */
+  /** `providers` — the sources this Worker can read now; a card with none of them is not queued at all. */
+  async monitorQueue(limit:number,providers:string[]) { return (await this.db.prepare(`SELECT s.id AS server_id,g.slug AS game_slug,t.server_id AS target_id,t.method,t.host,t.port,t.api_url,t.expect_name FROM servers s JOIN games g ON g.id=s.game_id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1 LEFT JOIN server_online o ON o.server_id=s.id WHERE s.moderation='PUBLISHED' AND (t.server_id IS NOT NULL OR EXISTS (SELECT 1 FROM online_sources os WHERE os.server_id=s.id AND os.enabled=1 AND os.provider IN (${providers.map(()=>'?').join(',') || "''"}))) ORDER BY COALESCE(o.checked_at,''),s.id LIMIT ?`).bind(...providers,limit).all<Row>()).results }
+  async onlineSources(serverIds:string[]) { if(!serverIds.length)return []; return (await this.db.prepare(`SELECT * FROM online_sources WHERE enabled=1 AND server_id IN (${serverIds.map(()=>'?').join(',')})`).bind(...serverIds).all<Row>()).results }
   async saveSample(serverId:string,p:Row) {
+    const known = p.online == null ? 0 : 1
+    const observedAt = p.observedAt ?? p.checkedAt
+    const day = new Date(Date.now()-86400000).toISOString()
     await this.db.batch([
-      this.db.prepare('INSERT INTO online_samples(server_id,at,players,status,latency_ms,players_known) VALUES (?,?,?,?,?,?)').bind(serverId,p.checkedAt,p.online ?? 0,p.status,p.latencyMs ?? null,p.online == null ? 0 : 1),
-      this.db.prepare(`INSERT INTO server_online(server_id,status,current,max,checked_at,source,method,latency_ms,note,players_known,max_known) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(server_id) DO UPDATE SET status=excluded.status,current=excluded.current,max=excluded.max,checked_at=excluded.checked_at,source=excluded.source,method=excluded.method,latency_ms=excluded.latency_ms,note=excluded.note,players_known=excluded.players_known,max_known=excluded.max_known`).bind(serverId,p.status,p.online ?? 0,p.maxOnline ?? 0,p.checkedAt,p.source,p.method,p.latencyMs ?? null,p.note ?? null,p.online == null ? 0 : 1,p.maxOnline == null ? 0 : 1),
-      this.db.prepare(`UPDATE server_online SET peak_24h=COALESCE((SELECT MAX(players) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),avg_7d=COALESCE((SELECT ROUND(AVG(players)) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),peak_30d=COALESCE((SELECT MAX(players) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),uptime_24h=COALESCE((SELECT 100.0*SUM(CASE WHEN status IN ('LIVE','VERIFIED') THEN 1 ELSE 0 END)/COUNT(*) FROM online_samples WHERE server_id=? AND at>?),0) WHERE server_id=?`).bind(serverId,new Date(Date.now()-86400000).toISOString(),serverId,new Date(Date.now()-7*86400000).toISOString(),serverId,new Date(Date.now()-30*86400000).toISOString(),serverId,new Date(Date.now()-86400000).toISOString(),serverId)
+      this.db.prepare('INSERT INTO online_samples(server_id,at,players,status,latency_ms,players_known,source_tier,source_name,source_url,fetched_at) VALUES (?,?,?,?,?,?,?,?,?,?)').bind(serverId,observedAt,p.online ?? 0,p.status,p.latencyMs ?? null,known,p.tier ?? null,p.source ?? null,p.sourceUrl ?? null,p.checkedAt),
+      this.db.prepare(`INSERT INTO server_online(server_id,status,current,max,checked_at,observed_at,source,source_tier,source_url,method,latency_ms,note,players_known,max_known) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(server_id) DO UPDATE SET status=excluded.status,current=excluded.current,max=excluded.max,checked_at=excluded.checked_at,observed_at=excluded.observed_at,source=excluded.source,source_tier=excluded.source_tier,source_url=excluded.source_url,method=excluded.method,latency_ms=excluded.latency_ms,note=excluded.note,players_known=excluded.players_known,max_known=excluded.max_known`).bind(serverId,p.status,p.online ?? 0,p.maxOnline ?? 0,p.checkedAt,observedAt,p.source,p.tier ?? null,p.sourceUrl ?? null,p.method,p.latencyMs ?? null,p.note ?? null,known,p.maxOnline == null ? 0 : 1),
+      // Uptime counts every answer that said "up", from any tier; UNKNOWN is no answer and is left out.
+      this.db.prepare(`UPDATE server_online SET peak_24h=COALESCE((SELECT MAX(players) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),avg_7d=COALESCE((SELECT ROUND(AVG(players)) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),peak_30d=COALESCE((SELECT MAX(players) FROM online_samples WHERE server_id=? AND players_known=1 AND at>?),0),uptime_24h=COALESCE((SELECT 100.0*SUM(CASE WHEN status IN ('LIVE','VERIFIED','EXTERNAL','OWNER_REPORTED') THEN 1 ELSE 0 END)/COUNT(*) FROM online_samples WHERE server_id=? AND at>? AND status<>'UNKNOWN'),0),checks_24h=(SELECT COUNT(*) FROM online_samples WHERE server_id=? AND fetched_at>?),change_24h=COALESCE((SELECT ROUND(100.0*(? - first.players)/first.players,1) FROM (SELECT players FROM online_samples WHERE server_id=? AND players_known=1 AND at>? ORDER BY at LIMIT 1) first WHERE first.players>0 AND ? IS NOT NULL),0) WHERE server_id=?`).bind(serverId,day,serverId,new Date(Date.now()-7*86400000).toISOString(),serverId,new Date(Date.now()-30*86400000).toISOString(),serverId,day,serverId,day,p.online ?? null,serverId,day,p.online ?? null,serverId)
     ])
   }
 }

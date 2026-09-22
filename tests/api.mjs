@@ -37,7 +37,7 @@ await new Promise((resolve,reject)=>{fixture.once('error',reject);fixture.listen
 let worker;let log;
 async function start(){
  log=createWriteStream(path.join(runDir,'worker.log'),{flags:'a'});
- worker=spawn(process.execPath,[wrangler,'dev','--local','--ip','127.0.0.1','--port','8788','--inspector-port','9239','--persist-to',state,'--log-level','error'],{windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
+ worker=spawn(process.execPath,[wrangler,'dev','--local','--ip','127.0.0.1','--port','8788','--local-upstream','127.0.0.1:8788','--inspector-port','9239','--persist-to',state,'--log-level','error'],{windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
  worker.stdout.pipe(log);worker.stderr.pipe(log);
  for(let i=0;i<180;i++){
   if(worker.exitCode!==null)throw new Error('Worker exited; see '+runDir);
@@ -146,6 +146,21 @@ try{
  await api('/votes/pending',{key,status:401});
  await api('/votes/pending',{key:rotate.apiKey});
  pass('Rotation invalidates old API key');
+ const view1=(await api('/events',{method:'POST',body:{serverId:server.id,kind:'VIEW',source:'search'},status:202})).json;
+ const view2=(await api('/events',{method:'POST',body:{serverId:server.id,kind:'VIEW',source:'search'},status:202})).json;
+ assert.equal(view1.recorded,true);assert.equal(view2.recorded,false,'the same visitor within 30 minutes is counted once');
+ await api('/events',{method:'POST',body:{serverId:server.id,kind:'PLAY_CLICK'},status:202});
+ await api('/events',{method:'POST',body:{serverId:server.id,kind:'HACK'},status:400});
+ await api('/events',{method:'POST',body:{serverId:'missing',kind:'VIEW'},status:404});
+ const stats=(await api('/servers/'+server.id+'/stats',{cookie})).json;
+ assert.equal(stats.totals.views,1);assert.equal(stats.totals.playClicks,1);assert.equal(stats.views.length,30);
+ assert.ok(stats.votes.total>=2);assert.equal(stats.sources[0].source,'search');
+ await api('/servers/'+server.id+'/stats',{cookie:other.cookie,status:403});
+ await api('/servers/'+server.id+'/stats',{status:401});
+ const ownerVotes=(await api('/servers/'+server.id+'/votes',{cookie})).json;
+ assert.ok(ownerVotes.some(v=>v.nickname==='DemoPlayer'&&v.status==='CLAIMED'));
+ await api('/servers/'+server.id+'/votes',{cookie:other.cookie,status:403});
+ pass('Card events deduped per visitor; owner-only stats and vote list from stored rows');
  await stop();
  const db=new DatabaseSync(findDb(state),{readOnly:true});
  const row=db.prepare('SELECT * FROM vote_integrations WHERE server_id=?').get(server.id);

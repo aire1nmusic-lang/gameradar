@@ -21,6 +21,7 @@ import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { StatusBadge } from '@/components/trust/status'
+import { useSeo } from '@/lib/seo'
 
 const BENEFITS = [
   {
@@ -97,11 +98,12 @@ const FAQ = [
   },
   {
     q: 'Как быстро обновляется онлайн?',
-    a: 'Проверка выполняется раз в 60 секунд. На карточке всегда видно время последней успешной проверки.',
+    a: 'Мониторинг проверяет серверы автоматически по очереди — обычно каждый сервер не реже раза в 15 минут. На карточке всегда видно источник и время последней проверки; число старше 30 минут помечается как устаревшее.',
   },
 ]
 
 export default function Owners() {
+  useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Подтвердите владение сервером, подключите Verified Online и голосование с выдачей наград.' })
   const { data: promos = [] } = useAsync(() => promoProducts(), [])
 
   return (
@@ -205,7 +207,7 @@ export default function Owners() {
               </div>
               <h2 className="text-[24px] sm:text-[30px]">Три способа подключить проверку</h2>
               <p className="mt-3 text-[14.5px] leading-relaxed text-ink-300">
-                Выберите способ, который поддерживает ваша игра. Проверка бесплатна и выполняется каждые 60 секунд.
+                Выберите способ, который поддерживает ваша игра. Проверка бесплатна и выполняется автоматически.
               </p>
             </div>
             <StatusBadge status="VERIFIED" size="lg" />

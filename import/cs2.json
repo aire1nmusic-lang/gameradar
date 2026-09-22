@@ -1,0 +1,519 @@
+[
+  {
+    "key": "cs2:17150408",
+    "game": "cs2",
+    "name": "SurfHeaven #1 Very Easy [Tier 1]",
+    "website": "https://surfheaven.eu/",
+    "chronicle": null,
+    "version": "Surf",
+    "modes": [
+      "Timer"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/cs2/17150408",
+        "config": {
+          "address": "141.95.94.30:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/csgo/17150408"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/csgo/17150408"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://surfheaven.eu/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=141.95.94.30"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "BM files CS2 under game id \"csgo\". The BM snippet address matches the live server. Game/connect port 27015; A2S query port 27015. A2S reply name: \" SurfHeaven #1 Very Easy [Tier 1] !knife !gloves !ws\"."
+  },
+  {
+    "key": "cs2:162.55.2.53-27034",
+    "game": "cs2",
+    "name": "CS2 DM | FFA #102 [DE] — CYBERSHOKE.NET",
+    "website": "https://cybershoke.net/",
+    "chronicle": null,
+    "version": "DM",
+    "modes": [
+      "FFA"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English",
+      "Russian"
+    ],
+    "country": "DE",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "162.55.2.53:27034"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/162.55.2.53:27034/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/162.55.2.53:27034/"
+      },
+      {
+        "name": "CS2Browser",
+        "url": "https://cs2browser.com/gameserver/29049/cs2-dm-ffa-102-de-cybershoke-net-easy-"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://cybershoke.net/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=162.55.2.53"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "No BattleMetrics id found: the BM API needs a subscription and the site is behind Cloudflare. Name suffix (e.g. \"(16 SLOTS)\") varies. Game/connect port 27034; A2S query port 27034. A2S reply name: \"CS2 DM | FFA #102 [DE] — CYBERSHOKE.NET (16 SLOTS)\"."
+  },
+  {
+    "key": "cs2:162.55.94.181-27023",
+    "game": "cs2",
+    "name": "CS2 SURF #23 [DE] — CYBERSHOKE.NET",
+    "website": "https://cybershoke.net/",
+    "chronicle": null,
+    "version": "Surf",
+    "modes": [],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English",
+      "Russian"
+    ],
+    "country": "DE",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "162.55.94.181:27023"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/162.55.94.181:27023/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/162.55.94.181:27023/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://cybershoke.net/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=162.55.94.181"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "No BM id found. Name suffix \"(TIER 1-2 - EASY, ...)\" varies. Game/connect port 27023; A2S query port 27023. A2S reply name: \"CS2 SURF #23 [DE] — CYBERSHOKE.NET (TIER 1-2 - EASY, ONLY NYX\"."
+  },
+  {
+    "key": "cs2:162.55.2.53-27026",
+    "game": "cs2",
+    "name": "CS2 HSDM | FFA #15 [DE] — CYBERSHOKE.NET",
+    "website": "https://cybershoke.net/",
+    "chronicle": null,
+    "version": "DM",
+    "modes": [
+      "Headshot only",
+      "FFA"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English",
+      "Russian"
+    ],
+    "country": "DE",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "162.55.2.53:27026"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/162.55.2.53:27026/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/162.55.2.53:27026/"
+      },
+      {
+        "name": "GS4U",
+        "url": "https://www.gs4u.net/en/s/305602.html"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://cybershoke.net/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=162.55.2.53"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "No BM id found. Game/connect port 27026; A2S query port 27026. A2S reply name: \"CS2 HSDM | FFA #15 [DE] — CYBERSHOKE.NET\"."
+  },
+  {
+    "key": "cs2:5.9.145.87-27040",
+    "game": "cs2",
+    "name": "XPLAY.GG • CS2 Matches #324",
+    "website": "https://xplay.gg/",
+    "chronicle": null,
+    "version": "Competitive",
+    "modes": [
+      "5v5",
+      "Matches"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English",
+      "Russian"
+    ],
+    "country": "DE",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "5.9.145.87:27040"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameMonitoring",
+      "url": "https://gamemonitoring.net/counter-strike-2/servers/993238"
+    },
+    "refs": [
+      {
+        "name": "GameMonitoring",
+        "url": "https://gamemonitoring.net/counter-strike-2/servers/993238"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://xplay.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=5.9.145.87"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "No BM id found. xplay.gg sits behind a Cloudflare challenge (curl 403); the domain is the network's published site. Low population at sample time. Game/connect port 27040; A2S query port 27040. A2S reply name: \"XPLAY.GG • CS2 Matches #324\"."
+  },
+  {
+    "key": "cs2:74.91.124.21-27015",
+    "game": "cs2",
+    "name": "GFL Zombie Escape 24/7",
+    "website": "https://gflclan.com/",
+    "chronicle": null,
+    "version": "Zombie Escape",
+    "modes": [],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "74.91.124.21:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/74.91.124.21:27015/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/74.91.124.21:27015/"
+      },
+      {
+        "name": "GameMonitoring",
+        "url": "https://gamemonitoring.net/counter-strike-2/servers/4903856"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://gflclan.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=74.91.124.21"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "No BM id found (the indexed GFL ZE BM pages are CS:S/test servers). Game/connect port 27015; A2S query port 27015. A2S reply name: \"GFL Zombie Escape 24/7 | discord.gg/gflze |\"."
+  },
+  {
+    "key": "cs2:82.29.125.130-27015",
+    "game": "cs2",
+    "name": "RAKIJA Public [Balkan]",
+    "website": "https://rakija.info/",
+    "chronicle": null,
+    "version": "Public",
+    "modes": [
+      "Casual"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "Serbian",
+      "Croatian"
+    ],
+    "country": "HR",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "82.29.125.130:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/cs2.rakija.info:27015/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/cs2.rakija.info:27015/"
+      },
+      {
+        "name": "Tsarvar",
+        "url": "https://tsarvar.com/en/servers/counter-strike-2/cs2.rakija.info:27015"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rakija.info/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=82.29.125.130"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Connect hostname cs2.rakija.info. No BM id found. rakija.info sits behind a Cloudflare challenge (curl 403). Country per tsarvar (Zagreb). Game/connect port 27015; A2S query port 27015; hostname cs2.rakija.info. A2S reply name: \" RAKIJA Public [Balkan] !skins !knife !gloves\"."
+  },
+  {
+    "key": "cs2:185.193.165.12-27015",
+    "game": "cs2",
+    "name": "TurkishArmy | PRO PUBLIC!",
+    "website": "https://turkisharmycs2.com/",
+    "chronicle": null,
+    "version": "Public",
+    "modes": [
+      "128 tick"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "Turkish"
+    ],
+    "country": "TR",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "185.193.165.12:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/185.193.165.12:27015/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/185.193.165.12:27015/"
+      },
+      {
+        "name": "GS4U",
+        "url": "https://www.gs4u.net/en/s/151051.html"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://turkisharmycs2.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=185.193.165.12"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname pro.cs2.org.tr resolves to 185.193.165.12. No BM id found. Game/connect port 27015; A2S query port 27015; hostname pro.cs2.org.tr. A2S reply name: \"TurkishArmy | PRO PUBLIC! | turkisharmycs2.com\"."
+  },
+  {
+    "key": "cs2:185.193.165.46-27015",
+    "game": "cs2",
+    "name": "Heliosgaming.net | Pro&Pub",
+    "website": "https://heliosgaming.net/",
+    "chronicle": null,
+    "version": "Public",
+    "modes": [
+      "DM"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "Turkish"
+    ],
+    "country": "TR",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "185.193.165.46:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/pro.heliosgaming.net:27015/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/pro.heliosgaming.net:27015/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://heliosgaming.net/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=185.193.165.46"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname pro.heliosgaming.net. No BM id found. Decorative name prefix/suffix changes often. Game/connect port 27015; A2S query port 27015; hostname pro.heliosgaming.net. A2S reply name: \"☪︎ Heliosgaming.net | Pro&Pub | +FPS -LAG | .gg/hga\"."
+  },
+  {
+    "key": "cs2:145.239.149.57-27015",
+    "game": "cs2",
+    "name": "Kosova Server | eSportsKosova.com",
+    "website": "https://esportskosova.com/",
+    "chronicle": null,
+    "version": "Public",
+    "modes": [
+      "Competitive maps"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "Albanian"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": null,
+        "config": {
+          "address": "145.239.149.57:27015"
+        }
+      }
+    ],
+    "source": {
+      "name": "GameTracker",
+      "url": "https://www.gametracker.com/server_info/makolli.in:27015/"
+    },
+    "refs": [
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/makolli.in:27015/"
+      },
+      {
+        "name": "Tsarvar",
+        "url": "https://tsarvar.com/en/servers/counter-strike-go/makolli.in:27015"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://esportskosova.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=145.239.149.57"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Hostname makolli.in (145.239.149.57). BM id 16914315 (\"eSportsKosova | Makolli.net\") is indexed at an old IP (87.238.211.216), which no longer answers, so it was not used. Game/connect port 27015; A2S query port 27015; hostname makolli.in. A2S reply name: \"Kosova Server | eSportsKosova.com\"."
+  }
+]

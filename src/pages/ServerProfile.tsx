@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
-  BellRing,
   CalendarClock,
   ChevronRight,
   Globe,
@@ -20,14 +19,18 @@ import {
   formatDate,
   formatLaunch,
   formatNumber,
+  formatPlayers,
   formatRating,
+  formatSlots,
   formatRelativeDays,
   plural,
 } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
-import { useServer, useSimilarServers } from '@/hooks/data'
-import type { ChartRange, GameServer } from '@/models'
+import { useAsync, useServer, useSimilarServers } from '@/hooks/data'
+import { repo } from '@/repositories'
+import { track, visitSource } from '@/services/events'
+import type { ChartRange, GameServer, HistoryEvent } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
@@ -41,6 +44,8 @@ import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { AreaChart } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
+import { VotePanel } from '@/components/profile/VotePanel'
+import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
 import { serverArt } from '@/data/themeMedia'
@@ -52,6 +57,7 @@ import {
   ThemedButton,
 } from '@/theme'
 import { ServerCard } from '@/components/server/ServerCard'
+import { breadcrumbs, useSeo } from '@/lib/seo'
 
 export default function ServerProfile() {
   const { slug } = useParams()
@@ -102,7 +108,52 @@ function Profile({ server }: { server: GameServer }) {
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [claimOpen, setClaimOpen] = useState(false)
+  const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
+
+  useSeo({
+    title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
+    description: [server.summary, server.rates && `Рейты ${server.rates}`, server.languages.length ? `Язык: ${server.languages.join(', ')}` : ''].filter(Boolean).join('. '),
+    path: `/server/${server.slug}`,
+    noindex: server.moderation !== 'PUBLISHED' || !!server.demo,
+    jsonLd: [
+      breadcrumbs([
+        { name: 'GameScout', path: '/' },
+        { name: game.name, path: '/' + game.slug },
+        { name: server.name, path: `/server/${server.slug}` },
+      ]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: server.name,
+        url: `https://gamescout.online/server/${server.slug}`,
+        inLanguage: 'ru',
+        about: { '@type': 'VideoGame', name: game.name },
+        ...(server.links.site ? { relatedLink: server.links.site } : {}),
+      },
+    ],
+  })
+  const site = server.links.site || undefined
+  const upcoming = server.online.status === 'PENDING' && !!server.launch
+
+  useEffect(() => {
+    track(server.id, 'VIEW', visitSource())
+  }, [server.id])
+
+  async function share() {
+    const url = window.location.origin + '/server/' + server.slug
+    try {
+      if (navigator.share) await navigator.share({ title: server.name, url })
+      else {
+        await navigator.clipboard.writeText(url)
+        setShared(true)
+        setTimeout(() => setShared(false), 1800)
+      }
+    } catch {
+      // the player closed the share sheet
+    }
+  }
 
   return (
     <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
@@ -164,10 +215,14 @@ function Profile({ server }: { server: GameServer }) {
                   {game.name} · {chronicle?.label ?? server.version}
                 </span>
                 <span className="text-ink-600">•</span>
-                <span>
-                  {server.flag} {server.country} · {server.region}
-                </span>
-                <span className="text-ink-600">•</span>
+                {(server.country || server.region) && (
+                  <>
+                    <span>
+                      {server.flag} {[server.country, server.region].filter(Boolean).join(' · ')}
+                    </span>
+                    <span className="text-ink-600">•</span>
+                  </>
+                )}
                 <Rating value={server.rating} count={server.reviewsCount} size="sm" />
               </div>
             </div>
@@ -185,19 +240,22 @@ function Profile({ server }: { server: GameServer }) {
               <Heart size={17} fill={favorite ? 'currentColor' : 'none'} />
             </button>
             <button
-              aria-label="Поделиться"
+              aria-label={shared ? 'Ссылка скопирована' : 'Поделиться'}
+              title={shared ? 'Ссылка скопирована' : 'Поделиться'}
+              onClick={share}
               className="grid h-11 w-11 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-ink-300 transition-colors hover:border-white/20 hover:text-ink-50"
             >
               <Share2 size={16} />
             </button>
             <span className="hidden lg:block">
-              {server.online.status === 'PENDING' && server.launch ? (
-                <ThemedButton size="lg" icon={<BellRing size={16} />}>
-                  Напомнить об открытии
-                </ThemedButton>
-              ) : (
-                <ThemedButton size="lg" icon={<Play size={16} fill="currentColor" />}>
-                  Играть на сервере
+              {site && (
+                <ThemedButton
+                  size="lg"
+                  href={site}
+                  onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'hero')}
+                  icon={upcoming ? <Globe size={16} /> : <Play size={16} fill="currentColor" />}
+                >
+                  {upcoming ? 'Сайт проекта' : 'Играть на сервере'}
                 </ThemedButton>
               )}
             </span>
@@ -213,7 +271,9 @@ function Profile({ server }: { server: GameServer }) {
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="min-w-0 space-y-6">
             <OnlineSection server={server} />
-            <ServerMedia server={server} />
+            <VotePanel server={server} />
+            {/* The gallery is generated art: only DEMO fixtures may show it. */}
+            {server.demo && <ServerMedia server={server} />}
             <InfoSection server={server} />
             <HistorySection server={server} />
             <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />
@@ -223,7 +283,7 @@ function Profile({ server }: { server: GameServer }) {
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <TrustPanel online={server.online} />
               <LinksCard server={server} />
-              <OwnerCard />
+              <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />
             </div>
           </aside>
         </div>
@@ -262,20 +322,21 @@ function Profile({ server }: { server: GameServer }) {
                 ? server.launch
                   ? formatCountdown(server.launch.at)
                   : '—'
-                : formatNumber(server.online.current)}
+                : formatPlayers(server.online)}
               {server.online.status !== 'PENDING' && (
-                <span className="text-[12px] font-normal text-ink-500"> / {formatNumber(server.online.max)}</span>
+                <span className="text-[12px] font-normal text-ink-500"> / {formatSlots(server.online)}</span>
               )}
             </div>
-            <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
+            <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
           </div>
-          {server.online.status === 'PENDING' && server.launch ? (
-            <Button variant="primary" icon={<BellRing size={15} />}>
-              Напомнить
-            </Button>
-          ) : (
-            <Button variant="primary" icon={<Play size={15} />}>
-              Играть
+          {site && (
+            <Button
+              variant="primary"
+              href={site}
+              onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'sticky')}
+              icon={upcoming ? <Globe size={15} /> : <Play size={15} />}
+            >
+              {upcoming ? 'Сайт' : 'Играть'}
             </Button>
           )}
         </div>
@@ -297,14 +358,16 @@ function Profile({ server }: { server: GameServer }) {
           30 минут за последние 30 дней.
         </Notice>
       </Modal>
+      <ClaimModal server={server} open={claimOpen} onClose={() => setClaimOpen(false)} />
     </ThemeScope>
   )
 }
 
 function OnlineSection({ server }: { server: GameServer }) {
   const [range, setRange] = useState<ChartRange>('24h')
-  const { status, current, max, change24h, peak24h, avg7d, peak30d } = server.online
-  const data = server.history[range]
+  const { status, change24h, peak24h, avg7d, peak30d } = server.online
+  const { data: samples } = useAsync(() => repo.servers.onlineHistory(server.id, range).catch(() => []), [server.id, range])
+  const data = (samples ?? []).map(sample => sample.players).filter((players): players is number => typeof players === 'number')
 
   if (status === 'PENDING' && server.launch) {
     return (
@@ -327,18 +390,23 @@ function OnlineSection({ server }: { server: GameServer }) {
         </div>
 
         <Notice tone="info" className="mt-5">
-          Проверка онлайна начнётся автоматически в момент запуска. До этого GameScout не показывает никаких цифр
-          онлайна — даже если владелец их заявляет.
+          До запуска GameScout не показывает никаких цифр онлайна — даже если проект их заявляет.
         </Notice>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Button variant="primary" icon={<BellRing size={15} />}>
-            Напомнить об открытии
-          </Button>
-          <Button variant="outline" href={`https://${server.links.discord}`} icon={<MessageSquare size={15} />}>
-            Discord проекта
-          </Button>
-        </div>
+        {(server.links.site || server.links.discord) && (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {server.links.site && (
+              <Button variant="primary" href={server.links.site} onClick={() => track(server.id, 'WEBSITE_CLICK', 'launch')} icon={<Globe size={15} />}>
+                Сайт проекта
+              </Button>
+            )}
+            {server.links.discord && (
+              <Button variant="outline" href={server.links.discord} icon={<MessageSquare size={15} />}>
+                Discord проекта
+              </Button>
+            )}
+          </div>
+        )}
       </section>
     )
   }
@@ -355,14 +423,14 @@ function OnlineSection({ server }: { server: GameServer }) {
                 status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {formatNumber(current)}
+              {formatPlayers(server.online)}
             </span>
             <span className="pb-1.5 text-[14px] text-ink-400">
-              {status === 'OFFLINE' ? 'сервер не отвечает' : `игроков сейчас · из ${formatNumber(max)}`}
+              {status === 'OFFLINE' ? 'сервер не отвечает' : `игроков сейчас · из ${formatSlots(server.online)}`}
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-3">
-            <VerifiedLine status={status} seconds={server.online.checkedAgoSec} source={server.online.source} />
+            <VerifiedLine online={server.online} launching={!!server.launch} />
             {status !== 'OFFLINE' && <TrendChip value={change24h} />}
           </div>
         </div>
@@ -391,12 +459,22 @@ function OnlineSection({ server }: { server: GameServer }) {
       )}
       {status === 'OWNER_REPORTED' && (
         <Notice tone="info" title="Онлайн не подтверждён независимо" className="mt-5">
-          Число передано владельцем сервера. GameScout не может его проверить — подключение Verified Online доступно
-          владельцу бесплатно.
+          {server.online.sourceTier === 'OFFICIAL'
+            ? 'Число опубликовано на сайте проекта. GameScout не может его проверить — подключение Verified Online доступно владельцу бесплатно.'
+            : 'Число передано владельцем сервера. GameScout не может его проверить — подключение Verified Online доступно владельцу бесплатно.'}
+        </Notice>
+      )}
+      {status === 'EXTERNAL' && (
+        <Notice tone="info" title="Онлайн по данным стороннего мониторинга" className="mt-5">
+          Число взято у {server.online.source}
+          {server.online.note ? `. ${server.online.note}` : ''} GameScout отмечает VERIFIED только то, что измерил сам.
         </Notice>
       )}
 
       <div className="mt-6">
+        {data.length < 2 && (
+          <p className="text-[13px] text-ink-500">История онлайна появится после нескольких проверок за выбранный период.</p>
+        )}
         <AreaChart
           data={data}
           range={range}
@@ -413,7 +491,7 @@ function OnlineSection({ server }: { server: GameServer }) {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Сейчас" value={formatNumber(current)} accent={status === 'VERIFIED'} />
+        <StatTile label="Сейчас" value={formatPlayers(server.online)} accent={status === 'VERIFIED'} />
         <StatTile label="Пик за 24 часа" value={formatNumber(peak24h)} />
         <StatTile label="Среднее за 7 дней" value={formatNumber(avg7d)} />
         <StatTile label="Пик за 30 дней" value={formatNumber(peak30d)} />
@@ -450,12 +528,19 @@ function InfoSection({ server }: { server: GameServer }) {
     ['Игра', game.name],
     ['Версия / хроники', server.version],
     ['Режимы', server.modes.join(' · ')],
-    ['Регион', `${server.region} · ${server.country}`],
-    ['Языки', server.languages.join(', ')],
+    ['Регион', [server.region, server.country].filter(Boolean).join(' · ') || '—'],
+    ['Языки', server.languages.join(', ') || '—'],
   ]
   if (server.rates) specs.push(['Рейты', server.rates])
   if (server.nextWipeAt) specs.push(['Следующий вайп', formatDate(server.nextWipeAt)])
-  specs.push(['Открыт', `${formatDate(server.openedAt)} · ${formatAge(server.openedAt)}`])
+  // A future opening is shown by the launch block; "opened N months ago" would be false.
+  if (server.openedAt && Date.parse(server.openedAt) <= Date.now()) specs.push(['Открыт', `${formatDate(server.openedAt)} · ${formatAge(server.openedAt)}`])
+  // An imported card says where its facts come from and when they were last checked.
+  if (server.provenance?.sourceName)
+    specs.push([
+      'Источник данных',
+      `${server.provenance.sourceName}${server.provenance.lastSourceCheckAt ? ` · проверено ${formatDate(server.provenance.lastSourceCheckAt)}` : ''}`,
+    ])
 
   return (
     <section className="surface rounded-xl p-5 sm:p-6">
@@ -486,12 +571,26 @@ function InfoSection({ server }: { server: GameServer }) {
   )
 }
 
+/** Facts the platform stores about the card — nothing generated. */
+function projectEvents(server: GameServer): HistoryEvent[] {
+  const now = Date.now()
+  const events: HistoryEvent[] = [...server.events]
+  if (server.openedAt && Date.parse(server.openedAt) <= now) events.push({ label: 'Открытие сервера', date: server.openedAt, kind: 'open' })
+  if (server.lastWipeAt) events.push({ label: 'Последний вайп', date: server.lastWipeAt, kind: 'wipe' })
+  events.push({ label: 'Карточка добавлена в каталог GameScout', date: server.addedAt, kind: 'update' })
+  if (server.provenance?.lastSourceCheckAt)
+    events.push({ label: 'Данные карточки сверены с источниками', date: server.provenance.lastSourceCheckAt, kind: 'verify' })
+  return events.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+}
+
 function HistorySection({ server }: { server: GameServer }) {
+  const events = projectEvents(server)
+  if (!events.length) return null
   return (
     <section className="surface rounded-xl p-5 sm:p-6">
       <h2 className="text-[18px]">История проекта</h2>
       <div className="mt-5 space-y-0">
-        {server.events.map((event, index) => (
+        {events.map((event, index) => (
           <div key={`${event.label}-${index}`} className="flex gap-4">
             <div className="flex flex-col items-center">
               <span
@@ -506,7 +605,7 @@ function HistorySection({ server }: { server: GameServer }) {
                         : 'bg-ink-500',
                 )}
               />
-              {index < server.events.length - 1 && <span className="w-px flex-1 bg-white/8" />}
+              {index < events.length - 1 && <span className="w-px flex-1 bg-white/8" />}
             </div>
             <div className="flex flex-1 items-baseline justify-between gap-4 pb-5">
               <span className="text-[13.5px] text-ink-100">{event.label}</span>
@@ -535,17 +634,21 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
     <section className="surface rounded-xl p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[18px]">Отзывы игроков</h2>
-        <Button variant="secondary" size="sm" onClick={onWrite}>
-          Написать отзыв
-        </Button>
+        {/* Reviews are not stored yet; the button returns with the real flow. */}
+        {server.reviews.length > 0 && (
+          <Button variant="secondary" size="sm" onClick={onWrite}>
+            Написать отзыв
+          </Button>
+        )}
       </div>
 
       {server.reviews.length === 0 ? (
         <div className="mt-5 rounded-lg border border-dashed border-white/10 px-5 py-10 text-center">
           <p className="text-[14px] text-ink-200">Отзывов пока нет</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-ink-400">
-            Сервер ещё не открылся. Первые отзывы появятся после старта — оставить их смогут только игроки, которые
-            действительно заходили на сервер.
+            {server.launch
+              ? 'Сервер ещё не открылся. Первые отзывы появятся после старта.'
+              : 'Отзывы на GameScout пока не принимаются — мы запустим их вместе с проверкой, что автор действительно играл на сервере.'}
           </p>
         </div>
       ) : (
@@ -627,14 +730,23 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
 }
 
 function LinksCard({ server }: { server: GameServer }) {
+  const links = [
+    { key: 'site', icon: <Globe size={15} />, url: server.links.site, event: true },
+    { key: 'discord', icon: <MessageSquare size={15} />, url: server.links.discord, event: false },
+    { key: 'telegram', icon: <Send size={15} />, url: server.links.telegram, event: false },
+  ].filter(link => !!link.url)
   return (
     <div className="surface rounded-xl p-5">
       <h3 className="mb-3.5 text-[14px] font-medium text-ink-50">Ссылки проекта</h3>
-      <div className="space-y-2">
-        <LinkRow icon={<Globe size={15} />} label={server.links.site} />
-        <LinkRow icon={<MessageSquare size={15} />} label={server.links.discord} />
-        {server.links.telegram && <LinkRow icon={<Send size={15} />} label={server.links.telegram} />}
-      </div>
+      {links.length ? (
+        <div className="space-y-2">
+          {links.map(link => (
+            <LinkRow key={link.key} icon={link.icon} url={link.url!} onClick={link.event ? () => track(server.id, 'WEBSITE_CLICK', 'links') : undefined} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-[13px] text-ink-500">Проект не опубликовал ссылок.</p>
+      )}
       <div className="mt-4 flex items-center justify-between border-t border-white/6 pt-3.5 text-[12.5px] text-ink-400">
         <span>В избранном у игроков</span>
         <span className="num text-ink-100">{formatNumber(server.favorites)}</span>
@@ -643,12 +755,20 @@ function LinksCard({ server }: { server: GameServer }) {
   )
 }
 
-function LinkRow({ icon, label }: { icon: React.ReactNode; label: string }) {
+function LinkRow({ icon, url, onClick }: { icon: React.ReactNode; url: string; onClick?: () => void }) {
+  let label = url
+  try {
+    const parsed = new URL(url)
+    label = parsed.host.replace(/^www\./, '') + (parsed.pathname === '/' ? '' : parsed.pathname)
+  } catch {
+    // shown as given
+  }
   return (
     <a
-      href={`https://${label}`}
+      href={url}
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer nofollow"
+      onClick={onClick}
       className="flex items-center gap-2.5 rounded-md border border-white/7 bg-white/[0.02] px-3 py-2.5 text-[13px] text-ink-200 transition-colors hover:border-white/16 hover:text-ink-50"
     >
       <span className="text-ink-400">{icon}</span>
@@ -658,15 +778,17 @@ function LinkRow({ icon, label }: { icon: React.ReactNode; label: string }) {
   )
 }
 
-function OwnerCard() {
+function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) {
   return (
     <div className="rounded-xl border border-white/7 bg-ink-900/60 p-5">
-      <h3 className="text-[14px] font-medium text-ink-50">Это ваш сервер?</h3>
+      <h3 className="text-[14px] font-medium text-ink-50">{owned ? 'Владелец подтверждён' : 'Это ваш сервер?'}</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-ink-400">
-        Подтвердите владение, чтобы редактировать карточку, подключить Verified Online и видеть статистику переходов.
+        {owned
+          ? 'Карточкой управляет подтверждённый владелец проекта.'
+          : 'Подтвердите владение, чтобы настроить награду за голос, мониторинг и видеть статистику переходов.'}
       </p>
-      <Button to="/owners" variant="outline" full className="mt-4">
-        Подтвердить владение
+      <Button variant="outline" full className="mt-4" onClick={onClaim} icon={owned ? undefined : <ShieldCheck size={15} />}>
+        {owned ? 'Я владелец — открыть' : 'Это мой сервер'}
       </Button>
     </div>
   )

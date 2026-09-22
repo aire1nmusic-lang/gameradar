@@ -293,3 +293,93 @@ CSS-класс `.ad-slot` (`data-ad-label`). Подмена органическ
 Архитектура подготовлена под замену данных на API: весь доступ к данным идёт через модули
 `src/data/*`, а темы резолвятся через `resolveWorld()` / `themeForGame()` — компоненты не знают,
 откуда пришли игры, серверы и темы.
+
+## Реальный каталог: импорт и мониторинг
+
+Реальные серверы попадают в каталог из курируемого датасета `import/*.json` (`lineage2.json`,
+`minecraft.json`, `gtarp.json`). В записи только публичные факты: название, официальный сайт,
+публичный endpoint, хроника / режим, рейты, дата открытия, язык и страна, если они подтверждены.
+Поля для описания, логотипа или скриншотов нет — валидатор (`scripts/import/dataset.mjs`) отклоняет
+любой незнакомый ключ, поэтому чужие рекламные тексты и картинки в каталог не попадут. Текст карточки
+GameScout пишет сам по фактам.
+
+У каждой записи есть `source` (страница, откуда она взята) и `refs` (все страницы, где факты
+подтвердились). `confirmed` требует минимум двух независимых источников, `likely` по умолчанию
+не импортируется. В D1 это колонки `import_key`, `source_name`, `source_url`, `source_refs`,
+`imported_at`, `last_source_check_at` (миграция `0003_provenance.sql`).
+
+```bash
+npm run import:check                                  # проверить датасет, БД не трогать
+npm run import:servers -- --hide-demo                 # локальная D1 (.wrangler/state)
+npm run import:probe                                  # опросить endpoint'ы датасета кодом адаптеров
+npm run import:servers -- --remote --config <prod wrangler.toml>          # план, без записи
+npm run import:servers -- --remote --config <prod wrangler.toml> --yes    # запись в production
+```
+
+Импорт идемпотентен: id строки выводится из `key` записи, запись — upsert, который меняет строку,
+только если изменился факт. Карточку с подтверждённым владельцем импорт не перезаписывает.
+`--hide-demo` переводит DEMO-карточки в `ARCHIVED` (они остаются в БД, dev-seed не меняется),
+`--show-demo` возвращает их, `--archive-missing` скрывает импортированные карточки,
+которых больше нет в датасете.
+
+### Источники онлайна и модель доверия
+
+На каждом проходе мониторинга для карточки пробуется цепочка **DIRECT → OFFICIAL → EXTERNAL → UNKNOWN**
+(`worker/lib/monitor.ts`); первый ответ с числом побеждает.
+
+| Tier | Что это | Статус | Где |
+| --- | --- | --- | --- |
+| DIRECT | собственная проверка GameScout | `VERIFIED` / `LIVE` / `ANOMALY` / `OFFLINE` | `worker/adapters/games.ts`, таблица `monitoring_targets` |
+| OFFICIAL | счётчик на сайте/в API самого проекта | `OWNER_REPORTED` («По данным сайта проекта») | `official_json`, `official_html` |
+| EXTERNAL | сторонний мониторинг | `EXTERNAL` («По данным <источник>») | `mcstatus`, `mcsrvstat`, `steam`, `battlemetrics` |
+| UNKNOWN | ни один источник не ответил и никто не сказал, что сервер выключен | `UNKNOWN` | — |
+
+Только DIRECT может дать `VERIFIED`. «Сервер выключен» — факт, только если его сообщил источник:
+падение стороннего API даёт `UNKNOWN`, а не ложный `OFFLINE`. Источники OFFICIAL/EXTERNAL лежат в
+таблице `online_sources` (миграция `0004`) и задаются в датасете полем `onlineSources`; для каждого
+Minecraft-адреса importer сам добавляет `mcstatus.io` и `mcsrvstat.us` как запасные.
+
+| Игра | DIRECT | OFFICIAL / EXTERNAL |
+| --- | --- | --- |
+| Minecraft | Server List Ping (+SRV) → `LIVE`, число сообщает сам сервер | mcstatus.io, mcsrvstat.us (документированные публичные API) |
+| GTA RP / FiveM | `info.json`/`dynamic.json`/`players.json` → `VERIFIED` только для настоящего ростера (уникальные id), совпавшего с `dynamic.json`, от самого сервера (не `*.cfx.re`) и с совпавшим именем проекта; обезличенный `players.json` → `LIVE` | мастер-лист Cfx.re не используется |
+| Lineage 2 | логин-сервер → `LIVE` без числа | счётчик на сайте проекта, где он честный (BoHpts JSON, TheBattle) |
+| Rust / CS2 / DayZ | нет: A2S работает по UDP, а в Worker UDP нет | Steam Web API `GetServerList` — только с секретом `STEAM_API_KEY`; BattleMetrics API с 2026 года требует платную подписку |
+
+**Свежесть.** Число старше 30 минут (`FRESH_MS`) считается устаревшим: в карточке вместо него «—» и
+«Данные устарели · обновлено N назад», оно не участвует в сортировке «по онлайну», в суммах онлайна
+игр и в рейтинге. Рейтинг взвешивает онлайн по доверию: VERIFIED 1, LIVE 0,6, EXTERNAL 0,4, OWNER_REPORTED 0,25.
+История (`online_samples`) хранит для каждой точки tier, имя и URL источника и время получения.
+
+Мониторинг идёт по cron (`*/2 * * * *`, ~50 карточек укладываются в 30-минутное окно свежести), по `MONITOR_BATCH` карточек за тик, начиная с давно не
+проверенных; карточки, чей единственный источник сейчас недоступен (Steam без ключа), в очередь не попадают.
+Ключ Steam задаётся секретом: `npx wrangler secret put STEAM_API_KEY`.
+
+### Локальный Worker и production-конфиг
+
+Production `wrangler.toml` объявляет `[[routes]]` (`gamescout.online/api/*`). С маршрутом `wrangler dev`
+по умолчанию подставляет его host в URL запроса, и Worker перестаёт считать запрос локальным — dev-вход
+(`/api/v1/auth/dev`) закрывается даже при `.dev.vars`. Поэтому `npm run dev:api` и тесты запускают
+Worker с `--local-upstream 127.0.0.1:<port>`. Production не меняется: там `ENVIRONMENT=production`,
+`DEV_AUTH_ENABLED=false`, и dev-вход недоступен независимо от host.
+
+## Владельцы, голосование, аналитика
+
+- **«Это мой сервер»** — модалка на профиле: вход → проверочный код → файл
+  `/.well-known/gamescout-verification.txt` на сайте проекта → проверка → карточка в кабинете.
+- **Голосование** — панель на профиле: награда из настроек владельца, ник, кулдаун с датой следующего
+  голоса. Выдача наград — существующий Pull API (`/api/v1/votes/pending`, `/api/v1/votes/claim`).
+- **Кабинет** (`/dashboard`) — только сохранённые данные: мои серверы и статус владения, онлайн с
+  источником, просмотры/переходы/голоса за 7 или 30 дней, последние голоса, настройки награды,
+  выпуск ключа Pull API (показывается один раз), настройки прямого мониторинга.
+- **События карточки** — `POST /api/v1/events` (`VIEW`, `WEBSITE_CLICK`, `PLAY_CLICK`, `VOTE_CLICK`,
+  `CLAIM_START`) в `server_events`; один посетитель (солёный хэш адреса и User-Agent) — не чаще раза в
+  30 минут на карточку и тип события.
+- **DEMO** — вне `ENVIRONMENT=development` API не отдаёт DEMO-карточки вообще; dev-seed не изменён.
+
+## SEO
+
+`useSeo` (`src/lib/seo.ts`) выставляет title, description, canonical, Open Graph, robots и JSON-LD
+(BreadcrumbList, WebPage) на каждой странице; приватные страницы — `noindex`. `public/robots.txt`
+закрывает API и кабинет; `public/sitemap.xml` генерируется при `npm run build` из датасета
+(`scripts/sitemap.mjs`) — карточки, добавленные владельцами, в него пока не попадают.

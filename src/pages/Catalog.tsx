@@ -17,10 +17,12 @@ import { EmptyState } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { themeForGame } from '@/data/themes'
 import { InlinePromo, SidebarBanner } from '@/components/ads/AdSlots'
+import { useSeo } from '@/lib/seo'
 
 const PAGE_SIZE = 12
 
 export default function Catalog() {
+  useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
   const [params, setParams] = useSearchParams()
 
   const [filters, setFilters] = useState<CatalogFilters>(() => ({

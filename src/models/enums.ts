@@ -27,6 +27,10 @@ export const OnlineStatus = {
   Anomaly: 'ANOMALY',
   Pending: 'PENDING',
   Checking: 'CHECKING',
+  /** a third-party monitor reports the number — never VERIFIED */
+  External: 'EXTERNAL',
+  /** every source failed and none said the server is down */
+  Unknown: 'UNKNOWN',
 } as const
 export type OnlineStatus = (typeof OnlineStatus)[keyof typeof OnlineStatus]
 
@@ -40,6 +44,11 @@ export const ProbeMethod = {
   Agent: 'AGENT',
   LoginServer: 'LOGIN_SERVER',
   OwnerSubmitted: 'OWNER_SUBMITTED',
+  /** a counter the project publishes on its own site or API */
+  OfficialSource: 'OFFICIAL_SOURCE',
+  /** a third-party monitor (mcsrvstat.us, BattleMetrics, …) */
+  ExternalMonitor: 'EXTERNAL_MONITOR',
+  None: 'NONE',
 } as const
 export type ProbeMethod = (typeof ProbeMethod)[keyof typeof ProbeMethod]
 

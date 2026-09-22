@@ -134,7 +134,7 @@ function applyQuery(query: ServerQuery): GameServer[] {
     }
     const windowDays = WINDOW_DAYS[query.openedWithin ?? 'any']
     if (windowDays !== Infinity) {
-      if ((now - new Date(server.openedAt).getTime()) / 86_400_000 > windowDays) return false
+      if ((now - new Date(server.openedAt ?? server.addedAt).getTime()) / 86_400_000 > windowDays) return false
     }
     return true
   })

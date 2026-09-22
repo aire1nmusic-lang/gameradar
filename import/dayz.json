@@ -1,0 +1,545 @@
+[
+  {
+    "key": "dayz:10208960",
+    "game": "dayz",
+    "name": "The Lab US1 | Max 5 | dayzthelab.com",
+    "website": "https://dayzthelab.com/",
+    "chronicle": null,
+    "version": "PvP",
+    "modes": [
+      "1PP",
+      "Group max 5"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/10208960",
+        "config": {
+          "address": "168.100.163.22:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/10208960"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/10208960"
+      },
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/168.100.163.22:2302/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://dayzthelab.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=168.100.163.22"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "A2S query port 27016, game port 2302. The map segment of the BM title changes (Chernarus/Deerisle). Game/connect port 2302; A2S query port 27016. A2S reply name: \"The Lab US1 | Max 5 | dayzthelab.com\"."
+  },
+  {
+    "key": "dayz:24916845",
+    "game": "dayz",
+    "name": "The Lab EU1 | Max 5 | dayzthelab.com",
+    "website": "https://dayzthelab.com/",
+    "chronicle": null,
+    "version": "PvP",
+    "modes": [
+      "1PP",
+      "Group max 5"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/24916845",
+        "config": {
+          "address": "195.60.166.82:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/24916845"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/24916845"
+      },
+      {
+        "name": "GameMonitoring",
+        "url": "https://gamemonitoring.net/dayz/servers/3025432"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://dayzthelab.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=195.60.166.82"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "A2S query port 27016. Game/connect port 2302; A2S query port 27016. A2S reply name: \"The Lab EU1 | Max 5 | dayzthelab.com\"."
+  },
+  {
+    "key": "dayz:29713923",
+    "game": "dayz",
+    "name": "KarmaKrew Chernarus #2 EU - SOLO DUO TRIO | 1PP",
+    "website": "https://karmakrew.tv/",
+    "chronicle": null,
+    "version": "Vanilla+",
+    "modes": [
+      "PvP",
+      "1PP",
+      "Group max 3"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/29713923",
+        "config": {
+          "address": "193.25.252.15:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/29713923"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/29713923"
+      },
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/193.25.252.15:2302/"
+      },
+      {
+        "name": "KarmaKrew server list",
+        "url": "https://karmakrew.tv/server-list/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://karmakrew.tv/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=193.25.252.15"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "IP listed on karmakrew.tv/server-list. A2S query port 27016. Game/connect port 2302; A2S query port 27016. A2S reply name: \"KarmaKrew Chernarus #2 EU - SOLO DUO TRIO | 1PP | VANILLA + MOD\"."
+  },
+  {
+    "key": "dayz:30203865",
+    "game": "dayz",
+    "name": "KarmaKrew Chernarus #3 NA - 1PP | VANILLA + MODS",
+    "website": "https://karmakrew.tv/",
+    "chronicle": null,
+    "version": "Vanilla+",
+    "modes": [
+      "PvP",
+      "1PP"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/30203865",
+        "config": {
+          "address": "172.111.51.131:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/30203865"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/30203865"
+      },
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/172.111.51.131:2302/"
+      },
+      {
+        "name": "KarmaKrew server list",
+        "url": "https://karmakrew.tv/server-list/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://karmakrew.tv/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=172.111.51.131"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "IP listed on karmakrew.tv/server-list. A2S query port 27016. Game/connect port 2302; A2S query port 27016. A2S reply name: \"KarmaKrew Chernarus #3 NA - 1PP | VANILLA + MODS\"."
+  },
+  {
+    "key": "dayz:13864540",
+    "game": "dayz",
+    "name": "Rearmed EU Main",
+    "website": "https://rearmed.gg/",
+    "chronicle": null,
+    "version": "Modded",
+    "modes": [
+      "PvP",
+      "1PP",
+      "Expansion"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "DE",
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/13864540",
+        "config": {
+          "address": "193.25.252.35:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/13864540"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/13864540"
+      },
+      {
+        "name": "GameMonitoring",
+        "url": "https://gamemonitoring.net/dayz/servers/630014"
+      },
+      {
+        "name": "GameTracker",
+        "url": "https://www.gametracker.com/server_info/193.25.252.35:2302/"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rearmed.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=193.25.252.35"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "IP listed on rearmed.gg. A2S query port 2303. Country per gs4u (Frankfurt). Game/connect port 2302; A2S query port 2303. A2S reply name: \"Rearmed EU Main\"."
+  },
+  {
+    "key": "dayz:13864541",
+    "game": "dayz",
+    "name": "Rearmed EU2 | Solo Duo Trio",
+    "website": "https://rearmed.gg/",
+    "chronicle": null,
+    "version": "Modded",
+    "modes": [
+      "PvP",
+      "1PP",
+      "Group max 3"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/13864541",
+        "config": {
+          "address": "193.25.252.80:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/13864541"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/13864541"
+      },
+      {
+        "name": "GameMonitoring",
+        "url": "https://gamemonitoring.net/dayz/servers/631966"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rearmed.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=193.25.252.80"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "IP listed on rearmed.gg. A2S query port 2303. GameTracker shows a map variant in the name (\"Sakhal\"). Game/connect port 2302; A2S query port 2303. A2S reply name: \"Rearmed EU2 | Solo Duo Trio\"."
+  },
+  {
+    "key": "dayz:24842689",
+    "game": "dayz",
+    "name": "Rearmed US3 | 5 Man Max",
+    "website": "https://rearmed.gg/",
+    "chronicle": null,
+    "version": "Modded",
+    "modes": [
+      "PvP",
+      "1PP",
+      "Group max 5"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/24842689",
+        "config": {
+          "address": "172.111.51.155:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/24842689"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/24842689"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rearmed.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=172.111.51.155"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "IP listed on rearmed.gg; the BM snippet address matches. A2S query port 2303. Game/connect port 2302; A2S query port 2303. A2S reply name: \"Rearmed US3 | 5 Man Max\"."
+  },
+  {
+    "key": "dayz:24819107",
+    "game": "dayz",
+    "name": "Rearmed US4 | Solo/Duo/Trio",
+    "website": "https://rearmed.gg/",
+    "chronicle": null,
+    "version": "Modded",
+    "modes": [
+      "PvP",
+      "1PP",
+      "Group max 3"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/24819107",
+        "config": {
+          "address": "172.111.51.156:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/24819107"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/24819107"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rearmed.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=172.111.51.156"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "IP listed on rearmed.gg; BM id matched by exact name only (no address in the snippet). Game/connect port 2302; A2S query port 2303. A2S reply name: \"Rearmed US4 | Solo/Duo/Trio\"."
+  },
+  {
+    "key": "dayz:12416109",
+    "game": "dayz",
+    "name": "DayzUnderground.com - Chernarus - OrganicRP Enhanced Vanilla",
+    "website": "https://www.dayzunderground.com/",
+    "chronicle": null,
+    "version": "RP",
+    "modes": [
+      "Roleplay",
+      "Hardcore",
+      "1PP",
+      "Vanilla+"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/12416109",
+        "config": {
+          "address": "51.222.245.31:2502"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/12416109"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/12416109"
+      },
+      {
+        "name": "TrackyServer",
+        "url": "https://www.trackyserver.com/server/dayzunderground-com-hardcore-survival-organic-rp-1184578"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.dayzunderground.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=51.222.245.31"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "One host runs 3 servers (Livonia 2402/27014, Chernarus 2502/27015, test 2602/27016). BM title is older (\"Hardcore Survival - Organic RP\"); the BM snippet game port 2502 matches. Game/connect port 2502; A2S query port 27015. A2S reply name: \"DayzUnderground.com - Chernarus - OrganicRP Enhanced Vanilla\"."
+  },
+  {
+    "key": "dayz:31922310",
+    "game": "dayz",
+    "name": "SIBERIA OFFICIAL V5 | Hardcore | Bases | PVPZones",
+    "website": null,
+    "chronicle": null,
+    "version": "Hardcore",
+    "modes": [
+      "PvP",
+      "Custom map"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": null,
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/dayz/31922310",
+        "config": {
+          "address": "161.129.66.130:2302"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/dayz/31922310"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/dayz/31922310"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=161.129.66.130"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Official server of the SiberiaMap mod author (Redhunter). No website (Discord only). Low population at sample time. Only BM (search index) and Steam confirm it. Game/connect port 2302; A2S query port 2303. A2S reply name: \"SIBERIA OFFICIAL V5 | Hardcore | Bases | PVPZones | Redhunter\"."
+  }
+]

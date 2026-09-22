@@ -39,7 +39,7 @@ export function Footer() {
             </p>
             <div className="mt-5 flex items-center gap-2 rounded-lg border border-white/7 bg-white/[0.02] px-3 py-2 text-[12px] text-ink-400">
               <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
-              Проверки выполняются каждые 60 секунд
+              У каждого онлайна указан источник и время проверки
             </div>
           </div>
 
@@ -79,8 +79,9 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-2xl">
-            Демонстрационный прототип. Названия серверов, показатели онлайна, рейтинги и отзывы сгенерированы для
-            демонстрации интерфейса и не являются реальными данными.
+            Карточки серверов собраны из открытых источников — у каждой указаны источник и дата сверки. Онлайн
+            со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
+            подтвердить сервер и управлять карточкой.
           </p>
           <div className="flex shrink-0 gap-5">
             <span className="transition-colors hover:text-ink-300">Условия</span>

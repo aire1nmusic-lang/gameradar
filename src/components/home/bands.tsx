@@ -5,8 +5,12 @@ import { worldArt } from '@/data/themeMedia'
 import { Button } from '@/components/ui/Button'
 import { StatusBadge, STATUS_META } from '@/components/trust/status'
 import type { OnlineStatus } from '@/models'
-import { useTicker } from '@/hooks/useUi'
-import { formatNumber } from '@/lib/format'
+import { Link } from 'react-router-dom'
+import { useAsync } from '@/hooks/data'
+import { repo } from '@/repositories'
+import { getGame } from '@/data/games'
+import { probeLabel } from '@/services/monitoringService'
+import { formatPlayers, formatSeconds, formatSlots } from '@/lib/format'
 
 const STEPS = [
   {
@@ -86,9 +90,17 @@ export function TrustBand() {
 }
 
 /** A card that visibly re-checks itself — the product promise, demonstrated. */
+/**
+ * A real card from the catalogue: the server with the most trusted fresh
+ * online right now, with its actual source, method and last check. Nothing
+ * here is staged — if no server has a fresh number, the card says so.
+ */
 function LiveCheckCard() {
-  const seconds = useTicker(3, 60)
-  const progress = (seconds / 60) * 100
+  const { data } = useAsync(() => repo.servers.query({ sort: 'online', limit: 24 }).catch(() => undefined), [])
+  const rank = (status: string) => ({ VERIFIED: 0, LIVE: 1, EXTERNAL: 2, OWNER_REPORTED: 3 })[status] ?? 9
+  const server = (data?.items ?? [])
+    .filter((item) => item.online.freshness === 'fresh' && item.online.playersKnown !== false)
+    .sort((a, b) => rank(a.online.status) - rank(b.online.status))[0]
 
   return (
     <div className="surface-raised relative overflow-hidden rounded-xl p-5">
@@ -96,39 +108,32 @@ function LiveCheckCard() {
         className="pointer-events-none absolute -top-20 -right-16 h-52 w-52 rounded-full opacity-20 blur-[70px]"
         style={{ background: 'radial-gradient(closest-side, var(--color-signal-500), transparent)' }}
       />
-
-      <div className="relative flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[12.5px] text-ink-400">HolySky · Minecraft 1.21</div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="num font-display text-[34px] leading-none font-semibold text-ink-50">
-              {formatNumber(1284)}
-            </span>
-            <span className="num text-[14px] text-ink-500">/ 3 000</span>
+      {server ? (
+        <>
+          <div className="relative flex items-start justify-between gap-4">
+            <Link to={`/server/${server.slug}`} className="min-w-0 hover:opacity-90">
+              <div className="truncate text-[12.5px] text-ink-400">
+                {server.name} · {getGame(server.gameId).shortName} {server.version}
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="num font-display text-[34px] leading-none font-semibold text-ink-50">{formatPlayers(server.online)}</span>
+                <span className="num text-[14px] text-ink-500">/ {formatSlots(server.online)}</span>
+              </div>
+            </Link>
+            <StatusBadge status={server.online.status} launching={!!server.launch} />
           </div>
-        </div>
-        <StatusBadge status="VERIFIED" />
-      </div>
-
-      <div className="relative mt-5 space-y-3 border-t border-white/6 pt-4 font-mono text-[11.5px]">
-        <Row label="Источник" value="GameScout Direct Query" />
-        <Row label="Метод" value="Прямой игровой протокол" />
-        <Row label="Последняя проверка" value={`${seconds} сек. назад`} accent />
-        <Row label="Успешных проверок за 24 ч" value="99.8%" />
-      </div>
-
-      <div className="relative mt-4">
-        <div className="h-[3px] overflow-hidden rounded-full bg-white/7">
-          <div
-            className="h-full rounded-full bg-signal-500/70 transition-[width] duration-1000 ease-linear"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="mt-2 flex items-center justify-between font-mono text-[10.5px] text-ink-500">
-          <span>следующая проверка</span>
-          <span className="num">через {60 - seconds} сек</span>
-        </div>
-      </div>
+          <div className="relative mt-5 space-y-3 border-t border-white/6 pt-4 font-mono text-[11.5px]">
+            <Row label="Источник" value={server.online.source} />
+            <Row label="Метод" value={probeLabel(server.online)} />
+            <Row label="Последняя проверка" value={formatSeconds(server.online.checkedAgoSec)} accent={server.online.status === 'VERIFIED'} />
+            <Row label="Успешных проверок за 24 ч" value={server.online.uptime24h ? `${server.online.uptime24h.toFixed(1).replace('.', ',')}%` : '—'} />
+          </div>
+        </>
+      ) : (
+        <p className="relative text-[13px] leading-relaxed text-ink-400">
+          Сейчас нет серверов со свежим измерением онлайна. Как только мониторинг проверит сервер, здесь появятся его данные.
+        </p>
+      )}
     </div>
   )
 }

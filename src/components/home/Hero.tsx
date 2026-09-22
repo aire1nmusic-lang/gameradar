@@ -58,8 +58,8 @@ export function Hero() {
           />
           <TrustStat
             icon={<Radar size={15} className="text-ink-300" />}
-            value="каждые 60 сек"
-            label="частота проверки онлайна"
+            value={formatNumber(stats?.measuredServers ?? 0)}
+            label="серверов со свежим онлайном"
           />
           <TrustStat
             icon={<Search size={15} className="text-ink-300" />}

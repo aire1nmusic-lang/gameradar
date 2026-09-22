@@ -6,12 +6,14 @@ import { Container } from '@/components/layout/Container'
 import { LaunchCard } from '@/components/server/LaunchCard'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState, Notice } from '@/components/ui/feedback'
+import { useSeo } from '@/lib/seo'
 
 type Window = 'today' | 'week' | 'all'
 
 const DAY = 86_400_000
 
 export default function Openings() {
+  useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
   const { data: all = [] } = useOpenings(undefined, 20)
 

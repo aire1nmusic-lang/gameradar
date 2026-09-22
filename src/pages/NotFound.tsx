@@ -1,8 +1,10 @@
 import { Container } from '@/components/layout/Container'
 import { EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/Button'
+import { useSeo } from '@/lib/seo'
 
 export default function NotFound() {
+  useSeo({ title: 'Страница не найдена', noindex: true })
   return (
     <Container className="py-24">
       <EmptyState

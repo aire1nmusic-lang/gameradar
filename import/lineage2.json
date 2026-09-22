@@ -1,0 +1,1198 @@
+[
+  {
+    "key": "l2:la2era.com:aurora",
+    "game": "lineage2",
+    "name": "La2Era Aurora",
+    "website": "https://la2era.com/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x3",
+    "openedAt": "2026-10-02",
+    "languages": [
+      "Русский",
+      "English",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/33074"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://la2era.com/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/33074"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Upcoming new world 'Aurora' HF PTS x3. Project also runs HF x3 'Elegia' (opened 2025-10-03 per official site) and C4 x1 'New Era'. mmotop lists the HF world as 'HF Elegia'."
+  },
+  {
+    "key": "l2:mw-essence.io",
+    "game": "lineage2",
+    "name": "MW-Essence",
+    "website": "https://mw-essence.io/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": null,
+    "openedAt": "2026-10-02",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/34426"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://mw-essence.io/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/34426"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "x1 stated by both catalogues; official page title lists worlds Onyx/Astrum/Platinum and shows x5/x3 figures, so x1 could not be confirmed on the site itself. OBT 2026-09-25 per l2oops."
+  },
+  {
+    "key": "l2:essence.game",
+    "game": "lineage2",
+    "name": "Essence.game",
+    "website": "https://essence.game/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/36548"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://essence.game/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/36548"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/31606/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Upcoming; no exact day published. Official site doesn't state chronicle/rates explicitly; Essence x1 comes from the catalogues. Site html lang is English, but it's listed mainly on Russian catalogues."
+  },
+  {
+    "key": "l2:bohpts.net:x500",
+    "game": "lineage2",
+    "name": "BoHpts x500",
+    "website": "https://bohpts.net/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x500",
+    "openedAt": "2026-08-28T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English",
+      "Español",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/38636"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://bohpts.net/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/38636"
+      },
+      {
+        "name": "L2JBrasil Top",
+        "url": "https://top.l2jbrasil.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Opening date ambiguous (28.08 vs 11.09 on l2oops, bonus start 18.09 on site). mmotop labels the x500 world 'Interlude' but the official site, l2oops and l2jbrasil all say High Five. Also runs HF x7 and x20 worlds. Opening 2026-08-28T20:00+03:00 per the official servers API (opens_at); 18.09 was a bonus start. Online: official JSON, world id 6.",
+    "onlineSources": [
+      {
+        "provider": "official_json",
+        "url": "https://bohpts.net/",
+        "config": {
+          "url": "https://bohpts.net/api/v1/servers",
+          "path": "data[id=6].online"
+        }
+      }
+    ]
+  },
+  {
+    "key": "l2:euro-pvp.com:x100",
+    "game": "lineage2",
+    "name": "Euro-PvP x100",
+    "website": "https://euro-pvp.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "Exp x100 / SP x100 / Adena x1",
+    "openedAt": "2026-09-04",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2TOP.RU",
+      "url": "https://l2top.ru/info/24116/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://euro-pvp.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/"
+      },
+      {
+        "name": "L2JBrasil Top",
+        "url": "https://top.l2jbrasil.com/"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/24116/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "New x100 world; project also runs x1200 (merged OLD+NEW). euro-pvp.net is an alias domain. Site uses a cookie/JS anti-bot check: plain curl -sI returns 403, loads fine (200) with cookies. Rate breakdown from l2jbrasil listing."
+  },
+  {
+    "key": "l2:linestorm.org",
+    "game": "lineage2",
+    "name": "LineStorm",
+    "website": "https://linestorm.org/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x1200",
+    "openedAt": "2026-09-11",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/39639"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://linestorm.org/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39639"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Official front page still shows older event news (no 2026 date visible). Site has mixed RU/EN text. Behind an anti-bot cookie check (loads with cookies)."
+  },
+  {
+    "key": "l2:l2chronos.com:ragnarok",
+    "game": "lineage2",
+    "name": "L2Chronos Ragnarok",
+    "website": "https://l2chronos.com/",
+    "chronicle": null,
+    "version": "C3",
+    "rates": "x1",
+    "openedAt": "2026-10-09T19:00:00+02:00",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/39660"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2chronos.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39660"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/31941/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "PTS C3 (Rise of Darkness); the site says it will later update to C4. Upcoming."
+  },
+  {
+    "key": "l2:playexpanse.com",
+    "game": "lineage2",
+    "name": "Expanse",
+    "website": "https://playexpanse.com/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x1",
+    "openedAt": "2026-10-09",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/39666"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://playexpanse.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39666"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Upcoming. mmotop world name 'Sakura'. Year inferred as 2026 from l2oops and the mmotop listing (added 2026-09-10)."
+  },
+  {
+    "key": "l2:zmega.com:stage-x10",
+    "game": "lineage2",
+    "name": "zMega Stage x10",
+    "website": "https://zmega.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x10",
+    "openedAt": "2026-09-19T20:00:00+03:00",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/4540"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://zmega.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/4540"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/31568/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Seasonal/stage Interlude PTS x10 in a long-running complex (also x30/x50/x1000 Interlude, HF x5). Anti-bot cookie check: HEAD gives 403, loads with cookies."
+  },
+  {
+    "key": "l2:thebattle.club:nostalgia-x10",
+    "game": "lineage2",
+    "name": "TheBattle.Club Nostalgia",
+    "website": "https://thebattle.club/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x10",
+    "openedAt": "2026-06-19T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/27589"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://thebattle.club/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/27589"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/31697/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Catalogues link lin2game.com/x10, which redirects to thebattle.club. Opening date unclear, so left null. Complex also has HF x15 'RETRO' and other worlds. Opening 2026-06-19T20:00+03:00 per the official site. Online: server-rendered data attribute on the official page (LIKELY — not a visible label).",
+    "onlineSources": [
+      {
+        "provider": "official_html",
+        "url": "https://thebattle.club/ru",
+        "config": {
+          "url": "https://thebattle.club/ru",
+          "regex": "server_nostalgia\" data-gw-server-online-max=\"\\d+\" data-gw-server-online=\"(\\d+)\""
+        }
+      }
+    ]
+  },
+  {
+    "key": "l2:scryde.game:x5",
+    "game": "lineage2",
+    "name": "Scryde x5",
+    "website": "https://ru.scryde.game/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x5",
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/20650"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://ru.scryde.game"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/20650"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Official site has a JS bot check (curl -sI gives a 307 loop); it loads in a real browser and shows Scryde x5 with a bonus start. mmotop listing title mentions 'Скрайд Классик х5: 18 сентября' and l2oops also lists new HF x5 (02.10.26) and x50 (09.10.26) starts, so the dates are ambiguous. scryde.net redirects to ru.scryde.game."
+  },
+  {
+    "key": "l2:destorus.top",
+    "game": "lineage2",
+    "name": "Destorus",
+    "website": "https://destorus.top/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x10000",
+    "openedAt": "2026-09-26",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/30750"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://destorus.top/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "L2TOP.RU",
+        "url": "https://l2top.ru/info/26991/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/30750"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "l2oops says 'Interlude+'; l2top and mmotop say Interlude. mmotop links destorus.ru, which did not load; destorus.top does. The site also shows a 12.10.2026 date (purpose unclear)."
+  },
+  {
+    "key": "l2:melior.club",
+    "game": "lineage2",
+    "name": "Melior",
+    "website": "https://melior.club/",
+    "chronicle": "classic",
+    "version": "Classic",
+    "rates": "Exp x3 / SP x3 / Adena x2",
+    "openedAt": "2026-09-25T20:00:00+02:00",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/2855/MELIOR/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://melior.club/en"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/2855/MELIOR/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "l2network says 'Classic 3.0' (L2J). Project has been active since 2021; this is a new x3 launch."
+  },
+  {
+    "key": "l2:l2etina.com",
+    "game": "lineage2",
+    "name": "L2Etina",
+    "website": "https://l2etina.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "Exp x30 / SP x30 / Adena x5",
+    "openedAt": "2026-09-18",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/3838/L2Etinax30/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2etina.com/en"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/3838/L2Etinax30/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Interlude on the Classic client (L2OFF per l2network). l2network showed status 'Offline' at its last check, but the website loads."
+  },
+  {
+    "key": "l2:l2rehab.com:luna",
+    "game": "lineage2",
+    "name": "L2Rehab Luna",
+    "website": "https://l2rehab.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "Exp x10 / SP x10 / Adena x1",
+    "openedAt": "2026-10-03T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/3551/L2REHAB/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2rehab.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/3551/L2REHAB/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Upcoming. Complex also lists Airin x5 (opened 2026-08-01 per site) and x1/x20 worlds. Site html lang is ru with English content; l2network flags English."
+  },
+  {
+    "key": "l2:lineage2dex.com",
+    "game": "lineage2",
+    "name": "Lineage2Dex",
+    "website": "https://lineage2dex.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "Exp/SP x25 / Adena x1",
+    "openedAt": "2026-10-09",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lineage2dex.com/en"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      },
+      {
+        "name": "L2JBrasil Top",
+        "url": "https://top.l2jbrasil.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Seasonal Interlude+ on the Classic client. The l2jbrasil listing title also mentions 'Lineage.ro'. Upcoming."
+  },
+  {
+    "key": "l2:flauron.com:nostalgia-x3",
+    "game": "lineage2",
+    "name": "Flauron Nostalgia x3",
+    "website": "https://flauron.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x3",
+    "openedAt": "2026-09-25T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://flauron.com/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site news: new Interlude x3 opens 25 Sept 20:00 GMT+3, OBT 22 Sept. Complex also runs Nostalgia x1 and Essence-client worlds Mega x30 / Nova x1. Same legal entity (Таганай Групп) as destorus.top and world-hero.net. Site shows only ON/SOON status, no online number."
+  },
+  {
+    "key": "l2:l2boom.com",
+    "game": "lineage2",
+    "name": "L2BOOM",
+    "website": "https://l2boom.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x20",
+    "openedAt": "2026-10-09",
+    "languages": [
+      "English",
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2boom.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Body says 'Interlude x20 October 9 — 20:00' (no timezone given for opening), but the <title> says 'Launch 19 October 2026', which conflicts; l2oops agrees with 09.10. OBT 2026-09-26T20:00:00+03:00 (from page countdown). Interlude gameplay on a modern (Fafurion) client with auto-farm."
+  },
+  {
+    "key": "l2:eternal.ms:new-x1200",
+    "game": "lineage2",
+    "name": "Eternal.ms NEW x1200",
+    "website": "https://eternal.ms/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x1200",
+    "openedAt": "2026-10-02T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English",
+      "Українська",
+      "Español"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://eternal.ms/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "New x1200 world; OBT 29 Sept 20:00. Full timestamp taken from the page's countdown (2026-10-02T20:00:00+03:00). Project also runs the no-wipe MAIN x1200 (online shown only as a % bar)."
+  },
+  {
+    "key": "l2:l2mad.net:x30",
+    "game": "lineage2",
+    "name": "L2MAD Interlude x30",
+    "website": "https://l2mad.net/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x30",
+    "openedAt": "2026-09-19",
+    "languages": [
+      "English",
+      "Українська",
+      "Português",
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2mad.net/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'Interlude x30 September 19 — 18:00' (timezone not stated). Homepage server-renders a per-world online count (x30 NEW 3708, x10 OLD 1344, x1 OLD 627 at check time), which is a candidate official counter. Complex also runs x1, x10, x1200, MultiCraft x100."
+  },
+  {
+    "key": "l2:l2mad.net:x100000",
+    "game": "lineage2",
+    "name": "L2MAD Interlude x100000",
+    "website": "https://l2mad.net/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x100000",
+    "openedAt": "2026-10-10",
+    "languages": [
+      "English",
+      "Українська",
+      "Português",
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2mad.net/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'x100000 Interlude October 10 — 18:00', OBT October 7 20:00 (timezone not stated). l2oops lists it as 'x100k Interlude+'."
+  },
+  {
+    "key": "l2:l2reborn.org:guardian",
+    "game": "lineage2",
+    "name": "Reborn Guardian x1",
+    "website": "https://l2reborn.org/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x1",
+    "openedAt": "2026-09-18",
+    "languages": [
+      "English",
+      "Español",
+      "Português",
+      "Русский",
+      "中文",
+      "Polski",
+      "한국어"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2reborn.org/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Site confirms a new standalone Essence 'Guardian x1' world marked New with 'Play now'. The opening date 2026-09-18 comes only from l2oops, because the site shows no date. Reborn also has an upcoming Interlude 'Eternal Season' x10~x30 ('opening coming soon'; l2oops says 25.09) and other worlds."
+  },
+  {
+    "key": "l2:aden.land:x50",
+    "game": "lineage2",
+    "name": "Aden.land PvP x50",
+    "website": "https://aden.land/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x50",
+    "openedAt": "2026-09-25",
+    "languages": [
+      "Русский",
+      "English",
+      "Português",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://aden.land/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'PvP NEW x50 25.09.2026'. Project also runs Main x1 (26.06.2026) and Old x3 (since 02.06.2023). Homepage leaks a PHP notice when there is no Accept-Language header."
+  },
+  {
+    "key": "l2:reborn.top",
+    "game": "lineage2",
+    "name": "Reborn.top x1200",
+    "website": "https://reborn.top/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x1200",
+    "openedAt": "2026-09-25T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://reborn.top/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site news: new Interlude x1200 opens 25 Sept 20:00 (+3 GMT). The homepage server-renders 'В сети: N' (53 at check time, pre-launch). Unrelated to l2reborn.org."
+  },
+  {
+    "key": "l2:ketrawars.org:destiny",
+    "game": "lineage2",
+    "name": "KetraWars Destiny x1",
+    "website": "https://ketrawars.org/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x1",
+    "openedAt": "2026-10-02",
+    "languages": [
+      "Русский",
+      "English",
+      "Українська",
+      "Português",
+      "Español"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://ketrawars.org/ru"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'Destiny x1 Essence 2 октября' (no time given). Complex (since 2014) also runs Essence Main x1 and Interlude x1200/x100/x1. Its online digits are JS-animated odometers, and the value is not in the HTML."
+  },
+  {
+    "key": "l2:world-hero.net:x1200-new",
+    "game": "lineage2",
+    "name": "World-Hero x1200 NEW",
+    "website": "https://world-hero.net/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x1200",
+    "openedAt": "2026-09-18",
+    "languages": [
+      "English",
+      "Русский",
+      "Українська",
+      "Español",
+      "Português"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://world-hero.net/en"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site shows 'X1200 [NEW] ONLINE: 4 days!' on 2026-09-22, which matches the l2oops date 18.09. Interlude on the Classic client. Also runs X1200 [MAIN]. Same legal entity as flauron.com and destorus.top."
+  },
+  {
+    "key": "l2:l2abyss.com",
+    "game": "lineage2",
+    "name": "L2Abyss",
+    "website": "https://l2abyss.com/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "Exp x3 / SP x3 / Adena x1",
+    "openedAt": "2026-09-18",
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2abyss.com/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'ОТКРЫТИЕ 18 Сентября, L2 Essence x3, Celestial Destiny'. The year comes from l2oops (18.09.26)."
+  },
+  {
+    "key": "l2:l2essence.online:x100",
+    "game": "lineage2",
+    "name": "L2Essence.online x100",
+    "website": "https://l2essence.online/",
+    "chronicle": "essence",
+    "version": "Essence",
+    "rates": "x100",
+    "openedAt": "2026-09-25T20:00:00+03:00",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2OOPS",
+      "url": "https://l2oops.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2essence.online/"
+      },
+      {
+        "name": "L2OOPS",
+        "url": "https://l2oops.com/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: new x100 season on 25 Sept 2026 at 20:00 МСК (GMT+3), Celestial Destiny update. Project also lists an x20 world."
+  },
+  {
+    "key": "l2:viranium.com:cadmus",
+    "game": "lineage2",
+    "name": "Viranium Cadmus x3",
+    "website": "https://viranium.com/",
+    "chronicle": null,
+    "version": "Remastered",
+    "rates": "x3",
+    "openedAt": "2026-09-05T20:00:00+03:00",
+    "languages": [
+      "Русский",
+      "English",
+      "Português",
+      "Українська"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "MMOTOP Lineage 2",
+      "url": "https://la2.mmotop.ru/servers/39284"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://viranium.com/ru"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39284"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: 'Открытие Remastered сервера Cadmus x3 5 Сентября в 20:00 GMT+3'. Chronicle is 'Lineage 2 Remastered', which doesn't map to the enum, so chronicle is null. mmotop lists worlds Cadmus Remastered x3 and Eva Remastered x10. Site also shows Gran Kain x1."
+  },
+  {
+    "key": "l2:l2helios.net:x1000",
+    "game": "lineage2",
+    "name": "L2Helios HF x1000",
+    "website": "https://l2helios.net/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x1000",
+    "openedAt": "2026-09-19T18:00:00+03:00",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/3312/L2HELIOS-NET-NEW-PVP/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2helios.net/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/3312/L2HELIOS-NET-NEW-PVP/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: start 19 Sept 18:00 UTC+03:00 (OBT 15 Sept). Conflict: l2network says 2026/09/24 19:00 GMT+3; the site date was used. l2network rates: EXP/SP x1000, Adena x500 (L2J). Homepage server-renders 'Онлайн: 8343' for the new world, a candidate counter."
+  },
+  {
+    "key": "l2:l2agon.eu",
+    "game": "lineage2",
+    "name": "L2 Agon",
+    "website": "https://l2agon.eu/",
+    "chronicle": null,
+    "version": "C4",
+    "rates": "Exp x30 / SP x30 / Adena x70",
+    "openedAt": "2026-10-02T20:00:00+03:00",
+    "languages": [
+      "English",
+      "Ελληνικά",
+      "Русский",
+      "Українська",
+      "Polski",
+      "ქართული",
+      "Español",
+      "Português"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/3844/L2Agon/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2agon.eu/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/3844/L2Agon/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Chronicle 4 (L2J). Site is in Open Beta with a full wipe before Grand Opening. The opening date/time comes from l2network; the site countdown is JS-only. Drop differs between sources (site x3, l2network x1)."
+  },
+  {
+    "key": "l2:l2pearl.com",
+    "game": "lineage2",
+    "name": "L2 Pearl",
+    "website": "https://l2pearl.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "Exp x5 / SP x5 / Adena x2",
+    "openedAt": "2026-10-09T20:00:00+02:00",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "L2Network",
+      "url": "https://l2network.eu/details/3856/L2Pearl/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2pearl.com/"
+      },
+      {
+        "name": "L2Network",
+        "url": "https://l2network.eu/details/3856/L2Pearl/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site: Grand Opening 9 October 2026, Open Beta 2–8 October, x5. The time/timezone (20:00 GMT+2) comes from l2network. L2OFF per l2network. An H5 server is marked 'Soon'."
+  }
+]

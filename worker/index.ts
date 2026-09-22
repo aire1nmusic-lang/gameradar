@@ -34,7 +34,8 @@ import { Store, type Row } from './lib/store.ts'
 import { claimDto, gameDto, integrationDto, sampleDto, serverDto, targetDto, userDto, organicScore } from './lib/dto.ts'
 import { filters, integer, object, serverInput, strings, text } from './lib/validation.ts'
 import { safeFetchText } from './adapters/network.ts'
-import { probe } from './adapters/games.ts'
+import { resolveOnline } from './lib/monitor.ts'
+import { PROVIDERS, sourceAvailable } from './adapters/sources.ts'
 
 type Vars = { store: Store; user?: Row }
 const app = new Hono<{ Bindings: Env; Variables: Vars }>()
@@ -50,7 +51,7 @@ function allowedOrigins(env: Env): string[] {
 }
 
 app.use('*', async (c, next) => {
-  c.set('store', new Store(c.env.DB))
+  c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
 
   const origin = c.req.header('Origin')
   const allowed = origin && allowedOrigins(c.env).includes(origin)
@@ -478,33 +479,82 @@ app.get('/api/v1/servers/:id/monitoring', async c => {
  */
 async function runMonitoringPass(env: Env, limit: number): Promise<{ checked: number; results: Row[] }> {
   const s = new Store(env.DB)
-  const targets = await s.targets(limit)
+  // Oldest check first, so small batches rotate through every card.
+  const secrets = { steamKey: env.STEAM_API_KEY }
+  const providers = Object.keys(PROVIDERS).filter(provider => sourceAvailable(provider, secrets))
+  const queue = [...(await s.monitorQueue(limit, providers))]
+  const sources = await s.onlineSources(queue.map(entry => entry.server_id))
   const results: Row[] = []
   // Loopback targets are reachable only in local development, and only for
   // the origins the developer explicitly allowed.
   const local = devOrigins(env)
-  for (const target of targets) {
-    const allowLoopback = local.some(origin => String(target.api_url ?? '').startsWith(origin) || origin.includes(String(target.host ?? ' ')))
-    const result = await probe(
-      {
-        gameSlug: target.game_slug,
-        method: target.method,
-        host: target.host,
-        port: target.port,
-        apiUrl: target.api_url,
-      },
-      { allowLoopback },
-    )
-    await s.saveSample(target.server_id, result)
-    results.push({ serverId: target.server_id, status: result.status, online: result.online, latencyMs: result.latencyMs })
-  }
+  // A few cards at a time: a pass must finish well inside one invocation, and
+  // one slow server must not hold up the rest.
+  const lanes = Array.from({ length: Math.min(4, queue.length) }, async () => {
+    for (let entry = queue.shift(); entry; entry = queue.shift()) {
+      const allowLoopback = local.some(origin => String(entry.api_url ?? '').startsWith(origin) || origin.includes(String(entry.host ?? ' ')))
+      const target = entry.target_id
+        ? { gameSlug: entry.game_slug, method: entry.method, host: entry.host, port: entry.port, apiUrl: entry.api_url, expectName: entry.expect_name }
+        : null
+      const own = sources
+        .filter(row => row.server_id === entry.server_id)
+        .map(row => ({ tier: row.tier, provider: row.provider, name: row.name, url: row.url, config: JSON.parse(row.config || '{}') }))
+      const result = await resolveOnline(target, own, { allowLoopback }, secrets)
+      await s.saveSample(entry.server_id, result)
+      results.push({ serverId: entry.server_id, status: result.status, tier: result.tier, source: result.source, online: result.online, latencyMs: result.latencyMs, note: result.note })
+    }
+  })
+  await Promise.all(lanes)
   return { checked: results.length, results }
+}
+
+/** Probes per cron tick. Each probe costs a few subrequests (DNS + connect). */
+function monitorBatch(env: Env): number {
+  const size = Number(env.MONITOR_BATCH ?? 8)
+  return Number.isInteger(size) && size > 0 && size <= 50 ? size : 8
 }
 
 app.post('/api/v1/admin/monitor/run', async c => {
   requireAdmin(c)
   const body = await readJson(c).catch(() => ({}))
   return c.json(await runMonitoringPass(c.env, integer((body as Row).limit ?? 25, 'limit', 1, 200)))
+})
+
+/* ── card analytics ─────────────────────────────────────────────────────── */
+
+/**
+ * What players do with a card. Only facts a browser reports: the card was
+ * opened, a link out was followed, the vote form was used, a claim began.
+ * One event per visitor, card and kind per 30 minutes — refreshes and bots
+ * hammering a button do not inflate an owner's numbers.
+ */
+const EVENT_KINDS = ['VIEW', 'WEBSITE_CLICK', 'PLAY_CLICK', 'VOTE_CLICK', 'CLAIM_START'] as const
+
+app.post('/api/v1/events', async c => {
+  const body = await readJson(c)
+  const kind = text(body.kind, 'kind', 3, 20)
+  if (!(EVENT_KINDS as readonly string[]).includes(kind)) throw badRequest('Неизвестный тип события')
+  const server = await store(c).server(text(body.serverId, 'serverId', 1, 100))
+  if (!server || server.moderation !== 'PUBLISHED') throw notFound('Сервер не найден')
+  const source = body.source === undefined ? null : text(body.source, 'source', 0, 40)
+  const visitor = await sha256((c.env.IP_HASH_SECRET ?? 'gamescout') + ':event:' + clientIp(c) + ':' + (c.req.header('User-Agent') ?? ''))
+  const recorded = await store(c).recordEvent(server.id, kind, source, visitor, new Date(Date.now() - 30 * 60000).toISOString())
+  return c.json({ recorded }, 202)
+})
+
+/** Owner view of a card's real numbers: events, votes and delivery state. */
+app.get('/api/v1/servers/:id/stats', async c => {
+  const user = await requireUser(c)
+  const server = await loadManageable(c, c.req.param('id'), user)
+  const days = c.req.query('range') === '7d' ? 7 : 30
+  return c.json(await store(c).serverStats(server.id, new Date(Date.now() - days * 86400000).toISOString(), days))
+})
+
+app.get('/api/v1/servers/:id/votes', async c => {
+  const user = await requireUser(c)
+  const server = await loadManageable(c, c.req.param('id'), user)
+  const rows = await store(c).recentVotes(server.id, 50)
+  return c.json(rows.map(row => ({ id: row.id, nickname: row.nickname, status: row.status, delivery: row.delivery, createdAt: row.created_at, claimedAt: row.claimed_at ?? undefined })))
 })
 
 /* ── votes ────────────────────────────────────────────────────────────────── */
@@ -624,6 +674,6 @@ export default {
   fetch: app.fetch,
   /** Cron entry point: keeps VERIFIED/LIVE/OFFLINE current without a request. */
   async scheduled(_event: unknown, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }) {
-    ctx.waitUntil(runMonitoringPass(env, 50))
+    ctx.waitUntil(runMonitoringPass(env, monitorBatch(env)))
   },
 }

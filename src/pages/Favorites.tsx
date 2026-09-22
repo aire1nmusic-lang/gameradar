@@ -6,8 +6,10 @@ import { Container } from '@/components/layout/Container'
 import { ServerCard } from '@/components/server/ServerCard'
 import { EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/Button'
+import { useSeo } from '@/lib/seo'
 
 export default function Favorites() {
+  useSeo({ title: 'Избранное', noindex: true })
   const { favorites, clear } = useFavorites()
   const { data: all = [] } = useServers({ limit: 500 })
   const servers = favorites.map((slug) => all.find((server) => server.slug === slug)).filter(Boolean) as typeof all

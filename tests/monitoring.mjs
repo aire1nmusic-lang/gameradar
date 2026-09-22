@@ -72,7 +72,7 @@ await new Promise((resolve, reject) => {
 const log = createWriteStream(path.join(runDir, 'worker.log'), { flags: 'a' })
 const worker = spawn(
   process.execPath,
-  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', '8789', '--inspector-port', '9240', '--persist-to', state, '--log-level', 'error'],
+  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', '8789', '--local-upstream', '127.0.0.1:8789', '--inspector-port', '9240', '--persist-to', state, '--log-level', 'error'],
   { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, WRANGLER_SEND_METRICS: 'false' } },
 )
 worker.stdout.pipe(log)

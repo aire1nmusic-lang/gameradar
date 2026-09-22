@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /add-server
+Disallow: /favorites
+Disallow: /states
+
+Sitemap: https://gamescout.online/sitemap.xml

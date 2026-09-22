@@ -1,8 +1,25 @@
+import type { OnlineData } from '@/models'
+
 const numberFormatter = new Intl.NumberFormat('ru-RU')
 
 /** 1284 -> "1 284" */
 export function formatNumber(value: number): string {
   return numberFormatter.format(Math.round(value))
+}
+
+/**
+ * The player count as text, or "—" when there is no number to stand behind:
+ * nothing measured yet, or the protocol answers without a count (Lineage 2).
+ */
+export function formatPlayers(online: Pick<OnlineData, 'status' | 'current' | 'playersKnown' | 'freshness'>): string {
+  if (online.status === 'PENDING' || online.status === 'UNKNOWN' || online.playersKnown === false) return '—'
+  // An old number is not "online now".
+  return online.freshness === 'stale' ? '—' : formatNumber(online.current)
+}
+
+/** Slot count as text, "—" when the server never told us. */
+export function formatSlots(online: Pick<OnlineData, 'max' | 'maxKnown'>): string {
+  return online.maxKnown === false ? '—' : formatNumber(online.max)
 }
 
 /** 184920 -> "185K" ; 1 240 000 -> "1,2M" */
@@ -98,7 +115,9 @@ export function formatCountdown(iso: string, now = Date.now()): string {
 }
 
 export function formatRelativeDays(iso: string, now = Date.now()): string {
-  const diff = Math.round((now - new Date(iso).getTime()) / 86_400_000)
+  // Calendar days, not 24-hour blocks: "вчера" must mean the previous date.
+  const day = (time: number) => { const d = new Date(time); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) }
+  const diff = Math.round((day(now) - day(new Date(iso).getTime())) / 86_400_000)
   if (diff <= 0) return 'сегодня'
   if (diff === 1) return 'вчера'
   if (diff < 31) return `${diff} ${plural(diff, ['день', 'дня', 'дней'])} назад`

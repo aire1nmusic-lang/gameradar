@@ -68,7 +68,17 @@ export interface Game {
 /* ── Online & monitoring ────────────────────────────────────────────────── */
 
 export interface OnlineData {
+  /** false when the probe answered without a count — never print 0 then */
   playersKnown?: boolean
+  maxKnown?: boolean
+  /** DIRECT — our probe; OFFICIAL — the project's own counter; EXTERNAL — a third-party monitor */
+  sourceTier?: 'DIRECT' | 'OFFICIAL' | 'EXTERNAL'
+  /** public page where the number can be checked */
+  sourceUrl?: string
+  /** stale numbers are history, never shown as current */
+  freshness?: 'fresh' | 'stale' | 'unknown'
+  /** seconds since the number was true according to its source */
+  observedAgoSec?: number
   status: OnlineStatus
   current: number
   max: number
@@ -187,7 +197,8 @@ export interface GameServer {
   ownerId?: string
   moderation: ServerStatus
 
-  openedAt: string
+  /** absent when the opening date is not known — never guessed */
+  openedAt?: string
   addedAt: string
   updatedAt: string
   lastWipeAt?: string
@@ -198,6 +209,16 @@ export interface GameServer {
 
   /** fixtures only — never rendered as a real capture */
   demo?: boolean
+  /** where an imported card's facts come from; absent for owner-submitted cards */
+  provenance?: ServerProvenance
+}
+
+export interface ServerProvenance {
+  sourceName?: string
+  sourceUrl?: string
+  importedAt?: string
+  lastSourceCheckAt?: string
+  refs: { name: string; url: string }[]
 }
 
 /* ── People ─────────────────────────────────────────────────────────────── */

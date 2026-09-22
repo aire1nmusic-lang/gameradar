@@ -79,7 +79,7 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
       onlineHistory: (id, range = '24h') => request<OnlineSample[]>('/servers/' + encodeURIComponent(id) + '/online-history' + params({ range })),
       platformStats: async () => {
         const [games, servers] = await Promise.all([listGames(), allServers()])
-        return { games: games.length, servers: servers.length, playersOnline: games.reduce((sum, g) => sum + g.playersOnline, 0), verifiedServers: servers.filter(s => s.online.status === 'VERIFIED').length, checksPerMinute: 0 }
+        return { games: games.length, servers: servers.length, playersOnline: games.reduce((sum, g) => sum + g.playersOnline, 0), verifiedServers: servers.filter(s => s.online.status === 'VERIFIED' && s.online.freshness === 'fresh').length, measuredServers: servers.filter(s => s.online.freshness === 'fresh' && s.online.playersKnown !== false).length, checksPerMinute: 0 }
       },
     },
     rating: {

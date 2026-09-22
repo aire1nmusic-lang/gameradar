@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Play, Star, Users } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
-import { formatNumber, formatRating } from '@/lib/format'
+import { formatNumber, formatPlayers, formatRating, formatSlots } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { activeBoosts } from '@/services'
 import type { GameServer } from '@/models'
@@ -114,14 +114,14 @@ export function ThemedServerCard({
                 className="num gt-display text-[24px] leading-none"
                 style={{ color: status === 'OFFLINE' ? theme.colors.textFaint : theme.colors.text }}
               >
-                {status === 'PENDING' ? '—' : formatNumber(current)}
+                {formatPlayers(server.online)}
               </span>
               <span className="num text-[12.5px]" style={{ color: theme.colors.textFaint }}>
-                / {formatNumber(max)}
+                / {formatSlots(server.online)}
               </span>
             </div>
             <div className="mt-1.5">
-              <VerifiedLine status={status} seconds={server.online.checkedAgoSec} source={server.online.source} size="xs" />
+              <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
             </div>
           </div>
 

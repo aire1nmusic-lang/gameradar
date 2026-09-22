@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && node scripts/sitemap.mjs && vite build",
     "preview": "vite preview --port 4173",
-    "dev:api": "node scripts/setup-dev.mjs && wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to .wrangler/state",
+    "dev:api": "node scripts/setup-dev.mjs && wrangler dev --local --ip 127.0.0.1 --port 8787 --local-upstream 127.0.0.1:8787 --persist-to .wrangler/state",
     "dev:setup": "node scripts/setup-dev.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
@@ -18,7 +18,11 @@
     "dev:site": "node scripts/dev-site.mjs",
     "test:bundle": "node scripts/check-bundle.mjs",
     "test:api": "node tests/api.mjs",
-    "test:monitoring": "node tests/monitoring.mjs"
+    "test:monitoring": "node tests/monitoring.mjs",
+    "import:check": "node scripts/import-servers.mjs --check",
+    "import:servers": "node scripts/import-servers.mjs",
+    "import:probe": "node --experimental-strip-types scripts/probe-check.mjs",
+    "test:import": "node --test tests/import-dataset.test.mjs && node tests/import.mjs"
   },
   "dependencies": {
     "hono": "^4.13.8",

@@ -11,6 +11,7 @@ import { Notice } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { BoostedStrip, RatingList, RatingPodium } from '@/components/rating/RatingBoard'
 import { SidebarBanner } from '@/components/ads/AdSlots'
+import { useSeo } from '@/lib/seo'
 
 type View = 'organic' | 'combined'
 
@@ -21,6 +22,7 @@ type View = 'organic' | 'combined'
  * but it is a deliberate, labelled switch — never the default.
  */
 export default function RatingPage() {
+  useSeo({ title: 'Рейтинг серверов', path: '/rating', description: 'Независимый рейтинг игровых серверов GameScout: онлайн с учётом доверия к источнику, голоса игроков, стабильность.' })
   const [gameId, setGameId] = useState<string>('all')
   const [view, setView] = useState<View>('organic')
 

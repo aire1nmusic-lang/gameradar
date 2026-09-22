@@ -36,6 +36,8 @@ export const TRUST_WEIGHT: Record<OnlineStatus, number> = {
   [OnlineStatus.Pending]: 0,
   [OnlineStatus.Anomaly]: 0,
   [OnlineStatus.Offline]: 0,
+  [OnlineStatus.External]: 0.4,
+  [OnlineStatus.Unknown]: 0,
 }
 
 /** Which probe each game supports today — drives the /add-server wizard. */
@@ -72,11 +74,14 @@ export const PROBE_LABEL: Record<ProbeMethod, string> = {
   [ProbeMethod.ServerApi]: 'Официальный API платформы',
   [ProbeMethod.Agent]: 'GameScout Agent',
   [ProbeMethod.LoginServer]: 'Логин-сервер игры',
-  [ProbeMethod.OwnerSubmitted]: 'Данные владельца',
+  [ProbeMethod.OwnerSubmitted]: 'Не настроен',
+  [ProbeMethod.OfficialSource]: 'Счётчик на сайте проекта',
+  [ProbeMethod.ExternalMonitor]: 'Сторонний мониторинг',
+  [ProbeMethod.None]: 'Нет источника',
 }
 
 export function probeLabel(online: OnlineData): string {
-  return PROBE_LABEL[online.method] ?? online.source
+  return PROBE_LABEL[online.method] ?? online.method
 }
 
 /** Fill ratio, guarded against servers that never published a cap. */

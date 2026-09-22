@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Heart, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatAge, formatCountdown, formatNumber, formatRating } from '@/lib/format'
+import { formatAge, formatCountdown, formatNumber, formatPlayers, formatRating, formatRelativeDays, formatSlots } from '@/lib/format'
 import { getGame } from '@/data/games'
 import type { GameServer } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -44,7 +44,7 @@ function lifecycleLabel(server: GameServer): string {
     const days = Math.ceil((new Date(server.nextWipeAt).getTime() - Date.now()) / 86_400_000)
     if (days >= 0 && days <= 14) return days === 0 ? 'Вайп сегодня' : `Вайп через ${days} дн.`
   }
-  return `Открыт ${formatAge(server.openedAt)}`
+  return server.openedAt ? `Открыт ${formatAge(server.openedAt)}` : `Добавлен ${formatRelativeDays(server.addedAt)}`
 }
 
 export function ServerCard({ server, className }: { server: GameServer; className?: string }) {
@@ -127,12 +127,12 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
                 status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {status === 'PENDING' ? '—' : formatNumber(current)}
+              {formatPlayers(server.online)}
             </span>
-            <span className="num text-[13px] text-ink-500">/ {formatNumber(max)}</span>
+            <span className="num text-[13px] text-ink-500">/ {formatSlots(server.online)}</span>
           </div>
           <div className="mt-1.5">
-            <VerifiedLine status={status} seconds={server.online.checkedAgoSec} source={server.online.source} size="xs" />
+            <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5">

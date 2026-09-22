@@ -6,8 +6,10 @@ import { useServers } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { GameTile } from '@/components/home/GameTile'
 import { ServerRow } from '@/components/server/ServerRow'
+import { useSeo } from '@/lib/seo'
 
 export default function Games() {
+  useSeo({ title: 'Игры', path: '/games', description: 'Игры в каталоге GameScout и лидеры по онлайну в каждой из них.' })
   const { data: allServers = [] } = useServers({ limit: 500 })
   const serversByGame = (gameId: string) => allServers.filter((server) => server.gameId === gameId)
   const covered = GAMES.filter((game) => serversByGame(game.id).length > 0)

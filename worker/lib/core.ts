@@ -8,9 +8,15 @@ export interface Env {
   IP_HASH_SECRET?: string
   ALLOWED_ORIGIN?: string
   DEV_ALLOWED_ORIGINS?: string
+  MONITOR_BATCH?: string
+  /** Steam Web API key; without it Steam-backed online sources are not read. */
+  STEAM_API_KEY?: string
 }
 export const now = () => new Date().toISOString()
 export const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString()
+/** An online number older than this is shown as stale, never as current. */
+export const FRESH_MS = 30 * 60000
+export const freshSince = () => new Date(Date.now() - FRESH_MS).toISOString()
 export function token(bytes = 32): string {
   return [...crypto.getRandomValues(new Uint8Array(bytes))].map(b => b.toString(16).padStart(2, '0')).join('')
 }

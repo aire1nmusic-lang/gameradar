@@ -58,6 +58,8 @@ export interface PlatformStats {
   playersOnline: number
   verifiedServers: number
   checksPerMinute: number
+  /** servers whose online was observed within the freshness window, from any source */
+  measuredServers?: number
   games: number
 }
 

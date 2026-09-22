@@ -87,7 +87,7 @@ export function ThemedButton({
   if (to) return <Link to={to} className={classes}>{content}</Link>
   if (href)
     return (
-      <a href={href} target="_blank" rel="noreferrer" className={classes}>
+      <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={classes}>
         {content}
       </a>
     )

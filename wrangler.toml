@@ -15,6 +15,13 @@ migrations_dir = "migrations"
 ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
 ALLOWED_ORIGIN = "https://gamescout.online"
+# Probes per cron tick; each costs a few subrequests (DNS + connect).
+MONITOR_BATCH = "8"
+
+# Monitoring pass: oldest-checked cards first, MONITOR_BATCH per tick. Every 2 min × 8 keeps
+# ~50 cards inside the 30-min freshness window and each tick under 50 subrequests.
+[triggers]
+crons = ["*/2 * * * *"]
 
 [observability]
 enabled = true

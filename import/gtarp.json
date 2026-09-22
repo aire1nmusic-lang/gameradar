@@ -1,0 +1,296 @@
+[
+  {
+    "key": "gta:newdayrp.com",
+    "name": "New Day RP",
+    "website": "https://newdayrp.com/",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://ndrp.gg:30120/",
+      "expectName": "New Day RP"
+    },
+    "source": {
+      "name": "New Day RP FAQ",
+      "url": "https://newdayrp.com/threads/faqs.850/"
+    },
+    "refs": [
+      {
+        "name": "New Day RP FAQ",
+        "url": "https://newdayrp.com/threads/faqs.850/"
+      },
+      {
+        "name": "FiveM info.json",
+        "url": "http://ndrp.gg:30120/info.json"
+      }
+    ],
+    "confidence": "confirmed",
+    "notes": "Site FAQ publishes 'connect ndrp.gg'. Whitelisted.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:roleplay.co.uk",
+    "name": "Roleplay UK",
+    "website": "https://www.roleplay.co.uk/",
+    "languages": [
+      "English"
+    ],
+    "country": "GB",
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://fivem.roleplay.co.uk:30120/",
+      "expectName": "Roleplay.co.uk"
+    },
+    "source": {
+      "name": "Roleplay UK Wiki",
+      "url": "https://wiki.roleplay.co.uk/Guide:Install_FiveM"
+    },
+    "refs": [
+      {
+        "name": "Roleplay UK Wiki",
+        "url": "https://wiki.roleplay.co.uk/Guide:Install_FiveM"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.roleplay.co.uk/"
+      },
+      {
+        "name": "FiveM info.json",
+        "url": "http://fivem.roleplay.co.uk:30120/info.json"
+      }
+    ],
+    "confidence": "confirmed",
+    "notes": "Wiki publishes 'connect fivem.roleplay.co.uk'.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:fantasyrp.ro",
+    "name": "Fantasy Romania",
+    "website": "https://fantasyrp.ro/",
+    "languages": [
+      "Română"
+    ],
+    "country": "RO",
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://fivem.fantasyrp.ro:30120/",
+      "expectName": "Fantasy Romania"
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://fantasyrp.ro/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://fantasyrp.ro/"
+      },
+      {
+        "name": "FiveM info.json",
+        "url": "http://fivem.fantasyrp.ro:30120/info.json"
+      }
+    ],
+    "confidence": "confirmed",
+    "notes": "Homepage publishes 'connect fivem.fantasyrp.ro'. players.json anonymised.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:fatduckgaming.com",
+    "name": "Fat Duck Gaming",
+    "website": "https://fatduckgaming.com/",
+    "languages": [
+      "English"
+    ],
+    "country": "AU",
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "https://rp.fatduckgaming.com/",
+      "expectName": "Fat Duck Gaming"
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://fatduckgaming.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://fatduckgaming.com/"
+      },
+      {
+        "name": "FiveM info.json",
+        "url": "https://rp.fatduckgaming.com/info.json"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Homepage publishes connect URL https://rp.fatduckgaming.com; dynamic.json identifies the project, but its TLS certificate expired 2026-08-27, so a verifying client (and the Worker) cannot read it.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:cityliferp.net",
+    "name": "CityLife Roleplay",
+    "website": "https://wiki.cityliferp.net/",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://play.cl-rp.net:30120/",
+      "expectName": "CityLife"
+    },
+    "source": {
+      "name": "CityLife Roleplay Wiki",
+      "url": "https://wiki.cityliferp.net/getting-started/getting-started/how-to-connect"
+    },
+    "refs": [
+      {
+        "name": "CityLife Roleplay Wiki",
+        "url": "https://wiki.cityliferp.net/getting-started/getting-started/how-to-connect"
+      },
+      {
+        "name": "FiveM info.json",
+        "url": "http://play.cl-rp.net:30120/info.json"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Wiki publishes 'connect play.cl-rp.net'. info.json answers curl (sv_projectName 'CityLife RP 3.0'), dynamic.json and players.json never answer, and its DDoS filter drops Node/undici clients — no reliable probe.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:onev-rp.de",
+    "name": "ONEV RP",
+    "website": "https://onev-rp.de/",
+    "languages": [
+      "Deutsch"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://play.onev-rp.de:30120/",
+      "expectName": "ONEV"
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://onev-rp.de/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://onev-rp.de/"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Published hostname sits behind Cloudflare; direct endpoint timed out.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:elregresorp.es",
+    "name": "El Regreso RP",
+    "website": "https://wiki.elregresorp.es/",
+    "languages": [
+      "Español"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "SERVER_API",
+      "url": "http://server.elregresorp.es:30120/",
+      "expectName": "Regreso"
+    },
+    "source": {
+      "name": "El Regreso RP Wiki",
+      "url": "https://wiki.elregresorp.es/como-conectarse"
+    },
+    "refs": [
+      {
+        "name": "El Regreso RP Wiki",
+        "url": "https://wiki.elregresorp.es/como-conectarse"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Behind Cloudflare; direct endpoint timed out.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:gta.world",
+    "name": "GTA World",
+    "website": "https://global.gta.world/",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://global.gta.world/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://global.gta.world/"
+      },
+      {
+        "name": "GTA World forum",
+        "url": "https://forum.gta.world/en/topic/162491-were-now-on-fivem/"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Moved from RAGE:MP to FiveM; publishes only cfx.re join links, no direct endpoint.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:luckyv.de",
+    "name": "LuckyV.de",
+    "website": "https://luckyv.de/",
+    "languages": [
+      "Deutsch"
+    ],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://luckyv.de/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://luckyv.de/"
+      },
+      {
+        "name": "LuckyV.de on X",
+        "url": "https://x.com/LuckyVde/status/2024048322449748022"
+      }
+    ],
+    "confidence": "likely",
+    "notes": "Moved from alt:V to FiveM; publishes only cfx.re join links, no direct endpoint.",
+    "game": "gtarp",
+    "chronicle": "fivem",
+    "version": "FiveM",
+    "checkedAt": "2026-09-22"
+  }
+]

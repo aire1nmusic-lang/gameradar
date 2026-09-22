@@ -12,6 +12,7 @@ import { ThemedServerCard } from '@/components/server/ThemedServerCard'
 import { BackgroundTakeover, FeaturedServerCard, SidebarBanner, TopBanner } from '@/components/ads/AdSlots'
 import { BoostedStrip, RatingList, RatingPodium } from '@/components/rating/RatingBoard'
 import { EmptyState } from '@/components/ui/feedback'
+import { breadcrumbs, useSeo } from '@/lib/seo'
 
 /**
  * A game world: /minecraft, /lineage-2, /lineage-2/interlude.
@@ -40,16 +41,34 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
 
+  const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
+  const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
+  useSeo({
+    title: `Серверы ${worldName}`,
+    path: worldPath,
+    description: `Серверы ${worldName} в каталоге GameScout: онлайн с указанием источника, открытия, рейтинг и голосование.`,
+    jsonLd: [
+      breadcrumbs([
+        { name: 'GameScout', path: '/' },
+        ...(game ? [{ name: game.name, path: '/' + game.slug }] : []),
+        ...(game && chronicle ? [{ name: chronicle.label, path: worldPath }] : []),
+      ]),
+    ],
+  })
   const { data: servers = [] } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
   const { data: entries = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id, sponsored: true })
   const { data: organic = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id })
 
   if (!game) return null
 
-  const live = servers.filter((server) => server.online.status !== 'PENDING')
+  const live = servers.filter((server) => !['PENDING', 'UNKNOWN'].includes(server.online.status))
   const openings = servers.filter((server) => server.launch)
   const verifiedShare = live.length ? live.filter((s) => s.online.status === 'VERIFIED').length / live.length : 0
-  const topOnline = [...live].sort((a, b) => b.online.current - a.online.current).slice(0, 6)
+  // Fresh numbers first; a world whose online is not measured yet still lists its servers.
+  const measured = live.filter((server) => server.online.freshness === 'fresh' && server.online.playersKnown !== false)
+  const topOnline = measured.length
+    ? [...measured].sort((a, b) => b.online.current - a.online.current).slice(0, 6)
+    : servers.slice(0, 6)
 
   return (
     <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>
@@ -60,7 +79,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
         chronicle={chronicle}
         serversCount={chronicle?.serversCount ?? game.serversCount}
         playersOnline={chronicle?.playersOnline ?? game.playersOnline}
-        verifiedShare={verifiedShare || 0.82}
+        verifiedShare={verifiedShare}
       />
 
       <Container className="relative pb-16">
@@ -81,7 +100,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                   </>
                 }
                 title={chronicle ? `Серверы ${chronicle.label}` : `Серверы ${game.shortName}`}
-                description="Онлайн получен GameScout напрямую. Карточки с пометкой REPORTED показывают данные владельца."
+                description="У каждого числа указан источник: проверка GameScout, сайт проекта или сторонний мониторинг. VERIFIED — только то, что GameScout измерил сам."
                 action={{ label: 'Весь каталог', to: `/catalog?game=${game.id}` }}
               />
 
@@ -93,8 +112,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 </div>
               ) : (
                 <EmptyState
-                  title="В этой хронике пока нет активных серверов"
-                  description="Проекты появятся здесь, как только пройдут проверку онлайна."
+                  title="В этой хронике пока нет серверов"
+                  description="Проекты появятся здесь после добавления в каталог."
                   action="Открыть каталог"
                   actionTo={`/catalog?game=${game.id}`}
                 />

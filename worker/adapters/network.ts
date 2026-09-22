@@ -10,6 +10,7 @@ export interface NetworkOptions {
   allowLoopback?: boolean
   fetcher?: typeof fetch
   resolveHost?: (host: string) => Promise<string[]>
+  resolveSrv?: (host: string) => Promise<{ host: string; port: number } | undefined>
 }
 
 export function normalizeHost(input: string): string {
@@ -123,6 +124,50 @@ export async function resolvePublicHost(input: string, options: NetworkOptions =
     throw new AdapterError('invalid_target', 'DNS must resolve only to public addresses')
   }
   return addresses.find(isPublicIpv4) ?? addresses[0]
+}
+
+/**
+ * Minecraft's `_minecraft._tcp` SRV record, as the vanilla client resolves it.
+ * Returns undefined when the name has no SRV record; the caller then uses the
+ * default port. The target is validated like any other host before use.
+ */
+export async function resolveMinecraftSrv(input: string, options: NetworkOptions = {}): Promise<{ host: string; port: number } | undefined> {
+  const host = assertPublicHost(input, options)
+  if (ipv4Octets(host) || host === 'localhost') return undefined
+  if (options.resolveSrv) return options.resolveSrv(host)
+  const controller = new AbortController()
+  try {
+    const answer = await withDeadline((async () => {
+      const response = await (options.fetcher ?? fetch)(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent('_minecraft._tcp.' + host)}&type=SRV`, {
+        headers: { Accept: 'application/dns-json' }, redirect: 'manual', signal: controller.signal,
+      })
+      if (!response.ok) throw new AdapterError('dns_failed', 'DNS lookup failed')
+      return JSON.parse(await readBoundedText(response, 16384)) as { Status?: number; Answer?: { type: number; data: string }[] }
+    })(), options.timeoutMs)
+    // "priority weight port target." — lowest priority wins, as in the client.
+    const records = (answer.Answer ?? [])
+      .filter(record => record.type === 33)
+      .map(record => record.data.trim().split(/\s+/))
+      .filter(parts => parts.length === 4)
+      .map(([priority, , port, target]) => ({ priority: Number(priority), port: Number(port), host: target.replace(/\.$/, '') }))
+      .sort((a, b) => a.priority - b.priority)
+    const best = records[0]
+    if (!best) return undefined
+    return { host: assertPublicHost(best.host, options), port: assertPort(best.port) }
+  } finally { controller.abort() }
+}
+
+/** One DNS answer per probe: a probe that makes several requests resolves once. */
+export function memoizedResolver(options: NetworkOptions): NetworkOptions {
+  if (options.resolveHost) return options
+  const cache = new Map<string, Promise<string>>()
+  return {
+    ...options,
+    resolveHost: host => {
+      if (!cache.has(host)) cache.set(host, resolvePublicHost(host, options))
+      return cache.get(host)!.then(address => [address])
+    },
+  }
 }
 
 export function assertPublicUrl(input: string, options: NetworkOptions = {}): URL {

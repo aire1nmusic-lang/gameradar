@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Crown, Play, ShieldCheck, Star, Zap } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
-import { formatCompact, formatNumber, formatRating } from '@/lib/format'
+import { formatCompact, formatNumber, formatPlayers, formatRating } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import type { RankedServer } from '@/models'
 import { ThemedButton, ThemedCard, useGameTheme } from '@/theme'
@@ -60,7 +60,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 {isFirst && <Crown size={14} className="text-warn-300" />}
               </div>
               <div className="absolute top-2.5 right-2.5 z-[2]">
-                <StatusBadge status={server.online.status} size="sm" />
+                <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
               </div>
 
               <div className="absolute -bottom-5 left-4 z-[2]">
@@ -87,9 +87,9 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
 
               <div className="mt-3 flex items-end justify-between gap-2">
                 <div>
-                  <div className="num gt-display text-[22px] leading-none">{formatNumber(server.online.current)}</div>
+                  <div className="num gt-display text-[22px] leading-none">{formatPlayers(server.online)}</div>
                   <div className="mt-1.5">
-                    <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
+                    <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
                   </div>
                 </div>
                 <Sparkline data={server.history['24h']} width={62} accent={theme.colors.primary} />
@@ -207,10 +207,10 @@ export function RatingRow({
 
       <div className="w-[84px] shrink-0 text-right sm:w-[104px]">
         <div className="num text-[15px] font-semibold" style={{ color: theme.colors.text }}>
-          {formatNumber(server.online.current)}
+          {formatPlayers(server.online)}
         </div>
         <div className="mt-0.5 hidden justify-end sm:flex">
-          <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
+          <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
         </div>
       </div>
 

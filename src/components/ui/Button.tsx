@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
@@ -77,7 +77,7 @@ export function Button({
 
   if (href) {
     return (
-      <a href={href} className={classes} target="_blank" rel="noreferrer">
+      <a href={href} className={classes} target="_blank" rel="noopener noreferrer" onClick={rest.onClick as MouseEventHandler<HTMLAnchorElement> | undefined}>
         {content}
       </a>
     )

@@ -20,6 +20,7 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { StatusBadge } from '@/components/trust/status'
 import { TierBadge } from '@/components/boost/BoostBadge'
 import { ScoreBar } from '@/components/rating/RatingBoard'
+import { useSeo } from '@/lib/seo'
 
 /**
  * /boost — the commercial engine.
@@ -29,6 +30,7 @@ import { ScoreBar } from '@/components/rating/RatingBoard'
  * the independent rating.
  */
 export default function Boost() {
+  useSeo({ title: 'Продвижение', noindex: true })
   const { data: projects = [] } = useOwnedServers()
   const [slug, setSlug] = useState<string | undefined>(undefined)
   const [pack, setPack] = useState<BoostPackage['id'] | 'custom'>('pro')
@@ -115,7 +117,7 @@ export default function Boost() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="gt-display truncate text-[17px]">{server.name}</span>
-                  <StatusBadge status={server.online.status} size="sm" />
+                  <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
                 </div>
                 <div className="mt-1 text-[12.5px] gt-faint">
                   {game.shortName} · {server.version} · {server.flag} {server.region}

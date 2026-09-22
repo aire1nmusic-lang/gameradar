@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Play } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
-import { formatNumber } from '@/lib/format'
+import { formatPlayers } from '@/lib/format'
 
 import { useAd, useServer } from '@/hooks/data'
 import { getGame } from '@/data/games'
@@ -72,7 +72,7 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
             <span className="text-[11px] tracking-[0.14em] uppercase" style={{ color: theme.colors.textFaint }}>
               {creative.advertiser}
             </span>
-            {server && <StatusBadge status={server.online.status} size="sm" />}
+            {server && <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />}
           </div>
           <div className="gt-display text-[19px] leading-tight sm:text-[24px]">{creative.headline}</div>
           <p className="clamp-2 mt-1 max-w-xl text-[13px]" style={{ color: theme.colors.textMuted }}>
@@ -83,9 +83,9 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
         <div className="relative hidden shrink-0 flex-col items-end gap-2 sm:flex">
           {server && server.online.status !== 'PENDING' && (
             <div className="text-right">
-              <div className="num gt-display text-[22px] leading-none">{formatNumber(server.online.current)}</div>
+              <div className="num gt-display text-[22px] leading-none">{formatPlayers(server.online)}</div>
               <div className="mt-1">
-                <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
+                <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
               </div>
             </div>
           )}
@@ -135,9 +135,9 @@ export function SidebarBanner({ gameId, className }: { gameId?: string; classNam
 
           {server && (
             <div className="mt-4 space-y-2">
-              <StatusBadge status={server.online.status} size="sm" />
+              <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
               <div className="flex items-baseline gap-1.5">
-                <span className="num gt-display text-[24px] leading-none">{formatNumber(server.online.current)}</span>
+                <span className="num gt-display text-[24px] leading-none">{formatPlayers(server.online)}</span>
                 <span className="num text-[12px]" style={{ color: theme.colors.textFaint }}>
                   игроков сейчас
                 </span>
@@ -212,7 +212,7 @@ export function FeaturedServerCard({ gameId, className }: { gameId?: string; cla
             style={{ background: `linear-gradient(to right, transparent, ${theme.colors.surfaceRaised})` }}
           />
           <div className="absolute top-3 left-3 flex gap-2">
-            <StatusBadge status={server.online.status} size="sm" />
+            <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
             <PremiumBadge />
           </div>
         </div>
@@ -240,9 +240,9 @@ export function FeaturedServerCard({ gameId, className }: { gameId?: string; cla
 
           <div className="flex items-end justify-between gap-4 pt-1">
             <div>
-              <div className="num gt-display text-[28px] leading-none">{formatNumber(server.online.current)}</div>
+              <div className="num gt-display text-[28px] leading-none">{formatPlayers(server.online)}</div>
               <div className="mt-1.5">
-                <VerifiedLine status={server.online.status} seconds={server.online.checkedAgoSec} size="xs" />
+                <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
               </div>
             </div>
             <ThemedButton to={`/server/${server.slug}`} icon={<Play size={13} fill="currentColor" />}>

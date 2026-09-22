@@ -6,6 +6,7 @@ import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
 import { StatusBadge, STATUS_META, VerifiedLine } from '@/components/trust/status'
 import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/Button'
+import { useSeo } from '@/lib/seo'
 
 function withStatus(server: GameServer, status: OnlineStatus): GameServer {
   return { ...server, online: { ...server.online, status } }
@@ -14,6 +15,7 @@ function withStatus(server: GameServer, status: OnlineStatus): GameServer {
 const STATUSES: OnlineStatus[] = ['VERIFIED', 'LIVE', 'OWNER_REPORTED', 'OFFLINE', 'ANOMALY', 'PENDING', 'CHECKING']
 
 export default function UiStates() {
+  useSeo({ title: 'Состояния интерфейса', noindex: true })
   // Showcase only: every card is a real catalogue row repainted into each
   // status, so the page never depends on particular seed slugs existing.
   const { data: servers = [] } = useServers({ limit: 12 })

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { AlertTriangle, CalendarClock, Loader2, PowerOff, Radio, ShieldCheck, Upload } from 'lucide-react'
+import { AlertTriangle, CalendarClock, CircleHelp, Globe, Loader2, PowerOff, Radio, ShieldCheck, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatSeconds } from '@/lib/format'
-import { OnlineStatus } from '@/models'
+import { OnlineStatus, type OnlineData } from '@/models'
 
 interface StatusMeta {
   label: string
@@ -84,6 +84,24 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     dot: 'bg-ink-300',
     caption: 'Выполняется запрос к серверу',
   },
+  [OnlineStatus.External]: {
+    label: 'EXTERNAL ONLINE',
+    short: 'Внешний',
+    icon: <Globe size={12} strokeWidth={2.4} />,
+    pill: 'border-white/10 bg-white/[0.04]',
+    text: 'text-ink-200',
+    dot: 'bg-ink-300',
+    caption: 'Онлайн по данным стороннего мониторинга — GameScout его не проверял',
+  },
+  [OnlineStatus.Unknown]: {
+    label: 'ОНЛАЙН НЕИЗВЕСТЕН',
+    short: 'Неизвестно',
+    icon: <CircleHelp size={12} strokeWidth={2.4} />,
+    pill: 'border-white/10 bg-white/[0.03]',
+    text: 'text-ink-400',
+    dot: 'bg-ink-500',
+    caption: 'Источники онлайна сейчас не отвечают',
+  },
 }
 
 export function LiveDot({ status, className }: { status: OnlineStatus; className?: string }) {
@@ -143,24 +161,39 @@ export function StatusBadge({
   )
 }
 
-/** "Проверено GameScout 42 сек. назад" — the line that carries the whole promise. */
+/**
+ * "Проверено GameScout 42 сек. назад" — the line that carries the whole promise.
+ *
+ * Pass `online` to get the full story: whose number it is and how old it is.
+ * A number from a project or a monitor always names its source; a stale one
+ * says so instead of passing for current.
+ */
 export function VerifiedLine({
-  status,
-  seconds,
-  source,
+  online,
+  status: statusProp,
+  seconds: secondsProp,
+  source: sourceProp,
   launching,
   className,
   size = 'sm',
 }: {
-  status: OnlineStatus
-  seconds: number
+  online?: OnlineData
+  status?: OnlineStatus
+  seconds?: number
   /** false when the card has no announced opening date */
   launching?: boolean
   source?: string
   className?: string
   size?: 'xs' | 'sm'
 }) {
+  const status = online?.status ?? statusProp ?? OnlineStatus.Pending
+  const seconds = online ? (online.observedAgoSec ?? online.checkedAgoSec) : (secondsProp ?? 0)
+  const source = online?.source ?? sourceProp
   const base = cn('flex items-center gap-1.5 font-mono', size === 'xs' ? 'text-[10.5px]' : 'text-[11.5px]', className)
+
+  if (online?.freshness === 'stale' && status !== OnlineStatus.Offline) {
+    return <span className={cn(base, 'text-warn-400/85')}>Данные устарели · обновлено {formatSeconds(seconds)}</span>
+  }
 
   switch (status) {
     case OnlineStatus.Verified:
@@ -177,16 +210,32 @@ export function VerifiedLine({
           Сервер отвечает · {formatSeconds(seconds)}
         </span>
       )
+    case OnlineStatus.External:
+      return (
+        <span className={cn(base, 'text-ink-400')} title={online?.sourceUrl}>
+          По данным {source} · обновлено {formatSeconds(seconds)}
+        </span>
+      )
     case OnlineStatus.OwnerReported:
-      return <span className={cn(base, 'text-ink-500')}>{source ?? 'Данные предоставлены сервером'}</span>
+      return online?.sourceTier === 'OFFICIAL' ? (
+        <span className={cn(base, 'text-ink-400')} title={online.sourceUrl}>
+          По данным сайта проекта · обновлено {formatSeconds(seconds)}
+        </span>
+      ) : (
+        <span className={cn(base, 'text-ink-500')}>{source ?? 'Данные предоставлены сервером'}</span>
+      )
     case OnlineStatus.Offline:
       return (
-        <span className={cn(base, 'text-danger-400/80')}>Последняя удачная проверка — {formatSeconds(seconds)}</span>
+        <span className={cn(base, 'text-danger-400/80')}>
+          {online?.sourceTier && online.sourceTier !== 'DIRECT' ? `По данным ${source} сервер не отвечает` : `Последняя удачная проверка — ${formatSeconds(seconds)}`}
+        </span>
       )
     case OnlineStatus.Anomaly:
       return <span className={cn(base, 'text-warn-400/85')}>Данные на перепроверке GameScout</span>
     case OnlineStatus.Checking:
       return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
+    case OnlineStatus.Unknown:
+      return <span className={cn(base, 'text-ink-500')}>Источники онлайна не ответили · {formatSeconds(seconds)}</span>
     default:
       return (
         <span className={cn(base, 'text-ink-500')}>

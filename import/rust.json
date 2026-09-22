@@ -1,0 +1,600 @@
+[
+  {
+    "key": "rust:6324892",
+    "game": "rust",
+    "name": "Rustoria.co - US Main",
+    "website": "https://rustoria.co/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/6324892",
+        "config": {
+          "address": "208.103.169.97:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/6324892"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/6324892"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rustoria.co/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=208.103.169.97"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Connect hostname vanilla.rustoria.us (BM-listed). Website sits behind a bot check (\"Checking Connection...\") so curl got 403; the domain is the one BM lists as the server website. Game/connect port 28010; A2S query port 28015; hostname vanilla.rustoria.us. A2S reply name: \"Rustoria.co - US Main\"."
+  },
+  {
+    "key": "rust:9255283",
+    "game": "rust",
+    "name": "Rustoria.co - EU Main",
+    "website": "https://rustoria.co/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/9255283",
+        "config": {
+          "address": "208.103.169.247:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/9255283"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/9255283"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rustoria.co/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=208.103.169.247"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Connect hostname main.rustoria.uk. Website behind bot check (curl 403). Game/connect port 28010; A2S query port 28015; hostname main.rustoria.uk. A2S reply name: \"Rustoria.co - EU Main\"."
+  },
+  {
+    "key": "rust:9611162",
+    "game": "rust",
+    "name": "Rusty Moose |US Monthly|",
+    "website": "https://moose.gg/",
+    "chronicle": null,
+    "version": "Monthly",
+    "modes": [
+      "PvP",
+      "Vanilla"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/9611162",
+        "config": {
+          "address": "205.178.168.52:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/9611162"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/9611162"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://moose.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=205.178.168.52"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Hostname monthly.us.moose.gg. Search index shows a second BM id (35805781) with the same name; 9611162 is the one indexed with this hostname — re-check the id once BM API access exists. Game/connect port 28010; A2S query port 28015; hostname monthly.us.moose.gg. A2S reply name: \"Rusty Moose |US Monthly|\"."
+  },
+  {
+    "key": "rust:4729828",
+    "game": "rust",
+    "name": "Rusty Moose |EU Main|",
+    "website": "https://moose.gg/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/4729828",
+        "config": {
+          "address": "205.178.168.211:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/4729828"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/4729828"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://moose.gg/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=205.178.168.211"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname main.eu.moose.gg. Game/connect port 28010; A2S query port 28015; hostname main.eu.moose.gg. A2S reply name: \"Rusty Moose |EU Main|\"."
+  },
+  {
+    "key": "rust:433768",
+    "game": "rust",
+    "name": "Rustafied.com - US Main",
+    "website": "https://www.rustafied.com/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/433768",
+        "config": {
+          "address": "104.143.2.214:28015"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/433768"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/433768"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.rustafied.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=104.143.2.214"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname usmain.rustafied.com; A2S answers on query port 28018 only. Game/connect port 28015; A2S query port 28018; hostname usmain.rustafied.com. A2S reply name: \"Rustafied.com - US Main\"."
+  },
+  {
+    "key": "rust:3332713",
+    "game": "rust",
+    "name": "Rustafied.com - EU Main",
+    "website": "https://www.rustafied.com/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/3332713",
+        "config": {
+          "address": "195.60.166.128:28015"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/3332713"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/3332713"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.rustafied.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=195.60.166.128"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname eumain.rustafied.com; A2S on query port 28018. Game/connect port 28015; A2S query port 28018; hostname eumain.rustafied.com. A2S reply name: \"Rustafied.com - EU Main\"."
+  },
+  {
+    "key": "rust:6195010",
+    "game": "rust",
+    "name": "Rusticated.com - US Main",
+    "website": "https://rusticated.com/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/6195010",
+        "config": {
+          "address": "185.248.134.83:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/6195010"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/6195010"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rusticated.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=185.248.134.83"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname us-main.rusticated.com. Game/connect port 28010; A2S query port 28015; hostname us-main.rusticated.com. A2S reply name: \"Rusticated.com - US Main\"."
+  },
+  {
+    "key": "rust:15017289",
+    "game": "rust",
+    "name": "Rusticated.com - EU Main",
+    "website": "https://rusticated.com/",
+    "chronicle": null,
+    "version": "Vanilla",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/15017289",
+        "config": {
+          "address": "185.248.134.61:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/15017289"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/15017289"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rusticated.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=185.248.134.61"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname eu-main.rusticated.com. Game/connect port 28010; A2S query port 28015; hostname eu-main.rusticated.com. A2S reply name: \"Rusticated.com - EU Main\"."
+  },
+  {
+    "key": "rust:32281782",
+    "game": "rust",
+    "name": "Reddit.com/r/PlayRust - US Monthly Quad",
+    "website": null,
+    "chronicle": null,
+    "version": "Monthly",
+    "modes": [
+      "PvP",
+      "Vanilla",
+      "Quad limit"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/32281782",
+        "config": {
+          "address": "91.229.114.94:28015"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/32281782"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/32281782"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=91.229.114.94"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Hostname us.premium.rplayrust.com. No working website: rplayrust.com did not respond, and the subreddit (reddit.com/r/playrustpublic) blocks curl. Game/connect port 28015; A2S query port 28017; hostname us.premium.rplayrust.com. A2S reply name: \"Reddit.com/r/PlayRust - US Monthly Quad\"."
+  },
+  {
+    "key": "rust:30699208",
+    "game": "rust",
+    "name": "[US West] Facepunch 1",
+    "website": "https://rust.facepunch.com/",
+    "chronicle": null,
+    "version": "Official",
+    "modes": [
+      "PvP",
+      "Vanilla"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": "US",
+    "region": "NA",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/30699208",
+        "config": {
+          "address": "148.113.198.9:28015"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/30699208"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/30699208"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://rust.facepunch.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=148.113.198.9"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Official server run by Facepunch (the developer). Several BM ids exist for \"[EU]/[US] Facepunch N\" because IPs rotate; this id is the one indexed with 148.113.198.9:28015. Game/connect port 28015; A2S query port 28016. A2S reply name: \"[US West] Facepunch 1\"."
+  },
+  {
+    "key": "rust:2569573",
+    "game": "rust",
+    "name": "[EU] Stevious 2x Main | Vanilla",
+    "website": "https://stevious.com/",
+    "chronicle": null,
+    "version": "2x",
+    "modes": [
+      "PvP",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/2569573",
+        "config": {
+          "address": "168.100.161.157:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/2569573"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/2569573"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://stevious.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=168.100.161.157"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Live server name has a changing wipe-date suffix (e.g. \"| 17/9\"); the name here has it removed. Game/connect port 28010; A2S query port 28015. A2S reply name: \"[EU] Stevious 2x Main | Vanilla | 17/9\"."
+  },
+  {
+    "key": "rust:34885585",
+    "game": "rust",
+    "name": "Atlas - EU 3x | No BPs | Mondays",
+    "website": "https://atlasrust.com/",
+    "chronicle": null,
+    "version": "3x",
+    "modes": [
+      "PvP",
+      "No BPs",
+      "Weekly"
+    ],
+    "rates": null,
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "region": "EU",
+    "endpoint": null,
+    "onlineSources": [
+      {
+        "provider": "steam",
+        "url": "https://www.battlemetrics.com/servers/rust/34885585",
+        "config": {
+          "address": "195.60.166.23:28010"
+        }
+      }
+    ],
+    "source": {
+      "name": "BattleMetrics",
+      "url": "https://www.battlemetrics.com/servers/rust/34885585"
+    },
+    "refs": [
+      {
+        "name": "BattleMetrics",
+        "url": "https://www.battlemetrics.com/servers/rust/34885585"
+      },
+      {
+        "name": "Официальный сайт",
+        "url": "https://atlasrust.com/"
+      },
+      {
+        "name": "Steam GetServersAtAddress",
+        "url": "https://api.steampowered.com/ISteamApps/GetServersAtAddress/v1/?addr=195.60.166.23"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Hostname 3x.atlasrust.uk (BM search snippet). BM id matched by exact name; the address is listed on the Atlas organisation page snippet. Game/connect port 28010; A2S query port 28015; hostname 3x.atlasrust.uk. A2S reply name: \"Atlas - EU 3x | No BPs | Mondays\"."
+  }
+]

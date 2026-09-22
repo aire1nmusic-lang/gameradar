@@ -1,0 +1,1890 @@
+[
+  {
+    "key": "mc:mc.hypixel.net",
+    "game": "minecraft",
+    "name": "Hypixel",
+    "website": "https://hypixel.net/",
+    "chronicle": "bedwars",
+    "version": "1.8–1.21",
+    "modes": [
+      "BedWars",
+      "MiniGames",
+      "SkyBlock"
+    ],
+    "openedAt": "2013-04-13",
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.hypixel.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://hypixel.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://hypixel.net"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/221843"
+      },
+      {
+        "name": "Wikipedia (opening date)",
+        "url": "https://en.wikipedia.org/wiki/Hypixel"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Large minigame network; version range taken from the server's own SLP version string. HEAD request to site returned no status (bot protection) but GET loads with 200."
+  },
+  {
+    "key": "mc:play.cubecraft.net",
+    "game": "minecraft",
+    "name": "CubeCraft",
+    "website": "https://www.cubecraft.net/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "MiniGames",
+      "SkyBlock"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.cubecraft.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.cubecraft.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.cubecraft.net"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/25531"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s24755"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Java + Bedrock minigame network; the site labels play.cubecraft.net as the PC (Java) address."
+  },
+  {
+    "key": "mc:play.wynncraft.com",
+    "game": "minecraft",
+    "name": "Wynncraft",
+    "website": "https://wynncraft.com/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "RPG"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.wynncraft.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://wynncraft.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://wynncraft.com"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/230071/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/95558"
+      },
+      {
+        "name": "Wikipedia (release month)",
+        "url": "https://en.wikipedia.org/wiki/Wynncraft"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "MMORPG server; no mods required. None of the fixed primary modes fits well, so Survival is only an approximation. minecraftservers.org lists a vote-tracking subdomain (mccs.wynncraft.com) rather than the public address."
+  },
+  {
+    "key": "mc:2b2t.org",
+    "game": "minecraft",
+    "name": "2b2t",
+    "website": "https://www.2b2t.org/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Anarchy",
+      "Survival"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "2b2t.org",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.2b2t.org"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.2b2t.org"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/55625"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/137128/"
+      },
+      {
+        "name": "Wikipedia (founding month)",
+        "url": "https://en.wikipedia.org/wiki/2b2t"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Oldest anarchy server. 2b2t.org resolves through an SRV record to connect.2b2t.org, so an SLP client must resolve SRV (a plain A lookup on 2b2t.org:25565 times out). It has a join queue, and the SLP 'max' value is not meaningful."
+  },
+  {
+    "key": "mc:gommehd.net",
+    "game": "minecraft",
+    "name": "GommeHD",
+    "website": "https://www.gommehd.net/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "MiniGames",
+      "SkyBlock"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Deutsch"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "gommehd.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.gommehd.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.gommehd.net"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/189066"
+      },
+      {
+        "name": "minecraft-server.eu",
+        "url": "https://minecraft-server.eu/server/index/1DC8F"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "German minigame network. Address is the bare domain (SRV to mc.gommehd.net). Site returns 403 to HEAD requests; GET returned 200."
+  },
+  {
+    "key": "mc:play.manacube.com",
+    "game": "minecraft",
+    "name": "ManaCube",
+    "website": "https://manacube.com/",
+    "chronicle": "skyblock",
+    "version": "Java Edition",
+    "modes": [
+      "SkyBlock",
+      "Survival",
+      "Factions",
+      "Parkour"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.manacube.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://manacube.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://manacube.com"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/503790"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s23169"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Java + Bedrock network. Catalogues list tracking hostnames (hub./mcsl.manacube.com); the official address is play.manacube.com."
+  },
+  {
+    "key": "mc:org.mc-complex.com",
+    "game": "minecraft",
+    "name": "Complex Gaming",
+    "website": "https://www.mc-complex.com/",
+    "chronicle": "modded",
+    "version": "Java Edition",
+    "modes": [
+      "Modded",
+      "Survival",
+      "SkyBlock",
+      "Prison",
+      "Factions"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "org.mc-complex.com",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftservers.org",
+      "url": "https://minecraftservers.org/server/467177"
+    },
+    "refs": [
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/467177"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s179012"
+      },
+      {
+        "name": "topg.org",
+        "url": "https://topg.org/minecraft-servers/server-477056"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Best known for Pixelmon/Cobblemon, which need a modpack, but it also runs vanilla-client modes. The official site is a JS app and its static HTML shows no connection address, so the address comes from catalogues only. vanilla.mc-complex.com also answers SLP."
+  },
+  {
+    "key": "mc:play.jartexnetwork.com",
+    "game": "minecraft",
+    "name": "JartexNetwork",
+    "website": "https://jartexnetwork.com/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "Prison",
+      "SkyBlock",
+      "Factions",
+      "Survival",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.jartexnetwork.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://jartexnetwork.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://jartexnetwork.com"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s52462"
+      },
+      {
+        "name": "topg.org",
+        "url": "https://topg.org/minecraft-servers/server-637187"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Accepts both premium and cracked (offline-mode) clients, per catalogue listing. Address resolves via SRV to a jartex.fun host."
+  },
+  {
+    "key": "mc:go.pika.host",
+    "game": "minecraft",
+    "name": "PikaNetwork",
+    "website": "https://pika-network.net/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "SkyBlock",
+      "Prison",
+      "Factions",
+      "Survival",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "go.pika.host",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://pika-network.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://pika-network.net"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s41366"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/424827/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "The site's visible IP box still says play.pika-network.net, but that name returned NXDOMAIN (checked via 1.1.1.1). go.pika.host (also on the official page) and bare pika-network.net (SRV) both work. Owner should decide which to display."
+  },
+  {
+    "key": "mc:purpleprison.net",
+    "game": "minecraft",
+    "name": "Purple Prison",
+    "website": "https://www.purpleprison.co/",
+    "chronicle": "prison",
+    "version": "Java Edition",
+    "modes": [
+      "Prison"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "purpleprison.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.purpleprison.co"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.purpleprison.co"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s58101"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "OP prison server. The website is on the .co domain but the connect address is .net; purpleprison.net has no working website over HTTPS. curl reported status 000 on the .co site, but it returned full page content."
+  },
+  {
+    "key": "mc:play.opblocks.com",
+    "game": "minecraft",
+    "name": "OPBlocks",
+    "website": "https://opblocks.com/",
+    "chronicle": "prison",
+    "version": "Java Edition",
+    "modes": [
+      "Prison",
+      "SkyBlock",
+      "Survival",
+      "Modded"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.opblocks.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://opblocks.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://opblocks.com"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/400198"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s159193"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Catalogues list hub.opblocks.com; the official site shows play.opblocks.com. Its Pixelmon/Cobblemon modes are modded; the other modes are vanilla-client."
+  },
+  {
+    "key": "mc:blocksmc.com",
+    "game": "minecraft",
+    "name": "BlocksMC",
+    "website": "https://blocksmc.com/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "blocksmc.com",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftservers.org",
+      "url": "https://minecraftservers.org/server/680758"
+    },
+    "refs": [
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/680758"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s142180"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/378830/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Minigame network that accepts cracked (offline-mode) clients. The official site returns 403 to automated requests (Cloudflare), so the address was not confirmed there. The domain has an SRV record (to ccc.blocksmc.com)."
+  },
+  {
+    "key": "mc:mccentral.org",
+    "game": "minecraft",
+    "name": "MCCentral",
+    "website": "https://www.mccentral.org/",
+    "chronicle": "skyblock",
+    "version": "Java Edition",
+    "modes": [
+      "SkyBlock",
+      "MiniGames",
+      "Survival",
+      "Prison",
+      "Factions"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mccentral.org",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.mccentral.org/community/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.mccentral.org/community/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/96287"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s120359"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Site redirects to /community/. The bare domain uses an SRV record (to play.mccentral.org). The primary mode is a best guess because it runs many modes."
+  },
+  {
+    "key": "mc:play.originrealms.com",
+    "game": "minecraft",
+    "name": "Origin Realms",
+    "website": "https://originrealms.com/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "RPG"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.originrealms.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://originrealms.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://originrealms.com"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/602530"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s276705"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Custom-content survival/RPG server that uses a server resource pack, not a mod launcher. Low player count at check time."
+  },
+  {
+    "key": "mc:play.lemoncloud.org",
+    "game": "minecraft",
+    "name": "LemonCloud",
+    "website": "https://lemoncloud.org/",
+    "chronicle": "survival",
+    "version": "1.20+",
+    "modes": [
+      "Survival",
+      "SkyBlock",
+      "Prison",
+      "Factions",
+      "Modded"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.lemoncloud.org",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://lemoncloud.org"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lemoncloud.org"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/372760"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s50860"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "lemoncloud.net redirects to lemoncloud.org. Catalogues list one.lemoncloud.net (a tracking host); play.lemoncloud.net also answers SLP. Version floor comes from the server's SLP string."
+  },
+  {
+    "key": "mc:hub.mcs.gg",
+    "game": "minecraft",
+    "name": "MineSuperior",
+    "website": "https://minesuperior.com/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "SkyBlock",
+      "Towny",
+      "Lifesteal"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "hub.mcs.gg",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://minesuperior.com"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://minesuperior.com"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/410060"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s96480"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "The official site copies hub.mcs.gg; catalogues list server.mcs.gg. Both are on the same mcs.gg domain. SRV points to hub.minesuperior.org."
+  },
+  {
+    "key": "mc:mc.funtime.su",
+    "game": "minecraft",
+    "name": "FunTime",
+    "website": "https://funtime.su/",
+    "chronicle": "anarchy",
+    "version": "1.8–1.21",
+    "modes": [
+      "Anarchy",
+      "SkyBlock",
+      "MiniGames",
+      "BedWars"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.funtime.su",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftrating.ru",
+      "url": "https://minecraftrating.ru/server/funtime/"
+    },
+    "refs": [
+      {
+        "name": "minecraftrating.ru",
+        "url": "https://minecraftrating.ru/server/funtime/"
+      },
+      {
+        "name": "millida.net",
+        "url": "https://millida.net/rating/servers/funtime-4"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Russian griefing/anarchy project. The official site loads, but its static HTML shows no address (it is mainly a donation shop). The address is confirmed by catalogues and by an SRV record on mc.funtime.su (to connect.funtime.su); play.funtime.su also works."
+  },
+  {
+    "key": "mc:mc.holyworld.ru",
+    "game": "minecraft",
+    "name": "HolyWorld",
+    "website": "https://holyworld.ru/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Anarchy",
+      "Survival",
+      "MiniGames",
+      "BedWars",
+      "SkyBlock"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.holyworld.ru",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftrating.ru",
+      "url": "https://minecraftrating.ru/server/282587/"
+    },
+    "refs": [
+      {
+        "name": "minecraftrating.ru",
+        "url": "https://minecraftrating.ru/server/282587/"
+      },
+      {
+        "name": "minecraftmonitoring.com",
+        "url": "https://minecraftmonitoring.com/server/12372"
+      },
+      {
+        "name": "NameMC",
+        "url": "https://namemc.com/server/mc.holyworld.ru"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "The official site is a JS app with no address in its static HTML, so the address comes from catalogues. One minecraftrating listing uses a tracking subdomain (my.holyworld.ru)."
+  },
+  {
+    "key": "mc:mc.reallyworld.ru",
+    "game": "minecraft",
+    "name": "ReallyWorld",
+    "website": "https://reallyworld.ru/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Anarchy",
+      "Survival"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.reallyworld.ru",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://reallyworld.ru"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://reallyworld.ru"
+      },
+      {
+        "name": "minecraftrating.ru",
+        "url": "https://minecraftrating.ru/server/96306/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Russian griefing server. Resolves via SRV to pool.reallyworld.me."
+  },
+  {
+    "key": "mc:mc.masedworld.net",
+    "game": "minecraft",
+    "name": "MasedWorld",
+    "website": "https://masedworld.net/",
+    "chronicle": "survival",
+    "version": "1.8–1.20",
+    "modes": [
+      "Survival",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.masedworld.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://masedworld.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://masedworld.net"
+      },
+      {
+        "name": "minecraftrating.ru",
+        "url": "https://minecraftrating.ru/server/mased_world/"
+      },
+      {
+        "name": "minecraftmonitoring.com",
+        "url": "https://minecraftmonitoring.com/server/12814"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Russian survival/minigame project. The official site states the version range and the IP."
+  },
+  {
+    "key": "mc:mc.aresmine.me",
+    "game": "minecraft",
+    "name": "AresMine",
+    "website": "https://aresmine.ru/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "Anarchy"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.aresmine.me",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://aresmine.ru"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://aresmine.ru"
+      },
+      {
+        "name": "minecraftmonitoring.com",
+        "url": "https://minecraftmonitoring.com/server/13413"
+      },
+      {
+        "name": "minecraftrating.ru",
+        "url": "https://minecraftrating.ru/server/aresmine/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Russian griefing survival server. The website is on .ru, but the published address is on .me (mc.aresmine.ru also answers). minecraftrating lists a tracking host, mr.aresmine.me."
+  },
+  {
+    "key": "mc:mc.mineblaze.net",
+    "game": "minecraft",
+    "name": "MineBlaze",
+    "website": "https://mineblaze.net/",
+    "chronicle": "survival",
+    "version": "1.8–26.2",
+    "modes": [
+      "Survival",
+      "BedWars",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.mineblaze.net",
+      "port": 25565
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://mineblaze.net"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://mineblaze.net"
+      },
+      {
+        "name": "monitoringminecraft.com",
+        "url": "https://monitoringminecraft.com/server/mineblaze/"
+      },
+      {
+        "name": "minecraftmonitoring.com",
+        "url": "https://minecraftmonitoring.com/server/11780"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "The official site publishes the address with an explicit port (mc.mineblaze.net:25565). Its meta description states the version range. The proxy's SLP version string is older (1.8–1.20)."
+  },
+  {
+    "key": "mc:play.mineland.net",
+    "game": "minecraft",
+    "name": "Mineland Network",
+    "website": "https://mineland.net/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "MiniGames",
+      "SkyBlock",
+      "Survival"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский",
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.mineland.net",
+      "port": null
+    },
+    "source": {
+      "name": "minecraft-server-list.com",
+      "url": "https://minecraft-server-list.com/server/399188/"
+    },
+    "refs": [
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/399188/"
+      },
+      {
+        "name": "minecraft-mp.com",
+        "url": "https://minecraft-mp.com/server-s153946"
+      },
+      {
+        "name": "NameMC",
+        "url": "https://namemc.com/server/play.mineland.net"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "Russian-origin network with a Russian and an English forum. The official site is a JS app with no address in static HTML. play.mineland.net has an SRV record to a non-default port on play-bungee4.mineland.net, so clients must resolve SRV."
+  },
+  {
+    "key": "mc:mc.minelegacy.ru",
+    "game": "minecraft",
+    "name": "MineLegacy",
+    "website": "https://minelegacy.ru/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "BedWars",
+      "Anarchy",
+      "SkyBlock"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.minelegacy.ru",
+      "port": null
+    },
+    "source": {
+      "name": "NameMC",
+      "url": "https://namemc.com/server/mc.minelegacy.ru"
+    },
+    "refs": [
+      {
+        "name": "NameMC",
+        "url": "https://namemc.com/server/mc.minelegacy.ru"
+      },
+      {
+        "name": "minecraftserverslist.net",
+        "url": "https://www.minecraftserverslist.net/server/1218631/MineLegacy.ru"
+      },
+      {
+        "name": "gamemonitoring.net",
+        "url": "https://gamemonitoring.net/minecraft/servers/7427108"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "WEAKEST ENTRY: the official site answered HTTP 429 to every automated request, so neither the site nor the address could be confirmed there. Catalogues also list mlegacy.ru and mclegacy.ru. SLP succeeded once at 17:44Z; three later retries timed out."
+  },
+  {
+    "key": "mc:mc.dexland.org",
+    "game": "minecraft",
+    "name": "DexLand",
+    "website": "https://dexland.org/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "BedWars",
+      "SkyWars",
+      "Survival",
+      "Grief",
+      "Duels",
+      "KitPvP",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.dexland.org",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://dexland.org/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://dexland.org/"
+      },
+      {
+        "name": "TMonitoring",
+        "url": "https://tmonitoring.com/server/dexland/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Address shown on official site (3x) and tmonitoring.com. SLP 2026-09-22: 4018/20000 online, proxy 'CheatBungee 1.8.x - 1.20.x'. dexland.ru redirects to dexland.org. Site rejects HEAD (curl -I gave 000) but GET returns 200."
+  },
+  {
+    "key": "mc:mc.musteryworld.net",
+    "game": "minecraft",
+    "name": "MusteryWorld",
+    "website": "https://musteryworld.net/",
+    "chronicle": "bedwars",
+    "version": "1.12–1.21",
+    "modes": [
+      "BedWars",
+      "Survival",
+      "SkyBlock",
+      "Grief",
+      "LuckyWars",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.musteryworld.net",
+      "port": null
+    },
+    "source": {
+      "name": "TMonitoring",
+      "url": "https://tmonitoring.com/server/musteryworld/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://musteryworld.net/"
+      },
+      {
+        "name": "TMonitoring",
+        "url": "https://tmonitoring.com/server/musteryworld/"
+      },
+      {
+        "name": "Minecraft-Statistic",
+        "url": "https://minecraft-statistic.net/en/server/musteryworld.html"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.musteryworld.net confirmed by two catalogues (tmonitoring.com, minecraft-statistic.net). The official site currently shows the alias mc.musteryworld.top (same MOTD and slot count). SLP: .net 633/3279, .top 684/3279; MOTD advertises 1.12-1.21, BedWars, Survival, SkyBlock, Grief, Builders, LuckyWars. Site rejects HEAD (404) but GET returns 200."
+  },
+  {
+    "key": "mc:play.skybars.me",
+    "game": "minecraft",
+    "name": "SkyBars",
+    "website": "https://skybars.me/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Anarchy",
+      "Survival",
+      "BedWars",
+      "SkyWars",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.skybars.me",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://skybars.me/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://skybars.me/"
+      },
+      {
+        "name": "MCservers.ru",
+        "url": "https://mcservers.ru/server-185"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "play.SkyBars.me on official site (5x) and mcservers.ru. Catalogues also use tracking aliases (tmon./mcrt.skybars.me). SLP: 882/5000, version string 'SkyBars'. The official site says unlicensed clients are accepted as well as the normal client."
+  },
+  {
+    "key": "mc:mc.migosmc.net",
+    "game": "minecraft",
+    "name": "MigosMC",
+    "website": "https://migosmc.net/",
+    "chronicle": "survival",
+    "version": "1.8–1.21",
+    "modes": [
+      "Survival",
+      "Grief",
+      "Anarchy",
+      "BedWars",
+      "MiniGames",
+      "RolePlay"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.migosmc.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://migosmc.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://migosmc.net/"
+      },
+      {
+        "name": "Minecraft.buzz",
+        "url": "https://minecraft.buzz/server/11588"
+      },
+      {
+        "name": "MinecraftRating",
+        "url": "https://minecraftrating.ru/server/migosmc/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.migosmc.net on official site (5x), minecraft.buzz and minecraftrating.ru. SLP: 980/2026, 'NullCordX 1.8.x-1.21.x'. Site rejects HEAD but GET returns 200."
+  },
+  {
+    "key": "mc:mc.cheatmine.net",
+    "game": "minecraft",
+    "name": "CheatMine",
+    "website": "https://cheatmine.net/",
+    "chronicle": "anarchy",
+    "version": "1.8–1.20",
+    "modes": [
+      "Anarchy",
+      "Survival",
+      "Grief",
+      "BedWars",
+      "Duels"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.cheatmine.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://cheatmine.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://cheatmine.net/"
+      },
+      {
+        "name": "MineUse",
+        "url": "https://mineuse.com/servera-minecraft/server-6231"
+      },
+      {
+        "name": "MinecraftList",
+        "url": "https://minecraftlist.com/servers/mc.cheatmine.net"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "Address on official site, mineuse.com and minecraftlist.com. play.cheatmine.net is an alias (same backend and counts). SLP: 440/5000, 'CheatBungee 1.8.x - 1.20.x'. The server's theme is that cheat clients are allowed."
+  },
+  {
+    "key": "mc:mc.politcore.ru",
+    "game": "minecraft",
+    "name": "PolitCore",
+    "website": "https://politcore.ru/",
+    "chronicle": "survival",
+    "version": "1.16–1.21",
+    "modes": [
+      "Survival",
+      "Politics",
+      "Towny"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.politcore.ru",
+      "port": null
+    },
+    "source": {
+      "name": "MinecraftRating",
+      "url": "https://minecraftrating.ru/server/politcore/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://politcore.ru/"
+      },
+      {
+        "name": "MinecraftRating",
+        "url": "https://minecraftrating.ru/server/politcore/"
+      },
+      {
+        "name": "MCRate",
+        "url": "https://mcrate.org/server/politcore"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.politcore.ru on minecraftrating.ru (11x) and mcrate.org. The official site advertises mc.politcore.net (and eu.politcore.net for EU); both .ru and .net answer SLP with the same 'PolitCore' version and 750 slots (188 and 179 online). Political simulator on a real-world map."
+  },
+  {
+    "key": "mc:skytime.su",
+    "game": "minecraft",
+    "name": "SkyTime",
+    "website": "https://skytime.su/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Anarchy",
+      "Grief",
+      "Survival"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "skytime.su",
+      "port": null
+    },
+    "source": {
+      "name": "MisterLauncher",
+      "url": "https://misterlauncher.org/server/24274/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://skytime.su/"
+      },
+      {
+        "name": "MisterLauncher",
+        "url": "https://misterlauncher.org/server/24274/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "The official domain has an _minecraft._tcp SRV record pointing to connect.skytime.su, and misterlauncher.org lists SKYTIME.SU. Other catalogues (millida.net, hotmc.ru) list mc.skytime.su but could not be fetched (401/403). The official site is a shop page and does not print an IP, so this is only 'likely'. SLP: skytime.su and mc.skytime.su both 1347/2026 (play.skytime.su 1445/2026), version 'SkyTime.su 1.21.4 - 26.3'. The first mc.skytime.su attempt timed out."
+  },
+  {
+    "key": "mc:mc.vanilla-game.ru",
+    "game": "minecraft",
+    "name": "Vanilla Game",
+    "website": "https://vanilla-game.ru/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "Vanilla"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.vanilla-game.ru",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://www.vanilla-game.ru/vanilla-minecraft-server"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.vanilla-game.ru/vanilla-minecraft-server"
+      },
+      {
+        "name": "Minecraft Inside",
+        "url": "https://minecraft-inside.ru/top/server/22152/"
+      },
+      {
+        "name": "MinecraftRating",
+        "url": "https://minecraftrating.ru/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.vanilla-game.ru on the official page /vanilla-minecraft-server (eu.vanilla-game.ru for EU), minecraft-inside.ru and the minecraftrating.ru front page. Vanilla / Vanilla+ survival with no wipes and no pay-to-win. SLP: 85/300, Velocity 1.7.2-26.2. Smaller than the others but long-running."
+  },
+  {
+    "key": "mc:donutsmp.net",
+    "game": "minecraft",
+    "name": "DonutSMP",
+    "website": "https://store.donutsmp.net/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "Lifesteal",
+      "PvP"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "donutsmp.net",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftservers.org",
+      "url": "https://minecraftservers.org/server/625591"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://store.donutsmp.net/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/625591"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/482359/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "donutsmp.net on minecraftservers.org and minecraft-server-list.com; SRV -> java.donutsmp.net (play.donutsmp.net is an alias). SLP: 24430/50000, Velocity 1.7.2-26.3. donutsmp.net/www redirects to store.donutsmp.net. That page returned 200 once and a Cloudflare 'Just a moment' page (403) on another fetch."
+  },
+  {
+    "key": "mc:na.minemen.club",
+    "game": "minecraft",
+    "name": "Minemen Club",
+    "website": "https://minemen.club/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "PvP",
+      "Practice",
+      "Duels",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "na.minemen.club",
+      "port": null
+    },
+    "source": {
+      "name": "minecraftservers.org",
+      "url": "https://minecraftservers.org/server/591376"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://minemen.club/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/591376"
+      },
+      {
+        "name": "Minelist",
+        "url": "https://minelist.io/minemen-club"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "na.minemen.club on minecraftservers.org and minelist.io. Bare minemen.club SRV-resolves to geo.minemen.club (3774 online). SLP na.: 3573 online (max reported 0), 'XeBungee 1.7.10 - 1.8.9, 1.21.4+'. PvP practice network; chronicle 'bedwars' is used as the minigames/PvP bucket."
+  },
+  {
+    "key": "mc:play.fadecloud.com",
+    "game": "minecraft",
+    "name": "FadeCloud",
+    "website": "https://fadecloud.com/",
+    "chronicle": "skyblock",
+    "version": "Java Edition",
+    "modes": [
+      "SkyBlock",
+      "Prison",
+      "Survival",
+      "Dungeons",
+      "Gens"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.fadecloud.com",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://fadecloud.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://fadecloud.com/"
+      },
+      {
+        "name": "minecraft-servers.gg",
+        "url": "https://minecraft-servers.gg/server/4959-play-fadecloud-com"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "play.fadecloud.com on official site (3x) and minecraft-servers.gg. SLP: 3384/10000, Velocity 1.7.2-26.3. Java and Bedrock crossplay. Catalogues say it has run since 2014."
+  },
+  {
+    "key": "mc:hoplite.gg",
+    "game": "minecraft",
+    "name": "Hoplite",
+    "website": "https://www.hoplite.gg/",
+    "chronicle": "bedwars",
+    "version": "Java Edition",
+    "modes": [
+      "Battle Royale",
+      "Duels",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "hoplite.gg",
+      "port": null
+    },
+    "source": {
+      "name": "minecraft-server-list.com",
+      "url": "https://minecraft-server-list.com/server/500715/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.hoplite.gg/"
+      },
+      {
+        "name": "minecraft-server-list.com",
+        "url": "https://minecraft-server-list.com/server/500715/"
+      },
+      {
+        "name": "MinecraftList",
+        "url": "https://minecraftlist.com/servers/hoplite.gg"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "hoplite.gg on minecraft-server-list.com and minecraftlist.com; SRV -> java.hoplite.gg. play.hoplite.gg is an alias. SLP: 994/3000, Velocity 1.7.2-26.2. The first hoplite.gg ping timed out and a retry succeeded. Battle-royale network; chronicle 'bedwars' is used as the minigames bucket."
+  },
+  {
+    "key": "mc:opsucht.net",
+    "game": "minecraft",
+    "name": "OPSUCHT",
+    "website": "https://www.opsucht.net/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "CityBuild",
+      "Survival",
+      "Economy"
+    ],
+    "openedAt": null,
+    "languages": [
+      "Deutsch"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "opsucht.net",
+      "port": null
+    },
+    "source": {
+      "name": "minecraft-server.eu",
+      "url": "https://minecraft-server.eu/server/index/200CE/OPSUCHTNET-CityBuild-Wirtschafts-Server"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://www.opsucht.net/"
+      },
+      {
+        "name": "minecraft-server.eu",
+        "url": "https://minecraft-server.eu/server/index/200CE/OPSUCHTNET-CityBuild-Wirtschafts-Server"
+      },
+      {
+        "name": "Minelist",
+        "url": "https://minelist.io/opsucht"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "opsucht.net on minecraft-server.eu and minelist.io; SRV -> java.opsucht.net (opsucht.de also works). SLP: 981/982, 'BungeeCord 1.8.x-26.x'. German CityBuild/economy server."
+  },
+  {
+    "key": "mc:play.applemc.fun",
+    "game": "minecraft",
+    "name": "AppleMC",
+    "website": "https://applemc.fun/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "SMP",
+      "Lifesteal",
+      "BedWars",
+      "PvP"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.applemc.fun",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://applemc.fun/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://applemc.fun/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/683622"
+      },
+      {
+        "name": "Play Minecraft Servers",
+        "url": "https://play-minecraft-servers.com/minecraft-servers/applemc/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "play.applemc.fun on official site, minecraftservers.org and play-minecraft-servers.com; SRV -> java.applemc.fun. SLP: 772/3000, Velocity-CTD 1.7.2-26.3."
+  },
+  {
+    "key": "mc:mc.vortexnetwork.net",
+    "game": "minecraft",
+    "name": "Vortex Network",
+    "website": "https://vortexnetwork.net/",
+    "chronicle": "prison",
+    "version": "Java Edition",
+    "modes": [
+      "Prison",
+      "SkyBlock",
+      "Survival"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.vortexnetwork.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://vortexnetwork.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://vortexnetwork.net/"
+      },
+      {
+        "name": "minecraftservers.org",
+        "url": "https://minecraftservers.org/server/576518"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.vortexnetwork.net in the official site's JS config and on minecraftservers.org. Other catalogues use per-list aliases (mcsl./mcmp./play.vortexnetwork.net). SLP: 781/3000, version '26.3'. Space-themed Prison/SkyBlock network."
+  },
+  {
+    "key": "mc:mc.gamster.org",
+    "game": "minecraft",
+    "name": "Gamster",
+    "website": "https://gamster.org/",
+    "chronicle": "survival",
+    "version": "1.8–1.21",
+    "modes": [
+      "Survival",
+      "MiniGames"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "mc.gamster.org",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://gamster.org/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://gamster.org/"
+      },
+      {
+        "name": "TopG",
+        "url": "https://topg.org/minecraft-servers/server-484221"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "mc.gamster.org on official site and topg.org. SLP: 687/3000, Velocity 1.7.2-26.3. Catalogues say it is hosted in Romania. Mode list is approximate."
+  },
+  {
+    "key": "mc:play.akumamc.net",
+    "game": "minecraft",
+    "name": "AkumaMC",
+    "website": "https://akumamc.net/",
+    "chronicle": "skyblock",
+    "version": "Java Edition",
+    "modes": [
+      "SkyBlock",
+      "Prison",
+      "Gens",
+      "Factions"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.akumamc.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://akumamc.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://akumamc.net/"
+      },
+      {
+        "name": "MinecraftList",
+        "url": "https://www.minecraftlist.com/servers/play.akumamc.net"
+      },
+      {
+        "name": "Play Minecraft Servers",
+        "url": "https://play-minecraft-servers.com/minecraft-servers/akumamc/"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "play.akumamc.net on official site and minecraftlist.com. play-minecraft-servers.com and minecraft.menu list the bare akumamc.net (SRV -> random.akumamc.net). SLP: 551/2026, 'Proxy Connector 2.0 (1.8x-26.2)'."
+  },
+  {
+    "key": "mc:play.insanitycraft.net",
+    "game": "minecraft",
+    "name": "InsanityCraft",
+    "website": "https://insanitycraft.net/",
+    "chronicle": "survival",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "Factions",
+      "SkyBlock",
+      "Lifesteal",
+      "Prison"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.insanitycraft.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://insanitycraft.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://insanitycraft.net/"
+      },
+      {
+        "name": "MinecraftList",
+        "url": "https://minecraftlist.com/servers/play.insanitycraft.net"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "confirmed",
+    "notes": "play.insanitycraft.net on official site (5x) and minecraftlist.com. It is also on minecraft-mp.com (server-s207316) and minecraft.buzz, but those pages were not fetched. SLP: 157/600, 'FlameCord 1.7.x-26.x'. Catalogues say it has run since 2012. minecraftlist.com seems to build pages from the address in the URL, so it is weak on its own."
+  },
+  {
+    "key": "mc:play.minewind.net",
+    "game": "minecraft",
+    "name": "Minewind",
+    "website": "https://minewind.com/",
+    "chronicle": "anarchy",
+    "version": "Java Edition",
+    "modes": [
+      "Survival",
+      "PvP",
+      "Anarchy"
+    ],
+    "openedAt": null,
+    "languages": [
+      "English"
+    ],
+    "country": null,
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.minewind.net",
+      "port": null
+    },
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://minewind.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://minewind.com/"
+      },
+      {
+        "name": "MinecraftList",
+        "url": "https://minecraftlist.com/servers/play.minewind.net"
+      }
+    ],
+    "checkedAt": "2026-09-22",
+    "confidence": "likely",
+    "notes": "play.minewind.net on official site (4x). The only catalogue match is minecraftlist.com, which appears to build pages from the address in the URL. minecraftservers.org and play-minecraft-servers.com list tracking aliases instead (morbius./pms.minewind.net). SLP: 166/1000, Velocity 1.7.2-26.3. Long-running PvP/anarchy-style survival."
+  }
+]

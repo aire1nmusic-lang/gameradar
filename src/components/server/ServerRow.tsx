@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatNumber } from '@/lib/format'
+import { formatPlayers } from '@/lib/format'
 import { getGame } from '@/data/games'
 import type { GameServer } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
@@ -21,7 +21,7 @@ export function ServerRow({
   className?: string
 }) {
   const game = getGame(server.gameId)
-  const { status, current, change24h } = server.online
+  const { status, change24h } = server.online
 
   return (
     <Link
@@ -68,9 +68,9 @@ export function ServerRow({
       </div>
 
       <div className="w-[74px] shrink-0 text-right sm:w-[108px]">
-        <div className="num text-[15px] font-semibold text-ink-50">{formatNumber(current)}</div>
+        <div className="num text-[15px] font-semibold text-ink-50">{formatPlayers(server.online)}</div>
         <div className="mt-0.5 hidden justify-end sm:flex">
-          <VerifiedLine status={status} seconds={server.online.checkedAgoSec} size="xs" />
+          <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
         </div>
       </div>
 

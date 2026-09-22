@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  Copy,
   FileCode2,
   Globe2,
   LayoutDashboard,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn, hashSeed } from '@/lib/utils'
 import { submitServer } from '@/services'
+import { ownerApi } from '@/services/ownerApi'
 import { useAuth } from '@/hooks/useAuth'
 import { ProbeMethod, ServerStatus } from '@/models'
 import { GAMES, getGame } from '@/data/games'
@@ -22,9 +22,9 @@ import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Checkbox, ChipToggle, Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
-import { StatusBadge } from '@/components/trust/status'
 import { ServerCard } from '@/components/server/ServerCard'
 import { Logo } from '@/components/layout/Logo'
+import { useSeo } from '@/lib/seo'
 
 const STEPS = ['Основное', 'Проверка онлайна', 'Владение', 'Готово']
 
@@ -33,24 +33,29 @@ const CONNECT_METHODS = [
     id: 'protocol',
     icon: <Server size={16} />,
     title: 'Прямой игровой протокол',
-    body: 'Мы опрашиваем сервер по адресу и порту каждые 60 секунд.',
+    body: 'GameScout сам опрашивает сервер по адресу и порту: Minecraft — Server List Ping, Lineage 2 — логин-сервер (без числа игроков).',
     placeholder: 'play.example.com:25565',
+    games: ['minecraft', 'lineage2'],
   },
   {
     id: 'api',
     icon: <Globe2 size={16} />,
-    title: 'Официальный API платформы',
-    body: 'Для FiveM, RageMP и alt:V данные берутся из server browser.',
-    placeholder: 'https://servers.fivem.net/servers/detail/abc123',
+    title: 'Прямой адрес сервера FiveM',
+    body: 'GameScout читает info.json, dynamic.json и players.json напрямую с вашего сервера — без мастер-листа Cfx.re.',
+    placeholder: 'http://play.example.com:30120',
+    games: ['gtarp'],
   },
   {
-    id: 'agent',
+    id: 'none',
     icon: <FileCode2 size={16} />,
-    title: 'GameScout Agent',
-    body: 'Небольшой агент на вашем сервере — для закрытых лаунчеров.',
-    placeholder: 'Токен агента будет выдан после сохранения',
+    title: 'Подключить позже',
+    body: 'Онлайн не будет измеряться, пока вы не укажете адрес в кабинете владельца.',
+    placeholder: '',
+    games: [] as string[],
   },
 ]
+
+const methodsFor = (gameId: string) => CONNECT_METHODS.filter((item) => item.id === 'none' || item.games.includes(gameId))
 
 interface FormState {
   gameId: string
@@ -89,10 +94,11 @@ const INITIAL: FormState = {
 }
 
 export default function AddServer() {
+  useSeo({ title: 'Добавить сервер', noindex: true })
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormState>(INITIAL)
-  const [checkState, setCheckState] = useState<'idle' | 'probing' | 'done'>('idle')
-  const [ownerState, setOwnerState] = useState<'idle' | 'probing' | 'done'>('idle')
+  const [monitoringSaved, setMonitoringSaved] = useState(false)
+  const [monitoringError, setMonitoringError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [created, setCreated] = useState<GameServer | null>(null)
@@ -119,6 +125,26 @@ export default function AddServer() {
         modes: form.modes,
       } as never)
       setCreated(saved)
+      // The address is stored as the card's monitoring target; the first
+      // check runs once moderation publishes the card.
+      const method = methodsFor(form.gameId).find((item) => item.id === form.connect)
+      const address = form.address.trim()
+      if (method && method.id !== 'none' && address) {
+        try {
+          if (method.id === 'api') await ownerApi.updateMonitoring(saved.id, { method: 'SERVER_API', apiUrl: address })
+          else {
+            const [host, port] = address.replace(/^[a-z]+:\/\//i, '').split(':')
+            await ownerApi.updateMonitoring(saved.id, {
+              method: form.gameId === 'lineage2' ? 'LOGIN_SERVER' : 'GAME_PROTOCOL',
+              host,
+              ...(port ? { port: Number(port) } : {}),
+            })
+          }
+          setMonitoringSaved(true)
+        } catch (error) {
+          setMonitoringError(error instanceof Error ? error.message : 'Адрес мониторинга не сохранён')
+        }
+      }
       setStep(3)
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Не удалось отправить карточку')
@@ -131,11 +157,12 @@ export default function AddServer() {
   const patch = (next: Partial<FormState>) => setForm((prev) => ({ ...prev, ...next }))
 
   const preview = useMemo(
-    () => draftServer(form, checkState === 'done' ? 'VERIFIED' : 'OWNER_REPORTED'),
-    [form, checkState],
+    () => draftServer(form, 'PENDING'),
+    [form],
   )
 
-  const canContinue = step === 0 ? form.name.trim().length > 1 && form.modes.length > 0 : true
+  const canContinue =
+    step === 0 ? form.name.trim().length > 1 && form.modes.length > 0 : step === 2 ? form.agreeRules : true
 
   return (
     <div className="pb-20">
@@ -169,11 +196,11 @@ export default function AddServer() {
           <div className="min-w-0">
             {step === 0 && <StepBasics form={form} patch={patch} />}
             {step === 1 && (
-              <StepConnect form={form} patch={patch} state={checkState} setState={setCheckState} />
+              <StepConnect form={form} patch={patch} />
             )}
             {step === 2 && (
               <>
-                <StepOwnership state={ownerState} setState={setOwnerState} form={form} />
+                <StepOwnership form={form} patch={patch} />
                 {!user && (
                   <Notice tone="warn" title="Нужен вход" className="mt-4">
                     Карточка сохраняется за вашей учётной записью — войдите, чтобы отправить её на модерацию.
@@ -186,7 +213,7 @@ export default function AddServer() {
                 )}
               </>
             )}
-            {step === 3 && <StepDone form={form} verified={checkState === 'done'} created={created} />}
+            {step === 3 && <StepDone form={form} verified={monitoringSaved} created={created} monitoringError={monitoringError} />}
 
             {step < 3 && (
               <div className="mt-8 flex items-center justify-between gap-3 border-t border-white/6 pt-6">
@@ -199,7 +226,7 @@ export default function AddServer() {
                   Назад
                 </Button>
                 <div className="flex items-center gap-3">
-                  {step === 1 && checkState !== 'done' && (
+                  {step === 1 && form.connect === 'none' && (
                     <span className="hidden text-[12.5px] text-ink-500 sm:block">Можно подключить позже</span>
                   )}
                   <Button
@@ -224,7 +251,7 @@ export default function AddServer() {
             </div>
             <ServerCard server={preview} />
             <p className="mt-3 text-[12px] leading-relaxed text-ink-500">
-              Так карточку увидят игроки в каталоге. Пока онлайн не подтверждён, он помечается как REPORTED.
+              Так карточку увидят игроки в каталоге. Пока онлайн не измерен, карточка показывает «Онлайн ещё не измерялся».
             </p>
           </aside>
         </div>
@@ -410,46 +437,30 @@ function StepBasics({ form, patch }: { form: FormState; patch: (next: Partial<Fo
   )
 }
 
-function StepConnect({
-  form,
-  patch,
-  state,
-  setState,
-}: {
-  form: FormState
-  patch: (next: Partial<FormState>) => void
-  state: 'idle' | 'probing' | 'done'
-  setState: (state: 'idle' | 'probing' | 'done') => void
-}) {
-  const method = CONNECT_METHODS.find((item) => item.id === form.connect)!
+function StepConnect({ form, patch }: { form: FormState; patch: (next: Partial<FormState>) => void }) {
+  const methods = methodsFor(form.gameId)
+  const method = methods.find((item) => item.id === form.connect) ?? methods[0]
 
   return (
     <div className="space-y-5">
       <Panel
-        title="Подключите Verified Online"
-        description="Проверенный онлайн повышает доверие игроков и вес сервера в независимом рейтинге. Подключение бесплатное."
+        title="Проверка онлайна"
+        description="GameScout сам измеряет онлайн и показывает источник. Подключение бесплатное; VERIFIED получает только то, что GameScout посчитал сам."
       >
         <div className="grid gap-3">
-          {CONNECT_METHODS.map((item) => (
+          {methods.map((item) => (
             <button
               key={item.id}
-              onClick={() => {
-                patch({ connect: item.id })
-                setState('idle')
-              }}
+              onClick={() => patch({ connect: item.id })}
               className={cn(
                 'flex items-start gap-3 rounded-lg border p-4 text-left transition-colors',
-                form.connect === item.id
-                  ? 'border-signal-400/40 bg-signal-500/[0.06]'
-                  : 'border-white/7 bg-white/[0.02] hover:border-white/16',
+                method.id === item.id ? 'border-signal-400/40 bg-signal-500/[0.06]' : 'border-white/7 bg-white/[0.02] hover:border-white/16',
               )}
             >
               <span
                 className={cn(
                   'mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg border',
-                  form.connect === item.id
-                    ? 'border-signal-400/40 bg-signal-500/12 text-signal-300'
-                    : 'border-white/8 bg-white/[0.03] text-ink-300',
+                  method.id === item.id ? 'border-signal-400/40 bg-signal-500/12 text-signal-300' : 'border-white/8 bg-white/[0.03] text-ink-300',
                 )}
               >
                 {item.icon}
@@ -461,137 +472,50 @@ function StepConnect({
               <span
                 className={cn(
                   'mt-1 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border',
-                  form.connect === item.id ? 'border-signal-400 bg-signal-400' : 'border-white/15',
+                  method.id === item.id ? 'border-signal-400 bg-signal-400' : 'border-white/15',
                 )}
               >
-                {form.connect === item.id && <Check size={11} strokeWidth={3} className="text-ink-950" />}
+                {method.id === item.id && <Check size={11} strokeWidth={3} className="text-ink-950" />}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="mt-5">
-          <Field label={form.connect === 'agent' ? 'Токен агента' : 'Адрес для проверки'} required>
-            <Input
-              value={form.address}
-              onChange={(event) => {
-                patch({ address: event.target.value })
-                setState('idle')
-              }}
-              placeholder={method.placeholder}
-              disabled={form.connect === 'agent'}
-            />
-          </Field>
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setState('probing')
-              window.setTimeout(() => setState('done'), 1800)
-            }}
-            disabled={state === 'probing'}
-            icon={state === 'probing' ? <Loader2 size={15} className="animate-spin" /> : undefined}
-          >
-            {state === 'probing' ? 'Проверяем подключение…' : 'Проверить подключение'}
-          </Button>
-          {state === 'probing' && <StatusBadge status="CHECKING" />}
-          {state === 'done' && <StatusBadge status="VERIFIED" />}
-        </div>
-
-        {state === 'probing' && (
-          <Notice tone="info" className="mt-4">
-            Отправляем тестовый запрос к серверу. Обычно это занимает до 30 секунд.
-          </Notice>
+        {method.id !== 'none' && (
+          <div className="mt-5">
+            <Field label="Адрес для проверки" hint={method.id === 'api' ? 'Полный адрес с портом, как в F8 → connect' : 'Адрес и порт; порт можно не указывать'}>
+              <Input value={form.address} onChange={(event) => patch({ address: event.target.value })} placeholder={method.placeholder} />
+            </Field>
+          </div>
         )}
 
-        {state === 'done' && (
-          <Notice tone="signal" title="Подключение работает" className="mt-4">
-            Сервер ответил за 42 мс, получено 1 284 игрока. Онлайн будет обновляться каждые 60 секунд, а карточка
-            получит статус VERIFIED ONLINE сразу после модерации.
-          </Notice>
-        )}
-
-        {state === 'idle' && (
-          <Notice tone="warn" className="mt-4">
-            Без подключения онлайн будет показан как REPORTED — «данные предоставлены сервером». Подключить проверку
-            можно в любой момент в кабинете владельца.
-          </Notice>
-        )}
+        <Notice tone="info" className="mt-4">
+          {method.id === 'none'
+            ? 'Без источника карточка показывает «Онлайн ещё не измерялся». Адрес можно указать позже в кабинете владельца.'
+            : 'Адрес сохранится вместе с карточкой. Первая проверка пройдёт автоматически после модерации — результат и источник появятся на карточке и в кабинете.'}
+        </Notice>
       </Panel>
     </div>
   )
 }
 
-function StepOwnership({
-  form,
-  state,
-  setState,
-}: {
-  form: FormState
-  state: 'idle' | 'probing' | 'done'
-  setState: (state: 'idle' | 'probing' | 'done') => void
-}) {
-  const code = `gamescout-verify=${hashSeed(form.name || 'demo').toString(16).slice(0, 10)}`
-
+function StepOwnership({ form, patch }: { form: FormState; patch: (next: Partial<FormState>) => void }) {
   return (
-    <Panel
-      title="Подтвердите владение"
-      description="Это защищает карточку от чужих правок и открывает статистику переходов."
-    >
+    <Panel title="Владение сервером" description="Подтверждение защищает карточку от чужих правок и открывает кабинет: голоса, награды, мониторинг, статистику.">
       <div className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
-        <div className="text-[12px] tracking-[0.08em] text-ink-500 uppercase">DNS TXT-запись</div>
-        <div className="mt-3 flex items-center gap-2 rounded-md border border-white/8 bg-ink-950/70 px-3 py-2.5">
-          <code className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-signal-300">{code}</code>
-          <button
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-ink-400 transition-colors hover:bg-white/6 hover:text-ink-50"
-            aria-label="Скопировать"
-          >
-            <Copy size={13} />
-          </button>
-        </div>
-        <p className="mt-3 text-[12.5px] leading-relaxed text-ink-400">
-          Добавьте запись в DNS домена проекта и нажмите «Проверить». Запись можно удалить через сутки после
-          подтверждения.
+        <div className="text-[13.5px] font-medium text-ink-50">Файл на сайте проекта</div>
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-400">
+          После отправки откройте карточку и нажмите «Это мой сервер». GameScout выдаст проверочный код — разместите его в файле
+          {' '}
+          <code className="font-mono text-ink-200">/.well-known/gamescout-verification.txt</code> на сайте
+          {form.site ? ` ${form.site.replace(/^https?:\/\//, '').replace(/\/$/, '')}` : ' проекта'}, и мы проверим его автоматически.
         </p>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
-          <div className="text-[13.5px] font-medium text-ink-50">Файл на сайте</div>
-          <p className="mt-1.5 text-[12.5px] text-ink-400">Загрузите gamescout.txt в корень сайта проекта.</p>
-        </div>
-        <div className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
-          <div className="text-[13.5px] font-medium text-ink-50">Discord-роль</div>
-          <p className="mt-1.5 text-[12.5px] text-ink-400">Подтвердите права администратора на Discord-сервере.</p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button
-          variant="secondary"
-          disabled={state === 'probing'}
-          onClick={() => {
-            setState('probing')
-            window.setTimeout(() => setState('done'), 1600)
-          }}
-          icon={state === 'probing' ? <Loader2 size={15} className="animate-spin" /> : undefined}
-        >
-          {state === 'probing' ? 'Проверяем запись…' : 'Проверить владение'}
-        </Button>
-        {state === 'done' && (
-          <span className="flex items-center gap-1.5 text-[13px] text-signal-300">
-            <CheckCircle2 size={15} />
-            Владение подтверждено
-          </span>
-        )}
       </div>
 
       <div className="mt-6 border-t border-white/6 pt-5">
         <Checkbox
-          checked={state === 'done'}
-          onChange={() => undefined}
+          checked={form.agreeRules}
+          onChange={(checked) => patch({ agreeRules: checked })}
           label="Я подтверждаю, что данные карточки достоверны"
           hint="Намеренное завышение онлайна ведёт к снятию статуса и понижению в рейтинге"
         />
@@ -600,7 +524,7 @@ function StepOwnership({
   )
 }
 
-function StepDone({ form, verified, created }: { form: FormState; verified: boolean; created: GameServer | null }) {
+function StepDone({ form, verified, created, monitoringError }: { form: FormState; verified: boolean; created: GameServer | null; monitoringError: string }) {
   return (
     <Panel title="Сервер отправлен на модерацию">
       <div className="flex items-start gap-3 rounded-lg border border-signal-500/22 bg-signal-500/[0.06] p-4">
@@ -609,15 +533,22 @@ function StepDone({ form, verified, created }: { form: FormState; verified: bool
           <div className="text-[14px] font-medium text-ink-50">{created?.name ?? form.name ?? 'Ваш сервер'} добавлен</div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-300">
             Модерация занимает до 24 часов. После публикации карточка появится в каталоге и поиске.
-            {verified && ' Проверка онлайна уже настроена и запустится автоматически.'}
+            {verified && ' Адрес мониторинга сохранён — проверка запустится автоматически после публикации.'}
           </p>
         </div>
       </div>
 
+      {monitoringError && (
+        <Notice tone="warn" className="mt-4" title="Адрес мониторинга не сохранён">
+          {monitoringError} Укажите адрес в кабинете владельца.
+        </Notice>
+      )}
+
       <div className="mt-5 space-y-2.5">
         {[
           'Карточка появится в каталоге по вашей игре',
-          verified ? 'Онлайн будет проверяться каждые 60 секунд' : 'Подключите Verified Online в кабинете',
+          verified ? 'Онлайн будет проверяться автоматически, с указанием источника' : 'Адрес для проверки онлайна можно указать в кабинете',
+          'Подтвердите владение: на карточке кнопка «Это мой сервер»',
           'Статистика переходов станет доступна сразу после публикации',
         ].map((item) => (
           <div key={item} className="flex items-center gap-2 text-[13.5px] text-ink-300">
@@ -648,9 +579,9 @@ function StepDone({ form, verified, created }: { form: FormState; verified: bool
 }
 
 /** Builds a preview card from the form so owners see exactly what players will see. */
-function draftServer(form: FormState, status: 'VERIFIED' | 'OWNER_REPORTED'): GameServer {
+/** Preview of the card as players will first see it: nothing measured yet, no invented numbers. */
+function draftServer(form: FormState, status: 'PENDING'): GameServer {
   const max = Math.max(10, Number(form.maxPlayers) || 1000)
-  const current = Math.round(max * 0.42)
   const tags = form.tags
     .split(',')
     .map((tag) => tag.trim())
@@ -669,39 +600,36 @@ function draftServer(form: FormState, status: 'VERIFIED' | 'OWNER_REPORTED'): Ga
     languages: form.languages,
     online: {
       status,
-      current,
+      current: 0,
       max,
-      change24h: 12,
-      peak24h: Math.round(current * 1.3),
-      avg7d: Math.round(current * 0.9),
-      peak30d: Math.round(current * 1.5),
-      checkedAgoSec: 12,
-      source: status === 'VERIFIED' ? 'GameScout Direct Query' : 'Данные сервера',
-      method: status === 'VERIFIED' ? ProbeMethod.GameProtocol : ProbeMethod.OwnerSubmitted,
-      uptime24h: status === 'VERIFIED' ? 100 : 0,
-      checksPerDay: 1440,
+      playersKnown: false,
+      change24h: 0,
+      peak24h: 0,
+      avg7d: 0,
+      peak30d: 0,
+      checkedAgoSec: 0,
+      source: 'Ожидает проверки',
+      method: ProbeMethod.None,
+      uptime24h: 0,
+      checksPerDay: 0,
+      freshness: 'unknown',
     },
     rating: 0,
     reviewsCount: 0,
-    openedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     tags: tags.length ? tags.slice(0, 5) : (form.modes.length ? form.modes.slice(0, 3) : ['Новый']),
     summary: form.summary.trim() || 'Краткое описание появится здесь — расскажите, чем ваш сервер отличается.',
     description: form.summary,
     hue: hashSeed(form.name || 'draft') % 360,
     addedAt: new Date().toISOString(),
-    trendScore: 12,
+    trendScore: 0,
     favorites: 0,
     votes: 0,
     moderation: ServerStatus.Draft,
     demo: true,
     links: { site: form.site || 'example.gg', discord: form.discord || 'discord.gg/example' },
     highlights: [],
-    history: {
-      '24h': Array.from({ length: 24 }, (_, i) => Math.round(current * (0.7 + Math.sin(i / 3) * 0.16 + i * 0.008))),
-      '7d': [],
-      '30d': [],
-    },
+    history: { '24h': [], '7d': [], '30d': [] },
     events: [],
     reviews: [],
   }

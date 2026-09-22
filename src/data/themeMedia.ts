@@ -49,6 +49,16 @@ export interface WorldMedia {
 const WIDTHS = [400, 800, 1600]
 /** Posters also ship a 2560 px file so full-width heroes stay sharp on HiDPI desktops. */
 const POSTER_WIDTHS = [400, 800, 1600, 2560]
+/** Lineage 2 posters front the showcase hero and add the full 3840 master for large/high-DPI screens. */
+const SHOWCASE_WIDTHS = [...POSTER_WIDTHS, 3840]
+
+/**
+ * Worlds whose key art is the headline of the first screen: a tall, full-width
+ * hero with a light scrim (`poster` preset) instead of a dimmed banner.
+ * Extending the showcase to another game is adding its id here.
+ */
+const SHOWCASE_GAMES = new Set(['lineage2'])
+export const isShowcase = (gameId?: string) => !!gameId && SHOWCASE_GAMES.has(gameId)
 
 function art(
   base: string,
@@ -62,7 +72,7 @@ function art(
 
 /** A key-art poster: `mobile` is the object-position that keeps the subject in a portrait crop. */
 const poster = (base: string, alt: string, tone: ArtTone, mobile: string, desktop = '50% 50%') =>
-  art(base, alt, tone, { desktop, mobile }, POSTER_WIDTHS)
+  art(base, alt, tone, { desktop, mobile }, base.startsWith('lineage-2/') ? SHOWCASE_WIDTHS : POSTER_WIDTHS)
 
 /* ────────────────────────────────────────────────────────────────────────────
    The art itself
@@ -308,6 +318,6 @@ export function artSrc(art: WorldArt, width = 1600): string {
   return `${art.base}-${closest}.webp`
 }
 
-export function artSrcSet(art: WorldArt): string {
-  return art.widths.map((width) => `${art.base}-${width}.webp ${width}w`).join(', ')
+export function artSrcSet(art: WorldArt, widths: number[] = art.widths): string {
+  return widths.map((width) => `${art.base}-${width}.webp ${width}w`).join(', ')
 }

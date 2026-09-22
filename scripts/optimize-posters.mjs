@@ -4,7 +4,7 @@
  *   node scripts/optimize-posters.mjs <source dir>   (the folder with Lineage/, Майнкрафт/, GTA/)
  *
  * Reads the 3840×2160 PNG masters (never modified) and writes 16:9 WebP at
- * 400/800/1600/2560 px into public/media/worlds/<world>/<name>-<width>.webp —
+ * 400/800/1600/2560 px (+3840 for Lineage 2) into public/media/worlds/<world>/<name>-<width>.webp —
  * the layout src/data/themeMedia.ts expects. Mobile crops are done in CSS
  * (object-position per art), so there is one aspect ratio only.
  *
@@ -46,7 +46,9 @@ for (const [source, base] of POSTERS) {
   before += statSync(file).size
   mkdirSync(path.dirname(path.join(OUT, base)), { recursive: true })
   const sizes = []
-  for (const width of WIDTHS) {
+  // Lineage 2 posters front a full-width showcase hero, so large/high-DPI
+  // desktops get the full 3840 master; phones never request it (see ArtImage).
+  for (const width of base.startsWith('lineage-2/') ? [...WIDTHS, 3840] : WIDTHS) {
     const target = path.join(OUT, `${base}-${width}.webp`)
     // Large widths keep more detail; small ones are thumbnails behind a scrim.
     await sharp(file)

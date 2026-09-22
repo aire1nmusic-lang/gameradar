@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, Search, ShieldCheck, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber } from '@/lib/format'
-import { worldArt } from '@/data/themeMedia'
+import { isShowcase, worldArt } from '@/data/themeMedia'
 import type { Chronicle, Game } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { WorldArtSurface } from '@/components/media/WorldArt'
@@ -39,6 +39,8 @@ export function GameHero({
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const art = worldArt('hero', game.id, chronicle?.id)
+  // Showcase worlds put the key art at the centre of the first screen.
+  const showcase = !!art && isShowcase(game.id)
 
   const title = chronicle ? `${game.shortName} ${chronicle.label}` : game.name
   const subtitle = chronicle?.tagline ?? game.tagline
@@ -54,14 +56,18 @@ export function GameHero({
     <section
       className={cn(
         'relative overflow-hidden',
-        art ? 'min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]' : 'gt-hero',
+        showcase
+          ? 'min-h-[560px] sm:min-h-[620px] lg:min-h-[max(620px,70vh)]'
+          : art
+            ? 'min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]'
+            : 'gt-hero',
       )}
     >
       {art ? (
         <>
           {/* key art of the world — the first thing a player sees */}
-          <WorldArtSurface art={art} scrim="hero" sizes="100vw" priority width={1600} />
-          <ThemePattern opacity={0.05} />
+          <WorldArtSurface art={art} scrim={showcase ? 'poster' : 'hero'} sizes="100vw" priority width={showcase ? 2560 : 1600} />
+          <ThemePattern opacity={showcase ? 0.03 : 0.05} />
           <ThemeParticles />
         </>
       ) : (
@@ -114,7 +120,7 @@ export function GameHero({
             </ThemedHeading>
 
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed sm:text-[17px]" style={{ color: theme.colors.textMuted }}>
-              {subtitle}. Найди свой сервер по проверенному онлайну, а не по обещаниям.
+              {subtitle ? `${subtitle}. ` : ''}Найди свой сервер по проверенному онлайну, а не по обещаниям.
             </p>
 
             <div className="mt-7 flex max-w-xl items-center gap-2 rounded-xl border p-2 pl-4 backdrop-blur-md"

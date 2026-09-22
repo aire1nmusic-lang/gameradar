@@ -48,7 +48,7 @@ import { VotePanel } from '@/components/profile/VotePanel'
 import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
-import { serverArt } from '@/data/themeMedia'
+import { isShowcase, serverArt } from '@/data/themeMedia'
 import {
   ThemeHorizon,
   ThemeParticles,
@@ -105,6 +105,8 @@ function Profile({ server }: { server: GameServer }) {
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
   const cover = serverArt(server)
+  // Showcase worlds get a full profile hero with the header laid over the art.
+  const showcase = !!cover && isShowcase(server.gameId)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -158,7 +160,7 @@ function Profile({ server }: { server: GameServer }) {
   return (
     <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
       {/* hero: art of the server's world */}
-      <div className="relative h-[220px] overflow-hidden sm:h-[320px]">
+      <div className={cn('relative overflow-hidden', showcase ? 'h-[360px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
         <WorldArtSurface
           art={cover}
           fallback={
@@ -168,16 +170,21 @@ function Profile({ server }: { server: GameServer }) {
               <ThemeHorizon />
             </>
           }
-          scrim="hero"
+          scrim={showcase ? 'poster' : 'hero'}
           priority
-          width={1600}
+          width={showcase ? 2560 : 1600}
           sizes="100vw"
         />
-        <ThemePattern opacity={cover ? 0.05 : 0.12} />
+        <ThemePattern opacity={cover ? (showcase ? 0.03 : 0.05) : 0.12} />
         <ThemeParticles />
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: `linear-gradient(to top, ${theme.colors.bgDeep} 2%, transparent 68%)` }}
+          style={{
+            // Showcase: protect only the band the header sits on; the rest of the art stays visible.
+            background: showcase
+              ? `linear-gradient(to top, ${theme.colors.bgDeep} 0%, color-mix(in oklab, ${theme.colors.bgDeep} 70%, transparent) 24%, transparent 58%)`
+              : `linear-gradient(to top, ${theme.colors.bgDeep} 2%, transparent 68%)`,
+          }}
         />
         <Container className="relative flex h-full items-start pt-4">
           <nav className="flex items-center gap-1.5 text-[12.5px] text-white/60">
@@ -194,7 +201,7 @@ function Profile({ server }: { server: GameServer }) {
         </Container>
       </div>
 
-      <Container className="relative -mt-12 sm:-mt-14">
+      <Container className={cn('relative', showcase ? '-mt-40 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <ServerLogo
@@ -215,6 +222,12 @@ function Profile({ server }: { server: GameServer }) {
                   {game.name} · {chronicle?.label ?? server.version}
                 </span>
                 <span className="text-ink-600">•</span>
+                {server.rates && (
+                  <>
+                    <span className="text-ink-200">Рейты {server.rates}</span>
+                    <span className="text-ink-600">•</span>
+                  </>
+                )}
                 {(server.country || server.region) && (
                   <>
                     <span>

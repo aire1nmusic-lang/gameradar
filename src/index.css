@@ -580,6 +580,50 @@
     }
   }
 
+  /* Poster: the art is the headline. Protection is local, never a full-frame
+     veil — a band under the navbar, a column behind the copy on the left and
+     a hand-off into the page at the bottom; the rest of the image stays clear. */
+  .gt-scrim[data-preset='poster'] {
+    background-image:
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 62%, transparent) 0%,
+        transparent 16%
+      ),
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 80%, transparent) 0%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 56%, transparent) 32%,
+        color-mix(in oklab, var(--gt-bg-deep, #05060a) 16%, transparent) 52%,
+        transparent 64%
+      ),
+      linear-gradient(
+        to top,
+        var(--gt-bg, #08090d) 0%,
+        color-mix(in oklab, var(--gt-bg, #08090d) 72%, transparent) 10%,
+        color-mix(in oklab, var(--gt-bg, #08090d) 22%, transparent) 26%,
+        transparent 40%
+      );
+  }
+  @media (max-width: 639px) {
+    /* copy spans the whole width on phones: protect bottom-up, keep the top clear */
+    .gt-scrim[data-preset='poster'] {
+      background-image:
+        linear-gradient(
+          to bottom,
+          color-mix(in oklab, var(--gt-bg-deep, #05060a) 55%, transparent) 0%,
+          transparent 14%
+        ),
+        linear-gradient(
+          to top,
+          var(--gt-bg, #08090d) 0%,
+          color-mix(in oklab, var(--gt-bg, #08090d) 84%, transparent) 30%,
+          color-mix(in oklab, var(--gt-bg, #08090d) 45%, transparent) 58%,
+          transparent 82%
+        );
+    }
+  }
+
   /* Card cover: title and badges live on the bottom edge. */
   .gt-scrim[data-preset='card'] {
     background-image:

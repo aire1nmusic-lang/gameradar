@@ -14,7 +14,7 @@ import { artSrc, artSrcSet, type WorldArt } from '@/data/themeMedia'
  * never changes.
  */
 
-export type ScrimPreset = 'hero' | 'card' | 'banner' | 'stage' | 'tile' | 'none'
+export type ScrimPreset = 'hero' | 'poster' | 'card' | 'banner' | 'stage' | 'tile' | 'none'
 
 /** Extra flat dimming per image tone, so bright art doesn't blow out labels. */
 const TONE_DIM: Record<WorldArt['tone'], string> = {
@@ -22,6 +22,16 @@ const TONE_DIM: Record<WorldArt['tone'], string> = {
   medium: '10%',
   bright: '20%',
 }
+
+/** The poster scrim protects text locally, so only bright art gets a light flat dim. */
+const POSTER_DIM: Record<WorldArt['tone'], string> = {
+  dark: '0%',
+  medium: '0%',
+  bright: '8%',
+}
+
+/** Phones never need more than this — even a 3× screen at 375 px is covered by the 800 px file. */
+const MOBILE_MAX_WIDTH = 800
 
 export function ArtImage({
   art,
@@ -37,8 +47,10 @@ export function ArtImage({
   className?: string
 }) {
   const [loaded, setLoaded] = useState(false)
+  const mobile = art.widths.filter((w) => w <= MOBILE_MAX_WIDTH)
+  const capped = mobile.length > 0 && mobile.length < art.widths.length
 
-  return (
+  const img = (
     <img
       src={artSrc(art, width)}
       srcSet={artSrcSet(art)}
@@ -59,6 +71,16 @@ export function ArtImage({
         } as CSSProperties
       }
     />
+  )
+
+  // A separate phone source keeps 1600–3840 px files off small screens
+  // regardless of device pixel ratio; desktops choose from the full set.
+  if (!capped) return img
+  return (
+    <picture>
+      <source media="(max-width: 639px)" srcSet={artSrcSet(art, mobile)} sizes={sizes} />
+      {img}
+    </picture>
   )
 }
 
@@ -106,7 +128,7 @@ export function WorldArtSurface({
         <div
           className="gt-scrim"
           data-preset={scrim}
-          style={{ '--art-dim': art ? TONE_DIM[art.tone] : '0%' } as CSSProperties}
+          style={{ '--art-dim': art ? (scrim === 'poster' ? POSTER_DIM : TONE_DIM)[art.tone] : '0%' } as CSSProperties}
         />
       )}
 

@@ -72,7 +72,7 @@ export function FilterPanel({
               <StatusBadge status="VERIFIED" size="sm" withDot={false} className="hidden sm:inline-flex" />
             </span>
           }
-          description="Серверы, онлайн которых GameRadar проверяет самостоятельно"
+          description="Серверы, онлайн которых GameScout проверяет самостоятельно"
         />
       </div>
 

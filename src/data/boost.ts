@@ -118,7 +118,7 @@ export function leaderboard(gameId?: string, chronicleId?: string): RankedServer
 
 /**
  * The independent rating: identical data, boosts excluded.
- * Servers flagged DATA ANOMALY are held out until GameRadar re-verifies them,
+ * Servers flagged DATA ANOMALY are held out until GameScout re-verifies them,
  * so a suspicious number can never earn a position.
  */
 export function organicLeaderboard(gameId?: string, chronicleId?: string): RankedServer[] {

@@ -97,7 +97,7 @@ export default function Catalog() {
             <h1 className="text-[28px] leading-tight sm:text-[34px]">Каталог серверов</h1>
             <p className="mt-2 max-w-xl text-[14px] text-ink-300">
               {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])} по вашему
-              запросу. Онлайн у отмеченных проектов проверяет GameRadar.
+              запросу. Онлайн у отмеченных проектов проверяет GameScout.
             </p>
           </div>
         </div>

@@ -28,7 +28,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     pill: 'border-signal-500/28 bg-signal-500/10',
     text: 'text-signal-300',
     dot: 'bg-signal-400',
-    caption: 'Онлайн получен и проверен GameRadar',
+    caption: 'Онлайн получен и проверен GameScout',
   },
   [OnlineStatus.Live]: {
     label: 'LIVE',
@@ -55,7 +55,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     pill: 'border-danger-500/28 bg-danger-500/10',
     text: 'text-danger-300',
     dot: 'bg-danger-400',
-    caption: 'GameRadar не получает ответ от сервера',
+    caption: 'GameScout не получает ответ от сервера',
   },
   [OnlineStatus.Anomaly]: {
     label: 'DATA ANOMALY',
@@ -129,7 +129,7 @@ export function StatusBadge({
   )
 }
 
-/** "Проверено GameRadar 42 сек. назад" — the line that carries the whole promise. */
+/** "Проверено GameScout 42 сек. назад" — the line that carries the whole promise. */
 export function VerifiedLine({
   status,
   seconds,
@@ -150,7 +150,7 @@ export function VerifiedLine({
       return (
         <span className={cn(base, 'text-signal-500/90')}>
           <ShieldCheck size={12} />
-          Проверено GameRadar {formatSeconds(seconds)}
+          Проверено GameScout {formatSeconds(seconds)}
         </span>
       )
     case OnlineStatus.Live:
@@ -167,7 +167,7 @@ export function VerifiedLine({
         <span className={cn(base, 'text-danger-400/80')}>Последняя удачная проверка — {formatSeconds(seconds)}</span>
       )
     case OnlineStatus.Anomaly:
-      return <span className={cn(base, 'text-warn-400/85')}>Данные на перепроверке GameRadar</span>
+      return <span className={cn(base, 'text-warn-400/85')}>Данные на перепроверке GameScout</span>
     case OnlineStatus.Checking:
       return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
     default:

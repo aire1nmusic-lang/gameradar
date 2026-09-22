@@ -6,10 +6,10 @@
  */
 
 /**
- * How much GameRadar trusts a server's player count.
+ * How much GameScout trusts a server's player count.
  *
- * VERIFIED        — number obtained by GameRadar itself (game protocol,
- *                   official API, or a signed GameRadar Agent payload)
+ * VERIFIED        — number obtained by GameScout itself (game protocol,
+ *                   official API, or a signed GameScout Agent payload)
  * LIVE            — the server answers our probe, but the count it reports
  *                   cannot be independently confirmed (typical for Lineage 2,
  *                   where the login server exposes load, not players)

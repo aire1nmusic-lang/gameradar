@@ -323,7 +323,7 @@ function OnlineSection({ server }: { server: GameServer }) {
         </div>
 
         <Notice tone="info" className="mt-5">
-          Проверка онлайна начнётся автоматически в момент запуска. До этого GameRadar не показывает никаких цифр
+          Проверка онлайна начнётся автоматически в момент запуска. До этого GameScout не показывает никаких цифр
           онлайна — даже если владелец их заявляет.
         </Notice>
 
@@ -387,7 +387,7 @@ function OnlineSection({ server }: { server: GameServer }) {
       )}
       {status === 'OWNER_REPORTED' && (
         <Notice tone="info" title="Онлайн не подтверждён независимо" className="mt-5">
-          Число передано владельцем сервера. GameRadar не может его проверить — подключение Verified Online доступно
+          Число передано владельцем сервера. GameScout не может его проверить — подключение Verified Online доступно
           владельцу бесплатно.
         </Notice>
       )}

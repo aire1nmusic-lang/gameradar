@@ -93,7 +93,7 @@ function project(
     rankTotal: opts.rankTotal,
     rankChange: opts.rankChange,
     sources: [
-      { label: 'Каталог GameRadar', value: 46 },
+      { label: 'Каталог GameScout', value: 46 },
       { label: 'Главная страница', value: 24 },
       { label: 'Поиск по сайту', value: 18 },
       { label: 'Похожие серверы', value: 12 },
@@ -198,7 +198,7 @@ export const PROMO_PRODUCTS: PromoProduct[] = [
     id: 'FEATURED',
     name: 'Featured',
     tag: 'Главная страница',
-    description: 'Размещение в подборке на главной странице GameRadar.',
+    description: 'Размещение в подборке на главной странице GameScout.',
     bullets: ['Блок на главной', 'Ротация каждые 15 минут', 'Отдельная статистика'],
     priceLabel: 'от 7 900 ₽ / неделя',
     accent: 'FEATURED',

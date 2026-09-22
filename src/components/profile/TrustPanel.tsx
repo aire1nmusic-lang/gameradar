@@ -37,7 +37,7 @@ export function TrustPanel({ online, className }: { online: OnlineData; classNam
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-[14px] font-medium text-ink-50">
           <ShieldCheck size={15} className={verified ? 'text-signal-400' : 'text-ink-400'} />
-          Данные GameRadar
+          Данные GameScout
         </h3>
         {verified && (
           <span className="flex items-center gap-1.5 rounded-full bg-signal-500/10 px-2 py-0.5 font-mono text-[10.5px] text-signal-300">
@@ -91,7 +91,7 @@ export function TrustPanel({ online, className }: { online: OnlineData; classNam
         to="/owners#verified"
         className="mt-4 inline-flex items-center gap-1 text-[12.5px] text-ink-400 transition-colors hover:text-ink-100"
       >
-        Как GameRadar проверяет онлайн
+        Как GameScout проверяет онлайн
         <ArrowUpRight size={13} />
       </Link>
     </div>

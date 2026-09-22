@@ -1,4 +1,4 @@
-# GameRadar — UI/UX прототип
+# GameScout — UI/UX прототип
 
 Фронтенд-прототип рекламно-рейтинговой платформы игровых серверов: поиск, каталог, независимая проверка
 онлайна (**Verified Online**), рейтинг с бустами, рекламные форматы, открытия и кабинет владельца.
@@ -35,7 +35,7 @@ npm run dev
 | --- | --- |
 | `/` | Главная: hero-поиск, игры, открытия, высокий онлайн, рост, TOP (продвижение), доверие, недавние |
 | `/catalog` | Каталог: фильтры, сортировки, загрузка, пустое состояние, пагинация |
-| `/server/:slug` | Профиль сервера: онлайн + графики, блок данных GameRadar, информация, история, отзывы, похожие |
+| `/server/:slug` | Профиль сервера: онлайн + графики, блок данных GameScout, информация, история, отзывы, похожие |
 | `/games` | Игры и лидеры по каждой игре |
 | `/:game` | **Мир игры**: тематический hero, серверы, открытия, рейтинг, реклама (`/minecraft`, `/lineage-2`, `/gta-rp`, `/rust`, `/cs2`, …) |
 | `/:game/:chronicle` | **Мир хроники** со своей темой (`/lineage-2/interlude`, `/lineage-2/high-five`, `/lineage-2/essence`) |
@@ -58,7 +58,7 @@ sticky-CTA на карточке сервера, полноэкранный по
 
 Ключевое правило: **цвет = смысл**.
 
-- `signal` (мятный) — **только** проверенные данные GameRadar: `VERIFIED ONLINE`, live-индикаторы, доверие
+- `signal` (мятный) — **только** проверенные данные GameScout: `VERIFIED ONLINE`, live-индикаторы, доверие
 - `promo` (фиолетовый) — **только** платные размещения: TOP, VIP, Featured, Banner, Launch Promotion
 - `warn` — `DATA ANOMALY` и устаревшие данные, `danger` — `OFFLINE`
 - Основная кнопка — **белая, нейтральная**, чтобы не конкурировать со статусами
@@ -76,7 +76,7 @@ src/
   components/
     layout/    Header, MobileNav, Footer, Layout, Logo, AuthModal, Container
     ui/        Button, Badge, controls, overlays, feedback, Rating, ServerLogo, SectionHeader
-    trust/     статусы онлайна и строка «Проверено GameRadar»
+    trust/     статусы онлайна и строка «Проверено GameScout»
     charts/    AreaChart, Sparkline, BarSeries (чистый SVG)
     server/    ServerCard, ServerRow, LaunchCard, скелетоны
     home/      Hero, игровые плитки, discovery-секции, блоки доверия и CTA

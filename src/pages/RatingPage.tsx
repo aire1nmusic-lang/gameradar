@@ -46,7 +46,7 @@ export default function RatingPage() {
             <Trophy size={13} />
             Рейтинг серверов
           </div>
-          <h1 className="text-[30px] leading-tight sm:text-[40px]">ТОП серверов GameRadar</h1>
+          <h1 className="text-[30px] leading-tight sm:text-[40px]">ТОП серверов GameScout</h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-300">
             Очки начисляются за проверенный онлайн, стабильность данных, оценки игроков и динамику. Бусты
             показываются отдельной величиной и никогда не смешиваются с заработанными очками.
@@ -72,7 +72,7 @@ export default function RatingPage() {
         {view === 'combined' && (
           <Notice tone="warn" className="mt-4" title="Это витрина, а не рейтинг">
             В этом режиме сервер может стоять выше за счёт оплаты. Именно так выглядят списки большинства
-            анонсеров — GameRadar показывает такой порядок только по явному запросу.
+            анонсеров — GameScout показывает такой порядок только по явному запросу.
           </Notice>
         )}
 

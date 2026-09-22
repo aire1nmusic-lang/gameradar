@@ -3,7 +3,7 @@ import { ProbeMethod, ServerStatus } from '@/models'
 import type { ChartRange, GameServer, HistoryEvent, OnlineStatus, PromoKind, Review } from '@/models'
 
 /**
- * Demo dataset for the GameRadar prototype.
+ * Demo dataset for the GameScout prototype.
  * Everything here is fictional and generated deterministically from a seed —
  * no real server, player count or rating is represented.
  */
@@ -216,7 +216,7 @@ const RAW: RawServer[] = [
     highlights: ['180 модов', 'Сезоны по 6 месяцев', 'Своя вики'],
     site: 'pixelforge.eu',
     discord: 'discord.gg/pixelforge',
-    note: 'Сервер не отвечает на запросы GameRadar с 09:40.',
+    note: 'Сервер не отвечает на запросы GameScout с 09:40.',
     uptime24h: 41.2,
     checkedAgoSec: 55,
   },
@@ -1296,7 +1296,7 @@ const REVIEW_TEXTS: Array<{ text: string; min: number; max: number; playtime: st
     playtime: '62 часа',
   },
   {
-    text: 'Зашёл по рекомендации GameRadar, остался. Проверенный онлайн реально помогает выбирать — раньше тратил вечера впустую.',
+    text: 'Зашёл по рекомендации GameScout, остался. Проверенный онлайн реально помогает выбирать — раньше тратил вечера впустую.',
     min: 5,
     max: 5,
     playtime: '119 часов',
@@ -1357,7 +1357,7 @@ function buildEvents(raw: RawServer, openedAt: string): HistoryEvent[] {
   if (raw.status === 'VERIFIED') {
     events.push({ label: 'Подключён Verified Online', date: iso(-Math.min(raw.addedDaysAgo, 240) * DAY), kind: 'verify' })
   }
-  events.push({ label: 'Добавлен в GameRadar', date: iso(-raw.addedDaysAgo * DAY), kind: 'open' })
+  events.push({ label: 'Добавлен в GameScout', date: iso(-raw.addedDaysAgo * DAY), kind: 'open' })
   if (raw.status !== 'PENDING') {
     events.push({ label: 'Открытие проекта', date: openedAt, kind: 'open' })
   }
@@ -1404,7 +1404,7 @@ function build(raw: RawServer): GameServer {
         ? Math.max(Math.round(Math.max(...day) * 1.06), ...week, ...month)
         : 0,
       checkedAgoSec: raw.checkedAgoSec ?? 64,
-      source: raw.source ?? 'GameRadar Direct Query',
+      source: raw.source ?? 'GameScout Direct Query',
       method: raw.method ?? ProbeMethod.GameProtocol,
       uptime24h: raw.uptime24h ?? 0,
       checksPerDay: 1440,

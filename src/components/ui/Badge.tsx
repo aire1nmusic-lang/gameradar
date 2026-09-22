@@ -63,7 +63,7 @@ export function PromoLabel({ kind, className }: { kind: PromoKind; className?: s
         'inline-flex items-center gap-1.5 rounded-full border border-promo-500/30 bg-promo-500/10 px-2 py-[3px] text-[10px] font-semibold uppercase tracking-[0.1em] text-promo-200',
         className,
       )}
-      title="Платное размещение. Не влияет на независимый рейтинг GameRadar."
+      title="Платное размещение. Не влияет на независимый рейтинг GameScout."
     >
       <span className="h-1 w-1 rounded-full bg-promo-400" />
       {label}

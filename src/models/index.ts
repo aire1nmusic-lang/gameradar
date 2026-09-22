@@ -1,5 +1,5 @@
 /**
- * GameRadar domain model.
+ * GameScout domain model.
  *
  * Pure types and enums — no React, no data access, no formatting. Everything
  * here describes what the platform *is*, independent of where the data is
@@ -68,6 +68,7 @@ export interface Game {
 /* ── Online & monitoring ────────────────────────────────────────────────── */
 
 export interface OnlineData {
+  playersKnown?: boolean
   status: OnlineStatus
   current: number
   max: number
@@ -78,7 +79,7 @@ export interface OnlineData {
   peak30d: number
   /** seconds since the last successful probe */
   checkedAgoSec: number
-  /** human label of the source, e.g. "GameRadar Direct Query" */
+  /** human label of the source, e.g. "GameScout Direct Query" */
   source: string
   method: ProbeMethod
   uptime24h: number
@@ -101,7 +102,7 @@ export interface MonitoringTarget {
   port?: number
   /** FiveM / custom endpoint returning player data */
   apiUrl?: string
-  /** set when the owner installed the GameRadar Agent */
+  /** set when the owner installed the GameScout Agent */
   agentToken?: string
   method: ProbeMethod
 }
@@ -221,6 +222,7 @@ export interface Owner {
 
 /** A pending or completed "this is my server" proof. */
 export interface ServerClaim {
+  verificationUrl?: string
   id: string
   serverId: string
   userId: string
@@ -250,6 +252,8 @@ export interface Vote {
 
 /** Per-server vote integration settings, owned by the server owner. */
 export interface VoteIntegration {
+  rewardTitle?: string
+  hasApiKey?: boolean
   serverId: string
   delivery: VoteDelivery
   /** Bearer token for the pull API */

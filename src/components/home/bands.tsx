@@ -12,7 +12,7 @@ const STEPS = [
   {
     icon: <Radar size={17} />,
     title: 'Прямой запрос к серверу',
-    body: 'GameRadar опрашивает сервер по игровому протоколу, через официальный API или через GameRadar Agent — без участия владельца.',
+    body: 'GameScout опрашивает сервер по игровому протоколу, через официальный API или через GameScout Agent — без участия владельца.',
   },
   {
     icon: <Repeat2 size={17} />,
@@ -42,7 +42,7 @@ export function TrustBand() {
               Мы не верим цифрам на слово — мы их проверяем
             </h2>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink-300">
-              Главная проблема каталогов игровых серверов — онлайн, который никто не проверяет. GameRadar получает
+              Главная проблема каталогов игровых серверов — онлайн, который никто не проверяет. GameScout получает
               данные самостоятельно и всегда показывает их источник.
             </p>
 
@@ -111,7 +111,7 @@ function LiveCheckCard() {
       </div>
 
       <div className="relative mt-5 space-y-3 border-t border-white/6 pt-4 font-mono text-[11.5px]">
-        <Row label="Источник" value="GameRadar Direct Query" />
+        <Row label="Источник" value="GameScout Direct Query" />
         <Row label="Метод" value="Прямой игровой протокол" />
         <Row label="Последняя проверка" value={`${seconds} сек. назад`} accent />
         <Row label="Успешных проверок за 24 ч" value="99.8%" />

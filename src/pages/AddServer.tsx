@@ -44,7 +44,7 @@ const CONNECT_METHODS = [
   {
     id: 'agent',
     icon: <FileCode2 size={16} />,
-    title: 'GameRadar Agent',
+    title: 'GameScout Agent',
     body: 'Небольшой агент на вашем сервере — для закрытых лаунчеров.',
     placeholder: 'Токен агента будет выдан после сохранения',
   },
@@ -107,7 +107,7 @@ export default function AddServer() {
           <Logo compact className="lg:hidden" />
           <div className="hidden items-center gap-3 text-[13px] text-ink-400 lg:flex">
             <Link to="/" className="hover:text-ink-100">
-              GameRadar
+              GameScout
             </Link>
             <span className="text-ink-600">/</span>
             <span className="text-ink-100">Добавление сервера</span>
@@ -481,7 +481,7 @@ function StepOwnership({
   state: 'idle' | 'probing' | 'done'
   setState: (state: 'idle' | 'probing' | 'done') => void
 }) {
-  const code = `gameradar-verify=${hashSeed(form.name || 'demo').toString(16).slice(0, 10)}`
+  const code = `gamescout-verify=${hashSeed(form.name || 'demo').toString(16).slice(0, 10)}`
 
   return (
     <Panel
@@ -508,7 +508,7 @@ function StepOwnership({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
           <div className="text-[13.5px] font-medium text-ink-50">Файл на сайте</div>
-          <p className="mt-1.5 text-[12.5px] text-ink-400">Загрузите gameradar.txt в корень сайта проекта.</p>
+          <p className="mt-1.5 text-[12.5px] text-ink-400">Загрузите gamescout.txt в корень сайта проекта.</p>
         </div>
         <div className="rounded-lg border border-white/7 bg-white/[0.02] p-4">
           <div className="text-[13.5px] font-medium text-ink-50">Discord-роль</div>
@@ -620,7 +620,7 @@ function draftServer(form: FormState, status: 'VERIFIED' | 'OWNER_REPORTED'): Ga
       avg7d: Math.round(current * 0.9),
       peak30d: Math.round(current * 1.5),
       checkedAgoSec: 12,
-      source: status === 'VERIFIED' ? 'GameRadar Direct Query' : 'Данные сервера',
+      source: status === 'VERIFIED' ? 'GameScout Direct Query' : 'Данные сервера',
       method: status === 'VERIFIED' ? ProbeMethod.GameProtocol : ProbeMethod.OwnerSubmitted,
       uptime24h: status === 'VERIFIED' ? 100 : 0,
       checksPerDay: 1440,

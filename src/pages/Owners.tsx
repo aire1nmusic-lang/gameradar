@@ -59,7 +59,7 @@ const VERIFY_METHODS = [
   {
     icon: <Server size={16} />,
     title: 'Прямой игровой протокол',
-    body: 'GameRadar сам опрашивает сервер по адресу и порту. Ничего устанавливать не нужно.',
+    body: 'GameScout сам опрашивает сервер по адресу и порту. Ничего устанавливать не нужно.',
     games: 'Minecraft, Rust, CS2, ARK, DayZ, Valheim',
   },
   {
@@ -70,15 +70,15 @@ const VERIFY_METHODS = [
   },
   {
     icon: <FileCode2 size={16} />,
-    title: 'GameRadar Agent',
+    title: 'GameScout Agent',
     body: 'Небольшой агент на вашем сервере — для закрытых лаунчеров и нестандартных сборок.',
     games: 'Lineage 2 и кастомные сборки',
   },
 ]
 
 const OWNERSHIP_STEPS = [
-  { title: 'DNS TXT-запись', body: 'Добавьте запись gameradar-verify=<код> в DNS вашего домена.' },
-  { title: 'Файл на сайте', body: 'Загрузите файл gameradar.txt в корень сайта проекта.' },
+  { title: 'DNS TXT-запись', body: 'Добавьте запись gamescout-verify=<код> в DNS вашего домена.' },
+  { title: 'Файл на сайте', body: 'Загрузите файл gamescout.txt в корень сайта проекта.' },
   { title: 'Discord-сервер', body: 'Подтвердите роль администратора на официальном Discord проекта.' },
 ]
 
@@ -93,7 +93,7 @@ const FAQ = [
   },
   {
     q: 'Влияет ли покупка продвижения на рейтинг?',
-    a: 'Нет. Платные места отмечены меткой «Продвижение» и не участвуют в формуле независимого рейтинга GameRadar.',
+    a: 'Нет. Платные места отмечены меткой «Продвижение» и не участвуют в формуле независимого рейтинга GameScout.',
   },
   {
     q: 'Как быстро обновляется онлайн?',
@@ -118,7 +118,7 @@ export default function Owners() {
                 Ваш сервер найдут те, кто действительно ищет
               </h1>
               <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-ink-300">
-                GameRadar — площадка, где игроки выбирают сервер по проверенным данным. Разместите проект, подтвердите
+                GameScout — площадка, где игроки выбирают сервер по проверенным данным. Разместите проект, подтвердите
                 владение и подключите независимую проверку онлайна.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -156,7 +156,7 @@ export default function Owners() {
                     <span className="num text-[13px] text-ink-500">/ 3 000</span>
                   </div>
                   <div className="mt-2 font-mono text-[11px] text-signal-500/90">
-                    Проверено GameRadar 42 сек. назад
+                    Проверено GameScout 42 сек. назад
                   </div>
                 </div>
 

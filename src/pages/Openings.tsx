@@ -67,11 +67,11 @@ export default function Openings() {
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <Stat value={String(filtered.length)} label={plural(filtered.length, ['открытие', 'открытия', 'открытий'])} />
           <Stat value={formatNumber(totalInterest)} label="предрегистраций суммарно" />
-          <Stat value="0" label="серверов с онлайном до старта" hint="GameRadar не показывает онлайн до запуска" />
+          <Stat value="0" label="серверов с онлайном до старта" hint="GameScout не показывает онлайн до запуска" />
         </div>
 
         <Notice tone="info" className="mt-6">
-          До момента запуска GameRadar не публикует никаких показателей онлайна — даже заявленных владельцем. Интерес
+          До момента запуска GameScout не публикует никаких показателей онлайна — даже заявленных владельцем. Интерес
           отражают только предрегистрации.
         </Notice>
 

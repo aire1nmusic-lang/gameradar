@@ -1,66 +1,31 @@
 import { useState } from 'react'
 import { Modal } from '@/components/ui/overlays'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Segmented } from '@/components/ui/controls'
+import { Field, Input } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
+import { useAuth } from '@/hooks/useAuth'
 
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [mode, setMode] = useState<'player' | 'owner'>('player')
-
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Вход в GameRadar"
-      description="Избранное, напоминания об открытиях и кабинет владельца"
-      footer={
-        <div className="flex flex-col gap-2">
-          <Button variant="primary" full onClick={onClose}>
-            {mode === 'player' ? 'Войти как игрок' : 'Войти как владелец'}
-          </Button>
-          <p className="text-center text-[11.5px] text-ink-500">
-            Продолжая, вы соглашаетесь с условиями использования
-          </p>
-        </div>
-      }
-    >
-      <Segmented
-        value={mode}
-        onChange={setMode}
-        className="mb-5 w-full [&>button]:flex-1"
-        options={[
-          { value: 'player', label: 'Игрок' },
-          { value: 'owner', label: 'Владелец сервера' },
-        ]}
-      />
-
-      <div className="space-y-4">
-        <Field label="Email">
-          <Input placeholder="you@example.com" type="email" />
-        </Field>
-        <Field label="Пароль">
-          <Input placeholder="••••••••" type="password" />
-        </Field>
-      </div>
-
-      <div className="my-5 flex items-center gap-3 text-[11.5px] text-ink-500">
-        <span className="h-px flex-1 bg-white/7" />
-        или
-        <span className="h-px flex-1 bg-white/7" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" onClick={onClose}>
-          Discord
-        </Button>
-        <Button variant="secondary" onClick={onClose}>
-          Steam
-        </Button>
-      </div>
-
-      <Notice tone="info" className="mt-5">
-        Прототип: реальная авторизация не подключена. Кнопки просто закрывают окно.
-      </Notice>
-    </Modal>
-  )
+  const auth = useAuth()
+  const [name, setName] = useState('')
+  const [secret, setSecret] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function login(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setError('')
+    try { await auth.login(name, secret); setSecret(''); onClose() }
+    catch (e) { setError(e instanceof Error ? e.message : 'Не удалось войти') }
+    finally { setBusy(false) }
+  }
+  return <Modal open={open} onClose={onClose} title={auth.user ? 'Ваш аккаунт GameScout' : 'Вход в GameScout'} description="Кабинет владельца и подтверждение серверов">
+    {auth.user ? <div className="space-y-4"><p>Вы вошли как {auth.user.displayName}</p><Button to="/dashboard" onClick={onClose}>Кабинет владельца</Button><Button onClick={async () => { await auth.logout(); onClose() }}>Выйти</Button></div> :
+      auth.loading ? <p>Проверяем сессию…</p> :
+      auth.devAuthEnabled ? <form onSubmit={login} className="space-y-4">
+        <Notice tone="info">Локальный вход для разработки. Используйте имя владельца и DEV_AUTH_SECRET из локального файла .dev.vars. Повторный вход с тем же именем открывает тот же аккаунт.</Notice>
+        <Field label="Имя владельца" required><Input name="displayName" autoComplete="username" value={name} onChange={e => setName(e.target.value)} required minLength={2} maxLength={60} /></Field>
+        <Field label="Локальный ключ входа" required><Input name="secret" type="password" autoComplete="off" value={secret} onChange={e => setSecret(e.target.value)} required /></Field>
+        {error && <p role="alert" className="text-danger-300">{error}</p>}
+        <Button type="submit" variant="primary" disabled={busy} full>{busy ? 'Входим…' : 'Войти'}</Button>
+      </form> : <Notice tone="info">{auth.error || 'Вход владельцев в этом окружении ещё не подключён.'}</Notice>}
+  </Modal>
 }

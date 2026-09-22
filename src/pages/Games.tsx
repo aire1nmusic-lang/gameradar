@@ -16,10 +16,10 @@ export default function Games() {
     <div className="pb-16">
       <Container className="pt-10 lg:pt-14">
         <div className="max-w-2xl">
-          <div className="mb-3 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">Игры на GameRadar</div>
+          <div className="mb-3 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">Игры на GameScout</div>
           <h1 className="text-[30px] leading-tight sm:text-[40px]">Каталоги по играм</h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-300">
-            У каждой игры свой мир на GameRadar: собственное оформление, рейтинг и открытия. Хроники и платформы —
+            У каждой игры свой мир на GameScout: собственное оформление, рейтинг и открытия. Хроники и платформы —
             отдельные разделы со своей темой.
           </p>
         </div>

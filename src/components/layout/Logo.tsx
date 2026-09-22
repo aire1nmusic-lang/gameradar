@@ -22,11 +22,11 @@ export function RadarMark({ size = 26, animated = true }: { size?: number; anima
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <Link to="/" className={cn('group flex items-center gap-2.5', className)} aria-label="GameRadar — на главную">
+    <Link to="/" className={cn('group flex items-center gap-2.5', className)} aria-label="GameScout — на главную">
       <RadarMark />
       {!compact && (
         <span className="font-display text-[17px] leading-none font-semibold tracking-[-0.02em] text-ink-50">
-          Game<span className="text-ink-300 transition-colors group-hover:text-signal-300">Radar</span>
+          Game<span className="text-ink-300 transition-colors group-hover:text-signal-300">Scout</span>
         </span>
       )}
     </Link>

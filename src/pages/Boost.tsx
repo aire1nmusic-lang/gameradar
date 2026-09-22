@@ -79,7 +79,7 @@ export default function Boost() {
             </div>
             <h1 className="text-[34px] leading-[1.08] sm:text-[46px]">Продвиньте свой сервер</h1>
             <p className="mt-4 text-[15px] leading-relaxed text-ink-300 sm:text-[17px]">
-              Бусты поднимают карточку в списках и рекламных блоках GameRadar. Позиция в независимом рейтинге при
+              Бусты поднимают карточку в списках и рекламных блоках GameScout. Позиция в независимом рейтинге при
               этом не меняется — и это видно каждому игроку.
             </p>
           </div>
@@ -310,7 +310,7 @@ export default function Boost() {
               </div>
               <h2 className="text-[24px] leading-tight sm:text-[28px]">Доверие не входит в пакеты</h2>
               <p className="mt-3 text-[14px] leading-relaxed text-ink-300">
-                Продвижение влияет только на видимость. Данные о сервере GameRadar собирает сам — и одинаково для
+                Продвижение влияет только на видимость. Данные о сервере GameScout собирает сам — и одинаково для
                 всех, независимо от оплаты.
               </p>
             </div>

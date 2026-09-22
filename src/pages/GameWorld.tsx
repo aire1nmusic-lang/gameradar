@@ -81,7 +81,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                   </>
                 }
                 title={chronicle ? `Серверы ${chronicle.label}` : `Серверы ${game.shortName}`}
-                description="Онлайн получен GameRadar напрямую. Карточки с пометкой REPORTED показывают данные владельца."
+                description="Онлайн получен GameScout напрямую. Карточки с пометкой REPORTED показывают данные владельца."
                 action={{ label: 'Весь каталог', to: `/catalog?game=${game.id}` }}
               />
 
@@ -128,7 +128,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                           color: theme.colors.text,
                         }}
                       >
-                        старт {formatCountdown(server.launch!.at)}
+                        старт {server.launch ? formatCountdown(server.launch.at) : '—'}
                       </span>
                     </div>
                   ))}

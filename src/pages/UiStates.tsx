@@ -11,25 +11,15 @@ function withStatus(server: GameServer, status: OnlineStatus): GameServer {
   return { ...server, online: { ...server.online, status } }
 }
 
-const STATUSES: OnlineStatus[] = ['VERIFIED', 'OWNER_REPORTED', 'OFFLINE', 'ANOMALY', 'PENDING', 'CHECKING']
+const STATUSES: OnlineStatus[] = ['VERIFIED', 'LIVE', 'OWNER_REPORTED', 'OFFLINE', 'ANOMALY', 'PENDING', 'CHECKING']
 
 export default function UiStates() {
-  const { data: servers = [] } = useServers({ limit: 500 })
-  const bySlug = (slug: string) => servers.find((server) => server.slug === slug)
-  const holysky = bySlug('holysky')
+  // Showcase only: every card is a real catalogue row repainted into each
+  // status, so the page never depends on particular seed slugs existing.
+  const { data: servers = [] } = useServers({ limit: 12 })
 
-  const cards: Array<{ status: OnlineStatus; server: GameServer }> = holysky
-    ? (
-        [
-          { status: 'VERIFIED', server: bySlug('holysky') },
-          { status: 'LIVE', server: withStatus(bySlug('asterion') ?? holysky, 'LIVE') },
-          { status: 'OWNER_REPORTED', server: bySlug('azure-realms') },
-          { status: 'OFFLINE', server: bySlug('pixelforge') },
-          { status: 'ANOMALY', server: bySlug('northgate') },
-          { status: 'PENDING', server: bySlug('frostpeak') },
-          { status: 'CHECKING', server: withStatus(holysky, 'CHECKING') },
-        ] as Array<{ status: OnlineStatus; server?: GameServer }>
-      ).filter((card): card is { status: OnlineStatus; server: GameServer } => Boolean(card.server))
+  const cards: Array<{ status: OnlineStatus; server: GameServer }> = servers.length
+    ? STATUSES.map((status, index) => ({ status, server: withStatus(servers[index % servers.length], status) }))
     : []
 
   return (
@@ -41,7 +31,7 @@ export default function UiStates() {
           </div>
           <h1 className="text-[30px] leading-tight sm:text-[40px]">Состояния интерфейса</h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-300">
-            Как GameRadar показывает доверие к данным, загрузку, пустые результаты и сбои. Каждое состояние имеет своё
+            Как GameScout показывает доверие к данным, загрузку, пустые результаты и сбои. Каждое состояние имеет своё
             визуальное решение и честную формулировку.
           </p>
         </div>
@@ -102,7 +92,7 @@ export default function UiStates() {
               Значение получено прямым запросом к серверу 42 секунды назад. Успешных проверок за сутки — 99,8%.
             </Notice>
             <Notice tone="info" title="Онлайн не подтверждён независимо">
-              Число передано владельцем сервера. GameRadar не может его проверить — подключение Verified Online
+              Число передано владельцем сервера. GameScout не может его проверить — подключение Verified Online
               доступно владельцу бесплатно.
             </Notice>
             <Notice tone="warn" title="Данные устарели">
@@ -129,7 +119,7 @@ export default function UiStates() {
                 </Button>
               }
             >
-              GameRadar не получает ответ с 09:40. Проверки продолжаются каждые 60 секунд.
+              GameScout не получает ответ с 09:40. Проверки продолжаются каждые 60 секунд.
             </Notice>
           </div>
         </Section>

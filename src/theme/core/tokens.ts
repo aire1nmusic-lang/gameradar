@@ -1,7 +1,7 @@
 import type { GameTheme } from './types'
 
 /**
- * The neutral GameRadar shell.
+ * The neutral GameScout shell.
  *
  * Every game theme starts from these values, so a new theme only has to
  * describe what makes it different. This is also the theme used outside of
@@ -9,7 +9,7 @@ import type { GameTheme } from './types'
  */
 export const coreTheme: GameTheme = {
   id: 'core',
-  label: 'GameRadar',
+  label: 'GameScout',
   mood: 'Нейтральная платформенная тема',
   colors: {
     primary: '#2ee0a6',

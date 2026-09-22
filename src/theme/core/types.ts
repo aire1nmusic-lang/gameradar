@@ -1,5 +1,5 @@
 /**
- * GameRadar Theme Engine — type contracts.
+ * GameScout Theme Engine — type contracts.
  *
  * A theme is plain data. It never imports React and never touches the DOM,
  * so themes can later be delivered from an API without changing a component.

@@ -17,7 +17,7 @@ export function BoostBadge({ boosts, className }: { boosts?: number; className?:
         'inline-flex items-center gap-1.5 rounded-full border border-promo-400/40 bg-promo-500/15 px-2 py-[3px] text-[10px] font-semibold tracking-[0.1em] text-promo-200 uppercase backdrop-blur-sm',
         className,
       )}
-      title="Платное продвижение. Не влияет на независимый рейтинг GameRadar."
+      title="Платное продвижение. Не влияет на независимый рейтинг GameScout."
     >
       <Zap size={10} fill="currentColor" />
       Boosted

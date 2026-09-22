@@ -85,7 +85,7 @@ export function Footer() {
           <div className="flex shrink-0 gap-5">
             <span className="transition-colors hover:text-ink-300">Условия</span>
             <span className="transition-colors hover:text-ink-300">Приватность</span>
-            <span>© 2026 GameRadar</span>
+            <span>© 2026 GameScout</span>
           </div>
         </div>
       </Container>

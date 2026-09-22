@@ -7,7 +7,7 @@ import { OnlineStatus, ProbeMethod, type GameServer, type OnlineData } from '@/m
  * ones we only pass through, and which ones we refuse to rank.
  */
 
-/** GameRadar measured this itself. */
+/** GameScout measured this itself. */
 export function isTrusted(status: OnlineStatus): boolean {
   return status === OnlineStatus.Verified
 }
@@ -42,16 +42,16 @@ export const TRUST_WEIGHT: Record<OnlineStatus, number> = {
 export const GAME_PROBES: Record<string, { method: ProbeMethod; label: string; best: OnlineStatus }[]> = {
   minecraft: [
     { method: ProbeMethod.GameProtocol, label: 'Server List Ping (порт 25565)', best: OnlineStatus.Verified },
-    { method: ProbeMethod.Agent, label: 'Плагин GameRadar Agent', best: OnlineStatus.Verified },
+    { method: ProbeMethod.Agent, label: 'Плагин GameScout Agent', best: OnlineStatus.Verified },
   ],
   gtarp: [
     { method: ProbeMethod.ServerApi, label: 'FiveM /players.json', best: OnlineStatus.Verified },
-    { method: ProbeMethod.Agent, label: 'Resource GameRadar Agent', best: OnlineStatus.Verified },
+    { method: ProbeMethod.Agent, label: 'Resource GameScout Agent', best: OnlineStatus.Verified },
   ],
   lineage2: [
     // L2 exposes server load, not an exact player count — Verified needs the agent.
     { method: ProbeMethod.LoginServer, label: 'Логин-сервер (статус и загрузка)', best: OnlineStatus.Live },
-    { method: ProbeMethod.Agent, label: 'GameRadar Agent на сервере', best: OnlineStatus.Verified },
+    { method: ProbeMethod.Agent, label: 'GameScout Agent на сервере', best: OnlineStatus.Verified },
   ],
   rust: [{ method: ProbeMethod.GameProtocol, label: 'Server query (A2S)', best: OnlineStatus.Verified }],
   cs2: [{ method: ProbeMethod.GameProtocol, label: 'Server query (A2S)', best: OnlineStatus.Verified }],
@@ -70,7 +70,7 @@ export function bestAutomaticStatus(gameId: string): OnlineStatus {
 export const PROBE_LABEL: Record<ProbeMethod, string> = {
   [ProbeMethod.GameProtocol]: 'Прямой игровой протокол',
   [ProbeMethod.ServerApi]: 'Официальный API платформы',
-  [ProbeMethod.Agent]: 'GameRadar Agent',
+  [ProbeMethod.Agent]: 'GameScout Agent',
   [ProbeMethod.LoginServer]: 'Логин-сервер игры',
   [ProbeMethod.OwnerSubmitted]: 'Данные владельца',
 }

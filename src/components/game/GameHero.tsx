@@ -85,7 +85,7 @@ export function GameHero({
           aria-label="Хлебные крошки"
         >
           <Link to="/" className="transition-colors hover:text-[var(--gt-text)]">
-            GameRadar
+            GameScout
           </Link>
           <ChevronRight size={12} />
           <Link to="/games" className="transition-colors hover:text-[var(--gt-text)]">

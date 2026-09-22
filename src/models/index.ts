@@ -1,5 +1,5 @@
 /**
- * GameRadar domain model.
+ * GameScout domain model.
  *
  * Pure types and enums — no React, no data access, no formatting. Everything
  * here describes what the platform *is*, independent of where the data is
@@ -68,6 +68,7 @@ export interface Game {
 /* ── Online & monitoring ────────────────────────────────────────────────── */
 
 export interface OnlineData {
+  playersKnown?: boolean
   status: OnlineStatus
   current: number
   max: number
@@ -78,7 +79,7 @@ export interface OnlineData {
   peak30d: number
   /** seconds since the last successful probe */
   checkedAgoSec: number
-  /** human label of the source, e.g. "GameRadar Direct Query" */
+  /** human label of the source, e.g. "GameScout Direct Query" */
   source: string
   method: ProbeMethod
   uptime24h: number
@@ -101,7 +102,7 @@ export interface MonitoringTarget {
   port?: number
   /** FiveM / custom endpoint returning player data */
   apiUrl?: string
-  /** set when the owner installed the GameRadar Agent */
+  /** set when the owner installed the GameScout Agent */
   agentToken?: string
   method: ProbeMethod
 }
@@ -221,6 +222,7 @@ export interface Owner {
 
 /** A pending or completed "this is my server" proof. */
 export interface ServerClaim {
+  verificationUrl?: string
   id: string
   serverId: string
   userId: string
@@ -250,6 +252,8 @@ export interface Vote {
 
 /** Per-server vote integration settings, owned by the server owner. */
 export interface VoteIntegration {
+  rewardTitle?: string
+  hasApiKey?: boolean
   serverId: string
   delivery: VoteDelivery
   /** Bearer token for the pull API */
@@ -317,6 +321,49 @@ export interface Advertisement {
   serverId?: string
   activeFrom?: string
   activeTo?: string
+}
+
+/** One headline number on the owner dashboard. */
+export interface OwnerMetric {
+  key: string
+  label: string
+  value: number
+  change: number
+  format: 'number' | 'percent'
+  hint: string
+}
+
+/** Card analytics for one owned server. */
+export interface OwnerProject {
+  server: GameServer
+  metrics: OwnerMetric[]
+  views: number[]
+  clicks: number[]
+  rankPosition: number
+  rankTotal: number
+  rankChange: number
+  sources: Array<{ label: string; value: number }>
+  countries: Array<{ label: string; flag: string; value: number }>
+}
+
+/** A notice shown in the owner dashboard. */
+export interface OwnerAlert {
+  id: string
+  kind: 'ok' | 'info' | 'warn'
+  title: string
+  body: string
+  at: string
+}
+
+/** A promotion package an owner can buy. Configuration, not catalogue data. */
+export interface PromoProduct {
+  id: string
+  name: string
+  tag: string
+  description: string
+  bullets: string[]
+  priceLabel: string
+  accent: 'TOP' | 'VIP' | 'FEATURED' | 'banner' | 'launch'
 }
 
 export interface AdProduct {

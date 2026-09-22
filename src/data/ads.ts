@@ -61,7 +61,7 @@ export const AD_INVENTORY: AdCreative[] = [
   {
     id: 'top-default',
     slot: 'top-banner',
-    advertiser: 'GameRadar Boost',
+    advertiser: 'GameScout Boost',
     headline: 'Ваш сервер может быть здесь',
     sub: 'Рекламные места в мире каждой игры — от 990 ₽',
     cta: 'Выбрать пакет',
@@ -92,7 +92,7 @@ export const AD_INVENTORY: AdCreative[] = [
   {
     id: 'side-default',
     slot: 'sidebar',
-    advertiser: 'GameRadar Boost',
+    advertiser: 'GameScout Boost',
     headline: 'Sidebar-баннер',
     sub: 'Постоянное место в мире игры на всю неделю.',
     cta: 'Забронировать',
@@ -112,7 +112,7 @@ export const AD_INVENTORY: AdCreative[] = [
   {
     id: 'takeover-default',
     slot: 'takeover',
-    advertiser: 'GameRadar Boost',
+    advertiser: 'GameScout Boost',
     headline: 'Брендирование мира игры',
     sub: 'Фон, баннер и featured-карточка в одном пакете',
     cta: 'Узнать подробнее',

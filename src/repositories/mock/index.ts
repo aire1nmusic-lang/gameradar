@@ -13,7 +13,7 @@ import {
   type Page,
   type ServerQuery,
 } from '@/models'
-import { GAMES, chronicleOfVersion } from '@/data/games'
+import { GAMES, chronicleOfVersion } from './gameFixtures'
 import { SERVERS, SERVERS_BY_SLUG, similarServers } from '@/data/servers'
 import { BOOST_PACKAGES, activeBoosts, boostForecast, leaderboard, organicLeaderboard } from '@/data/boost'
 import { AD_INVENTORY, AD_PRODUCTS, type AdCreative } from '@/data/ads'
@@ -199,6 +199,7 @@ const servers: ServerRepository = {
     })
   },
   platformStats: () => reply(PLATFORM_STATS),
+  onlineHistory: () => reply([]),
   submit: (input) => {
     // The prototype does not persist. A real implementation inserts a row with
     // moderation = PENDING_MODERATION and returns it.
@@ -265,6 +266,7 @@ const votes: VoteRepository = {
     return reply(items)
   },
   countFor: (serverId) => reply(SERVERS.find((item) => item.id === serverId)?.votes ?? 0),
+  reward: (serverId) => reply({ serverId, delivery: VoteDelivery.Pull, cooldownHours: 12 }),
   integration: (serverId) =>
     reply({
       serverId,
@@ -343,6 +345,12 @@ const DEMO_USER = {
 }
 
 const owners: OwnerRepository = {
+  verifyClaim: unsupported,
+  claimById: unsupported,
+  updateServer: unsupported,
+  updateIntegration: unsupported,
+  rotateApiKey: unsupported,
+
   current: () =>
     reply({
       id: 'owner-demo',
@@ -359,13 +367,17 @@ const owners: OwnerRepository = {
       userId,
       method,
       status: ClaimStatus.Pending,
-      proofToken: `gameradar-verify=${hashSeed(serverId).toString(16)}`,
+      proofToken: `gamescout-verify=${hashSeed(serverId).toString(16)}`,
       createdAt: new Date().toISOString(),
     }),
   claims: () => reply([]),
 }
 
+async function unsupported(): Promise<never> { throw new Error('Not available in explicit mock mode') }
 const users: UserRepository = {
+  session: () => reply({ user: null, devAuthEnabled: false }),
+  login: unsupported,
+  logout: unsupported,
   current: () => reply(undefined), // no auth in the prototype
 }
 

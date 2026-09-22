@@ -18,7 +18,7 @@ export default function Openings() {
   const filtered = useMemo(() => {
     const now = Date.now()
     return all.filter((server) => {
-      const diff = new Date(server.launch!.at).getTime() - now
+      const diff = new Date(server.launch?.at ?? 0).getTime() - now
       if (window === 'today') return diff < DAY
       if (window === 'week') return diff < 7 * DAY
       return true
@@ -28,7 +28,7 @@ export default function Openings() {
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>()
     for (const server of filtered) {
-      const date = new Date(server.launch!.at)
+      const date = new Date(server.launch?.at ?? Date.now())
       const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
       map.set(key, [...(map.get(key) ?? []), server])
     }
@@ -67,11 +67,11 @@ export default function Openings() {
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <Stat value={String(filtered.length)} label={plural(filtered.length, ['открытие', 'открытия', 'открытий'])} />
           <Stat value={formatNumber(totalInterest)} label="предрегистраций суммарно" />
-          <Stat value="0" label="серверов с онлайном до старта" hint="GameRadar не показывает онлайн до запуска" />
+          <Stat value="0" label="серверов с онлайном до старта" hint="GameScout не показывает онлайн до запуска" />
         </div>
 
         <Notice tone="info" className="mt-6">
-          До момента запуска GameRadar не публикует никаких показателей онлайна — даже заявленных владельцем. Интерес
+          До момента запуска GameScout не публикует никаких показателей онлайна — даже заявленных владельцем. Интерес
           отражают только предрегистрации.
         </Notice>
 
@@ -85,7 +85,7 @@ export default function Openings() {
             />
           ) : (
             groups.map(([key, servers]) => {
-              const date = new Date(servers[0].launch!.at)
+              const date = new Date(servers[0].launch?.at ?? Date.now())
               const today = new Date()
               const isToday = date.toDateString() === today.toDateString()
               const isTomorrow = date.toDateString() === new Date(today.getTime() + DAY).toDateString()

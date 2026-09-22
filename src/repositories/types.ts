@@ -1,4 +1,3 @@
-import type { OwnerProject } from '@/data/dashboard'
 import type {
   AdProduct,
   Advertisement,
@@ -9,6 +8,8 @@ import type {
   Game,
   GameServer,
   Owner,
+  OwnerProject,
+  OnlineSample,
   Page,
   RankedServer,
   ServerClaim,
@@ -49,6 +50,7 @@ export interface ServerRepository {
   submit(input: Partial<GameServer>): Promise<GameServer>
   /** headline counters for the home page */
   platformStats(): Promise<PlatformStats>
+  onlineHistory(serverId: string, range?: string): Promise<OnlineSample[]>
 }
 
 export interface PlatformStats {
@@ -76,6 +78,7 @@ export interface VoteRepository {
   countFor(serverId: string, sinceDays?: number): Promise<number>
   /** owner-side integration settings (pull API key, Votifier, webhook) */
   integration(serverId: string): Promise<VoteIntegration | undefined>
+  reward(serverId: string): Promise<VoteIntegration>
 }
 
 export interface BoostRepository {
@@ -105,6 +108,12 @@ export interface AdRepository {
 }
 
 export interface OwnerRepository {
+  verifyClaim(id: string): Promise<ServerClaim>
+  claimById(id: string): Promise<ServerClaim>
+  updateServer(id: string, input: Partial<GameServer>): Promise<GameServer>
+  updateIntegration(id: string, input: Partial<VoteIntegration>): Promise<VoteIntegration>
+  rotateApiKey(id: string): Promise<{ apiKey: string }>
+
   current(): Promise<Owner | undefined>
   serversOf(ownerId: string): Promise<GameServer[]>
   /** per-card analytics shown in the dashboard */
@@ -114,6 +123,10 @@ export interface OwnerRepository {
 }
 
 export interface UserRepository {
+  session(): Promise<{ user: User | null; devAuthEnabled: boolean }>
+  login(input: { displayName: string; secret: string }): Promise<unknown>
+  logout(): Promise<unknown>
+
   current(): Promise<User | undefined>
 }
 

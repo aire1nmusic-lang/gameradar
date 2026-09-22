@@ -1,6 +1,7 @@
 import { repo } from '@/repositories'
-import type { AdSlot } from '@/models'
-import { PROMO_PRODUCTS } from '@/data/dashboard'
+import type { AdSlot, PromoProduct } from '@/models'
+import { PROMO_PRODUCTS } from './promoCatalog'
+
 
 /** Advertising use-cases. Every surface that renders these must label them. */
 
@@ -12,7 +13,12 @@ export function adProducts() {
   return repo.ads.products()
 }
 
-/** Promotion products (TOP / VIP / Featured / Launch) shown to owners. */
-export function promoProducts() {
+/**
+ * Promotion products (TOP / VIP / Featured / Banner / Launch) shown to owners.
+ *
+ * Async on purpose: the price list moves behind the API once billing exists,
+ * and no caller has to change when it does.
+ */
+export function promoProducts(): Promise<PromoProduct[]> {
   return Promise.resolve(PROMO_PRODUCTS)
 }

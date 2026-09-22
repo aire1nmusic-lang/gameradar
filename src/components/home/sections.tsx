@@ -28,7 +28,7 @@ export function GamesSection() {
         <SectionHeader
           eyebrow={<>Популярные игры</>}
           title="Выберите игру"
-          description="У каждой игры свой мир на GameRadar: собственное оформление, рейтинг, открытия и хроники."
+          description="У каждой игры свой мир на GameScout: собственное оформление, рейтинг, открытия и хроники."
           action="Все игры"
           actionTo="/games"
         />
@@ -99,7 +99,7 @@ export function HighOnlineSection() {
             </>
           }
           title="Где играют прямо сейчас"
-          description="Только серверы с онлайном, который GameRadar проверил самостоятельно."
+          description="Только серверы с онлайном, который GameScout проверил самостоятельно."
           action="Смотреть каталог"
           actionTo="/catalog?sort=online&verified=1"
         />
@@ -166,7 +166,7 @@ export function PromotedSection() {
               </div>
               <h2 className="text-[22px] sm:text-[26px]">TOP серверы</h2>
               <p className="mt-1.5 max-w-xl text-[13.5px] text-ink-300">
-                Платные места владельцев серверов. Не влияют на независимый рейтинг GameRadar и на проверку онлайна.
+                Платные места владельцев серверов. Не влияют на независимый рейтинг GameScout и на проверку онлайна.
               </p>
             </div>
             <Link

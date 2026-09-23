@@ -290,7 +290,7 @@ function ServerPanel({ server, claims }: { server: GameServer; claims: ServerCla
 
           {owned ? (
             <>
-              <IntegrationCard serverId={server.id} />
+              <IntegrationCard serverId={server.id} minecraft={server.gameId === 'minecraft'} />
               <MonitoringCard server={server} />
             </>
           ) : (
@@ -334,11 +334,16 @@ function Metric({ label, value, hint }: { label: string; value?: number; hint?: 
 }
 
 /** Vote reward shown to players, cooldown and the Pull API key (shown once). */
-function IntegrationCard({ serverId }: { serverId: string }) {
+function IntegrationCard({ serverId, minecraft }: { serverId: string; minecraft: boolean }) {
   const integration = useAsync(() => ownerApi.integration(serverId), [serverId])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [cooldown, setCooldown] = useState('12')
+  // Votifier is Minecraft's own delivery protocol; other games use the Pull API.
+  const [delivery, setDelivery] = useState('PULL_API')
+  const [votifierHost, setVotifierHost] = useState('')
+  const [votifierPort, setVotifierPort] = useState('8192')
+  const [votifierToken, setVotifierToken] = useState('')
   const [message, setMessage] = useState<{ tone: 'signal' | 'danger'; text: string } | undefined>()
   const [apiKey, setApiKey] = useState('')
   const [busy, setBusy] = useState(false)
@@ -348,6 +353,9 @@ function IntegrationCard({ serverId }: { serverId: string }) {
     setTitle(integration.data.rewardTitle ?? '')
     setDescription(integration.data.rewardDescription ?? '')
     setCooldown(String(integration.data.cooldownHours ?? 12))
+    setDelivery(integration.data.delivery ?? 'PULL_API')
+    setVotifierHost(integration.data.votifierHost ?? '')
+    setVotifierPort(String(integration.data.votifierPort ?? 8192))
   }, [integration.data])
 
   async function save(event: React.FormEvent) {
@@ -355,7 +363,16 @@ function IntegrationCard({ serverId }: { serverId: string }) {
     setBusy(true)
     setMessage(undefined)
     try {
-      await ownerApi.updateIntegration(serverId, { rewardTitle: title, rewardDescription: description, cooldownHours: Number(cooldown) })
+      await ownerApi.updateIntegration(serverId, {
+        rewardTitle: title,
+        rewardDescription: description,
+        cooldownHours: Number(cooldown),
+        ...(minecraft && votifierHost.trim()
+          ? { votifierHost: votifierHost.trim(), votifierPort: Number(votifierPort), ...(votifierToken ? { votifierToken } : {}) }
+          : {}),
+        ...(minecraft ? { delivery } : {}),
+      })
+      setVotifierToken('')
       setMessage({ tone: 'signal', text: 'Сохранено. Игроки видят награду рядом с кнопкой голосования.' })
       integration.reload()
     } catch (error) {
@@ -398,6 +415,37 @@ function IntegrationCard({ serverId }: { serverId: string }) {
             options={[1, 6, 12, 24].map(hours => ({ value: String(hours), label: `${hours} ч` }))}
           />
         </Field>
+        {minecraft && (
+          <>
+            <Field label="Как сервер получает голоса">
+              <Select
+                value={delivery}
+                onChange={setDelivery}
+                options={[
+                  { value: 'PULL_API', label: 'Pull API — сервер сам забирает голоса' },
+                  { value: 'VOTIFIER', label: 'NuVotifier v2 — GameScout отправляет голос на сервер' },
+                ]}
+              />
+            </Field>
+            {delivery === 'VOTIFIER' && (
+              <div className="grid gap-3 sm:grid-cols-[1fr_110px]">
+                <Field label="Адрес NuVotifier">
+                  <Input value={votifierHost} onChange={event => setVotifierHost(event.target.value)} placeholder="play.example.com" />
+                </Field>
+                <Field label="Порт">
+                  <Input value={votifierPort} onChange={event => setVotifierPort(event.target.value.replace(/\D/g, ''))} inputMode="numeric" />
+                </Field>
+                <Field
+                  label="Токен NuVotifier"
+                  hint={integration.data?.hasVotifierToken ? 'Токен сохранён. Введите новый, чтобы заменить.' : 'Из config.yml плагина NuVotifier (tokens → default)'}
+                  className="sm:col-span-2"
+                >
+                  <Input type="password" autoComplete="off" value={votifierToken} onChange={event => setVotifierToken(event.target.value)} />
+                </Field>
+              </div>
+            )}
+          </>
+        )}
         <Button type="submit" variant="primary" disabled={busy}>
           Сохранить
         </Button>

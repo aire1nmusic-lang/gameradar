@@ -279,9 +279,10 @@ export interface VoteIntegration {
   delivery: VoteDelivery
   /** Bearer token for the pull API */
   apiKey?: string
-  /** Votifier host/port/public key (Minecraft) */
-  votifier?: { host: string; port: number; publicKey: string; version: 1 | 2; token?: string }
-  webhookUrl?: string
+  /** NuVotifier v2 endpoint (Minecraft only); the token itself is never sent back */
+  votifierHost?: string
+  votifierPort?: number
+  hasVotifierToken?: boolean
   cooldownHours: number
   rewardDescription?: string
 }

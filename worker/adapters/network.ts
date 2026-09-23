@@ -11,6 +11,12 @@ export interface NetworkOptions {
   fetcher?: typeof fetch
   resolveHost?: (host: string) => Promise<string[]>
   resolveSrv?: (host: string) => Promise<{ host: string; port: number } | undefined>
+  /**
+   * The URL's host is a fixed third-party API written in our code (not owner
+   * input), so the DNS pinning check is skipped — it would only cost two
+   * extra subrequests per call. Never set this for user-supplied URLs.
+   */
+  trustedHost?: boolean
 }
 
 export function normalizeHost(input: string): string {
@@ -184,7 +190,7 @@ export function assertPublicUrl(input: string, options: NetworkOptions = {}): UR
 /** No redirects, bounded bytes/time, no cookies or owner supplied headers. */
 export async function fetchPublicText(input: string, options: NetworkOptions & { maxBytes?: number } = {}): Promise<string> {
   const url = assertPublicUrl(input, options)
-  await resolvePublicHost(url.hostname, options)
+  if (!options.trustedHost) await resolvePublicHost(url.hostname, options)
   const controller = new AbortController()
   try {
     return await withDeadline((async () => {

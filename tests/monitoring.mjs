@@ -191,6 +191,28 @@ try {
   assert.equal(chronicle.online.playersKnown, false, 'Lineage 2 must never publish a player count from the login server')
   pass('Lineage 2 never reaches VERIFIED or publishes a count from the login server')
 
+  // A card with nothing to read its online from is not "waiting for a check":
+  // the pass turns it into UNKNOWN with the reason instead of PENDING forever.
+  const sourceless = (await api('/servers/demo-minecraft-survival')).json
+  assert.equal(sourceless.online.status, 'UNKNOWN', 'no source must not stay PENDING')
+  assert.equal(sourceless.online.source, 'Нет источника')
+  assert.equal(sourceless.online.playersKnown, false)
+  pass('A card without any online source becomes UNKNOWN with the reason, not PENDING forever')
+
+  // One card per pass still reaches every card: the lease moves the queue on.
+  const seen = new Set()
+  for (let round = 0; round < 2; round++) {
+    const run = (await api('/admin/monitor/run', { method: 'POST', body: { limit: 1 }, key: vars.ADMIN_TOKEN })).json
+    assert.equal(run.checked, 1)
+    run.results.forEach(result => seen.add(result.serverId))
+  }
+  assert.ok(seen.has(server.id) && seen.has(l2.id), 'two passes of one card each must visit both cards')
+  pass('Queue rotates by last attempt: limit=1 passes visit every card (no starvation)')
+
+  const counted = (await api('/servers/' + server.slug)).json
+  assert.ok(counted.online.checksPerDay >= 3, 'checksPerDay must reflect the stored checks, got ' + counted.online.checksPerDay)
+  pass('checksPerDay reports the checks actually stored in the last 24 hours')
+
   writeFileSync(path.join(runDir, 'result.json'), JSON.stringify({ passed: true, checks: results }, null, 2))
   console.log('Monitoring acceptance passed. Report: ' + path.join(runDir, 'result.json'))
 } catch (error) {

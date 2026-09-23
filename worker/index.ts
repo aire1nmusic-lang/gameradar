@@ -31,11 +31,16 @@ import {
   type Env,
 } from './lib/core.ts'
 import { Store, type Row } from './lib/store.ts'
-import { claimDto, gameDto, integrationDto, sampleDto, serverDto, targetDto, userDto, organicScore } from './lib/dto.ts'
+import { claimDto, gameDto, integrationDto, rewardDto, sampleDto, serverDto, targetDto, userDto, organicScore } from './lib/dto.ts'
 import { filters, integer, object, serverInput, strings, text } from './lib/validation.ts'
 import { safeFetchText } from './adapters/network.ts'
 import { resolveOnline } from './lib/monitor.ts'
 import { PROVIDERS, sourceAvailable } from './adapters/sources.ts'
+import { assertPort, assertPublicHost, assertPublicUrl } from './adapters/network.ts'
+import { SubrequestBudget } from './lib/budget.ts'
+import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
+import { sitemapXml } from './lib/sitemap.ts'
+import { deliverVotifierVotes } from './lib/votes.ts'
 
 type Vars = { store: Store; user?: Row }
 const app = new Hono<{ Bindings: Env; Variables: Vars }>()
@@ -43,6 +48,8 @@ const app = new Hono<{ Bindings: Env; Variables: Vars }>()
 const SESSION_COOKIE = 'gs_session'
 const SESSION_DAYS = 30
 const CLAIM_FILE = '/.well-known/gamescout-verification.txt'
+/** How long a claim's proof token is accepted. */
+const CLAIM_TTL_MS = 86400000
 
 /* ── plumbing ─────────────────────────────────────────────────────────────── */
 
@@ -139,9 +146,15 @@ async function requireServerKey(c: { req: { header: (n: string) => string | unde
   return integration
 }
 
-/** Owner or the account that submitted the card. */
+/**
+ * Who may manage a card: its verified owner — or, while nobody has proven
+ * ownership yet, the account that submitted it. Once an owner is verified the
+ * submitter loses access, so a card filed by someone else can never be used to
+ * read the owner's statistics or rotate the owner's server key.
+ */
 function assertCanManage(server: Row, user: Row) {
-  if (server.owner_id !== user.id && server.submitted_by !== user.id) throw forbidden('Сервер принадлежит другому владельцу')
+  const allowed = server.owner_id ? server.owner_id === user.id : server.submitted_by === user.id
+  if (!allowed) throw forbidden('Сервер принадлежит другому владельцу')
 }
 
 async function loadManageable(c: { get: (k: 'store') => Store }, serverId: string, user: Row): Promise<Row> {
@@ -157,6 +170,20 @@ app.get('/api/v1/health', async c => {
   await store(c).health()
   return c.json({ status: 'ok', environment: c.env.ENVIRONMENT ?? 'production', time: now() })
 })
+
+/* ── sitemap ──────────────────────────────────────────────────────────────── */
+
+async function sitemap(c: { get: (k: 'store') => Store; body: (data: string, status: number, headers: Record<string, string>) => Response }) {
+  const s = store(c)
+  const [games, chronicles, servers] = await Promise.all([s.games(), s.chronicles(), s.sitemapServers()])
+  return c.body(sitemapXml(games, chronicles, servers), 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600',
+  })
+}
+app.get('/api/v1/sitemap.xml', c => sitemap(c))
+// Answers only once the zone routes /sitemap.xml to this Worker; until then Pages serves the static file.
+app.get('/sitemap.xml', c => sitemap(c))
 
 /* ── games ────────────────────────────────────────────────────────────────── */
 
@@ -216,7 +243,7 @@ app.get('/api/v1/servers/:key/reward', async c => {
   const server = await store(c).server(c.req.param('key'))
   if (!server || server.moderation !== 'PUBLISHED') throw notFound('Сервер не найден')
   const integration = await store(c).ensureIntegration(server.id)
-  return c.json(integrationDto(integration))
+  return c.json(rewardDto(integration))
 })
 
 app.post('/api/v1/servers', async c => {
@@ -234,10 +261,16 @@ app.post('/api/v1/servers', async c => {
     if (!input.version) input.version = chronicle.label
   }
 
+  // An obvious duplicate — same game and the same name, or the same site and
+  // version — points the author at the existing card instead of cloning it.
+  const duplicate = await s.findDuplicate(game.id, String(input.name), String(input.website ?? ''), String(input.version ?? ''))
+  if (duplicate) throw conflict(`Такой сервер уже есть в каталоге: /server/${duplicate.slug}`, 'duplicate_server')
+
   const base = slugify(String(input.name))
   const row: Row = {
     id: id('srv'),
-    slug: (await s.server(base)) ? `${base}-${token(3)}` : base,
+    // Hidden and pending cards count too: the slug column is unique.
+    slug: (await s.slugTaken(base)) ? `${base}-${token(3)}` : base,
     version: '',
     moderation: 'PENDING_MODERATION',
     submitted_by: user.id,
@@ -376,6 +409,9 @@ app.post('/api/v1/claims/:id/verify', async c => {
   const claim = await s.claim(c.req.param('id'))
   if (!claim || claim.user_id !== user.id) throw notFound('Заявка не найдена')
   if (claim.status === 'VERIFIED') return c.json(claimDto(claim))
+  if (claim.status !== 'PENDING') throw conflict('Заявка закрыта — создайте новую', 'claim_closed')
+  // A proof token lives 24 hours; after that a new claim issues a new token.
+  if (Date.parse(claim.created_at) + CLAIM_TTL_MS <= Date.now()) throw new ApiError(410, 'Срок действия кода истёк — создайте новую заявку', 'proof_expired')
   if (!(await s.claimAttempt(claim.id))) throw tooMany('Слишком много попыток подтверждения', 'too_many_attempts')
 
   const server = await s.server(claim.server_id)
@@ -419,9 +455,42 @@ app.patch('/api/v1/servers/:id/vote-integration', async c => {
   if (body.rewardTitle !== undefined) fields.reward_title = text(body.rewardTitle, 'rewardTitle', 0, 80)
   if (body.rewardDescription !== undefined) fields.reward_text = text(body.rewardDescription, 'rewardDescription', 0, 500)
   if (body.cooldownHours !== undefined) fields.cooldown_hours = integer(body.cooldownHours, 'cooldownHours', 1, 24)
+  const minecraft = server.game_id === 'minecraft'
+  const votifierFields = ['votifierHost', 'votifierPort', 'votifierToken'].filter(key => body[key] !== undefined)
+  // Votifier is Minecraft's protocol; other games take votes through the Pull API.
+  if (votifierFields.length && !minecraft) throw badRequest('Votifier доступен только для серверов Minecraft', 'votifier_minecraft_only')
+  if (body.votifierHost !== undefined) {
+    const host = text(body.votifierHost, 'votifierHost', 1, 253)
+    const loopback = devOrigins(c.env).map(origin => new URL(origin).hostname)
+    try {
+      if (!loopback.includes(host)) assertPublicHost(host)
+    } catch {
+      throw badRequest('Адрес Votifier должен быть публичным', 'invalid_target')
+    }
+    fields.votifier_host = host
+  }
+  if (body.votifierPort !== undefined) {
+    const port = integer(body.votifierPort, 'votifierPort', 1, 65535)
+    try {
+      assertPort(port)
+    } catch {
+      throw badRequest('Недопустимый порт Votifier', 'invalid_target')
+    }
+    fields.votifier_port = port
+  }
+  if (body.votifierToken !== undefined) fields.votifier_token = text(body.votifierToken, 'votifierToken', 8, 200)
   if (body.delivery !== undefined) {
     const delivery = text(body.delivery, 'delivery', 1, 20)
-    if (!['PULL_API', 'VOTIFIER', 'WEBHOOK'].includes(delivery)) throw badRequest('Неизвестный способ доставки')
+    if (delivery === 'WEBHOOK') throw badRequest('Доставка через webhook пока не поддерживается — используйте Pull API', 'unsupported_delivery')
+    if (!['PULL_API', 'VOTIFIER'].includes(delivery)) throw badRequest('Неизвестный способ доставки')
+    if (delivery === 'VOTIFIER') {
+      if (!minecraft) throw badRequest('Votifier доступен только для серверов Minecraft', 'votifier_minecraft_only')
+      const current = await store(c).ensureIntegration(server.id)
+      const host = fields.votifier_host ?? current.votifier_host
+      const port = fields.votifier_port ?? current.votifier_port
+      const secret = fields.votifier_token ?? current.votifier_token
+      if (!host || !port || !secret) throw badRequest('Укажите адрес, порт и токен NuVotifier', 'votifier_incomplete')
+    }
     fields.delivery = delivery
   }
   if (!Object.keys(fields).length) throw badRequest('Нет полей для обновления')
@@ -460,6 +529,22 @@ app.patch('/api/v1/servers/:id/monitoring', async c => {
   if (body.host !== undefined) target.host = text(body.host, 'host', 1, 253)
   if (body.port !== undefined) target.port = integer(body.port, 'port', 1, 65535)
   if (body.apiUrl !== undefined) target.apiUrl = text(body.apiUrl, 'apiUrl', 8, 500)
+  if (method === 'SERVER_API' && !target.apiUrl) throw badRequest('Для FiveM нужен адрес http(s)://host:port', 'missing_api_url')
+  if (method !== 'SERVER_API' && method !== 'AGENT' && !target.host) throw badRequest('Нужен адрес сервера', 'missing_host')
+
+  // The monitor refuses private networks at probe time; refusing them here too
+  // tells the owner immediately instead of producing a silent OFFLINE later.
+  const loopback = devOrigins(c.env)
+  try {
+    if (target.apiUrl) {
+      const url = new URL(String(target.apiUrl))
+      if (!loopback.includes(url.origin)) assertPublicUrl(String(target.apiUrl))
+    }
+    if (target.host && !loopback.some(origin => new URL(origin).hostname === target.host)) assertPublicHost(String(target.host))
+    if (target.port !== undefined) assertPort(Number(target.port))
+  } catch (error) {
+    throw badRequest(error instanceof Error ? `Адрес не подходит для мониторинга: ${error.message}` : 'Адрес не подходит для мониторинга', 'invalid_target')
+  }
 
   return c.json(targetDto((await store(c).setTarget(server.id, target))!))
 })
@@ -477,14 +562,33 @@ app.get('/api/v1/servers/:id/monitoring', async c => {
  * Exposed to admins so a pass can be triggered and observed on demand; the
  * scheduled handler below calls the same code on a cron.
  */
-async function runMonitoringPass(env: Env, limit: number): Promise<{ checked: number; results: Row[] }> {
+/** Worst-case subrequests one card may need (direct probe + retry + two monitors). */
+const CARD_RESERVE = 10
+/** Stop starting new cards after this long; the rest wait for the next tick. */
+const PASS_DEADLINE_MS = 60_000
+
+async function runMonitoringPass(
+  env: Env,
+  limit: number,
+  budget = new SubrequestBudget(subrequestBudget(env)),
+): Promise<{ checked: number; skipped: number; sourceless: number; results: Row[] }> {
   const s = new Store(env.DB)
-  // Oldest check first, so small batches rotate through every card.
   const secrets = { steamKey: env.STEAM_API_KEY }
   const providers = Object.keys(PROVIDERS).filter(provider => sourceAvailable(provider, secrets))
+
+  // Cards with nothing to read online from stop being PENDING forever.
+  const sourceless = (await s.markSourceless(providers, 'Источник онлайна для этого сервера не подключён')).meta.changes ?? 0
+
+  // Oldest attempt first, so small batches rotate through every card.
   const queue = [...(await s.monitorQueue(limit, providers))]
   const sources = await s.onlineSources(queue.map(entry => entry.server_id))
+
+  // One budget and one DNS/SRV cache for the whole invocation.
+  const shared = budgetedNetwork(budget)
+
   const results: Row[] = []
+  let skipped = 0
+  const startedAt = Date.now()
   // Loopback targets are reachable only in local development, and only for
   // the origins the developer explicitly allowed.
   const local = devOrigins(env)
@@ -492,27 +596,66 @@ async function runMonitoringPass(env: Env, limit: number): Promise<{ checked: nu
   // one slow server must not hold up the rest.
   const lanes = Array.from({ length: Math.min(4, queue.length) }, async () => {
     for (let entry = queue.shift(); entry; entry = queue.shift()) {
-      const allowLoopback = local.some(origin => String(entry.api_url ?? '').startsWith(origin) || origin.includes(String(entry.host ?? ' ')))
-      const target = entry.target_id
-        ? { gameSlug: entry.game_slug, method: entry.method, host: entry.host, port: entry.port, apiUrl: entry.api_url, expectName: entry.expect_name }
-        : null
-      const own = sources
-        .filter(row => row.server_id === entry.server_id)
-        .map(row => ({ tier: row.tier, provider: row.provider, name: row.name, url: row.url, config: JSON.parse(row.config || '{}') }))
-      const result = await resolveOnline(target, own, { allowLoopback }, secrets)
-      await s.saveSample(entry.server_id, result)
-      results.push({ serverId: entry.server_id, status: result.status, tier: result.tier, source: result.source, online: result.online, latencyMs: result.latencyMs, note: result.note })
+      // Out of time or budget: leave the card unleased so the next tick takes it first.
+      if (Date.now() - startedAt > PASS_DEADLINE_MS || !budget.reserve(CARD_RESERVE)) {
+        skipped++
+        continue
+      }
+      try {
+        await s.lease(entry.server_id)
+        const allowLoopback = local.some(origin => String(entry.api_url ?? '').startsWith(origin) || origin.includes(String(entry.host ?? '\u0000')))
+        const target = entry.target_id
+          ? { gameSlug: entry.game_slug, method: entry.method, host: entry.host, port: entry.port, apiUrl: entry.api_url, expectName: entry.expect_name }
+          : null
+        const own = sources
+          .filter(row => row.server_id === entry.server_id)
+          .map(row => ({ tier: row.tier, provider: row.provider, name: row.name, url: row.url, config: parseConfig(row.config) }))
+        const result = await resolveOnline(target, own, { ...shared, allowLoopback }, secrets)
+        if (result.skipped) {
+          // Nothing was learned: storing it would invent an UNKNOWN/OFFLINE.
+          skipped++
+          continue
+        }
+        await s.saveSample(entry.server_id, result)
+        results.push({ serverId: entry.server_id, status: result.status, tier: result.tier, source: result.source, online: result.online, latencyMs: result.latencyMs, note: result.note })
+      } catch (error) {
+        // One broken card must not abort the pass for everyone else.
+        console.error('monitor_card_failed', entry.server_id, String(error))
+        skipped++
+      } finally {
+        budget.release(CARD_RESERVE)
+      }
     }
   })
   await Promise.all(lanes)
-  return { checked: results.length, results }
+  return { checked: results.length, skipped, sourceless, results }
 }
+
+function parseConfig(raw: unknown): Record<string, unknown> {
+  try {
+    const value = JSON.parse(String(raw ?? '{}'))
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  } catch {
+    return {}
+  }
+}
+
 
 /** Probes per cron tick. Each probe costs a few subrequests (DNS + connect). */
 function monitorBatch(env: Env): number {
   const size = Number(env.MONITOR_BATCH ?? 8)
   return Number.isInteger(size) && size > 0 && size <= 50 ? size : 8
 }
+
+app.post('/api/v1/admin/votes/deliver', async c => {
+  requireAdmin(c)
+  return c.json(
+    await deliverVotifierVotes(new Store(c.env.DB), new SubrequestBudget(subrequestBudget(c.env)), {
+      limit: 20,
+      loopbackHosts: devOrigins(c.env).map(origin => new URL(origin).hostname),
+    }),
+  )
+})
 
 app.post('/api/v1/admin/monitor/run', async c => {
   requireAdmin(c)
@@ -604,8 +747,11 @@ app.post('/api/v1/votes', async c => {
 
   // The insert itself carries the cooldown and rate limits, so two racing
   // requests can never both win.
+  // A vote travels the way its server chose: Votifier (Minecraft, configured) or the Pull API.
+  const votifier =
+    integration.delivery === 'VOTIFIER' && server.game_id === 'minecraft' && !!integration.votifier_host && !!integration.votifier_port && !!integration.votifier_token
   const inserted = await s.insertVote(
-    { id: voteId, serverId: server.id, nickname, userId: user?.id, voterKey, ipHash, createdAt: now() },
+    { id: voteId, serverId: server.id, nickname, userId: user?.id, voterKey, ipHash, createdAt: now(), delivery: votifier ? 'VOTIFIER' : 'PULL_API' },
     cooldownSince,
     rateSince,
   )
@@ -616,6 +762,19 @@ app.post('/api/v1/votes', async c => {
   }
 
   const vote = (await s.vote(voteId))!
+  if (votifier) {
+    // Deliver right away; a failure stays PENDING and the cron retries it.
+    const delivery = deliverVotifierVotes(new Store(c.env.DB), new SubrequestBudget(subrequestBudget(c.env)), {
+      limit: 1,
+      voteId,
+      loopbackHosts: devOrigins(c.env).map(origin => new URL(origin).hostname),
+    }).catch(error => console.error('votifier_delivery_failed', String(error)))
+    try {
+      c.executionCtx.waitUntil(delivery)
+    } catch {
+      await delivery
+    }
+  }
   return c.json(
     {
       id: vote.id,
@@ -674,6 +833,12 @@ export default {
   fetch: app.fetch,
   /** Cron entry point: keeps VERIFIED/LIVE/OFFLINE current without a request. */
   async scheduled(_event: unknown, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }) {
-    ctx.waitUntil(runMonitoringPass(env, monitorBatch(env)))
+    const budget = new SubrequestBudget(subrequestBudget(env))
+    ctx.waitUntil(
+      (async () => {
+        await deliverVotifierVotes(new Store(env.DB), budget, { limit: 3 }).catch(error => console.error('votifier_retry_failed', String(error)))
+        await runMonitoringPass(env, monitorBatch(env), budget)
+      })(),
+    )
   },
 }

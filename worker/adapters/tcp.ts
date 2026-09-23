@@ -10,7 +10,7 @@ export interface TcpTransport {
 export type TcpConnector = (host: string, port: number) => Promise<TcpTransport> | TcpTransport
 export interface TcpOptions extends NetworkOptions { connect?: TcpConnector }
 
-async function cloudflareConnect(host: string, port: number): Promise<TcpTransport> {
+export async function cloudflareConnect(host: string, port: number): Promise<TcpTransport> {
   const { connect } = await import('cloudflare:sockets')
   return connect({ hostname: host, port }, { secureTransport: 'off' }) as unknown as TcpTransport
 }

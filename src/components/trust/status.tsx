@@ -235,7 +235,11 @@ export function VerifiedLine({
     case OnlineStatus.Checking:
       return <span className={cn(base, 'text-ink-400')}>Идёт проверка онлайна…</span>
     case OnlineStatus.Unknown:
-      return <span className={cn(base, 'text-ink-500')}>Источники онлайна не ответили · {formatSeconds(seconds)}</span>
+      return online?.source === 'Нет источника' ? (
+        <span className={cn(base, 'text-ink-500')}>Источник онлайна не подключён</span>
+      ) : (
+        <span className={cn(base, 'text-ink-500')}>Источники онлайна не ответили · {formatSeconds(seconds)}</span>
+      )
     default:
       return (
         <span className={cn(base, 'text-ink-500')}>

@@ -79,6 +79,14 @@ const str = (config: Record<string, unknown>, key: string): string => {
   return value
 }
 
+interface SteamServer {
+  addr?: unknown
+  gameport?: unknown
+  players?: unknown
+  max_players?: unknown
+  gametype?: unknown
+}
+
 /** Credentials some sources need; a source without its credential is skipped, not failed. */
 export interface SourceSecrets {
   steamKey?: string
@@ -105,7 +113,7 @@ export const PROVIDERS: Record<string, Provider> = {
    */
   async mcsrvstat(config, options) {
     const now = new Date().toISOString()
-    const data = (await json(`https://api.mcsrvstat.us/3/${encodeURIComponent(str(config, 'address'))}`, options)) as {
+    const data = (await json(`https://api.mcsrvstat.us/3/${encodeURIComponent(str(config, 'address'))}`, { ...options, trustedHost: true })) as {
       online?: boolean
       players?: { online?: unknown; max?: unknown }
       debug?: { cachetime?: unknown }
@@ -121,7 +129,7 @@ export const PROVIDERS: Record<string, Provider> = {
   /** api.mcstatus.io v2 — public, documented, cached ~1 min (retrieved_at). */
   async mcstatus(config, options) {
     const now = new Date().toISOString()
-    const data = (await json(`https://api.mcstatus.io/v2/status/java/${encodeURIComponent(str(config, 'address'))}`, options)) as {
+    const data = (await json(`https://api.mcstatus.io/v2/status/java/${encodeURIComponent(str(config, 'address'))}`, { ...options, trustedHost: true })) as {
       online?: boolean
       retrieved_at?: unknown
       players?: { online?: unknown; max?: unknown }
@@ -142,7 +150,7 @@ export const PROVIDERS: Record<string, Provider> = {
     const now = new Date().toISOString()
     const id = str(config, 'id')
     if (!/^\d{1,12}$/.test(id)) throw new AdapterError('invalid_config', 'BattleMetrics id must be numeric')
-    const data = (await json(`https://api.battlemetrics.com/servers/${id}`, options)) as {
+    const data = (await json(`https://api.battlemetrics.com/servers/${id}`, { ...options, trustedHost: true })) as {
       data?: { attributes?: { status?: string; players?: unknown; maxPlayers?: unknown; updatedAt?: unknown } }
     }
     const attributes = data.data?.attributes
@@ -159,19 +167,45 @@ export const PROVIDERS: Record<string, Provider> = {
   /**
    * Steam Web API IGameServersService/GetServerList — Valve's master server,
    * filtered to one game address. Needs a Steam Web API key (STEAM_API_KEY);
-   * the key travels only in this request and is never logged.
+   * the key travels only in this request and never appears in errors or logs.
+   *
+   *   · 403 (bad key) and 429 (rate limit) are errors → UNKNOWN, never OFFLINE;
+   *   · an answer for another address is refused (address_mismatch);
+   *   · not listed at all → "down" as the master server sees it;
+   *   · Rust reports true counts in gametype tags cpN/mpN, because the plain
+   *     player fields wrap above 255.
    */
   async steam(config, options, secrets) {
     const now = new Date().toISOString()
     const address = str(config, 'address')
-    if (!/^\d+\.\d+\.\d+\.\d+:\d{1,5}$/.test(address)) throw new AdapterError('invalid_config', 'Steam address must be ip:port')
+    const match = /^(\d+\.\d+\.\d+\.\d+):(\d{1,5})$/.exec(address)
+    if (!match) throw new AdapterError('invalid_config', 'Steam address must be ip:port')
     if (!secrets.steamKey) throw new AdapterError('missing_secret', 'Steam Web API key is not configured')
+    const [, ip, port] = match
     const url = `https://api.steampowered.com/IGameServersService/GetServerList/v1/?key=${encodeURIComponent(secrets.steamKey)}&limit=5&filter=${encodeURIComponent(STEAM_FILTER + address)}`
-    const data = (await json(url, options)) as { response?: { servers?: { players?: unknown; max_players?: unknown }[] } }
-    const server = data.response?.servers?.[0]
-    // Not listed by the master server means it is not up right now.
-    if (!server) return { up: false, online: null, maxOnline: null, observedAt: now }
-    return { up: true, online: count(server.players), maxOnline: count(server.max_players), observedAt: now }
+    let data: { response?: { servers?: SteamServer[] } }
+    try {
+      data = (await json(url, { ...options, trustedHost: true })) as typeof data
+    } catch (error) {
+      // Never surface the request URL: it carries the key.
+      const code = error instanceof AdapterError ? error.code : 'steam_failed'
+      if (code === 'http_403') throw new AdapterError('steam_forbidden', 'Steam Web API rejected the key')
+      if (code === 'http_429') throw new AdapterError('rate_limited', 'Steam Web API rate limit reached')
+      throw new AdapterError(code, 'Steam Web API request failed')
+    }
+    if (!data.response || typeof data.response !== 'object') throw new AdapterError('invalid_payload', 'Steam Web API answered without a response')
+    const servers = Array.isArray(data.response.servers) ? data.response.servers : []
+    if (!servers.length) return { up: false, online: null, maxOnline: null, observedAt: now }
+    const server = servers.find(item => String(item.addr ?? '').split(':')[0] === ip && (String(item.gameport) === port || String(item.addr ?? '').endsWith(':' + port)))
+    if (!server) throw new AdapterError('address_mismatch', 'Steam listed a different address')
+    const tags = String(server.gametype ?? '')
+    const tagged = (key: string) => count(new RegExp(`(?:^|,)${key}(\\d+)(?:,|$)`).exec(tags)?.[1])
+    return {
+      up: true,
+      online: tagged('cp') ?? count(server.players),
+      maxOnline: tagged('mp') ?? count(server.max_players),
+      observedAt: now,
+    }
   },
 
   /** The project's own JSON endpoint, read at a fixed path. */

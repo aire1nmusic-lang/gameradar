@@ -84,20 +84,23 @@ export default function ServerProfile() {
     )
   }
 
-  if (!server) {
-    return (
-      <Container className="py-24">
-        <EmptyState
-          title="Сервер не найден"
-          description="Возможно, карточка была удалена владельцем или ссылка устарела."
-          action="Открыть каталог"
-          actionTo="/catalog"
-        />
-      </Container>
-    )
-  }
-
+  if (!server) return <ServerNotFound />
   return <Profile server={server} />
+}
+
+/** An unknown slug is a soft 404 of the SPA: keep it out of the index. */
+function ServerNotFound() {
+  useSeo({ title: 'Сервер не найден', noindex: true })
+  return (
+    <Container className="py-24">
+      <EmptyState
+        title="Сервер не найден"
+        description="Возможно, карточка была удалена владельцем или ссылка устарела."
+        action="Открыть каталог"
+        actionTo="/catalog"
+      />
+    </Container>
+  )
 }
 
 function Profile({ server }: { server: GameServer }) {

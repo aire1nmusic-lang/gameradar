@@ -9,6 +9,8 @@ export interface Env {
   ALLOWED_ORIGIN?: string
   DEV_ALLOWED_ORIGINS?: string
   MONITOR_BATCH?: string
+  /** subrequests one monitoring invocation may spend; 45 fits the free plan (50) */
+  MONITOR_SUBREQUESTS?: string
   /** Steam Web API key; without it Steam-backed online sources are not read. */
   STEAM_API_KEY?: string
 }

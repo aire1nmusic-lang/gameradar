@@ -2,7 +2,7 @@ import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known FROM servers s LEFT JOIN server_online o ON o.server_id=s.id`
+const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h FROM servers s LEFT JOIN server_online o ON o.server_id=s.id`
 /** A number counts only while it is fresh; an old one is history, not "online". */
 const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
 const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`
@@ -41,7 +41,17 @@ export class Store {
     return { items:rows.results,total:Number(count?.total ?? 0),limit:q.limit,offset:q.offset }
   }
   server(key: string) { return this.db.prepare(`${serverSelect} WHERE (s.id=? OR s.slug=?)${this.live}`).bind(key,key).first<Row>() }
-  async ownerServers(userId: string) { return (await this.db.prepare(`${serverSelect} WHERE s.owner_id=? OR s.submitted_by=? ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
+  /** Cards the user manages: owned ones, plus own submissions nobody has claimed yet. */
+  async ownerServers(userId: string) { return (await this.db.prepare(`${serverSelect} WHERE s.owner_id=? OR (s.owner_id IS NULL AND s.submitted_by=?) ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
+  /** Public cards for the sitemap. DEMO rows never appear here. */
+  async sitemapServers() { return (await this.db.prepare("SELECT slug, updated_at FROM servers WHERE moderation='PUBLISHED' AND is_demo=0 ORDER BY updated_at DESC LIMIT 45000").all<Row>()).results }
+  async slugTaken(slug:string) { return !!(await this.db.prepare('SELECT 1 AS hit FROM servers WHERE slug=?').bind(slug).first<Row>()) }
+  /** Same game and name, or same site host and version, among cards that are not archived. */
+  findDuplicate(gameId:string,name:string,website:string,version:string) {
+    let host = ''
+    try { host = new URL(website).hostname.replace(/^www\./,'') } catch {}
+    return this.db.prepare(`SELECT id, slug FROM servers WHERE game_id=? AND moderation<>'ARCHIVED' AND is_demo=0 AND (lower(trim(name))=lower(trim(?)) OR (?<>'' AND version=? AND (website LIKE ? OR website LIKE ?))) LIMIT 1`).bind(gameId,name,host,version,`%://${host}/%`,`%://www.${host}/%`).first<Row>()
+  }
   async insertServer(row: Row) {
     const fields = Object.keys(row)
     await this.db.batch([this.db.prepare(`INSERT INTO servers (${fields.join(',')}) VALUES (${fields.map(()=>'?').join(',')})`).bind(...fields.map(k=>row[k])),this.db.prepare(`INSERT INTO server_online(server_id,status,source,method,players_known,max_known) VALUES (?,'PENDING','Ожидает проверки','OWNER_SUBMITTED',0,0)`).bind(row.id)])
@@ -80,7 +90,7 @@ export class Store {
   async updateIntegration(serverId:string,fields:Row) { const keys=Object.keys(fields); await this.db.prepare(`UPDATE vote_integrations SET ${keys.map(k=>`${k}=?`).join(',')},updated_at=? WHERE server_id=?`).bind(...keys.map(k=>fields[k]),now(),serverId).run(); return (await this.integration(serverId))! }
   async insertVote(row:Row,cooldownSince:string,rateSince:string) {
     const result=await this.db.batch([
-      this.db.prepare(`INSERT INTO votes(id,server_id,nickname,user_id,voter_key,ip_hash,delivery,created_at) SELECT ?,?,?,?,?,?,'PULL_API',? WHERE NOT EXISTS (SELECT 1 FROM votes WHERE server_id=? AND voter_key=? AND created_at>?) AND (SELECT COUNT(*) FROM votes WHERE ip_hash=? AND created_at>?)<30 AND (SELECT COUNT(*) FROM votes WHERE server_id=? AND ip_hash=? AND created_at>?)<5`).bind(row.id,row.serverId,row.nickname,row.userId ?? null,row.voterKey,row.ipHash,row.createdAt,row.serverId,row.voterKey,cooldownSince,row.ipHash,rateSince,row.serverId,row.ipHash,rateSince),
+      this.db.prepare(`INSERT INTO votes(id,server_id,nickname,user_id,voter_key,ip_hash,delivery,created_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM votes WHERE server_id=? AND voter_key=? AND created_at>?) AND (SELECT COUNT(*) FROM votes WHERE ip_hash=? AND created_at>?)<30 AND (SELECT COUNT(*) FROM votes WHERE server_id=? AND ip_hash=? AND created_at>?)<5`).bind(row.id,row.serverId,row.nickname,row.userId ?? null,row.voterKey,row.ipHash,row.delivery ?? 'PULL_API',row.createdAt,row.serverId,row.voterKey,cooldownSince,row.ipHash,rateSince,row.serverId,row.ipHash,rateSince),
       this.db.prepare('UPDATE servers SET votes_count=(SELECT COUNT(*) FROM votes WHERE server_id=? AND status<>\'REJECTED\') WHERE id=?').bind(row.serverId,row.serverId)
     ])
     return result[0].meta.changes > 0
@@ -101,16 +111,33 @@ export class Store {
     return { since, views, totals: { views: count('VIEW'), websiteClicks: count('WEBSITE_CLICK'), playClicks: count('PLAY_CLICK'), voteClicks: count('VOTE_CLICK'), claimStarts: count('CLAIM_START') }, votes: { total: Number(votes?.total ?? 0), pending: Number(votes?.pending ?? 0), claimed: Number(votes?.claimed ?? 0), inRange: Number(votes?.recent ?? 0) }, sources: sources.map(row => ({ source: row.source, count: Number(row.n) })) }
   }
   async recentVotes(serverId:string,limit:number) { return (await this.db.prepare('SELECT * FROM votes WHERE server_id=? ORDER BY created_at DESC LIMIT ?').bind(serverId,limit).all<Row>()).results }
+  /** Votifier votes still owed to a Minecraft server: pending, under the attempt cap, from the last day, not leased right now. */
+  async votifierDue(limit:number,voteId?:string) {
+    const day=new Date(Date.now()-86400000).toISOString(), stale=new Date(Date.now()-120000).toISOString()
+    return (await this.db.prepare(`SELECT v.*,vi.votifier_host,vi.votifier_port,vi.votifier_token FROM votes v JOIN vote_integrations vi ON vi.server_id=v.server_id JOIN servers s ON s.id=v.server_id WHERE v.status='PENDING' AND v.delivery='VOTIFIER' AND s.game_id='minecraft' AND vi.votifier_host IS NOT NULL AND vi.votifier_port IS NOT NULL AND vi.votifier_token IS NOT NULL AND v.delivery_attempts<? AND v.created_at>? AND (v.delivering_at IS NULL OR v.delivering_at<?)${voteId?' AND v.id=?':''} ORDER BY v.created_at LIMIT ?`).bind(3,day,stale,...(voteId?[voteId]:[]),limit).all<Row>()).results
+  }
+  /** Takes the send lease; null when another sender holds it. */
+  leaseVoteDelivery(voteId:string) { return this.db.prepare(`UPDATE votes SET delivering_at=?,delivery_attempts=delivery_attempts+1 WHERE id=? AND status='PENDING' AND (delivering_at IS NULL OR delivering_at<?) RETURNING id`).bind(now(),voteId,new Date(Date.now()-120000).toISOString()).first<Row>() }
+  markVoteDelivered(voteId:string) { return this.db.prepare(`UPDATE votes SET status='CLAIMED',claimed_at=?,delivered_at=?,delivering_at=NULL,last_delivery_error=NULL WHERE id=? AND status='PENDING'`).bind(now(),now(),voteId).run() }
+  markVoteDeliveryFailed(voteId:string,code:string) { return this.db.prepare(`UPDATE votes SET delivering_at=NULL,last_delivery_error=? WHERE id=?`).bind(code.slice(0,60),voteId).run() }
   lastVote(serverId:string,key:string) { return this.db.prepare('SELECT * FROM votes WHERE server_id=? AND voter_key=? ORDER BY created_at DESC LIMIT 1').bind(serverId,key).first<Row>() }
   vote(voteId:string) { return this.db.prepare('SELECT * FROM votes WHERE id=?').bind(voteId).first<Row>() }
-  async pendingVotes(serverId:string,limit:number,offset:number) { const items=(await this.db.prepare("SELECT * FROM votes WHERE server_id=? AND status='PENDING' ORDER BY created_at,id LIMIT ? OFFSET ?").bind(serverId,limit,offset).all<Row>()).results; const count=await this.db.prepare("SELECT COUNT(*) AS total FROM votes WHERE server_id=? AND status='PENDING'").bind(serverId).first<Row>();return {items,total:Number(count?.total ?? 0),limit,offset} }
-  async claimVotes(serverId:string,ids:string[]) { return (await this.db.prepare(`UPDATE votes SET status='CLAIMED',claimed_at=?,delivered_at=? WHERE server_id=? AND status='PENDING' AND id IN (${ids.map(()=>'?').join(',')}) RETURNING *`).bind(now(),now(),serverId,...ids).all<Row>()).results }
+  async pendingVotes(serverId:string,limit:number,offset:number) { const items=(await this.db.prepare("SELECT * FROM votes WHERE server_id=? AND status='PENDING' AND delivery='PULL_API' ORDER BY created_at,id LIMIT ? OFFSET ?").bind(serverId,limit,offset).all<Row>()).results; const count=await this.db.prepare("SELECT COUNT(*) AS total FROM votes WHERE server_id=? AND status='PENDING' AND delivery='PULL_API'").bind(serverId).first<Row>();return {items,total:Number(count?.total ?? 0),limit,offset} }
+  async claimVotes(serverId:string,ids:string[]) { return (await this.db.prepare(`UPDATE votes SET status='CLAIMED',claimed_at=?,delivered_at=? WHERE server_id=? AND status='PENDING' AND delivery='PULL_API' AND id IN (${ids.map(()=>'?').join(',')}) RETURNING *`).bind(now(),now(),serverId,...ids).all<Row>()).results }
   async onlineHistory(serverId:string,since:string,limit:number) { return (await this.db.prepare('SELECT server_id,at,players,status,latency_ms,players_known,source_tier,source_name FROM online_samples WHERE server_id=? AND at>=? ORDER BY at DESC,id DESC LIMIT ?').bind(serverId,since,limit).all<Row>()).results.reverse() }
   target(serverId:string) { return this.db.prepare('SELECT * FROM monitoring_targets WHERE server_id=?').bind(serverId).first<Row>() }
   async setTarget(serverId:string,target:Row) { await this.db.prepare(`INSERT INTO monitoring_targets(server_id,method,host,port,api_url,enabled) VALUES (?,?,?,?,?,?) ON CONFLICT(server_id) DO UPDATE SET method=excluded.method,host=excluded.host,port=excluded.port,api_url=excluded.api_url,enabled=excluded.enabled`).bind(serverId,target.method,target.host ?? null,target.port ?? null,target.apiUrl ?? null,target.enabled === false ? 0 : 1).run();return this.target(serverId) }
   /** Published cards with a direct target or an online source, least recently checked first. */
   /** `providers` — the sources this Worker can read now; a card with none of them is not queued at all. */
-  async monitorQueue(limit:number,providers:string[]) { return (await this.db.prepare(`SELECT s.id AS server_id,g.slug AS game_slug,t.server_id AS target_id,t.method,t.host,t.port,t.api_url,t.expect_name FROM servers s JOIN games g ON g.id=s.game_id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1 LEFT JOIN server_online o ON o.server_id=s.id WHERE s.moderation='PUBLISHED' AND (t.server_id IS NOT NULL OR EXISTS (SELECT 1 FROM online_sources os WHERE os.server_id=s.id AND os.enabled=1 AND os.provider IN (${providers.map(()=>'?').join(',') || "''"}))) ORDER BY COALESCE(o.checked_at,''),s.id LIMIT ?`).bind(...providers,limit).all<Row>()).results }
+  async monitorQueue(limit:number,providers:string[]) { return (await this.db.prepare(`SELECT s.id AS server_id,g.slug AS game_slug,t.server_id AS target_id,t.method,t.host,t.port,t.api_url,t.expect_name FROM servers s JOIN games g ON g.id=s.game_id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1 LEFT JOIN server_online o ON o.server_id=s.id WHERE s.moderation='PUBLISHED' AND (t.server_id IS NOT NULL OR EXISTS (SELECT 1 FROM online_sources os WHERE os.server_id=s.id AND os.enabled=1 AND os.provider IN (${providers.map(()=>'?').join(',') || "''"}))) ORDER BY CASE WHEN o.checked_at IS NULL OR o.status='PENDING' OR o.source='Нет источника' THEN 0 ELSE 1 END,COALESCE(o.attempted_at,o.checked_at,''),s.id LIMIT ?`).bind(...providers,limit).all<Row>()).results }
+  /** Stamps the attempt before probing, so a check that crashes the invocation cannot pin the queue. */
+  lease(serverId:string) { return this.db.prepare('UPDATE server_online SET attempted_at=? WHERE server_id=?').bind(now(),serverId).run() }
+  /**
+   * A published card with nothing to read its online from is not "waiting for a
+   * check" — it becomes UNKNOWN with the reason, instead of PENDING forever.
+   * Announced openings keep PENDING until the opening time.
+   */
+  markSourceless(providers:string[],note:string) { return this.db.prepare(`UPDATE server_online SET status='UNKNOWN',method='NONE',source='Нет источника',source_tier=NULL,source_url=NULL,note=?,current=0,players_known=0,max_known=0,checked_at=?,observed_at=? WHERE status='PENDING' AND server_id IN (SELECT s.id FROM servers s WHERE s.moderation='PUBLISHED' AND (s.launch_at IS NULL OR s.launch_at<=?) AND NOT EXISTS (SELECT 1 FROM monitoring_targets t WHERE t.server_id=s.id AND t.enabled=1) AND NOT EXISTS (SELECT 1 FROM online_sources os WHERE os.server_id=s.id AND os.enabled=1 AND os.provider IN (${providers.map(()=>'?').join(',') || "''"})))`).bind(note,now(),now(),now(),...providers).run() }
   async onlineSources(serverIds:string[]) { if(!serverIds.length)return []; return (await this.db.prepare(`SELECT * FROM online_sources WHERE enabled=1 AND server_id IN (${serverIds.map(()=>'?').join(',')})`).bind(...serverIds).all<Row>()).results }
   async saveSample(serverId:string,p:Row) {
     const known = p.online == null ? 0 : 1

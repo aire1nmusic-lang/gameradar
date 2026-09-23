@@ -24,7 +24,7 @@ ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # The mirror's public origins (comma-separated, https only).
-EXTRA_ORIGINS = "https://gamescout-ru.vercel.app"
+EXTRA_ORIGINS = "https://gamescout-ru.vercel.app,https://new.gamescout.online,https://d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net"
 PROXY_ONLY = "true"
 
 [observability]

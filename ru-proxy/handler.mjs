@@ -24,7 +24,8 @@ export function proxyConfig(env) {
   if (upstream.protocol !== 'https:' && env.GS_ALLOW_HTTP_UPSTREAM !== 'true') throw new Error('GS_UPSTREAM must be https')
   const secret = env.GS_PROXY_SECRET ?? ''
   if (secret.length < 32) throw new Error('GS_PROXY_SECRET must be at least 32 characters')
-  const publicOrigins = (env.GS_PUBLIC_ORIGINS ?? '').split(',').map(o => o.trim()).filter(Boolean)
+  // Comma- or semicolon-separated (yc --environment reserves the comma).
+  const publicOrigins = (env.GS_PUBLIC_ORIGINS ?? '').split(/[,;]/).map(o => o.trim()).filter(Boolean)
   if (!publicOrigins.length) throw new Error('GS_PUBLIC_ORIGINS is empty')
   return { upstream: upstream.origin, secret, publicOrigins, timeoutMs: Number(env.GS_TIMEOUT_MS ?? 25000) }
 }

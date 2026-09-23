@@ -1,0 +1,53 @@
+# API Gateway of the Yandex mirror: one host for the SPA (Object Storage) and
+# the API (Cloud Function relay → gamescout-origin → D1), so cookies stay
+# same-origin and the browser never talks to Cloudflare.
+# Placeholders: __BUCKET__, __FUNCTION_ID__, __SERVICE_ACCOUNT_ID__
+openapi: 3.0.0
+info:
+  title: gamescout-ru
+  version: 1.0.0
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: index.html
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /api/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /__gs/health:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: '{file}'
+        # SPA routes (/lineage-2, /server/…) are not objects: serve the app shell.
+        error_object:
+          object: index.html
+          statusCode: 200
+        service_account_id: __SERVICE_ACCOUNT_ID__

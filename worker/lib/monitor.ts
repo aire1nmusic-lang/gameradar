@@ -7,13 +7,16 @@
  *   EXTERNAL  a third-party monitor → EXTERNAL.
  *   UNKNOWN   nothing answered and nobody said the server is down.
  *
- * "Down" is a fact only when a source says so: a failed direct probe or a
- * monitor reporting the server offline gives OFFLINE; an API outage gives
- * UNKNOWN, never a false OFFLINE.
+ * OFFLINE needs a basis: a source reporting the server down, or our own probe
+ * failing twice when the card has no other source to ask. A direct failure
+ * while every monitor is unreachable, or an API outage, gives UNKNOWN — never
+ * a false OFFLINE. A check cut short by the invocation's subrequest budget is
+ * marked `skipped` and not stored at all.
  */
 import { probe, type ProbeResult, type ProbeTarget } from '../adapters/games.ts'
 import { readSource, sourceAvailable, type OnlineSource, type SourceSecrets } from '../adapters/sources.ts'
-import type { NetworkOptions } from '../adapters/network.ts'
+import { AdapterError, type NetworkOptions } from '../adapters/network.ts'
+import { BUDGET_EXHAUSTED, BUDGET_MESSAGE } from './budget.ts'
 import type { TcpOptions } from '../adapters/tcp.ts'
 
 export type SourceTierName = 'DIRECT' | 'OFFICIAL' | 'EXTERNAL'
@@ -33,7 +36,11 @@ export interface OnlineResult {
   /** when the number was true according to its source */
   observedAt: string
   note?: string
+  /** the invocation ran out of subrequests mid-check: nothing was learned, nothing is stored */
+  skipped?: boolean
 }
+
+const isBudgetNote = (note?: string) => note === BUDGET_MESSAGE
 
 const TIER_ORDER: Record<string, number> = { OFFICIAL: 0, EXTERNAL: 1 }
 
@@ -43,21 +50,24 @@ export async function resolveOnline(
   options: TcpOptions & NetworkOptions = {},
   secrets: SourceSecrets = {},
 ): Promise<OnlineResult> {
-  let fallback: OnlineResult | undefined
-  let directFailed = false
+  let direct: OnlineResult | undefined
+  let skipped = false
 
   if (target) {
     // One lost packet must not flip a live server to OFFLINE: retry once.
     let result = await probe(target, options)
-    if (result.status === 'OFFLINE') result = await probe(target, options)
-    const direct: OnlineResult = { ...result, sourceUrl: null, tier: 'DIRECT', observedAt: result.checkedAt }
-    if (result.status !== 'OFFLINE') return direct
-    fallback = direct
-    directFailed = true
+    if (result.status === 'OFFLINE' && !isBudgetNote(result.note)) result = await probe(target, options)
+    if (isBudgetNote(result.note)) skipped = true
+    const measured: OnlineResult = { ...result, sourceUrl: null, tier: 'DIRECT', observedAt: result.checkedAt }
+    if (result.status !== 'OFFLINE') return measured
+    direct = measured
   }
 
+  const available = sources.filter(item => sourceAvailable(item.provider, secrets)).sort((a, b) => (TIER_ORDER[a.tier] ?? 9) - (TIER_ORDER[b.tier] ?? 9))
   const errors: string[] = []
-  for (const source of sources.filter(item => sourceAvailable(item.provider, secrets)).sort((a, b) => (TIER_ORDER[a.tier] ?? 9) - (TIER_ORDER[b.tier] ?? 9))) {
+  let reportedDown: OnlineResult | undefined
+  let reportedUp: string | undefined
+  for (const source of available) {
     const startedAt = Date.now()
     try {
       const reading = await readSource(source, options, secrets)
@@ -76,18 +86,19 @@ export async function resolveOnline(
           status: source.tier === 'OFFICIAL' ? 'OWNER_REPORTED' : 'EXTERNAL',
           online: reading.online,
           maxOnline: reading.maxOnline,
-          ...(directFailed ? { note: 'Прямая проверка GameScout не прошла; число — по данным источника.' } : {}),
+          ...(direct ? { note: 'Прямая проверка GameScout не прошла; число — по данным источника.' } : {}),
         }
       }
-      if (!reading.up && !fallback) fallback = { ...base, status: 'OFFLINE', online: null, maxOnline: null, note: `По данным ${source.name} сервер не отвечает.` }
+      if (reading.up) reportedUp ??= source.name
+      else reportedDown ??= { ...base, status: 'OFFLINE', online: null, maxOnline: null, note: `По данным ${source.name} сервер не отвечает.` }
     } catch (error) {
+      if (error instanceof AdapterError && error.code === BUDGET_EXHAUSTED) skipped = true
       errors.push(`${source.name}: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
-  if (fallback) return fallback
   const now = new Date().toISOString()
-  return {
+  const unknown = (note: string): OnlineResult => ({
     status: 'UNKNOWN',
     online: null,
     maxOnline: null,
@@ -98,6 +109,19 @@ export async function resolveOnline(
     latencyMs: null,
     checkedAt: now,
     observedAt: now,
-    note: errors.length ? `Источники онлайна недоступны: ${errors.join('; ')}` : 'Источники онлайна не настроены',
+    note,
+    ...(skipped ? { skipped } : {}),
+  })
+
+  // A source saying "down" is a basis for OFFLINE — stronger still when our own probe agrees.
+  if (reportedDown && !reportedUp) {
+    return direct ? { ...reportedDown, note: `Прямая проверка GameScout и ${reportedDown.source} не получили ответа.` } : reportedDown
   }
+  if (reportedUp) return unknown(`${reportedUp}: сервер отвечает, но не сообщает число игроков.`)
+  // Our own probe failed twice and there is no second opinion to consult: that is the evidence we have.
+  if (direct && !available.length) return skipped ? { ...direct, skipped } : direct
+  if (direct) {
+    return unknown(`Прямая проверка не прошла, а сторонние источники недоступны — оснований для OFFLINE недостаточно. ${errors.join('; ')}`.trim())
+  }
+  return unknown(errors.length ? `Источники онлайна недоступны: ${errors.join('; ')}` : 'Источник онлайна не подключён')
 }

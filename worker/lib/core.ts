@@ -9,8 +9,15 @@ export interface Env {
   ALLOWED_ORIGIN?: string
   DEV_ALLOWED_ORIGINS?: string
   MONITOR_BATCH?: string
+  /** subrequests one monitoring invocation may spend; 45 fits the free plan (50) */
+  MONITOR_SUBREQUESTS?: string
   /** Steam Web API key; without it Steam-backed online sources are not read. */
   STEAM_API_KEY?: string
+  /** Discord application (Sign in with Discord); both required to enable it */
+  DISCORD_CLIENT_ID?: string
+  DISCORD_CLIENT_SECRET?: string
+  /** development/tests only: a local stand-in for https://discord.com/api */
+  DISCORD_API_BASE?: string
 }
 export const now = () => new Date().toISOString()
 export const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString()

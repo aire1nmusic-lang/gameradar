@@ -45,7 +45,10 @@ export const ownerApi = {
   votes: (serverId: string) => apiRequest<OwnerVote[]>(`/servers/${id(serverId)}/votes`),
 
   integration: (serverId: string) => apiRequest<VoteIntegration>(`/servers/${id(serverId)}/vote-integration`),
-  updateIntegration: (serverId: string, input: { rewardTitle?: string; rewardDescription?: string; cooldownHours?: number; delivery?: string }) =>
+  updateIntegration: (
+    serverId: string,
+    input: { rewardTitle?: string; rewardDescription?: string; cooldownHours?: number; delivery?: string; votifierHost?: string; votifierPort?: number; votifierToken?: string },
+  ) =>
     apiSend<VoteIntegration>(`/servers/${id(serverId)}/vote-integration`, input, 'PATCH'),
   rotateApiKey: (serverId: string) => apiSend<{ apiKey: string }>(`/servers/${id(serverId)}/api-key`, {}),
 

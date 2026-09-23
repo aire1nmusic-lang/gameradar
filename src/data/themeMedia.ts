@@ -103,24 +103,6 @@ const ART = {
     'medium',
     { desktop: '50% 42%', mobile: '58% 40%' },
   ),
-  mcValley: art(
-    'minecraft/voxel-valley',
-    'Воксельная долина с деревней и замком',
-    'bright',
-    { desktop: '50% 50%', mobile: '60% 55%' },
-  ),
-  mcFortress: art(
-    'minecraft/fortress-sunset',
-    'Закатная долина с крепостью в блочном мире',
-    'medium',
-    { desktop: '50% 50%', mobile: '66% 50%' },
-  ),
-  gtaNeon: art(
-    'gta-rp/neon-skyline',
-    'Неоновая ночь над мегаполисом',
-    'dark',
-    { desktop: '50% 50%', mobile: '54% 45%' },
-  ),
   rustOutpost: art(
     'rust/wasteland-outpost',
     'Постапокалиптический аванпост на закате',

@@ -8,6 +8,12 @@ export interface Env {
   IP_HASH_SECRET?: string
   ALLOWED_ORIGIN?: string
   DEV_ALLOWED_ORIGINS?: string
+  /** Extra https origins allowed to write (a front mirror such as ru.gamescout.online), comma-separated */
+  EXTRA_ORIGINS?: string
+  /** Shared secret of GameScout's own front proxy; only it may pass the visitor's IP */
+  PROXY_SECRET?: string
+  /** "true" on an origin reachable only through the front proxy: everything else gets 403 */
+  PROXY_ONLY?: string
   MONITOR_BATCH?: string
   /** subrequests one monitoring invocation may spend; 45 fits the free plan (50) */
   MONITOR_SUBREQUESTS?: string

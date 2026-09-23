@@ -16,3 +16,7 @@ public/sitemap.xml
 
 # 4K poster masters — sources only; the site ships the WebP in public/media/worlds
 /Постеры/
+
+# RU mirror (Vercel) build output and local project link
+/ru-proxy/.deploy/
+/ru-proxy/.vercel/

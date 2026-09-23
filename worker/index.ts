@@ -43,7 +43,7 @@ import { sitemapXml } from './lib/sitemap.ts'
 import { authorizeUrl, discordEnabled, discordProfile, safeNext } from './lib/discord.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 
-type Vars = { store: Store; user?: Row }
+type Vars = { store: Store; user?: Row; proxyIp?: string }
 const app = new Hono<{ Bindings: Env; Variables: Vars }>()
 
 const SESSION_COOKIE = 'gs_session'
@@ -54,12 +54,35 @@ const CLAIM_TTL_MS = 86400000
 
 /* ── plumbing ─────────────────────────────────────────────────────────────── */
 
+/** Front mirrors (e.g. the Russian entry) that serve the same site from another host. */
+function extraOrigins(env: Env): string[] {
+  return (env.EXTRA_ORIGINS ?? '').split(',').map(o => o.trim()).filter(o => /^https:\/\/[a-z0-9.-]+$/.test(o))
+}
+
+/*
+ * GameScout's own front proxy relays the visitor's IP in X-GS-Client-IP and
+ * proves itself with X-GS-Proxy-Auth. Without the secret the header is
+ * ignored, so a client cannot choose the IP its votes and limits count by.
+ */
+const PROXY_AUTH_HEADER = 'X-GS-Proxy-Auth'
+const PROXY_IP_HEADER = 'X-GS-Client-IP'
+const IP_PATTERN = /^(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9a-f:]{2,39})$/i
+
 function allowedOrigins(env: Env): string[] {
-  return [env.ALLOWED_ORIGIN ?? '', ...devOrigins(env), ...(env.ENVIRONMENT === 'development' ? ['http://localhost:5173', 'http://127.0.0.1:5173'] : [])].filter(Boolean)
+  return [env.ALLOWED_ORIGIN ?? '', ...extraOrigins(env), ...devOrigins(env), ...(env.ENVIRONMENT === 'development' ? ['http://localhost:5173', 'http://127.0.0.1:5173'] : [])].filter(Boolean)
 }
 
 app.use('*', async (c, next) => {
   c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
+
+  const proxyAuth = c.req.header(PROXY_AUTH_HEADER)
+  if (proxyAuth && (await sameSecret(proxyAuth, c.env.PROXY_SECRET))) {
+    const ip = c.req.header(PROXY_IP_HEADER)?.trim()
+    if (ip && IP_PATTERN.test(ip)) c.set('proxyIp', ip)
+  } else if (c.env.PROXY_ONLY === 'true') {
+    // This origin is only an upstream of the front proxy, never a public entry.
+    throw forbidden('Доступ только через сайт GameScout')
+  }
 
   const origin = c.req.header('Origin')
   const allowed = origin && allowedOrigins(c.env).includes(origin)
@@ -758,8 +781,8 @@ app.get('/api/v1/servers/:id/votes', async c => {
 
 /* ── votes ────────────────────────────────────────────────────────────────── */
 
-function clientIp(c: { req: { header: (n: string) => string | undefined } }): string {
-  return c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() ?? '127.0.0.1'
+function clientIp(c: { req: { header: (n: string) => string | undefined }; get: (k: 'proxyIp') => string | undefined }): string {
+  return c.get('proxyIp') ?? c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() ?? '127.0.0.1'
 }
 
 app.get('/api/v1/votes/eligibility', async c => {

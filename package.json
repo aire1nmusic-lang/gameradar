@@ -19,6 +19,8 @@
     "test:bundle": "node scripts/check-bundle.mjs",
     "test:api": "node tests/api.mjs && node tests/owner.mjs",
     "test:monitoring": "node tests/monitoring.mjs",
+    "test:proxy": "node tests/proxy.mjs",
+    "mirror:build": "node ru-proxy/build.mjs --noindex",
     "import:check": "node scripts/import-servers.mjs --check",
     "import:servers": "node scripts/import-servers.mjs",
     "import:probe": "node --experimental-strip-types scripts/probe-check.mjs",

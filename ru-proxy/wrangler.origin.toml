@@ -1,0 +1,31 @@
+# Upstream of the RU mirror (ru-proxy): the same Worker code and the same D1 as
+# production, reachable only through the mirror (PROXY_ONLY + PROXY_SECRET).
+#
+# No cron and no routes: monitoring stays in "gamescout-api", and this Worker
+# never answers on gamescout.online. It applies no migrations.
+#
+#   npx wrangler deploy --config ru-proxy/wrangler.origin.toml
+#   npx wrangler secret put PROXY_SECRET --config ru-proxy/wrangler.origin.toml
+name = "gamescout-origin"
+main = "../worker/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gamescout"
+database_id = "28f90736-92b9-4261-82f5-ed5d8f55f239"
+migrations_dir = "../migrations"
+
+[vars]
+ENVIRONMENT = "production"
+DEV_AUTH_ENABLED = "false"
+ALLOWED_ORIGIN = "https://gamescout.online"
+# The mirror's public origins (comma-separated, https only).
+EXTRA_ORIGINS = "https://gamescout-ru.vercel.app"
+PROXY_ONLY = "true"
+
+[observability]
+enabled = true

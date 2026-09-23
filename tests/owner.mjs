@@ -86,10 +86,33 @@ const votifier = net.createServer(socket => {
 })
 await new Promise(resolve => votifier.listen(VOTIFIER_PORT, '127.0.0.1', resolve))
 
+// A stand-in for Discord's OAuth endpoints (the Worker may point there only in development).
+const DISCORD_PORT = 8796
+const discord = createServer((req, res) => {
+  let body = ''
+  req.on('data', chunk => (body += chunk))
+  req.on('end', () => {
+    if (req.method === 'POST' && req.url === '/oauth2/token') {
+      const form = new URLSearchParams(body)
+      const valid = form.get('client_id') === 'test-client' && form.get('client_secret') === 'test-secret' && form.get('code') === 'good-code' && form.get('redirect_uri')?.endsWith('/api/v1/auth/discord/callback')
+      res.writeHead(valid ? 200 : 401, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify(valid ? { access_token: 'access-1', token_type: 'Bearer' } : { error: 'invalid_grant' }))
+    }
+    if (req.url === '/users/@me' && req.headers.authorization === 'Bearer access-1') {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ id: '123456789012345678', username: 'discordtester', global_name: 'Discord Tester', avatar: 'abcdef1234' }))
+    }
+    res.writeHead(404)
+    res.end()
+  })
+})
+await new Promise(resolve => discord.listen(DISCORD_PORT, '127.0.0.1', resolve))
+
 const log = createWriteStream(path.join(runDir, 'worker.log'), { flags: 'a' })
 const worker = spawn(
   process.execPath,
-  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', String(PORT), '--local-upstream', `127.0.0.1:${PORT}`, '--inspector-port', '9243', '--persist-to', state, '--log-level', 'error'],
+  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', String(PORT), '--local-upstream', `127.0.0.1:${PORT}`, '--inspector-port', '9243', '--persist-to', state, '--log-level', 'error',
+    '--var', 'DISCORD_CLIENT_ID:test-client', '--var', 'DISCORD_CLIENT_SECRET:test-secret', '--var', `DISCORD_API_BASE:http://127.0.0.1:${DISCORD_PORT}`],
   { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env },
 )
 worker.stdout.pipe(log)
@@ -129,6 +152,46 @@ try {
     } catch {}
     await sleep(250)
   }
+
+  /* ── Sign in with Discord ─────────────────────────────────────────────── */
+  assert.deepEqual((await api('/auth/me')).json.providers, ['discord'])
+  const start = await fetch(base + '/auth/discord?next=' + encodeURIComponent('/server/some-card'), { redirect: 'manual' })
+  assert.equal(start.status, 302)
+  const authorize = new URL(start.headers.get('location'))
+  assert.equal(authorize.searchParams.get('scope'), 'identify', 'only the identity is requested, never email')
+  const oauthState = authorize.searchParams.get('state')
+  const oauthCookie = start.headers.getSetCookie().find(cookie => cookie.startsWith('gs_oauth='))
+  assert.ok(oauthCookie.includes('HttpOnly'))
+  const cookieValue = oauthCookie.split(';')[0]
+  const callback = (query, cookie) => fetch(base + '/auth/discord/callback?' + query, { redirect: 'manual', headers: cookie ? { Cookie: cookie } : {} })
+
+  const forged = await callback(`code=good-code&state=${'0'.repeat(32)}`, cookieValue)
+  assert.equal(forged.status, 302)
+  assert.match(forged.headers.get('location'), /auth_error=discord/)
+  assert.ok(!forged.headers.getSetCookie().some(cookie => cookie.startsWith('gs_session=') && !cookie.startsWith('gs_session=;')), 'a forged state never creates a session')
+  const noCookie = await callback(`code=good-code&state=${oauthState}`)
+  assert.match(noCookie.headers.get('location'), /auth_error=discord/)
+  const badCode = await callback(`code=bad-code&state=${oauthState}`, cookieValue)
+  assert.match(badCode.headers.get('location'), /auth_error=discord/)
+
+  const good = await callback(`code=good-code&state=${oauthState}`, cookieValue)
+  assert.equal(good.status, 302)
+  assert.equal(good.headers.get('location'), '/server/some-card', 'back to where the player started')
+  const discordSession = good.headers.getSetCookie().find(cookie => cookie.startsWith('gs_session='))
+  assert.ok(discordSession.includes('HttpOnly'))
+  const discordCookie = discordSession.split(';')[0]
+  const me = (await api('/auth/me', { cookie: discordCookie })).json.user
+  assert.equal(me.displayName, 'Discord Tester')
+  assert.equal(me.provider, 'DISCORD')
+
+  const second = await fetch(base + '/auth/discord?next=' + encodeURIComponent('//evil.example'), { redirect: 'manual' })
+  const secondState = new URL(second.headers.get('location')).searchParams.get('state')
+  const secondCookie = second.headers.getSetCookie().find(cookie => cookie.startsWith('gs_oauth=')).split(';')[0]
+  const secondCallback = await callback(`code=good-code&state=${secondState}`, secondCookie)
+  assert.equal(secondCallback.headers.get('location'), '/dashboard', 'an off-site next is replaced, never followed')
+  const meAgain = (await api('/auth/me', { cookie: secondCallback.headers.getSetCookie().find(cookie => cookie.startsWith('gs_session=')).split(';')[0] })).json.user
+  assert.equal(meAgain.id, me.id, 'signing in again reuses the account')
+  pass('Sign in with Discord: forged/missing state and bad codes create no session; success returns to the page; one account per Discord id')
 
   const alice = await login('Owner Alice')
   const bob = await login('Submitter Bob')
@@ -280,4 +343,5 @@ try {
   log.end()
   await new Promise(resolve => site.close(resolve))
   await new Promise(resolve => votifier.close(resolve))
+  await new Promise(resolve => discord.close(resolve))
 }

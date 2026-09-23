@@ -40,6 +40,7 @@ import { assertPort, assertPublicHost, assertPublicUrl } from './adapters/networ
 import { SubrequestBudget } from './lib/budget.ts'
 import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
 import { sitemapXml } from './lib/sitemap.ts'
+import { authorizeUrl, discordEnabled, discordProfile, safeNext } from './lib/discord.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 
 type Vars = { store: Store; user?: Row }
@@ -324,7 +325,62 @@ function sessionCookie(value: string, env: Env, maxAge: number): string {
 
 app.get('/api/v1/auth/me', async c => {
   const user = await currentUser(c)
-  return c.json({ user: user ? userDto(user) : null, devAuthEnabled: devEnabled(c.env, c.req.raw) })
+  return c.json({
+    user: user ? userDto(user) : null,
+    devAuthEnabled: devEnabled(c.env, c.req.raw),
+    providers: discordEnabled(c.env) ? ['discord'] : [],
+  })
+})
+
+/* ── Sign in with Discord ─────────────────────────────────────────────────── */
+
+const OAUTH_COOKIE = 'gs_oauth'
+const OAUTH_MAX_AGE = 600
+
+function oauthCookie(value: string, env: Env, maxAge: number): string {
+  const parts = [`${OAUTH_COOKIE}=${value}`, 'Path=/api/v1/auth', 'HttpOnly', 'SameSite=Lax', `Max-Age=${maxAge}`]
+  if (env.ENVIRONMENT !== 'development') parts.push('Secure')
+  return parts.join('; ')
+}
+
+app.get('/api/v1/auth/discord', c => {
+  if (!discordEnabled(c.env)) throw notFound('Вход через Discord не подключён')
+  // state and the return path travel in one short-lived HttpOnly cookie.
+  const state = token(16)
+  const next = encodeURIComponent(safeNext(c.req.query('next')))
+  c.header('Set-Cookie', oauthCookie(`${state}.${next}`, c.env, OAUTH_MAX_AGE))
+  c.header('Cache-Control', 'no-store')
+  return c.redirect(authorizeUrl(c.env, state), 302)
+})
+
+app.get('/api/v1/auth/discord/callback', async c => {
+  if (!discordEnabled(c.env)) throw notFound('Вход через Discord не подключён')
+  const stored = readCookie(c.req.header('Cookie'), OAUTH_COOKIE) ?? ''
+  const [expected, encodedNext] = stored.split('.')
+  const next = safeNext(decodeURIComponent(encodedNext ?? ''))
+  c.header('Cache-Control', 'no-store')
+  // The cookie is single-use whatever happens next.
+  c.header('Set-Cookie', oauthCookie('', c.env, 0), { append: true })
+  const failed = () => c.redirect(`${next}${next.includes('?') ? '&' : '?'}auth_error=discord`, 302)
+
+  const state = c.req.query('state') ?? ''
+  const code = c.req.query('code') ?? ''
+  if (!expected || !state || !(await sameSecret(state, expected))) return failed()
+  if (!code || code.length > 200) return failed()
+  try {
+    const profile = await discordProfile(c.env, code)
+    const s = store(c)
+    await s.deleteExpiredSessions()
+    const user = await s.upsertOAuthUser('DISCORD', profile.id, profile.displayName, profile.avatarUrl, id('usr'))
+    const raw = token(32)
+    await s.createSession(await sha256(raw), user.id, new Date(Date.now() + SESSION_DAYS * 86400000).toISOString())
+    c.header('Set-Cookie', sessionCookie(raw, c.env, SESSION_DAYS * 86400), { append: true })
+    return c.redirect(next, 302)
+  } catch (error) {
+    // The reason stays in the Worker log; the player sees a generic error.
+    console.error('discord_login_failed', String(error))
+    return failed()
+  }
 })
 
 /**

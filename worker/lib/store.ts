@@ -64,6 +64,11 @@ export class Store {
   publish(serverId:string) { return this.db.prepare("UPDATE servers SET moderation='PUBLISHED',updated_at=? WHERE id=?").bind(now(),serverId).run() }
   user(userId:string) { return this.db.prepare('SELECT * FROM users WHERE id=?').bind(userId).first<Row>() }
   userByProvider(providerId:string) { return this.db.prepare("SELECT * FROM users WHERE provider='EMAIL' AND provider_id=?").bind(providerId).first<Row>() }
+  /** Creates or refreshes the account behind an OAuth identity; the (provider, provider_id) pair is unique. */
+  async upsertOAuthUser(provider:string,providerId:string,displayName:string,avatarUrl:string|undefined,newId:string) {
+    await this.db.prepare(`INSERT INTO users(id,display_name,avatar_url,provider,provider_id,roles,created_at) VALUES (?,?,?,?,?,'["PLAYER","OWNER"]',?) ON CONFLICT(provider,provider_id) DO UPDATE SET display_name=excluded.display_name,avatar_url=excluded.avatar_url`).bind(newId,displayName,avatarUrl ?? null,provider,providerId,now()).run()
+    return (await this.db.prepare('SELECT * FROM users WHERE provider=? AND provider_id=?').bind(provider,providerId).first<Row>())!
+  }
   async createDevUser(row:Row) {
     await this.db.prepare(`INSERT INTO users(id,display_name,provider,provider_id,roles,created_at) VALUES (?,?,'EMAIL',?,'["PLAYER","OWNER"]',?) ON CONFLICT(provider,provider_id) DO NOTHING`).bind(row.id,row.displayName,row.providerId,row.createdAt).run()
     return (await this.userByProvider(row.providerId))!

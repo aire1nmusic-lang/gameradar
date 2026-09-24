@@ -1,7 +1,7 @@
 /**
  * Assembles the Vercel deploy folder of the mirror from an existing SPA build.
  *
- *   npm run build && node ru-proxy/build.mjs [--noindex] [--out ru-proxy/.deploy]
+ *   npm run build && node ru-proxy/build.mjs [--noindex | --robots file] [--out ru-proxy/.deploy]
  *
  * --noindex keeps a test host out of search engines (robots.txt + X-Robots-Tag);
  * leave it off only when the mirror serves the canonical domain.
@@ -23,6 +23,10 @@ for (const entry of readdirSync(out)) if (entry !== '.vercel') rmSync(path.join(
 cpSync(dist, path.join(out, 'public'), { recursive: true })
 for (const file of ['middleware.js', 'handler.mjs']) cpSync(path.join(here, file), path.join(out, file))
 writeFileSync(path.join(out, 'package.json'), JSON.stringify({ private: true, type: 'module' }, null, 2) + '\n')
+
+// --robots <file>: a production robots.txt (e.g. the Cloudflare-managed AI-crawler block kept on Yandex).
+const robotsArg = process.argv.indexOf('--robots')
+if (robotsArg > 0 && !noindex) cpSync(path.resolve(process.argv[robotsArg + 1]), path.join(out, 'public', 'robots.txt'))
 
 const vercel = JSON.parse(readFileSync(path.join(here, 'vercel.json'), 'utf8'))
 if (noindex) {

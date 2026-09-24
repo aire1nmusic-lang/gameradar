@@ -1,85 +1,74 @@
 # Перенос gamescout.online на вход через Yandex Cloud
 
-Статус: `new.gamescout.online` работает через Yandex (проверено 23.09.2026). Основной домен **не переключён**.
-
-## Результаты проверки (23.09.2026)
-
-| Проверка | Результат |
-| --- | --- |
-| TLS `new.gamescout.online` | Let's Encrypt (YR1), до 22.12.2026, автопродление Certificate Manager |
-| Внешние узлы check-host: Москва ×2, Санкт-Петербург, Нюрнберг, Хельсинки, Амстердам | 200 для страницы, постера и `/api/v1/servers?limit=100` |
-| Российский провайдер (Дом.ру, прямой маршрут) → тот же шлюз | главная, `/lineage-2`, `/minecraft`, `/gta-rp`, каталог (96), профиль, mobile/desktop — без ошибок API и битых картинок |
-| API > 16 КБ | 201 КБ целиком |
-| Cookie / POST / Origin | `Set-Cookie` проходит; голос/claim отвечают 404/400/401 без записи; чужой Origin — 403 |
-| IP посетителя | берётся из шлюза; подмена заголовков игнорируется; хеш события в D1 совпал с реальным IP |
-| Браузер → Cloudflare | нет (только шлюз и Google Fonts) |
-
-Оговорки: узлы check-host в РФ — дата-центры, они открывают и `gamescout.online` через Cloudflare, поэтому
-домашние провайдеры проверяются только реальным пользователем. На машине разработчика VPN-клиент
-перехватывает `*.gamescout.online` по имени, поэтому оттуда `new.` не открывается (временный домен шлюза
-с того же IP — открывается).
+Статус на 24.09.2026: **Yandex готов принять `gamescout.online`** (сертификат выпущен, домен привязан к
+шлюзу, production-сборка залита, проверка до переключения пройдена). Apex DNS **не переключён**.
 
 ## Схема
 
 ```
-браузер ──► gamescout.online (DNS only) ──► Yandex API Gateway  (TLS: Let's Encrypt, Certificate Manager)
+браузер ──► gamescout.online (DNS only) ──► Yandex API Gateway gamescout-ru (TLS: Let's Encrypt, Certificate Manager)
                                              ├─ /, /{file+}  → Object Storage gamescout-ru-site (SPA, fallback index.html)
                                              └─ /api/*, /__gs/health → Cloud Function gamescout-api-proxy
-                                                                         └─(секрет + IP посетителя)→ Cloudflare Worker → D1
-Cloudflare остаётся: DNS зоны, Worker(ы), D1, cron-мониторинг, Pages (резерв/откат).
+                                                                         └─(секрет + IP посетителя)→ Worker gamescout-origin → D1
+Cloudflare остаётся: DNS зоны, gamescout-api (cron-мониторинг), D1, Pages gameradar и Worker route — как откат.
 ```
 
-Ресурсы Yandex (облако `cloud-haze-697`, каталог `gamescout`): бакет `gamescout-ru-site`, функция
-`gamescout-api-proxy`, шлюз `gamescout-ru` (`d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net`),
-сервисный аккаунт `gamescout-gw`, сертификаты в Certificate Manager, бюджет `gamescout-consumption-guard`.
+| Ресурс | Значение |
+| --- | --- |
+| Облако / каталог | `cloud-haze-697` / `gamescout` (`b1gee8rjvfqvev92jkcr`) |
+| Шлюз | `gamescout-ru`, `d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net` (158.160.184.183) |
+| Домены шлюза | `gamescout.online` (сертификат `fpq6dopo4ek750a18g49`, до 23.12.2026), `new.gamescout.online` (`fpqvavmfp047p2rorn07`, до 22.12.2026) |
+| Функция | `gamescout-api-proxy`, `GS_PUBLIC_ORIGINS` = gamescout.online; new.gamescout.online; домен шлюза |
+| Бакет | `gamescout-ru-site`: production-сборка `main` (39b4837), robots.txt с паритетом Cloudflare |
+| Бюджет | `gamescout-consumption-guard`: 100 ₽/мес, уведомления при 20 ₽ и 100 ₽ |
 
-## Предусловия (до переключения)
+## Проверка до переключения (24.09.2026, через IP шлюза с SNI/Host `gamescout.online`)
 
-1. **Мониторинг production исправлен.** Сейчас `gamescout-api` работает на коде `737129d`, миграция `0005`
-   не применена, очередь мониторинга застревает (данные «устарели»). Сначала:
-   `npx wrangler d1 migrations apply gamescout --remote` → `npx wrangler deploy` из `main`.
-2. **Один код upstream.** После шага 1 перевести `gamescout-origin` на тот же код (`main`):
-   `npx wrangler deploy --config ru-proxy/wrangler.origin.toml`. Либо (проще в поддержке) дать
-   `PROXY_SECRET` самому `gamescout-api`, указать функцию на его адрес и удалить `gamescout-origin`.
-3. **Discord OAuth** (если включён в `main`): redirect URI `https://gamescout.online/api/v1/auth/discord/callback`
-   не меняется; колбэк пойдёт через Yandex → функция → Worker. Сам Discord в РФ заблокирован.
-4. **Сертификат для apex** выпускается заранее, без переключения трафика (DNS-проверка):
-   `yc certificate-manager certificate request --name gamescout-online --domains gamescout.online --challenge dns`
-   и CNAME `_acme-challenge` → `<id>.cm.yandexcloud.net` (DNS only) в Cloudflare. Дождаться `ISSUED`.
-5. **Сборка без noindex** в бакет (основной домен индексируется; `robots.txt` и `sitemap.xml` — настоящие):
-   `npm run build && node ru-proxy/build.mjs && node ru-proxy/yandex/upload.mjs --bucket gamescout-ru-site`.
-   Для `new.` тогда нужен отдельный бакет или `noindex` снять только после переключения.
-6. Привязать домен к шлюзу: `yc serverless api-gateway add-domain gamescout-ru --domain gamescout.online --certificate-id <id>`
-   (до переключения DNS это ни на что не влияет). В функции `GS_PUBLIC_ORIGINS` добавить
-   `https://gamescout.online`; в Worker он уже `ALLOWED_ORIGIN`.
+24/24 PASS, каждый ответ от Yandex (`server: ycalb`, без `cf-ray`):
+TLS (сертификат Yandex, serial совпадает), `/`, `/lineage-2`, `/minecraft`, `/gta-rp`, `/catalog`,
+`/server/donutsmp`, `/openings`, `/rating` (SPA = index.html побайтно), robots.txt (паритет), sitemap.xml,
+постер (побайтно), JS-бандл (immutable), API-каталог 204 КБ / 96 карточек, профиль, фильтр,
+cookie → API, `Set-Cookie` ← logout, POST vote → 404/400 без записи, claim → 401, чужой Origin → 403,
+CORS preflight → 204, подмена IP-заголовков игнорируется, IP посетителя — реальный.
+Браузер (mobile, домен шлюза, та же сборка): без ошибок API, без битых картинок, запросов в Cloudflare нет.
+D1 после проверки не изменена (0 событий/голосов/claim/сессий).
 
-## Переключение (по разрешению владельца)
+## Переключение (только по отдельному разрешению владельца)
 
-1. Записать текущее состояние apex (для отката): сейчас proxied-записи Cloudflare → Pages `gameradar`.
-2. В Cloudflare DNS заменить apex на `CNAME gamescout.online → d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net`,
-   **DNS only**, TTL 60 (Cloudflare выполнит CNAME flattening на apex).
-3. Проверить: главная, игры, каталог, профиль, `/api/v1/servers?limit=100` > 16 КБ, `/__gs/health`, POST,
-   `/sitemap.xml`, `/robots.txt`; из РФ (Дом.ру/мобильный) и из Европы.
-4. Worker route `gamescout.online/api/*` и Pages custom domain **не удалять** — нужны для отката.
+Одна запись в Cloudflare → gamescout.online → DNS:
 
-## Откат (≤ 5 минут)
+| Было | Стало |
+| --- | --- |
+| CNAME `gamescout.online` → `gameradar-c1e.pages.dev`, **Proxied** | CNAME `gamescout.online` → `d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net`, **DNS only**, TTL 1 min |
 
-Вернуть apex на прежнюю proxied-запись Pages (оранжевое облако). Proxied-запись отвечает сразу, у
-DNS-only записи TTL 60 — резолверы переключатся за 1–5 минут. Ничего в Yandex удалять не нужно.
+Cloudflare сделает CNAME flattening на apex. Остальные записи не трогать; `_acme-challenge` (TXT) оставить.
 
-## Стоимость
+После переключения проверить: главная, игры, каталог, профиль, `/__gs/health` (ваш IP), POST из UI,
+`/api/v1/servers?limit=100` целиком — из РФ (домашний и мобильный) и из Европы.
 
-Всё в free tier до: 100 тыс. запросов к шлюзу/мес (≈ 40–50 запросов на визит → ~2 тыс. визитов),
-1 млн вызовов функции, 1 ГБ хранения, 100 тыс. GET, 100 ГБ исходящего трафика. Сверх: шлюз 142,3 ₽ за
-1 млн запросов, функция 18,97 ₽ за 1 млн вызовов + 6,48 ₽ за ГБ×час; трафик сверх 100 ГБ — по прайс-листу
-VPC. Бюджет `gamescout-consumption-guard` уведомляет при 20 ₽ и 100 ₽ в месяц.
+## Откат (1–5 минут)
 
-## Ограничения
+Вернуть ту же запись: CNAME `gamescout.online` → `gameradar-c1e.pages.dev`, **Proxied**. Pages custom domain
+и Worker route `gamescout.online/api/*` не удаляются, поэтому Cloudflare начинает отвечать сразу; у
+DNS-only записи TTL 60 с, резолверы переключатся за 1–5 минут. В Yandex ничего менять не нужно.
 
-- Мобильные «белые списки» в РФ: Yandex Cloud — наиболее вероятный вариант, но гарантий нет.
-- Июньская (2026) «заморозка по отпечатку» задевала Yandex Cloud при >3 параллельных TLS-соединениях;
-  HTTP/2 держит одно соединение на хост — на проверке из Дом.ру не проявилась.
-- Посетители из Европы тоже пойдут через Москву (+задержка); Cloudflare на бесплатном плане не умеет
-  гео-DNS. Альтернатива без переноса apex: Redirect Rule в Cloudflare `ip.src.country eq "RU"` →
-  `https://new.gamescout.online` (гипотеза: короткий 302 проходит до обрыва на ~16 КБ; проверить).
-- При каждом релизе фронтенда — загрузка сборки в бакет (Pages собирается сам).
+## Что будет с new.gamescout.online
+
+Продолжит работать как второй адрес того же шлюза (тот же бакет, функция и данные). После переключения
+в нём нет необходимости: можно оставить как запасной адрес или позже отвязать домен от шлюза и удалить
+его записи. Индексации не мешает: canonical на всех страницах указывает на `https://gamescout.online`.
+
+## Известные проблемы
+
+- **Мониторинг production (не связан с Yandex).** cron `gamescout-api` завершается `exceededCpu`
+  (лимит 10 мс CPU на вызов бесплатного плана): попытки идут, результаты не сохраняются, последний
+  успешный `checked_at` — 24.09 05:26 UTC. Оба входа показывают одинаково устаревший онлайн. Нужна
+  правка Worker (меньше CPU на вызов) или перенос проб в Yandex Cloud Function; отдельно от переключения.
+- **Сертификат apex выпущен по TXT, а не по CNAME:** Cloudflare держит скрытые TXT на `_acme-challenge`
+  для своего сертификата, и CNAME-делегирование не работает. Автопродление Certificate Manager через
+  TXT не сработает само: примерно за 30 дней до 23.12.2026 заменить TXT на новое значение из
+  `yc certificate-manager certificate get gamescout-online-apex --full`.
+- Посетители из Европы тоже идут через Москву (+задержка).
+- Мобильные «белые списки» в РФ: Yandex — лучший шанс, но гарантий нет.
+- Релиз фронтенда: Pages собирается сам, бакет — вручную:
+  `npm run build && node ru-proxy/build.mjs --robots ru-proxy/yandex/robots.production.txt && node ru-proxy/yandex/upload.mjs --bucket gamescout-ru-site`.

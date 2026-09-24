@@ -72,7 +72,7 @@ await new Promise((resolve, reject) => {
 const log = createWriteStream(path.join(runDir, 'worker.log'), { flags: 'a' })
 const worker = spawn(
   process.execPath,
-  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', '8789', '--local-upstream', '127.0.0.1:8789', '--inspector-port', '9240', '--persist-to', state, '--log-level', 'error'],
+  [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', '8789', '--local-upstream', '127.0.0.1:8789', '--inspector-port', '9240', '--persist-to', state, '--log-level', 'error', '--test-scheduled'],
   { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, WRANGLER_SEND_METRICS: 'false' } },
 )
 worker.stdout.pipe(log)
@@ -208,6 +208,18 @@ try {
   }
   assert.ok(seen.has(server.id) && seen.has(l2.id), 'two passes of one card each must visit both cards')
   pass('Queue rotates by last attempt: limit=1 passes visit every card (no starvation)')
+
+  // The cron only enqueues a tick; the queue consumer runs the pass.
+  const beforeCron = (await api('/servers/' + server.slug)).json.online.checksPerDay
+  const cron = await fetch('http://127.0.0.1:8789/__scheduled?cron=' + encodeURIComponent('*/2 * * * *'))
+  assert.equal(cron.status, 200)
+  let afterCron = beforeCron
+  for (let attempt = 0; attempt < 60 && afterCron === beforeCron; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    afterCron = (await api('/servers/' + server.slug)).json.online.checksPerDay
+  }
+  assert.ok(afterCron > beforeCron, 'a cron tick must reach the queue consumer and store a check')
+  pass('Cron enqueues a tick and the queue consumer runs the monitoring pass')
 
   const counted = (await api('/servers/' + server.slug)).json
   assert.ok(counted.online.checksPerDay >= 3, 'checksPerDay must reflect the stored checks, got ' + counted.online.checksPerDay)

@@ -908,16 +908,37 @@ app.post('/api/v1/votes/claim', async c => {
   return c.json({ items, claimed: items.map(item => item.id) })
 })
 
+/** One tick of background work: retry pending Votifier votes, then one monitoring pass. */
+async function runTick(env: Env): Promise<void> {
+  const budget = new SubrequestBudget(subrequestBudget(env))
+  await deliverVotifierVotes(new Store(env.DB), budget, { limit: 3 }).catch(error => console.error('votifier_retry_failed', String(error)))
+  const pass = await runMonitoringPass(env, monitorBatch(env), budget)
+  console.log('monitor_tick', JSON.stringify({ checked: pass.checked, skipped: pass.skipped, sourceless: pass.sourceless, subrequests: budget.used }))
+}
+
 export default {
   fetch: app.fetch,
-  /** Cron entry point: keeps VERIFIED/LIVE/OFFLINE current without a request. */
-  async scheduled(_event: unknown, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }) {
-    const budget = new SubrequestBudget(subrequestBudget(env))
-    ctx.waitUntil(
-      (async () => {
-        await deliverVotifierVotes(new Store(env.DB), budget, { limit: 3 }).catch(error => console.error('votifier_retry_failed', String(error)))
-        await runMonitoringPass(env, monitorBatch(env), budget)
-      })(),
-    )
+  /**
+   * Cron entry point: keeps VERIFIED/LIVE/OFFLINE current without a request.
+   * On the free plan a cron invocation gets 10 ms of CPU, less than one pass
+   * needs, so with a queue bound the cron only enqueues a tick and the queue
+   * consumer does the work. Without a queue (local tests) the tick runs here.
+   */
+  async scheduled(event: { scheduledTime?: number }, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }) {
+    if (env.MONITOR_QUEUE) {
+      await env.MONITOR_QUEUE.send({ tick: event.scheduledTime ?? Date.now() })
+      return
+    }
+    ctx.waitUntil(runTick(env).catch(error => console.error('monitor_tick_failed', String(error))))
+  },
+  /** Queue consumer: one tick per delivered batch, however many ticks piled up. */
+  async queue(batch: { messages: readonly unknown[]; ackAll(): void }, env: Env): Promise<void> {
+    try {
+      await runTick(env)
+    } catch (error) {
+      // The lease already moved the queue on; the next tick retries, not this message.
+      console.error('monitor_tick_failed', String(error))
+    }
+    batch.ackAll()
   },
 }

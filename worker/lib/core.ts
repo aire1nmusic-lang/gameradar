@@ -15,6 +15,8 @@ export interface Env {
   /** "true" on an origin reachable only through the front proxy: everything else gets 403 */
   PROXY_ONLY?: string
   MONITOR_BATCH?: string
+  /** Queue of monitoring ticks: the cron only enqueues, the consumer does the pass (free-plan cron CPU is 10 ms). */
+  MONITOR_QUEUE?: { send(body: unknown): Promise<unknown> }
   /** subrequests one monitoring invocation may spend; 45 fits the free plan (50) */
   MONITOR_SUBREQUESTS?: string
   /** Steam Web API key; without it Steam-backed online sources are not read. */

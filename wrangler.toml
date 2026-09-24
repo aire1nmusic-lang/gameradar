@@ -26,6 +26,20 @@ crons = ["*/2 * * * *"]
 [observability]
 enabled = true
 
+# Free-plan cron invocations get 10 ms of CPU, less than one monitoring pass:
+# the cron only enqueues a tick, the queue consumer runs the pass. One message
+# per tick = 3 queue operations; 720 ticks/day ≈ 2 160 of the 10 000 free ops.
+[[queues.producers]]
+binding = "MONITOR_QUEUE"
+queue = "gamescout-monitor"
+
+[[queues.consumers]]
+queue = "gamescout-monitor"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 0
+max_concurrency = 1
+
 [[routes]]
 pattern = "gamescout.online/api/*"
 zone_name = "gamescout.online"

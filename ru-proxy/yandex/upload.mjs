@@ -19,7 +19,7 @@ const arg = (name, fallback) => {
 const bucket = arg('bucket')
 if (!bucket) throw new Error('--bucket is required')
 const dir = path.resolve(arg('dir', 'ru-proxy/.deploy/public'))
-const prefix = (arg('prefix', '') || '').replace(/^/+|/+$/g, '')
+const prefix = (arg('prefix', '') || '').replace(/^\/+|\/+$/g, '')
 const yc = process.env.YC ?? path.join(os.homedir(), 'yandex-cloud', 'bin', process.platform === 'win32' ? 'yc.exe' : 'yc')
 
 function files(root, prefix = '') {
@@ -33,7 +33,16 @@ function files(root, prefix = '') {
 const list = files(dir, prefix)
 let done = 0
 for (const { full, key } of list) {
-  const cache = key.replace(prefix ? prefix + '/' : '', '').startsWith('assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate'
+  const path = key.replace(prefix ? prefix + '/' : '', '')
+  // Hashed bundles never change. Art is named by width, not by content, so it
+  // may change on a release: one day fresh, a week stale-while-revalidate.
+  // API Gateway answers conditional requests with a full 200, so max-age=0
+  // would re-download every picture on every visit.
+  const cache = path.startsWith('assets/')
+    ? 'public, max-age=31536000, immutable'
+    : path.startsWith('media/')
+      ? 'public, max-age=86400, stale-while-revalidate=604800'
+      : 'public, max-age=0, must-revalidate'
   const run = spawnSync(yc, ['storage', 's3', 'cp', full, `s3://${bucket}/${key}`, '--cache-control', cache, '--only-show-errors'], { encoding: 'utf8', windowsHide: true })
   if (run.status !== 0) throw new Error(`upload of ${key} failed: ${run.stderr || run.stdout}`)
   done++

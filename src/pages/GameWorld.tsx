@@ -9,7 +9,7 @@ import { Container } from '@/components/layout/Container'
 import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
 import { GameHero } from '@/components/game/GameHero'
 import { ChronicleNav } from '@/components/game/ChronicleNav'
-import { ServerList } from '@/components/server/ServerRow'
+import { ServerList, ServerRowSkeleton } from '@/components/server/ServerRow'
 import { LaunchRow } from '@/components/server/LaunchRow'
 import { RatingPodium } from '@/components/rating/RatingBoard'
 import { Segmented } from '@/components/ui/controls'
@@ -57,7 +57,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
       ]),
     ],
   })
-  const { data: servers = [], loading } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
+  const { data: servers = [], loading, error, reload } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
   const { data: organic = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id })
 
   const openings = useMemo(() => servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()), [servers])
@@ -76,7 +76,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
 
   return (
     <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>
-      <GameHero game={game} chronicle={chronicle} serversCount={servers.length} playersOnline={playersOnline} openings={openings.length} />
+      {/* No count until the list arrives: a slow or failed request must not read as "0 серверов". */}
+      <GameHero game={game} chronicle={chronicle} serversCount={(loading || error) && servers.length === 0 ? undefined : servers.length} playersOnline={playersOnline} openings={openings.length} />
 
       <Container className="relative pb-16">
         {/* chronicles + sort stay reachable while the list scrolls */}
@@ -111,7 +112,16 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           />
           {listed.length > 0 ? (
             <ServerList servers={listed} ranked={sort === 'online'} showGame={false} />
-          ) : loading ? null : (
+          ) : loading ? (
+            <div className="space-y-1.5" aria-busy="true">
+              {Array.from({ length: 6 }, (_, index) => (
+                <ServerRowSkeleton key={index} />
+              ))}
+            </div>
+          ) : error ? (
+            // A failed request is not an empty game.
+            <EmptyState title="Не удалось загрузить серверы" description="Проверьте соединение и попробуйте ещё раз." action="Повторить" onAction={reload} />
+          ) : (
             <EmptyState title="В этой хронике пока нет серверов" description="Проекты появятся здесь после добавления в каталог." action="Открыть каталог" actionTo={`/catalog?game=${game.id}`} />
           )}
         </section>

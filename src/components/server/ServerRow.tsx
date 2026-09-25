@@ -43,6 +43,20 @@ export function ServerRow({
     : stale
       ? `Данные устарели · обновлено ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`
       : `${meta.caption}${server.online.source ? ` · ${server.online.source}` : ''} · ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`
+  // Under the number, say whose number it is: GameScout's own check, a named
+  // third-party monitor, or the project itself. Phones have no tooltip.
+  const sourceLabel =
+    status === OnlineStatus.Verified
+      ? 'проверено'
+      : status === OnlineStatus.Offline
+        ? 'офлайн'
+        : !known
+          ? 'нет данных'
+          : status === OnlineStatus.External
+            ? server.online.source || 'внешний'
+            : status === OnlineStatus.OwnerReported
+              ? 'от проекта'
+              : 'онлайн'
 
   const identity = [showGame ? game.shortName : null, chronicle?.label ?? server.version].filter(Boolean)
   // Phones get the identity only; modes need the room a desktop row has.
@@ -90,7 +104,10 @@ export function ServerRow({
       </span>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
-        <TrendChip value={change24h} className="hidden shrink-0 sm:inline-flex" />
+        // Wrapped: TrendChip's own inline-flex would override a `hidden` passed to it, and phones need the room for the name.
+        <span className="hidden shrink-0 sm:inline-flex">
+          <TrendChip value={change24h} />
+        </span>
       )}
 
       <div className="w-[86px] shrink-0 text-right sm:w-[104px]" title={tooltip}>
@@ -109,10 +126,10 @@ export function ServerRow({
             >
               {known ? formatPlayers(server.online) : '—'}
             </div>
-            <div className="mt-1 flex items-center justify-end gap-1.5 text-[10.5px]">
-              <LiveDot status={status} stale={stale} />
-              <span className={cn(stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
-                {stale ? 'устарело' : status === OnlineStatus.Verified ? 'проверено' : status === OnlineStatus.Offline ? 'офлайн' : known ? 'онлайн' : 'нет данных'}
+            <div className="mt-1 flex min-w-0 items-center justify-end gap-1.5 text-[10.5px]">
+              <LiveDot status={status} stale={stale} className="shrink-0" />
+              <span className={cn('truncate', stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
+                {stale ? 'устарело' : sourceLabel}
               </span>
             </div>
           </>

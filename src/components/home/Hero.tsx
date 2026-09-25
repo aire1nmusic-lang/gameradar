@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Search, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
 import { buildSuggestions, QUICK_SEARCHES } from '@/services'
@@ -25,12 +25,8 @@ export function Hero() {
           {players > 0 && (
             <div className="mb-4 inline-flex items-center gap-2 text-[12.5px] text-ink-300">
               <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
-              <span className="num">{formatNumber(players)} игроков онлайн прямо сейчас</span>
-              <span className="hidden text-ink-600 sm:inline">·</span>
-              <Link to="/owners#verified" className="hidden items-center gap-1 text-ink-400 transition-colors hover:text-ink-100 sm:inline-flex">
-                <ShieldCheck size={12} className="text-signal-400" />
-                онлайн проверяем сами
-              </Link>
+              {/* The total mixes our own checks with monitors and project sites, so no "we verify" claim next to it. */}
+              <span className="num">{formatNumber(players)} игроков на серверах прямо сейчас</span>
             </div>
           )}
 

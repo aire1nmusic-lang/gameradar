@@ -22,7 +22,8 @@ export function GameHero({
 }: {
   game: Game
   chronicle?: Chronicle
-  serversCount: number
+  /** undefined while the list is still loading */
+  serversCount?: number
   playersOnline: number
   openings?: number
 }) {
@@ -36,7 +37,7 @@ export function GameHero({
   const tagline = (chronicle ? chronicle.tagline : game.tagline)?.trim() || ''
   const facts = [
     playersOnline > 0 ? `${formatCompact(playersOnline)} онлайн` : null,
-    `${formatNumber(serversCount)} ${plural(serversCount, ['сервер', 'сервера', 'серверов'])}`,
+    serversCount === undefined ? null : `${formatNumber(serversCount)} ${plural(serversCount, ['сервер', 'сервера', 'серверов'])}`,
     openings > 0 ? `${openings} ${plural(openings, ['открытие', 'открытия', 'открытий'])}` : null,
   ].filter(Boolean)
 
@@ -84,7 +85,7 @@ export function GameHero({
 
         <p className="num mt-2 text-[14px]" style={{ color: theme.colors.textMuted }}>
           {facts.join(' · ')}
-          {tagline ? <span className="hidden sm:inline"> · {tagline}</span> : null}
+          {tagline ? <span className="hidden sm:inline">{facts.length > 0 ? ' · ' : ''}{tagline}</span> : null}
         </p>
 
         <div

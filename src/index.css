@@ -692,3 +692,36 @@
     pointer-events: none;
   }
 }
+
+/* ── GameScout logo ─────────────────────────────────────────────────────────
+   Two owner-approved palettes: "cyan" (silver G, cyan S) and "neon" (violet G,
+   magenta S). Registered properties let the colours themselves animate. */
+@property --gs-a0 { syntax: '<color>'; inherits: true; initial-value: #f5f7fa; }
+@property --gs-a1 { syntax: '<color>'; inherits: true; initial-value: #8d96a3; }
+@property --gs-b0 { syntax: '<color>'; inherits: true; initial-value: #6ff7ff; }
+@property --gs-b1 { syntax: '<color>'; inherits: true; initial-value: #10c3e3; }
+@property --gs-glow { syntax: '<color>'; inherits: true; initial-value: rgb(24 217 242 / 0.55); }
+
+.gs-logo {
+  --gs-w0: #ffffff;
+  --gs-w1: #b9c0ca;
+  overflow: visible;
+}
+.gs-logo__glow {
+  filter: drop-shadow(0 0 5px var(--gs-glow));
+}
+/* A slow drift between the two palettes: cyan, then neon, then back. */
+.gs-logo--live {
+  animation: gs-palette 16s ease-in-out infinite;
+}
+@keyframes gs-palette {
+  0%, 38% { --gs-a0: #f5f7fa; --gs-a1: #8d96a3; --gs-b0: #6ff7ff; --gs-b1: #10c3e3; --gs-glow: rgb(24 217 242 / 0.55); }
+  50%, 88% { --gs-a0: #8b6bff; --gs-a1: #b44cff; --gs-b0: #ff5ae9; --gs-b1: #d81bff; --gs-glow: rgb(224 44 255 / 0.55); }
+  100% { --gs-a0: #f5f7fa; --gs-a1: #8d96a3; --gs-b0: #6ff7ff; --gs-b1: #10c3e3; --gs-glow: rgb(24 217 242 / 0.55); }
+}
+/* A theme can pin a palette: <html data-logo="neon"> or data-logo="cyan". */
+[data-logo='neon'] .gs-logo { --gs-a0: #8b6bff; --gs-a1: #b44cff; --gs-b0: #ff5ae9; --gs-b1: #d81bff; --gs-glow: rgb(224 44 255 / 0.55); animation: none; }
+[data-logo='cyan'] .gs-logo { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .gs-logo--live { animation: none; }
+}

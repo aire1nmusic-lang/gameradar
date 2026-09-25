@@ -1,34 +1,80 @@
+import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { MARK_G, MARK_S, MARK_VIEWBOX, WORD_GAME, WORD_SCOUT, WORD_VIEWBOX } from './logoPaths'
 
-export function RadarMark({ size = 26, animated = true }: { size?: number; animated?: boolean }) {
+const ratio = (viewBox: string) => {
+  const [, , w, h] = viewBox.split(' ').map(Number)
+  return w / h
+}
+const MARK_RATIO = ratio(MARK_VIEWBOX)
+const WORD_RATIO = ratio(WORD_VIEWBOX)
+
+/**
+ * The GS mark. Colours come from CSS variables (--gs-a* for the G, --gs-b* for
+ * the S), so a theme can repaint it and `.gs-logo--live` can animate it.
+ * Gradient ids are per instance: a logo hidden with display:none must not
+ * take the others' gradients with it.
+ */
+export function GsMark({ height = 30, live = false, className }: { height?: number; live?: boolean; className?: string }) {
+  const id = useId().replace(/:/g, '')
   return (
-    <span
-      className="relative grid shrink-0 place-items-center overflow-hidden rounded-[9px] border border-white/10 bg-ink-900"
-      style={{ width: size + 8, height: size + 8 }}
+    <svg
+      viewBox={MARK_VIEWBOX}
+      height={height}
+      width={Math.round(height * MARK_RATIO)}
+      className={cn('gs-logo shrink-0', live && 'gs-logo--live', className)}
+      aria-hidden
     >
-      <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-        <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-ink-600" />
-        <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-ink-700" />
-        <g className={animated ? 'origin-center animate-sweep' : 'origin-center'} style={{ transformBox: 'fill-box' }}>
-          <path d="M16 16 L29 11 A14 14 0 0 1 29 21 Z" fill="var(--color-signal-400)" opacity="0.5" />
-        </g>
-        <circle cx="16" cy="16" r="2.4" fill="var(--color-signal-400)" />
-        <circle cx="23.5" cy="10.5" r="1.5" fill="var(--color-signal-300)" opacity="0.9" />
-      </svg>
-    </span>
+      <defs>
+        <linearGradient id={`${id}a`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style={{ stopColor: 'var(--gs-a0)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-a1)' }} />
+        </linearGradient>
+        <linearGradient id={`${id}b`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style={{ stopColor: 'var(--gs-b0)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-b1)' }} />
+        </linearGradient>
+      </defs>
+      <path d={MARK_G} fill={`url(#${id}a)`} />
+      <path d={MARK_S} fill={`url(#${id}b)`} className="gs-logo__glow" />
+    </svg>
+  )
+}
+
+/** "GameScout" as drawn in the logo: "Game" in silver, "Scout" in the mark's accent. */
+export function GsWordmark({ height = 17, live = false, className }: { height?: number; live?: boolean; className?: string }) {
+  const id = useId().replace(/:/g, '')
+  return (
+    <svg
+      viewBox={WORD_VIEWBOX}
+      height={height}
+      width={Math.round(height * WORD_RATIO)}
+      className={cn('gs-logo shrink-0', live && 'gs-logo--live', className)}
+      role="img"
+      aria-label="GameScout"
+    >
+      <defs>
+        <linearGradient id={`${id}w`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style={{ stopColor: 'var(--gs-w0)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-w1)' }} />
+        </linearGradient>
+        <linearGradient id={`${id}b`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style={{ stopColor: 'var(--gs-b0)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-b1)' }} />
+        </linearGradient>
+      </defs>
+      <path d={WORD_GAME} fill={`url(#${id}w)`} />
+      <path d={WORD_SCOUT} fill={`url(#${id}b)`} />
+    </svg>
   )
 }
 
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
     <Link to="/" className={cn('group flex items-center gap-2.5', className)} aria-label="GameScout — на главную">
-      <RadarMark />
-      {!compact && (
-        <span className="font-display text-[17px] leading-none font-semibold tracking-[-0.02em] text-ink-50">
-          Game<span className="text-ink-300 transition-colors group-hover:text-signal-300">Scout</span>
-        </span>
-      )}
+      <GsMark height={30} live />
+      {!compact && <GsWordmark height={17} live />}
     </Link>
   )
 }

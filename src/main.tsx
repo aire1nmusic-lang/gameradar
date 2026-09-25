@@ -3,8 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { initializeRepositories } from '@/repositories'
 import { AuthProvider } from '@/hooks/useAuth'
+import { AppearanceProvider, applyAppearance, readAppearance } from '@/theme/appearance'
 import App from './App'
 import './index.css'
+
+// The owner's look choices land on <html> before anything renders: no flash of the default.
+applyAppearance(readAppearance())
 
 const rootElement = document.getElementById('root')!
 /** The skeleton index.html paints before any script runs; kept on screen until the catalogue is ready. */
@@ -33,6 +37,6 @@ function Bootstrap() {
       </>
     )
   }
-  return <BrowserRouter><AuthProvider><App /></AuthProvider></BrowserRouter>
+  return <BrowserRouter><AuthProvider><AppearanceProvider><App /></AppearanceProvider></AuthProvider></BrowserRouter>
 }
 createRoot(rootElement).render(<StrictMode><Bootstrap /></StrictMode>)

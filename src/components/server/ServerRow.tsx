@@ -66,7 +66,7 @@ export function ServerRow({
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'group relative flex min-h-[72px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[64px] sm:gap-4 sm:px-4',
+        'gs-row group relative flex min-h-[72px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[64px] sm:gap-4 sm:px-4',
         className,
       )}
     >
@@ -81,7 +81,7 @@ export function ServerRow({
         </span>
       )}
 
-      <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

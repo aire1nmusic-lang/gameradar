@@ -1,5 +1,19 @@
 import { useState, type CSSProperties } from 'react'
+import { Axe, Biohazard, Car, Crosshair, Gamepad2, Pickaxe, Swords, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { GAMES_BY_ID } from '@/data/games'
+import { useAppearance } from '@/theme/appearance'
+
+/** The game's sign for servers without their own logo (default icon styles "glyph" and "crest"). */
+const GAME_GLYPH: Record<string, LucideIcon> = {
+  lineage2: Swords,
+  minecraft: Pickaxe,
+  gtarp: Car,
+  rust: Axe,
+  cs2: Crosshair,
+  dayz: Biohazard,
+}
+const GLYPH_PX = { xs: 15, sm: 19, md: 22, lg: 28, xl: 38 } as const
 
 const SIZES = {
   xs: 'h-8 w-8 rounded-sm text-[11px]',
@@ -25,12 +39,15 @@ export function ServerLogo({
   name,
   hue,
   src,
+  gameId,
   size = 'md',
   className,
   style,
 }: {
   name: string
   hue: number
+  /** picks the game sign for the "glyph" and "crest" default styles */
+  gameId?: string
   /** real logo url; the monogram is drawn until it loads and if it fails */
   src?: string
   size?: keyof typeof SIZES
@@ -39,7 +56,52 @@ export function ServerLogo({
   style?: CSSProperties
 }) {
   const [failed, setFailed] = useState(false)
+  const { appearance } = useAppearance()
   const showImage = !!src && !failed
+  const game = gameId ? GAMES_BY_ID[gameId] : undefined
+  const Glyph = (gameId && GAME_GLYPH[gameId]) || Gamepad2
+
+  // An approved server logo always wins; the default style only fills the gap.
+  if (!showImage && game && appearance.icons === 'glyph') {
+    return (
+      <div
+        className={cn('relative grid shrink-0 place-items-center overflow-hidden text-white', SIZES[size], className)}
+        style={{
+          background: `linear-gradient(145deg, ${game.from}, ${game.to})`,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.1)',
+          ...style,
+        }}
+        aria-hidden
+      >
+        <span className="absolute inset-0 bg-gradient-to-b from-white/10 to-black/25" />
+        <Glyph size={GLYPH_PX[size]} strokeWidth={2.1} className="relative drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]" />
+      </div>
+    )
+  }
+  if (!showImage && appearance.icons === 'crest') {
+    const badge = Math.round(GLYPH_PX[size] * 0.8)
+    return (
+      <div className={cn('relative shrink-0', SIZES[size].replace(/rounded-S+/, ''), className)} style={style} aria-hidden>
+        <div
+          className="absolute inset-0 grid place-items-center font-display font-semibold tracking-tight text-white/95"
+          style={{
+            clipPath: 'polygon(50% 0, 100% 13%, 100% 58%, 50% 100%, 0 58%, 0 13%)',
+            background: `linear-gradient(160deg, hsl(${hue} 64% 46%), hsl(${(hue + 38) % 360} 60% 24%))`,
+          }}
+        >
+          <span className="-mt-[8%] drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">{initialsOf(name)}</span>
+        </div>
+        {game && (
+          <span
+            className="absolute -right-1 -bottom-1 grid place-items-center rounded-full text-white ring-2 ring-[var(--color-ink-900)]"
+            style={{ width: badge + 6, height: badge + 6, background: `linear-gradient(145deg, ${game.from}, ${game.to})` }}
+          >
+            <Glyph size={badge - 4} strokeWidth={2.4} />
+          </span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div

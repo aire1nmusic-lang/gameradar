@@ -14,6 +14,7 @@ import Boost from '@/pages/Boost'
 import UiStates from '@/pages/UiStates'
 import NotFound from '@/pages/NotFound'
 import GameWorld from '@/pages/GameWorld'
+import Design from '@/pages/Design'
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="boost" element={<Boost />} />
         <Route path="states" element={<UiStates />} />
+        <Route path="design" element={<Design />} />
 
         {/*
           Themed game worlds. React Router ranks static segments above dynamic

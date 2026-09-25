@@ -166,7 +166,7 @@ function ServerPanel({ server, claims }: { server: GameServer; claims: ServerCla
       <div className="surface mt-4 rounded-xl p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex items-start gap-4">
-            <ServerLogo name={server.name} hue={server.hue} size="lg" />
+            <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="lg" />
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-[20px]">{server.name}</h2>

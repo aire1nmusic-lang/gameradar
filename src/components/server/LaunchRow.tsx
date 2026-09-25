@@ -26,7 +26,7 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
         className,
       )}
     >
-      <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-semibold text-ink-50">{server.name}</div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">

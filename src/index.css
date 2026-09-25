@@ -725,3 +725,77 @@
 @media (prefers-reduced-motion: reduce) {
   .gs-logo--live { animation: none; }
 }
+
+/* ── Appearance variants (owner's /design panel) ───────────────────────────
+   data-surface: the platform's own neutrals; game worlds are lifted in
+   ThemeScope with the same tints. */
+html[data-surface='graphite'] {
+  --color-ink-1000: #13161c;
+  --color-ink-950: #1a1e25;
+  --color-ink-900: #1f242c;
+  --color-ink-850: #252a33;
+  --color-ink-800: #2a303a;
+  --color-ink-750: #313843;
+  --color-ink-700: #39414d;
+  --color-ink-600: #46505e;
+}
+html[data-surface='dusk'] {
+  --color-ink-1000: #100e24;
+  --color-ink-950: #16142e;
+  --color-ink-900: #1c1a38;
+  --color-ink-850: #222042;
+  --color-ink-800: #28264c;
+  --color-ink-750: #302e58;
+  --color-ink-700: #3a3766;
+  --color-ink-600: #4a4679;
+}
+
+/* data-hero: how much of the first screen the world's picture takes */
+.gs-hero { min-height: 240px; }
+@media (min-width: 640px) { .gs-hero { min-height: 300px; } }
+@media (min-width: 1024px) { .gs-hero { min-height: 360px; } }
+html[data-hero='large'] .gs-hero { min-height: 340px; }
+@media (min-width: 640px) { html[data-hero='large'] .gs-hero { min-height: 440px; } }
+@media (min-width: 1024px) { html[data-hero='large'] .gs-hero { min-height: 520px; } }
+html[data-hero='cinematic'] .gs-hero { min-height: min(72vh, 520px); }
+@media (min-width: 640px) { html[data-hero='cinematic'] .gs-hero { min-height: min(76vh, 620px); } }
+@media (min-width: 1024px) { html[data-hero='cinematic'] .gs-hero { min-height: min(80vh, 720px); } }
+html[data-hero='cinematic'] .gs-hero-title { font-size: clamp(34px, 5.2vw, 64px) !important; }
+html[data-hero='large'] .gs-hero-title { font-size: clamp(30px, 4.2vw, 52px) !important; }
+
+/* home tiles grow with the hero choice: the pictures are the point */
+.gs-tile { height: 148px; }
+html[data-hero='large'] .gs-tile { height: 190px; }
+html[data-hero='cinematic'] .gs-tile { height: 230px; }
+@media (max-width: 639px) {
+  html[data-hero='large'] .gs-tile { height: 170px; }
+  html[data-hero='cinematic'] .gs-tile { height: 200px; }
+}
+
+/* data-motion: scroll-driven, so no script and nothing hidden where the browser lacks it */
+@supports (animation-timeline: view()) {
+  html[data-motion='lively'] main section,
+  html[data-motion='lively'] .gs-row {
+    animation: gs-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+  html[data-motion='lively'] .gs-hero .gt-art-img.is-loaded {
+    animation: gs-parallax linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 90vh;
+  }
+}
+@keyframes gs-reveal {
+  from { opacity: 0.001; transform: translateY(22px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes gs-parallax {
+  from { transform: translateY(0) scale(1.06); }
+  to { transform: translateY(12%) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion='lively'] main section,
+  html[data-motion='lively'] .gs-row,
+  html[data-motion='lively'] .gs-hero .gt-art-img.is-loaded { animation: none; }
+}

@@ -63,7 +63,7 @@ export function TopBanner({ gameId, className }: { gameId?: string; className?: 
 
         {server && (
           <div className="relative hidden shrink-0 sm:block">
-            <ServerLogo name={server.name} hue={server.hue} size="lg" />
+            <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="lg" />
           </div>
         )}
 
@@ -119,7 +119,7 @@ export function SidebarBanner({ gameId, className }: { gameId?: string; classNam
           />
           {server && (
             <div className="absolute -bottom-5 left-4">
-              <ServerLogo name={server.name} hue={server.hue} size="md" />
+              <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="md" />
             </div>
           )}
         </div>
@@ -219,7 +219,7 @@ export function FeaturedServerCard({ gameId, className }: { gameId?: string; cla
 
         <div className="relative flex flex-col justify-center gap-3 p-5 sm:p-6" style={{ background: theme.colors.surfaceRaised }}>
           <div className="flex items-center gap-3">
-            <ServerLogo name={server.name} hue={server.hue} size="md" />
+            <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="md" />
             <div className="min-w-0">
               <div className="gt-display truncate text-[20px] leading-tight">{server.name}</div>
               <div className="text-[12.5px]" style={{ color: theme.colors.textFaint }}>

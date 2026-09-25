@@ -17,7 +17,9 @@ export type {
 
 export { coreTheme } from './core/tokens'
 export { themeToCssVars, mergeTheme } from './core/cssVars'
-export { ThemeScope, useGameTheme } from './core/ThemeProvider'
+export { ThemeScope, useGameTheme, liftTheme } from './core/ThemeProvider'
+export { AppearanceProvider, useAppearance, APPEARANCE_OPTIONS, APPEARANCE_DEFAULTS } from './appearance'
+export type { Appearance, Surface, HeroSize, Motion, IconStyle, LogoMode } from './appearance'
 export { ThemeAura, ThemeFrame, ThemeHorizon, ThemeParticles, ThemePattern } from './core/Decor'
 export {
   ThemedBadge,

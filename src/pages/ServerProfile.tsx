@@ -232,6 +232,7 @@ function Profile({ server }: { server: GameServer }) {
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <ServerLogo
               name={server.name}
+              gameId={server.gameId}
               hue={server.hue}
               src={server.logoUrl}
               size="xl"

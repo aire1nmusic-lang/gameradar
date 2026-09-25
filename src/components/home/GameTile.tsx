@@ -95,7 +95,7 @@ export function GameTile({ game, className, compact, priority = true }: { game: 
       className={cn(
         // No lift on hover: moving a clipped, rounded box while its art zooms makes the picture edge jump.
         'group relative isolate overflow-hidden rounded-xl border border-white/7 transition-colors duration-300 hover:border-white/20',
-        compact ? 'h-[104px]' : 'h-[148px]',
+        compact ? 'h-[104px]' : 'gs-tile',
         className,
       )}
       // The world's colours stand in for the picture until it arrives, so a tile is never an empty box.

@@ -113,7 +113,7 @@ export default function Boost() {
               className="flex flex-wrap items-center gap-4 rounded-xl border p-4"
               style={{ borderColor: 'var(--gt-border)', background: 'var(--gt-surface)' }}
             >
-              <ServerLogo name={server.name} hue={server.hue} size="md" />
+              <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="md" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="gt-display truncate text-[17px]">{server.name}</span>
@@ -472,7 +472,7 @@ function Ladder({
             >
               {index + 1}
             </span>
-            <ServerLogo name={entry.server.name} hue={entry.server.hue} size="xs" />
+            <ServerLogo name={entry.server.name} hue={entry.server.hue} gameId={entry.server.gameId} size="xs" />
             <div className="min-w-0 flex-1">
               <div className={cn('truncate text-[13px]', isMe ? 'font-medium text-promo-100' : 'text-ink-200')}>
                 {entry.server.name}

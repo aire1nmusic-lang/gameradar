@@ -49,7 +49,7 @@ export function GameHero({
   }
 
   return (
-    <section className={cn('relative overflow-hidden', art ? 'min-h-[240px] sm:min-h-[300px] lg:min-h-[360px]' : 'gt-hero min-h-[220px] lg:min-h-[280px]')}>
+    <section className={cn('gs-hero relative overflow-hidden', !art && 'gt-hero')}>
       {art ? (
         <WorldArtSurface art={art} scrim="poster" sizes="100vw" priority width={2560} />
       ) : (
@@ -79,7 +79,7 @@ export function GameHero({
           )}
         </nav>
 
-        <ThemedHeading as="h1" size={44} className="max-w-2xl">
+        <ThemedHeading as="h1" size={44} className="gs-hero-title max-w-2xl">
           {title}
         </ThemedHeading>
 

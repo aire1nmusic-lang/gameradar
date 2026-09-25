@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { MobileNav } from './MobileNav'
+import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 
@@ -37,6 +38,7 @@ export function Layout() {
       </main>
       <Footer />
       <MobileNav />
+      <DesignPanel />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

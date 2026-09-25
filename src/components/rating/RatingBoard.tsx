@@ -68,6 +68,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
               <div className="absolute -bottom-5 left-4 z-[2]">
                 <ServerLogo
                   name={server.name}
+                  gameId={server.gameId}
                   hue={server.hue}
                   src={server.logoUrl}
                   size={isFirst ? 'lg' : 'md'}
@@ -181,7 +182,7 @@ export function RatingRow({
         {entry.rank}
       </span>
 
-      <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

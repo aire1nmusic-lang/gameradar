@@ -1,47 +1,45 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarClock, Flame, Sparkles, TrendingUp } from 'lucide-react'
-import { useGames, useHighOnline, useOpenings, usePromoted, useRecentlyAdded, useRisingServers } from '@/hooks/data'
+import { Flame, CalendarClock, Sparkles } from 'lucide-react'
+import { useOpenings, useRecentlyAdded, useServers } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
 import { SectionHeader } from '@/components/ui/SectionHeader'
-import { GameTile } from './GameTile'
-import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
-import { ServerRow } from '@/components/server/ServerRow'
-import { LaunchCard } from '@/components/server/LaunchCard'
-import { Button } from '@/components/ui/Button'
+import { ServerList, ServerRowSkeleton } from '@/components/server/ServerRow'
+import { LaunchRow } from '@/components/server/LaunchRow'
 
-/** Shared placeholder so every rail reserves its space while loading. */
-function CardGrid({ count, className }: { count: number; className?: string }) {
+function RowsSkeleton({ count }: { count: number }) {
   return (
-    <div className={className}>
+    <div className="space-y-1.5">
       {Array.from({ length: count }).map((_, index) => (
-        <ServerCardSkeleton key={index} />
+        <ServerRowSkeleton key={index} />
       ))}
     </div>
   )
 }
 
-export function GamesSection() {
-  const { data: games } = useGames()
+/**
+ * Where players are right now: the ten largest fresh player counts, whatever
+ * the source. The source is one hover away; the list itself stays readable.
+ */
+export function HighOnlineSection() {
+  const { data: page, loading } = useServers({ sort: 'online', limit: 24 }, true)
+  const servers = (page ?? [])
+    .filter((server) => server.online.freshness === 'fresh' && server.online.playersKnown !== false && server.online.current > 0)
+    .slice(0, 10)
+  if (!loading && servers.length === 0) return null
+
   return (
-    <section className="py-10 sm:py-12">
+    <section className="py-8 sm:py-10">
       <Container>
         <SectionHeader
-          eyebrow={<>Популярные игры</>}
-          title="Выберите игру"
-          description="У каждой игры свой мир на GameScout: собственное оформление, рейтинг, открытия и хроники."
-          action="Все игры"
-          actionTo="/games"
+          eyebrow={
+            <>
+              <Flame size={13} /> Сейчас онлайн
+            </>
+          }
+          title="Где играют прямо сейчас"
+          action="Весь каталог"
+          actionTo="/catalog?sort=online"
         />
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-          {(games ?? []).slice(0, 6).map((game) => (
-            <GameTile key={game.id} game={game} />
-          ))}
-        </div>
-        <div className="mt-4 sm:hidden">
-          <Button to="/games" variant="outline" full iconRight={<ArrowRight size={15} />}>
-            Все игры
-          </Button>
-        </div>
+        {loading ? <RowsSkeleton count={6} /> : <ServerList servers={servers} ranked />}
       </Container>
     </section>
   )
@@ -49,166 +47,49 @@ export function GamesSection() {
 
 export function OpeningsSection() {
   const { data: servers = [] } = useOpenings(undefined, 5)
+  if (servers.length === 0) return null
   return (
-    <section className="py-10 sm:py-12">
+    <section className="py-8 sm:py-10">
       <Container>
         <SectionHeader
           eyebrow={
             <>
-              <CalendarClock size={13} /> Открываются сегодня и на неделе
+              <CalendarClock size={13} /> Открытия
             </>
           }
-          title="Новые открытия"
-          description="Серверы, которые стартуют в ближайшие дни. Подпишитесь на напоминание, чтобы зайти в первый час."
+          title="Стартуют в ближайшие дни"
           action="Все открытия"
           actionTo="/openings"
         />
-      </Container>
-
-      <div className="relative">
-        <Container>
-          <div className="rail -mx-5 px-5 sm:mx-0 sm:px-0">
-            {servers.map((server) => (
-              <LaunchCard key={server.slug} server={server} />
-            ))}
-            <Link
-              to="/openings"
-              className="group flex w-[180px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/10 text-ink-400 transition-colors hover:border-white/20 hover:text-ink-100"
-            >
-              <span className="grid h-10 w-10 place-items-center rounded-full border border-white/10 transition-transform duration-200 group-hover:translate-x-0.5">
-                <ArrowRight size={16} />
-              </span>
-              <span className="text-[13px]">Все открытия</span>
-            </Link>
-          </div>
-        </Container>
-      </div>
-    </section>
-  )
-}
-
-export function HighOnlineSection() {
-  const { data: servers, loading } = useHighOnline(undefined, 6)
-  return (
-    <section className="py-10 sm:py-12">
-      <Container>
-        <SectionHeader
-          eyebrow={
-            <>
-              <Flame size={13} /> Сейчас высокий онлайн
-            </>
-          }
-          title="Где играют прямо сейчас"
-          description="Только серверы с онлайном, который GameScout проверил самостоятельно."
-          action="Смотреть каталог"
-          actionTo="/catalog?sort=online&verified=1"
-        />
-        {loading ? (
-          <CardGrid count={6} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(servers ?? []).map((server) => (
-              <ServerCard key={server.slug} server={server} />
-            ))}
-          </div>
-        )}
-      </Container>
-    </section>
-  )
-}
-
-export function RisingSection() {
-  const { data: servers = [] } = useRisingServers(undefined, 5)
-  return (
-    <section className="py-10 sm:py-12">
-      <Container>
-        <SectionHeader
-          eyebrow={
-            <>
-              <TrendingUp size={13} /> Быстро растут
-            </>
-          }
-          title="Проекты с ростом онлайна"
-          description="Рост считается по проверенным данным за последние 24 часа."
-          action="Весь рейтинг роста"
-          actionTo="/catalog?sort=growth"
-        />
-        <div className="surface overflow-hidden rounded-xl p-2 sm:p-3">
-          <div className="space-y-1.5">
-            {servers.map((server, index) => (
-              <ServerRow key={server.slug} server={server} rank={index + 1} />
-            ))}
-          </div>
+        <div className="space-y-1.5">
+          {servers.map((server) => (
+            <LaunchRow key={server.slug} server={server} />
+          ))}
         </div>
       </Container>
     </section>
   )
 }
 
-export function PromotedSection() {
-  const { data: servers = [] } = usePromoted(undefined, 3)
-  return (
-    <section className="py-10 sm:py-12">
-      <Container>
-        <div className="relative overflow-hidden rounded-2xl border border-promo-500/18 bg-promo-900/25 p-5 sm:p-7">
-          <div
-            className="pointer-events-none absolute -top-24 -right-10 h-64 w-64 rounded-full opacity-25 blur-[80px]"
-            style={{ background: 'radial-gradient(closest-side, var(--color-promo-500), transparent)' }}
-          />
-
-          <div className="relative mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-promo-500/30 bg-promo-500/12 px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] text-promo-200 uppercase">
-                  <Sparkles size={11} />
-                  Продвижение
-                </span>
-              </div>
-              <h2 className="text-[22px] sm:text-[26px]">TOP серверы</h2>
-              <p className="mt-1.5 max-w-xl text-[13.5px] text-ink-300">
-                Платные места владельцев серверов. Не влияют на независимый рейтинг GameScout и на проверку онлайна.
-              </p>
-            </div>
-            <Link
-              to="/rating"
-              className="group inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-2 text-[13px] text-ink-200 transition-colors hover:border-white/22 hover:text-ink-50"
-            >
-              Независимый рейтинг
-              <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-
-          <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {servers.map((server) => (
-              <ServerCard key={server.slug} server={server} />
-            ))}
-          </div>
-        </div>
-      </Container>
-    </section>
-  )
-}
-
+/** New cards worth a look: only those whose online is already known. */
 export function RecentlyAddedSection() {
-  const { data: servers, loading } = useRecentlyAdded(undefined, 4)
+  const { data: servers, loading } = useRecentlyAdded(undefined, 12)
+  const known = (servers ?? []).filter((server) => server.online.playersKnown !== false && server.online.current > 0).slice(0, 5)
+  if (!loading && known.length === 0) return null
   return (
-    <section className="py-10 sm:py-12">
+    <section className="py-8 sm:py-10">
       <Container>
         <SectionHeader
+          eyebrow={
+            <>
+              <Sparkles size={13} /> Новые в каталоге
+            </>
+          }
           title="Недавно добавленные"
-          description="Свежие проекты в каталоге. Часть из них ещё проходит проверку онлайна."
           action="Все новые"
           actionTo="/catalog?sort=new"
         />
-        {loading ? (
-          <CardGrid count={4} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {(servers ?? []).map((server) => (
-              <ServerCard key={server.slug} server={server} />
-            ))}
-          </div>
-        )}
+        {loading ? <RowsSkeleton count={4} /> : <ServerList servers={known} />}
       </Container>
     </section>
   )

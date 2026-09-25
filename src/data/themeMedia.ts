@@ -5,20 +5,18 @@ import type { GameServer } from '@/models'
 /**
  * World art registry — the bitmap layer of the Theme Engine.
  *
- * A world (game, or game + chronicle) owns a small set of key images. Nothing
- * else in the app knows a file path: components ask for a *slot* and get an
- * `WorldArt` back, so swapping artwork later is a change in this file only.
+ * A world (game, or game + chronicle) owns ONE master key art and, where the
+ * chronicle or mode has its own identity, one more. Nothing else in the app
+ * knows a file path: components ask for a *slot* and get a `WorldArt` back.
  *
  * Fallback chain:  chronicle → game → shared
  *
- * Every file lives in `public/media/worlds/<world>/<name>-<width>.webp` and is
- * published at three widths, so one entry serves heroes, cards and thumbnails.
+ * Every file lives in `public/media/worlds/<world>/<name>-<width>.webp` at
+ * 400/800/1600/2560/3840 px, published by scripts/publish-keyart.mjs from
+ * the masters in Постеры/ai-keyart (kept out of the repo).
  *
- * Key-art posters (16:9, 3840×2160 masters) are published by
- * scripts/optimize-posters.mjs as WebP at 400/800/1600/2560 px; the older
- * placeholder art keeps 400/800/1600. Replacing art means dropping files into
- * `public/media/worlds/` and editing the `ART` table below — no component
- * changes required.
+ * Every master is composed the same way: the subject sits in the right two
+ * thirds, the left third is quiet — that is where headings and search go.
  */
 
 export type ArtSlot = 'hero' | 'card' | 'promo' | 'stage'
@@ -46,99 +44,39 @@ export interface WorldMedia {
   gallery: WorldArt[]
 }
 
-const WIDTHS = [400, 800, 1600]
-/** Posters also ship a 2560 px file so full-width heroes stay sharp on HiDPI desktops. */
-const POSTER_WIDTHS = [400, 800, 1600, 2560]
-/** Lineage 2 posters front the showcase hero and add the full 3840 master for large/high-DPI screens. */
-const SHOWCASE_WIDTHS = [...POSTER_WIDTHS, 3840]
+const KEYART_WIDTHS = [400, 800, 1600, 2560, 3840]
+const LEGACY_WIDTHS = [400, 800, 1600]
 
-/**
- * Worlds whose key art is the headline of the first screen: a tall, full-width
- * hero with a light scrim (`poster` preset) instead of a dimmed banner.
- * Extending the showcase to another game is adding its id here.
- */
-const SHOWCASE_GAMES = new Set(['lineage2'])
+/** Every game with key art puts it at the centre of its first screen. */
+const SHOWCASE_GAMES = new Set(['lineage2', 'minecraft', 'gtarp', 'rust', 'cs2'])
 export const isShowcase = (gameId?: string) => !!gameId && SHOWCASE_GAMES.has(gameId)
 
-function art(
-  base: string,
-  alt: string,
-  tone: ArtTone,
-  focus: { desktop: string; mobile: string },
-  widths: number[] = WIDTHS,
-): WorldArt {
+function art(base: string, alt: string, tone: ArtTone, focus: { desktop: string; mobile: string }, widths: number[] = KEYART_WIDTHS): WorldArt {
   return { id: base, base: `/media/worlds/${base}`, widths, alt, tone, focus }
 }
 
-/** A key-art poster: `mobile` is the object-position that keeps the subject in a portrait crop. */
-const poster = (base: string, alt: string, tone: ArtTone, mobile: string, desktop = '50% 50%') =>
-  art(base, alt, tone, { desktop, mobile }, base.startsWith('lineage-2/') ? SHOWCASE_WIDTHS : POSTER_WIDTHS)
+/** A key-art master: `mobile` is the object-position that keeps the subject in a portrait crop. */
+const keyart = (base: string, alt: string, tone: ArtTone, mobile: string, desktop = '50% 50%') => art(base, alt, tone, { desktop, mobile })
 
 /* ────────────────────────────────────────────────────────────────────────────
    The art itself
    ──────────────────────────────────────────────────────────────────────────── */
 
 const ART = {
-  l2Citadel: art(
-    'lineage-2/citadel-sunset',
-    'Величественная цитадель на закате, герои на скале над городом',
-    'medium',
-    { desktop: '50% 46%', mobile: '62% 50%' },
-  ),
-  l2Moonlit: art(
-    'lineage-2/moonlit-citadel',
-    'Лунная цитадель над туманными горами',
-    'dark',
-    { desktop: '52% 45%', mobile: '70% 45%' },
-  ),
-  l2SkyGold: art(
-    'lineage-2/sky-citadel-gold',
-    'Золотой закат над небесной цитаделью',
-    'bright',
-    { desktop: '56% 44%', mobile: '72% 44%' },
-  ),
-  l2Arcane: art(
-    'lineage-2/arcane-portal',
-    'Эпический город у магического портала',
-    'medium',
-    { desktop: '50% 42%', mobile: '58% 40%' },
-  ),
-  rustOutpost: art(
-    'rust/wasteland-outpost',
-    'Постапокалиптический аванпост на закате',
-    'medium',
-    { desktop: '50% 52%', mobile: '60% 55%' },
-  ),
-  cs2Dawn: art(
-    'cs2/dawn-raid',
-    'Тактическая схватка на рассвете',
-    'medium',
-    { desktop: '50% 50%', mobile: '44% 48%' },
-  ),
+  l2Master: keyart('lineage-2/master', 'Lineage 2 — отряд из четырёх рас на скале перед готической крепостью на рассвете, дракон в тумане', 'dark', '68% 50%'),
+  l2Interlude: keyart('lineage-2/interlude', 'Lineage 2 Interlude — рыцарь и тёмный эльф идут к воротам каменного города на рассвете', 'medium', '70% 55%'),
+  l2HighFive: keyart('lineage-2/high-five', 'Lineage 2 High Five — отряд перед крепостью с осадными знамёнами', 'dark', '68% 50%'),
+  l2Classic: keyart('lineage-2/classic', 'Lineage 2 Classic — трое искателей приключений на дороге к деревне в сером тумане', 'medium', '45% 50%'),
+  l2Essence: keyart('lineage-2/essence', 'Lineage 2 Essence — камаэль, тёмный эльф и маг на кристальном мосту к небесной цитадели', 'bright', '50% 50%'),
+  mcMaster: keyart('minecraft/master', 'Minecraft — блочный замок над водопадом, портал и фонари на закате', 'medium', '72% 50%'),
+  mcAnarchy: keyart('minecraft/anarchy', 'Minecraft Anarchy — разрушенный блочный город с лавой ночью', 'dark', '70% 55%'),
+  mcSkyBlock: keyart('minecraft/skyblock', 'Minecraft SkyBlock — парящий остров с домом и деревом над облаками', 'bright', '40% 50%'),
+  mcMinigames: keyart('minecraft/minigames', 'Minecraft BedWars — цветные острова-базы и стеклянные мосты в пустоте', 'medium', '70% 45%'),
+  gtaMaster: keyart('gta-rp/master', 'GTA RP — ночной бульвар в дождь, неон, полицейская машина и пальмы', 'dark', '70% 60%'),
+  rustMaster: keyart('rust/master', 'Rust — база из ржавого металла на закате, выживший на крыше, вертолёт вдали', 'medium', '68% 50%'),
+  cs2Master: keyart('cs2/master', 'CS2 — боец с винтовкой в песчаном переулке, дым гранаты', 'bright', '62% 50%'),
 
-  // ── key-art posters ────────────────────────────────────────────────────
-  l2Interlude: poster('lineage-2/interlude-poster', 'Lineage II Interlude — герои у стен готического города', 'medium', '50% 55%'),
-  l2Essence: poster('lineage-2/essence-poster', 'Lineage II Essence — отряд героев на фоне небесной цитадели', 'bright', '50% 50%', '50% 45%'),
-  l2Classic: poster('lineage-2/classic-poster', 'Lineage II Classic — битва у крепости на закате', 'medium', '45% 50%'),
-  l2Gracia: poster('lineage-2/gracia-final-poster', 'Lineage II Gracia Final — тёмная цитадель под алой луной', 'dark', '70% 50%'),
-  mcSurvival: poster('minecraft/survival-poster', 'Minecraft Survival — долина с водопадами на рассвете', 'medium', '70% 55%'),
-  mcAnarchy: poster('minecraft/anarchy-poster', 'Minecraft Anarchy — разрушенный город в огне', 'dark', '80% 50%'),
-  mcSkyBlock: poster('minecraft/skyblock-poster', 'Minecraft SkyBlock — парящие острова над облаками', 'bright', '62% 50%'),
-  mcPrison: poster('minecraft/prison-poster', 'Minecraft Prison — крепость-тюрьма в горах', 'medium', '65% 50%'),
-  mcMinigames: poster('minecraft/minigames-poster', 'Minecraft Minigames — парящие арены мини-игр', 'bright', '60% 50%'),
-  mcModded: poster('minecraft/modded-rpg-poster', 'Minecraft Modded / RPG — магический город в сиянии кристаллов', 'medium', '75% 50%'),
-  gtaRoleplay: poster('gta-rp/roleplay-poster', 'GTA RP — вечерняя улица города с полицией и жителями', 'dark', '50% 55%'),
-  gtaFreeroam: poster('gta-rp/freeroam-poster', 'GTA Freeroam — прибрежное шоссе и небоскрёбы днём', 'bright', '55% 55%'),
-  gtaPvp: poster('gta-rp/pvp-poster', 'GTA PvP — ночная перестрелка в порту', 'dark', '40% 60%'),
-  gtaDrift: poster('gta-rp/drift-racing-poster', 'GTA Drift & Racing — дрифт на ночном серпантине', 'dark', '35% 60%'),
-  gtaGang: poster('gta-rp/gang-crime-poster', 'GTA Gang & Crime — банда у машин на закате', 'dark', '35% 55%'),
-
-  stage: art(
-    'shared/obsidian-stage',
-    'Тёмная арена между мирами',
-    'dark',
-    { desktop: '50% 58%', mobile: '50% 62%' },
-  ),
+  stage: art('shared/obsidian-stage', 'Тёмная арена между мирами', 'dark', { desktop: '50% 58%', mobile: '50% 62%' }, LEGACY_WIDTHS),
 } satisfies Record<string, WorldArt>
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -151,90 +89,35 @@ const SHARED: WorldMedia = {
   gallery: [],
 }
 
+const solo = (item: WorldArt): Partial<WorldMedia> => ({ hero: item, card: item, promo: item, gallery: [item] })
+
 const WORLDS: Record<string, Partial<WorldMedia>> = {
-  // ── Lineage 2 — high fantasy MMORPG, one look per chronicle ──────────────
-  lineage2: {
-    hero: ART.l2Citadel,
-    card: ART.l2Moonlit,
-    promo: ART.l2SkyGold,
-    gallery: [ART.l2Citadel, ART.l2Moonlit, ART.l2SkyGold, ART.l2Arcane],
-  },
-  'lineage2:interlude': {
-    hero: ART.l2Interlude,
-    card: ART.l2Interlude,
-    promo: ART.l2Interlude,
-    gallery: [ART.l2Interlude],
-  },
-  // No High Five poster yet: keeps the prototype art.
-  'lineage2:high-five': {
-    hero: ART.l2SkyGold,
-    card: ART.l2Citadel,
-    promo: ART.l2SkyGold,
-    gallery: [ART.l2SkyGold, ART.l2Citadel],
-  },
-  'lineage2:essence': {
-    hero: ART.l2Essence,
-    card: ART.l2Essence,
-    promo: ART.l2Essence,
-    gallery: [ART.l2Essence],
-  },
-  'lineage2:classic': {
-    hero: ART.l2Classic,
-    card: ART.l2Classic,
-    promo: ART.l2Classic,
-    gallery: [ART.l2Classic],
-  },
-  // chronicle id is "gracia" (slug "gracia-final")
-  'lineage2:gracia': {
-    hero: ART.l2Gracia,
-    card: ART.l2Gracia,
-    promo: ART.l2Gracia,
-    gallery: [ART.l2Gracia],
-  },
+  // ── Lineage 2 — one master, one look per chronicle ───────────────────────
+  lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFive, gallery: [ART.l2Master, ART.l2Interlude, ART.l2HighFive, ART.l2Classic, ART.l2Essence] },
+  'lineage2:interlude': solo(ART.l2Interlude),
+  'lineage2:high-five': solo(ART.l2HighFive),
+  'lineage2:classic': solo(ART.l2Classic),
+  'lineage2:essence': solo(ART.l2Essence),
+  // Gracia Final has no art of its own yet: the era sits between Interlude and High Five.
+  'lineage2:gracia': solo(ART.l2HighFive),
 
-  // ── Minecraft ────────────────────────────────────────────────────────────
-  // Survival is the base mode, so it fronts the game world.
-  minecraft: {
-    hero: ART.mcSurvival,
-    card: ART.mcSurvival,
-    promo: ART.mcSkyBlock,
-    gallery: [ART.mcSurvival, ART.mcSkyBlock, ART.mcMinigames, ART.mcPrison, ART.mcAnarchy, ART.mcModded],
-  },
-  'minecraft:survival': { hero: ART.mcSurvival, card: ART.mcSurvival, promo: ART.mcSurvival, gallery: [ART.mcSurvival] },
-  'minecraft:anarchy': { hero: ART.mcAnarchy, card: ART.mcAnarchy, promo: ART.mcAnarchy, gallery: [ART.mcAnarchy] },
-  'minecraft:skyblock': { hero: ART.mcSkyBlock, card: ART.mcSkyBlock, promo: ART.mcSkyBlock, gallery: [ART.mcSkyBlock] },
-  'minecraft:prison': { hero: ART.mcPrison, card: ART.mcPrison, promo: ART.mcPrison, gallery: [ART.mcPrison] },
-  'minecraft:modded': { hero: ART.mcModded, card: ART.mcModded, promo: ART.mcModded, gallery: [ART.mcModded] },
-  // The catalogue files minigame networks under BedWars; the Minigames poster fronts that page.
-  'minecraft:bedwars': { hero: ART.mcMinigames, card: ART.mcMinigames, promo: ART.mcMinigames, gallery: [ART.mcMinigames] },
+  // ── Minecraft — the survival world fronts the game, modes vary ───────────
+  minecraft: { hero: ART.mcMaster, card: ART.mcMaster, promo: ART.mcSkyBlock, gallery: [ART.mcMaster, ART.mcSkyBlock, ART.mcMinigames, ART.mcAnarchy] },
+  'minecraft:survival': solo(ART.mcMaster),
+  'minecraft:anarchy': solo(ART.mcAnarchy),
+  'minecraft:skyblock': solo(ART.mcSkyBlock),
+  'minecraft:prison': solo(ART.mcAnarchy),
+  'minecraft:modded': solo(ART.mcMaster),
+  // The catalogue files minigame networks under BedWars.
+  'minecraft:bedwars': solo(ART.mcMinigames),
 
-  // ── GTA RP ───────────────────────────────────────────────────────────────
-  // Chronicles here are platforms (FiveM / RAGE:MP / alt:V), not play styles,
-  // so they inherit the world: Roleplay fronts it, the other posters vary cards.
-  gtarp: {
-    hero: ART.gtaRoleplay,
-    card: ART.gtaRoleplay,
-    promo: ART.gtaGang,
-    gallery: [ART.gtaRoleplay, ART.gtaFreeroam, ART.gtaGang, ART.gtaDrift, ART.gtaPvp],
-  },
+  // ── GTA RP — platforms (FiveM / RAGE:MP / alt:V) share the city ──────────
+  gtarp: solo(ART.gtaMaster),
 
-  // ── Rust ─────────────────────────────────────────────────────────────────
-  rust: {
-    hero: ART.rustOutpost,
-    card: ART.rustOutpost,
-    promo: ART.rustOutpost,
-    gallery: [ART.rustOutpost],
-  },
+  rust: solo(ART.rustMaster),
+  cs2: solo(ART.cs2Master),
 
-  // ── CS2 ──────────────────────────────────────────────────────────────────
-  cs2: {
-    hero: ART.cs2Dawn,
-    card: ART.cs2Dawn,
-    promo: ART.cs2Dawn,
-    gallery: [ART.cs2Dawn],
-  },
-
-  // ARK / DayZ / Valheim have no key art yet and fall back to procedural art.
+  // DayZ and newer games have no key art yet and fall back to procedural art.
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -246,9 +129,7 @@ export function resolveWorldMedia(gameId?: string, chronicleId?: string): WorldM
   const game = gameId ? WORLDS[gameId] : undefined
   const chronicle = gameId && chronicleId ? WORLDS[`${gameId}:${chronicleId}`] : undefined
 
-  const gallery = chronicle?.gallery?.length
-    ? chronicle.gallery
-    : (game?.gallery ?? SHARED.gallery)
+  const gallery = chronicle?.gallery?.length ? chronicle.gallery : (game?.gallery ?? SHARED.gallery)
 
   return {
     hero: chronicle?.hero ?? game?.hero ?? SHARED.hero,
@@ -265,14 +146,10 @@ export function worldArt(slot: ArtSlot, gameId?: string, chronicleId?: string): 
 }
 
 /**
- * Cover art for a server.
- *
- * A server has no bespoke art in the prototype, so it inherits the art of its
- * chronicle (or game) — varied deterministically across the world gallery so a
- * grid of cards doesn't repeat one image.
+ * Cover art for a server: the art of its chronicle (or game), varied
+ * deterministically across the world gallery so a grid doesn't repeat one image.
  */
 export function serverArt(server: GameServer): WorldArt | undefined {
-  // The stored chronicle wins; the version label is only a fallback for cards without one.
   const chronicleId = server.chronicleId ?? chronicleOfVersion(server.gameId, server.version)?.id
   const media = resolveWorldMedia(server.gameId, chronicleId)
   if (!media.gallery.length) return media.card ?? media.hero
@@ -283,9 +160,7 @@ export function serverArt(server: GameServer): WorldArt | undefined {
 /** Art for an advertising creative, so paid units look native to the world. */
 export function promoArt(gameId?: string, seed?: string): WorldArt | undefined {
   const media = resolveWorldMedia(gameId)
-  if (seed && media.gallery.length > 1) {
-    return media.gallery[hashSeed(seed) % media.gallery.length]
-  }
+  if (seed && media.gallery.length > 1) return media.gallery[hashSeed(seed) % media.gallery.length]
   return media.promo ?? media.hero
 }
 
@@ -294,9 +169,7 @@ export function promoArt(gameId?: string, seed?: string): WorldArt | undefined {
    ──────────────────────────────────────────────────────────────────────────── */
 
 export function artSrc(art: WorldArt, width = 1600): string {
-  const closest = art.widths.reduce((best, current) =>
-    Math.abs(current - width) < Math.abs(best - width) ? current : best,
-  )
+  const closest = art.widths.reduce((best, current) => (Math.abs(current - width) < Math.abs(best - width) ? current : best))
   return `${art.base}-${closest}.webp`
 }
 

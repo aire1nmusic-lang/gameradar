@@ -107,7 +107,7 @@ export default function Games() {
 
                   <div className="space-y-1.5">
                     {servers.map((server, index) => (
-                      <ServerRow key={server.slug} server={server} rank={index + 1} showTags={false} />
+                      <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} />
                     ))}
                   </div>
                 </div>

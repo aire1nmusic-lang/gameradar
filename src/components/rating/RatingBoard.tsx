@@ -12,6 +12,7 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { Sparkline } from '@/components/charts/AreaChart'
 import { BoostBadge, TierBadge } from '@/components/boost/BoostBadge'
+import { ServerRow } from '@/components/server/ServerRow'
 
 /**
  * Rating board.
@@ -28,12 +29,12 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
   const top3 = entries.slice(0, 3)
   if (top3.length === 0) return null
 
-  // visual order on desktop: 2 – 1 – 3
-  const order = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3
+  // A phone reads 1–2–3 top to bottom; a desktop puts the winner in the middle: 2 – 1 – 3.
+  const podiumOrder: Record<number, string> = { 1: 'sm:order-2', 2: 'sm:order-1', 3: 'sm:order-3' }
 
   return (
     <div className="grid gap-4 sm:grid-cols-3 sm:items-end">
-      {order.map((entry) => {
+      {top3.map((entry) => {
         const isFirst = entry.rank === 1
         const server = entry.server
         const game = getGame(server.gameId)
@@ -41,7 +42,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
           <ThemedCard
             key={server.slug}
             interactive
-            className={cn('group relative flex flex-col overflow-hidden', isFirst && 'sm:-mt-6')}
+            className={cn('group relative flex flex-col overflow-hidden', podiumOrder[entry.rank], isFirst && 'sm:-mt-6')}
           >
             <Link to={`/server/${server.slug}`} className="absolute inset-0 z-[1]" aria-label={server.name} />
 
@@ -67,6 +68,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 <ServerLogo
                   name={server.name}
                   hue={server.hue}
+                  src={server.logoUrl}
                   size={isFirst ? 'lg' : 'md'}
                   style={{ boxShadow: `0 0 0 3px ${theme.colors.surfaceRaised}` }}
                 />
@@ -95,13 +97,17 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 <Sparkline data={server.history['24h']} width={62} accent={theme.colors.primary} />
               </div>
 
-              <ScoreBar entry={entry} className="mt-3.5" />
+              {entry.organic + entry.boosts > 0 && <ScoreBar entry={entry} className="mt-3.5" />}
 
               <div className="mt-4 flex items-center justify-between gap-2">
                 <span className="num inline-flex items-center gap-1 text-[12.5px]" style={{ color: theme.colors.textMuted }}>
-                  <Star size={12} className="text-warn-400" fill="currentColor" />
-                  {formatRating(server.rating)}
-                  <span style={{ color: theme.colors.textFaint }}>({formatCompact(server.reviewsCount)})</span>
+                  {server.rating > 0 && (
+                    <>
+                      <Star size={12} className="text-warn-400" fill="currentColor" />
+                      {formatRating(server.rating)}
+                      <span style={{ color: theme.colors.textFaint }}>({formatCompact(server.reviewsCount)})</span>
+                    </>
+                  )}
                 </span>
                 <ThemedButton
                   to={`/server/${server.slug}`}
@@ -174,14 +180,14 @@ export function RatingRow({
         {entry.rank}
       </span>
 
-      <ServerLogo name={server.name} hue={server.hue} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} size="sm" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[14.5px] font-medium" style={{ color: theme.colors.text }}>
             {server.name}
           </span>
-          <TierBadge rank={entry.rank} className="hidden sm:inline-flex" />
+          {entry.rank <= 3 && <TierBadge rank={entry.rank} className="hidden sm:inline-flex" />}
           {entry.boosted && <BoostBadge className="hidden md:inline-flex" />}
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[12px]" style={{ color: theme.colors.textFaint }}>
@@ -199,7 +205,7 @@ export function RatingRow({
         <Sparkline data={server.history['24h']} width={58} accent={theme.colors.primary} />
       </div>
 
-      {showScore && (
+      {showScore && entry.organic + entry.boosts > 0 && (
         <div className="hidden w-[132px] shrink-0 md:block">
           <ScoreBar entry={entry} />
         </div>
@@ -214,23 +220,26 @@ export function RatingRow({
         </div>
       </div>
 
-      <div className="hidden w-[58px] shrink-0 text-right sm:block">
-        <span className="num inline-flex items-center gap-1 text-[13px]" style={{ color: theme.colors.textMuted }}>
-          <Star size={11} className="text-warn-400" fill="currentColor" />
-          {formatRating(server.rating)}
-        </span>
-      </div>
+      {server.rating > 0 && (
+        <div className="hidden w-[58px] shrink-0 text-right sm:block">
+          <span className="num inline-flex items-center gap-1 text-[13px]" style={{ color: theme.colors.textMuted }}>
+            <Star size={11} className="text-warn-400" fill="currentColor" />
+            {formatRating(server.rating)}
+          </span>
+        </div>
+      )}
     </Link>
   )
 }
 
+/** Positions below the podium: the same dense row as everywhere else, ranked. */
 export function RatingList({ entries, from = 4 }: { entries: RankedServer[]; from?: number }) {
   const rest = entries.filter((entry) => entry.rank >= from)
   if (rest.length === 0) return null
   return (
     <div className="space-y-1.5">
       {rest.map((entry) => (
-        <RatingRow key={entry.server.slug} entry={entry} />
+        <ServerRow key={entry.server.slug} server={entry.server} rank={entry.rank} />
       ))}
     </div>
   )

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowUpDown, Search, SlidersHorizontal, X } from 'lucide-react'
+import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
@@ -10,16 +10,19 @@ import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
 import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
+import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
-import { Segmented } from '@/components/ui/controls'
+import { Select } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { themeForGame } from '@/data/themes'
-import { InlinePromo, SidebarBanner } from '@/components/ads/AdSlots'
+import { InlinePromo } from '@/components/ads/AdSlots'
 import { useSeo } from '@/lib/seo'
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 24
+type View = 'list' | 'grid'
+const VIEW_KEY = 'gs.catalog.view'
 
 export default function Catalog() {
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
@@ -34,10 +37,16 @@ export default function Catalog() {
     verifiedOnly: params.get('verified') === '1',
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
+  const [view, setView] = useState<View>(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
+    } catch {
+      return 'list'
+    }
+  })
   const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
 
   const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
   const { data: page, loading } = useServerPage(query)
@@ -49,12 +58,17 @@ export default function Catalog() {
     setVisible(PAGE_SIZE)
   }, [filters, sort])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_KEY, view)
+    } catch {
+      // a private window forgets the preference; the default is fine
+    }
+  }, [view])
+
   /*
-   * URL ⇄ state stays two-way.
-   *
-   * We write the params we own, and remember what we wrote. When the address
-   * changes for any other reason — a link from a game world, the back button,
-   * a pasted url — we re-hydrate the filters from it instead of ignoring it.
+   * URL ⇄ state stays two-way: we write the params we own and remember what
+   * we wrote; any other change of the address re-hydrates the filters.
    */
   const ownWrite = useRef('')
 
@@ -88,159 +102,146 @@ export default function Catalog() {
   }, [params])
 
   const reset = () => setFilters({ ...EMPTY_FILTERS, query: filters.query })
-
   const chips = buildChips(filters, setFilters)
 
   return (
     <div className="pb-16">
-      <Container className="pt-8 lg:pt-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-[28px] leading-tight sm:text-[34px]">Каталог серверов</h1>
-            <p className="mt-2 max-w-xl text-[14px] text-ink-300">
-              {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])} по вашему
-              запросу. Онлайн у отмеченных проектов проверяет GameScout.
-            </p>
-          </div>
+      <Container className="pt-6 lg:pt-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов</h1>
+          <span className="num text-[13px] text-ink-400">
+            {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])}
+          </span>
         </div>
 
-        <div className="mt-6 flex items-center gap-2 rounded-xl border border-white/9 bg-ink-900/70 p-2 pl-4 backdrop-blur-sm focus-within:border-white/20">
-          <Search size={18} className="shrink-0 text-ink-400" />
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22">
+          <Search size={17} className="shrink-0 text-ink-400" />
           <input
             value={filters.query}
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
             placeholder="Название сервера, игра, режим…"
-            className="h-10 min-w-0 flex-1 bg-transparent text-[15px] text-ink-50 placeholder:text-ink-500 focus:outline-none"
+            className="h-9 min-w-0 flex-1 bg-transparent text-[15px] text-ink-50 placeholder:text-ink-500 focus:outline-none"
           />
           {filters.query && (
-            <button
-              onClick={() => setFilters({ ...filters, query: '' })}
-              aria-label="Очистить"
-              className="grid h-8 w-8 place-items-center rounded-md text-ink-400 hover:bg-white/6 hover:text-ink-50"
-            >
+            <button onClick={() => setFilters({ ...filters, query: '' })} aria-label="Очистить" className="grid h-8 w-8 place-items-center rounded-md text-ink-400 hover:bg-white/6 hover:text-ink-50">
               <X size={16} />
             </button>
           )}
         </div>
       </Container>
 
-      {/* mobile toolbar */}
-      <div className="sticky top-14 z-40 mt-4 glass border-y border-white/7 py-2.5 lg:hidden">
+      {/* the toolbar follows the list: filters, active chips, sort, view */}
+      <div className="sticky top-[60px] z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
         <Container className="flex items-center gap-2">
           <button
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/[0.04] text-[13px] text-ink-100"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
           >
             <SlidersHorizontal size={14} />
             Фильтры
             {activeCount > 0 && (
-              <span className="num grid h-[18px] min-w-[18px] place-items-center rounded-full bg-signal-500 px-1 text-[10px] font-semibold text-ink-950">
-                {activeCount}
-              </span>
+              <span className="num grid h-[18px] min-w-[18px] place-items-center rounded-full bg-signal-500 px-1 text-[10px] font-semibold text-ink-950">{activeCount}</span>
             )}
           </button>
-          <button
-            onClick={() => setSortOpen(true)}
-            className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/[0.04] text-[13px] text-ink-100"
-          >
-            <ArrowUpDown size={14} />
-            {SORT_OPTIONS.find((option) => option.key === sort)?.label}
-          </button>
+
+          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                onClick={chip.remove}
+                className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] py-1 pr-2 pl-3 text-[12.5px] text-ink-200 transition-colors hover:border-white/20"
+              >
+                {chip.label}
+                <X size={12} className="text-ink-500 group-hover:text-ink-200" />
+              </button>
+            ))}
+            {chips.length > 1 && (
+              <button onClick={reset} className="shrink-0 px-2 text-[12.5px] text-ink-400 hover:text-ink-100">
+                Сбросить
+              </button>
+            )}
+          </div>
+
+          <Select
+            value={sort}
+            onChange={(value) => setSort(value as SortKey)}
+            options={SORT_OPTIONS.map((option) => ({ value: option.key, label: option.label }))}
+            className="w-[150px] shrink-0 [&_select]:h-9 [&_select]:text-[13px]"
+          />
+
+          <div className="hidden shrink-0 items-center rounded-md border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
+            <ViewButton active={view === 'list'} onClick={() => setView('list')} label="Список">
+              <List size={15} />
+            </ViewButton>
+            <ViewButton active={view === 'grid'} onClick={() => setView('grid')} label="Плитка">
+              <LayoutGrid size={15} />
+            </ViewButton>
+          </div>
         </Container>
       </div>
 
-      <Container className="mt-6 lg:mt-8">
-        <div className="lg:grid lg:grid-cols-[270px_1fr] lg:gap-8 xl:grid-cols-[286px_1fr] xl:gap-10">
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 pb-6">
-              <FilterPanel filters={filters} onChange={setFilters} onReset={reset} />
-              <ThemeScope theme={adTheme} as="div" className="mt-6">
-                <SidebarBanner gameId={filters.games[0]} />
-              </ThemeScope>
+      <Container className="mt-4">
+        {loading ? (
+          view === 'grid' ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <ServerCardSkeleton key={index} />
+              ))}
             </div>
-          </aside>
-
-          <div className="min-w-0">
-            <div className="mb-4 hidden flex-wrap items-center justify-between gap-3 lg:flex">
-              <div className="flex flex-wrap items-center gap-2">
-                {chips.length > 0 ? (
-                  <>
-                    {chips.map((chip) => (
-                      <button
-                        key={chip.key}
-                        onClick={chip.remove}
-                        className="group inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] py-1 pr-2 pl-3 text-[12.5px] text-ink-200 transition-colors hover:border-white/20"
-                      >
-                        {chip.label}
-                        <X size={12} className="text-ink-500 group-hover:text-ink-200" />
-                      </button>
-                    ))}
-                    <button onClick={reset} className="px-2 text-[12.5px] text-ink-400 hover:text-ink-100">
-                      Сбросить всё
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-[13px] text-ink-400">
-                    Найдено {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])}
-                  </span>
-                )}
-              </div>
-
-              <Segmented
-                value={sort}
-                onChange={(value) => setSort(value)}
-                size="sm"
-                options={SORT_OPTIONS.map((option) => ({ value: option.key, label: option.label }))}
-              />
+          ) : (
+            <div className="space-y-1.5">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <ServerRowSkeleton key={index} />
+              ))}
             </div>
-
-            {loading ? (
+          )
+        ) : results.length === 0 ? (
+          <EmptyState
+            title="По этим фильтрам ничего не нашлось"
+            description="Попробуйте убрать часть условий — например, ограничение по онлайну или требование проверенных данных."
+            action="Сбросить фильтры"
+            onAction={reset}
+            secondary={
+              <Button variant="outline" to="/openings">
+                Посмотреть открытия
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            {view === 'grid' ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <ServerCardSkeleton key={index} />
+                {results.map((server, index) => (
+                  <Fragment key={server.slug}>
+                    {index === 6 && (
+                      <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
+                        <InlinePromo gameId={filters.games[0]} />
+                      </ThemeScope>
+                    )}
+                    <ServerCard server={server} />
+                  </Fragment>
                 ))}
               </div>
-            ) : results.length === 0 ? (
-              <EmptyState
-                title="По этим фильтрам ничего не нашлось"
-                description="Попробуйте убрать часть условий — например, ограничение по онлайну или требование проверенных данных."
-                action="Сбросить фильтры"
-                onAction={reset}
-                secondary={
-                  <Button variant="outline" to="/openings">
-                    Посмотреть открытия
-                  </Button>
-                }
-              />
             ) : (
-              <>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {results.map((server, index) => (
-                    <Fragment key={server.slug}>
-                      {index === 6 && (
-                        <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
-                          <InlinePromo gameId={filters.games[0]} />
-                        </ThemeScope>
-                      )}
-                      <ServerCard server={server} />
-                    </Fragment>
-                  ))}
-                </div>
-
-                {visible < total && (
-                  <div className="mt-8 flex flex-col items-center gap-3">
-                    <Button variant="secondary" size="lg" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-                      Показать ещё {Math.min(PAGE_SIZE, total - visible)}
-                    </Button>
-                    <span className="num text-[12.5px] text-ink-500">
-                      {results.length} из {formatNumber(total)}
-                    </span>
-                  </div>
-                )}
-              </>
+              <div className="space-y-1.5">
+                {results.map((server, index) => (
+                  <ServerRow key={server.slug} server={server} rank={sort === 'online' || sort === 'recommended' ? index + 1 : undefined} />
+                ))}
+              </div>
             )}
-          </div>
-        </div>
+
+            {visible < total && (
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <Button variant="secondary" size="lg" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
+                  Показать ещё {Math.min(PAGE_SIZE, total - visible)}
+                </Button>
+                <span className="num text-[12.5px] text-ink-500">
+                  {results.length} из {formatNumber(total)}
+                </span>
+              </div>
+            )}
+          </>
+        )}
       </Container>
 
       <Sheet
@@ -260,104 +261,36 @@ export default function Catalog() {
       >
         <FilterPanel filters={filters} onChange={setFilters} onReset={reset} showReset={false} />
       </Sheet>
-
-      <Sheet open={sortOpen} onClose={() => setSortOpen(false)} title="Сортировка" maxHeight="60vh">
-        <div className="space-y-1 pb-2">
-          {SORT_OPTIONS.map((option) => (
-            <button
-              key={option.key}
-              onClick={() => {
-                setSort(option.key)
-                setSortOpen(false)
-              }}
-              className={cn(
-                'flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-[14px] transition-colors',
-                sort === option.key ? 'bg-white/8 text-ink-50' : 'text-ink-300 hover:bg-white/5',
-              )}
-            >
-              {option.label}
-              {sort === option.key && <span className="h-1.5 w-1.5 rounded-full bg-signal-400" />}
-            </button>
-          ))}
-        </div>
-      </Sheet>
     </div>
   )
 }
 
-/** Future banner inventory, shown honestly as a labelled placeholder. */
+function ViewButton({ active, onClick, label, children }: { active: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={active}
+      className={cn('grid h-8 w-8 place-items-center rounded-[5px] transition-colors', active ? 'bg-white/10 text-ink-50' : 'text-ink-400 hover:text-ink-100')}
+    >
+      {children}
+    </button>
+  )
+}
+
 function buildChips(filters: CatalogFilters, setFilters: (next: CatalogFilters) => void) {
   const chips: Array<{ key: string; label: string; remove: () => void }> = []
-
-  for (const game of filters.games) {
-    chips.push({
-      key: `game-${game}`,
-      label: GAMES_BY_ID[game]?.shortName ?? game,
-      remove: () => setFilters({ ...filters, games: filters.games.filter((g) => g !== game) }),
-    })
-  }
-  for (const version of filters.versions) {
-    chips.push({
-      key: `version-${version}`,
-      label: version,
-      remove: () => setFilters({ ...filters, versions: filters.versions.filter((v) => v !== version) }),
-    })
-  }
-  for (const mode of filters.modes) {
-    chips.push({
-      key: `mode-${mode}`,
-      label: mode,
-      remove: () => setFilters({ ...filters, modes: filters.modes.filter((m) => m !== mode) }),
-    })
-  }
-  for (const region of filters.regions) {
-    chips.push({
-      key: `region-${region}`,
-      label: region,
-      remove: () => setFilters({ ...filters, regions: filters.regions.filter((r) => r !== region) }),
-    })
-  }
-  for (const language of filters.languages) {
-    chips.push({
-      key: `lang-${language}`,
-      label: language,
-      remove: () => setFilters({ ...filters, languages: filters.languages.filter((l) => l !== language) }),
-    })
-  }
-  if (filters.verifiedOnly) {
-    chips.push({
-      key: 'VERIFIED',
-      label: 'Verified online',
-      remove: () => setFilters({ ...filters, verifiedOnly: false }),
-    })
-  }
-  if (filters.minOnline > 0) {
-    chips.push({
-      key: 'online',
-      label: `Онлайн от ${formatNumber(filters.minOnline)}`,
-      remove: () => setFilters({ ...filters, minOnline: 0 }),
-    })
-  }
-  if (filters.minRating > 0) {
-    chips.push({
-      key: 'rating',
-      label: `Рейтинг от ${filters.minRating.toFixed(1).replace('.', ',')}`,
-      remove: () => setFilters({ ...filters, minRating: 0 }),
-    })
-  }
-  if (filters.wipeSoon) {
-    chips.push({ key: 'wipe', label: 'Скоро вайп', remove: () => setFilters({ ...filters, wipeSoon: false }) })
-  }
-  if (filters.hideOffline) {
-    chips.push({ key: 'OFFLINE', label: 'Без offline', remove: () => setFilters({ ...filters, hideOffline: false }) })
-  }
-  if (filters.openedWithin !== 'any') {
-    chips.push({
-      key: 'opened',
-      label: 'По дате открытия',
-      remove: () => setFilters({ ...filters, openedWithin: 'any' }),
-    })
-  }
-
+  for (const game of filters.games) chips.push({ key: `game-${game}`, label: GAMES_BY_ID[game]?.shortName ?? game, remove: () => setFilters({ ...filters, games: filters.games.filter((g) => g !== game) }) })
+  for (const version of filters.versions) chips.push({ key: `version-${version}`, label: version, remove: () => setFilters({ ...filters, versions: filters.versions.filter((v) => v !== version) }) })
+  for (const mode of filters.modes) chips.push({ key: `mode-${mode}`, label: mode, remove: () => setFilters({ ...filters, modes: filters.modes.filter((m) => m !== mode) }) })
+  for (const region of filters.regions) chips.push({ key: `region-${region}`, label: region, remove: () => setFilters({ ...filters, regions: filters.regions.filter((r) => r !== region) }) })
+  for (const language of filters.languages) chips.push({ key: `lang-${language}`, label: language, remove: () => setFilters({ ...filters, languages: filters.languages.filter((l) => l !== language) }) })
+  if (filters.verifiedOnly) chips.push({ key: 'VERIFIED', label: 'Verified online', remove: () => setFilters({ ...filters, verifiedOnly: false }) })
+  if (filters.minOnline > 0) chips.push({ key: 'online', label: `Онлайн от ${formatNumber(filters.minOnline)}`, remove: () => setFilters({ ...filters, minOnline: 0 }) })
+  if (filters.minRating > 0) chips.push({ key: 'rating', label: `Рейтинг от ${filters.minRating.toFixed(1).replace('.', ',')}`, remove: () => setFilters({ ...filters, minRating: 0 }) })
+  if (filters.wipeSoon) chips.push({ key: 'wipe', label: 'Скоро вайп', remove: () => setFilters({ ...filters, wipeSoon: false }) })
+  if (filters.hideOffline) chips.push({ key: 'OFFLINE', label: 'Без offline', remove: () => setFilters({ ...filters, hideOffline: false }) })
+  if (filters.openedWithin !== 'any') chips.push({ key: 'opened', label: 'По дате открытия', remove: () => setFilters({ ...filters, openedWithin: 'any' }) })
   return chips
 }

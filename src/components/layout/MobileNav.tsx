@@ -1,40 +1,29 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { CalendarClock, Heart, Home, Plus, Search } from 'lucide-react'
+import { Gamepad2, Heart, Home, LayoutList, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 
+/** The five places a player goes. Adding a server is an owner action and lives on /owners. */
 const ITEMS = [
   { to: '/', label: 'Главная', icon: Home, end: true },
-  { to: '/catalog', label: 'Поиск', icon: Search, end: false },
-  { to: '/openings', label: 'Открытия', icon: CalendarClock, end: false },
+  { to: '/games', label: 'Игры', icon: Gamepad2, end: false },
+  { to: '/catalog', label: 'Каталог', icon: LayoutList, end: false },
+  { to: '/rating', label: 'Рейтинг', icon: Trophy, end: false },
   { to: '/favorites', label: 'Избранное', icon: Heart, end: false },
 ]
 
-export function MobileNav({ onSearch }: { onSearch: () => void }) {
+/** Routes whose own bottom bar replaces the navigation (a server profile has one CTA bar). */
+const HIDDEN = [/^\/add-server/, /^\/server\//]
+
+export function MobileNav() {
   const { favorites } = useFavorites()
   const location = useLocation()
-  const hidden = location.pathname.startsWith('/add-server')
-
-  if (hidden) return null
+  if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 glass border-t border-white/8 lg:hidden">
-      <div className="relative mx-auto grid h-[58px] max-w-lg grid-cols-5 items-center px-1">
-        {ITEMS.slice(0, 2).map((item) => (
-          <NavItem key={item.to} {...item} badge={0} onSearch={item.to === '/catalog' ? onSearch : undefined} />
-        ))}
-
-        <div className="flex justify-center">
-          <NavLink
-            to="/add-server"
-            aria-label="Добавить сервер"
-            className="-mt-6 grid h-12 w-12 place-items-center rounded-full bg-white text-ink-950 shadow-[0_8px_24px_-8px_rgba(255,255,255,0.45)] transition-transform duration-200 active:scale-95"
-          >
-            <Plus size={22} strokeWidth={2.2} />
-          </NavLink>
-        </div>
-
-        {ITEMS.slice(2).map((item) => (
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.08] bg-ink-950/95 backdrop-blur-md md:hidden">
+      <div className="mx-auto grid h-[56px] max-w-lg grid-cols-5 items-stretch">
+        {ITEMS.map((item) => (
           <NavItem key={item.to} {...item} badge={item.to === '/favorites' ? favorites.length : 0} />
         ))}
       </div>
@@ -42,42 +31,19 @@ export function MobileNav({ onSearch }: { onSearch: () => void }) {
   )
 }
 
-function NavItem({
-  to,
-  label,
-  icon: Icon,
-  end,
-  badge,
-  onSearch,
-}: {
-  to: string
-  label: string
-  icon: typeof Home
-  end: boolean
-  badge: number
-  onSearch?: () => void
-}) {
+function NavItem({ to, label, icon: Icon, end, badge }: { to: string; label: string; icon: typeof Home; end: boolean; badge: number }) {
   return (
     <NavLink
       to={to}
       end={end}
-      onClick={(event) => {
-        if (onSearch) {
-          event.preventDefault()
-          onSearch()
-        }
-      }}
       className={({ isActive }) =>
-        cn(
-          'relative flex h-full flex-col items-center justify-center gap-1 text-[10.5px] transition-colors duration-200',
-          isActive && !onSearch ? 'text-ink-50' : 'text-ink-400',
-        )
+        cn('relative flex flex-col items-center justify-center gap-1 text-[10.5px] transition-colors duration-150', isActive ? 'text-ink-50' : 'text-ink-400')
       }
     >
       {({ isActive }) => (
         <>
           <span className="relative">
-            <Icon size={19} strokeWidth={isActive && !onSearch ? 2.2 : 1.9} />
+            <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
             {badge > 0 && (
               <span className="num absolute -top-1.5 -right-2 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-signal-500 px-1 text-[9px] font-semibold text-ink-950">
                 {badge}
@@ -85,9 +51,7 @@ function NavItem({
             )}
           </span>
           {label}
-          {isActive && !onSearch && (
-            <span className="absolute top-0 h-[2px] w-7 rounded-full bg-gradient-to-r from-transparent via-signal-400 to-transparent" />
-          )}
+          {isActive && <span className="absolute top-0 h-[2px] w-8 rounded-full bg-signal-400" />}
         </>
       )}
     </NavLink>

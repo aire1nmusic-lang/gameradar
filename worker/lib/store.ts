@@ -2,7 +2,7 @@ import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h FROM servers s LEFT JOIN server_online o ON o.server_id=s.id`
+const serverSelect = `SELECT s.*, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port FROM servers s LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
 /** A number counts only while it is fresh; an old one is history, not "online". */
 const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
 const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`

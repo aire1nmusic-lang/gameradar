@@ -36,7 +36,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <MobileNav onSearch={() => setSearchOpen(true)} />
+      <MobileNav />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

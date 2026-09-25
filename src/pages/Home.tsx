@@ -1,13 +1,6 @@
 import { Hero } from '@/components/home/Hero'
-import {
-  GamesSection,
-  HighOnlineSection,
-  OpeningsSection,
-  PromotedSection,
-  RecentlyAddedSection,
-  RisingSection,
-} from '@/components/home/sections'
-import { OwnerBand, TrustBand } from '@/components/home/bands'
+import { HighOnlineSection, OpeningsSection, RecentlyAddedSection } from '@/components/home/sections'
+import { OwnerBand } from '@/components/home/bands'
 import { useSeo } from '@/lib/seo'
 
 export default function Home() {
@@ -15,12 +8,8 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <GamesSection />
-      <OpeningsSection />
       <HighOnlineSection />
-      <RisingSection />
-      <PromotedSection />
-      <TrustBand />
+      <OpeningsSection />
       <RecentlyAddedSection />
       <OwnerBand />
     </>

@@ -63,14 +63,7 @@ export function ChronicleNav({ game, chronicles }: { game: Game; chronicles: Chr
         >
           {thumb(chronicle.id)}
           {chronicle.label}
-          <span className="num font-mono text-[11px] opacity-60">{formatCompact(chronicle.playersOnline)}</span>
-          {chronicle.themeId && (
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              title="У хроники собственная тема оформления"
-              style={{ background: theme.colors.primary }}
-            />
-          )}
+          {chronicle.playersOnline > 0 && <span className="num text-[11.5px] opacity-70">{formatCompact(chronicle.playersOnline)}</span>}
         </NavLink>
       ))}
     </div>

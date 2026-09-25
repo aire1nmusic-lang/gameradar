@@ -131,7 +131,7 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
       <div className="relative flex h-full flex-col justify-between p-4">
         <div>
           <h3 className={cn('font-semibold text-white', compact ? 'text-[15px]' : 'text-[17px]')}>{game.shortName}</h3>
-          {!compact && <p className="clamp-1 mt-1 max-w-[70%] text-[12.5px] text-white/60">{game.tagline}</p>}
+          {!compact && <p className="clamp-1 mt-1 hidden max-w-[70%] text-[12.5px] text-white/60 sm:block">{game.tagline}</p>}
         </div>
 
         <div className="flex items-center gap-2.5 text-[11.5px]">

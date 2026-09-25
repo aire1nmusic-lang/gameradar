@@ -11,7 +11,6 @@ const COLUMNS = [
       { label: 'Открытия', to: '/openings' },
       { label: 'Рейтинг', to: '/rating' },
       { label: 'Избранное', to: '/favorites' },
-      { label: 'Состояния интерфейса', to: '/states' },
     ],
   },
   {

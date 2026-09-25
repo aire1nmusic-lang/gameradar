@@ -1,22 +1,25 @@
+import { useMemo, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { ArrowRight, CalendarClock, Flame, Plus, Trophy, Zap } from 'lucide-react'
+import { ArrowRight, CalendarClock, Flame, Plus, Trophy } from 'lucide-react'
 import { resolveWorld } from '@/data/themes'
 import { useRating, useServers } from '@/hooks/data'
-import { formatCountdown } from '@/lib/format'
+import type { GameServer } from '@/models'
 import { Container } from '@/components/layout/Container'
-import { ThemeScope, ThemedButton, ThemedDivider, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
+import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
 import { GameHero } from '@/components/game/GameHero'
 import { ChronicleNav } from '@/components/game/ChronicleNav'
-import { ThemedServerCard } from '@/components/server/ThemedServerCard'
-import { BackgroundTakeover, FeaturedServerCard, SidebarBanner, TopBanner } from '@/components/ads/AdSlots'
-import { BoostedStrip, RatingList, RatingPodium } from '@/components/rating/RatingBoard'
+import { ServerList } from '@/components/server/ServerRow'
+import { LaunchRow } from '@/components/server/LaunchRow'
+import { RatingPodium } from '@/components/rating/RatingBoard'
+import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { breadcrumbs, useSeo } from '@/lib/seo'
 
 /**
  * A game world: /minecraft, /lineage-2, /lineage-2/interlude.
- * Same platform, same data, completely different visual identity.
+ * Same platform, same data, its own key art and palette — and the list of
+ * servers on the first screen.
  */
 export default function GameWorld() {
   const { gameSlug, chronicleSlug } = useParams()
@@ -28,18 +31,17 @@ export default function GameWorld() {
 
   return (
     <ThemeScope theme={world.theme} as="div" className="relative">
-      <WorldBody
-        gameSlug={world.game.slug}
-        chronicleSlug={world.chronicle?.slug}
-        key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`}
-      />
+      <WorldBody gameSlug={world.game.slug} chronicleSlug={world.chronicle?.slug} key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`} />
     </ThemeScope>
   )
 }
 
+type Sort = 'online' | 'new' | 'name'
+
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
+  const [sort, setSort] = useState<Sort>('online')
 
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
@@ -55,209 +57,133 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
       ]),
     ],
   })
-  const { data: servers = [] } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
-  const { data: entries = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id, sponsored: true })
+  const { data: servers = [], loading } = useServers({ gameId: game?.id, chronicleId: chronicle?.id, limit: 200 }, true)
   const { data: organic = [] } = useRating({ gameId: game?.id, chronicleId: chronicle?.id })
 
-  if (!game) return null
+  const openings = useMemo(() => servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()), [servers])
+  const listed = useMemo(() => {
+    const open = new Set(openings.map((server) => server.slug))
+    const rest = servers.filter((server) => !open.has(server.slug))
+    const known = (server: GameServer) => server.online.playersKnown !== false && server.online.status !== 'UNKNOWN'
+    const byOnline = (a: GameServer, b: GameServer) => Number(known(b)) - Number(known(a)) || b.online.current - a.online.current
+    if (sort === 'name') return [...rest].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+    if (sort === 'new') return [...rest].sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt))
+    return [...rest].sort(byOnline)
+  }, [servers, openings, sort])
 
-  const live = servers.filter((server) => !['PENDING', 'UNKNOWN'].includes(server.online.status))
-  const openings = servers.filter((server) => server.launch)
-  const verifiedShare = live.length ? live.filter((s) => s.online.status === 'VERIFIED').length / live.length : 0
-  // Fresh numbers first; a world whose online is not measured yet still lists its servers.
-  const measured = live.filter((server) => server.online.freshness === 'fresh' && server.online.playersKnown !== false)
-  const topOnline = measured.length
-    ? [...measured].sort((a, b) => b.online.current - a.online.current).slice(0, 6)
-    : servers.slice(0, 6)
+  if (!game) return null
+  const playersOnline = servers.reduce((sum, server) => sum + (server.online.freshness === 'fresh' ? server.online.current : 0), 0)
 
   return (
     <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>
-      <BackgroundTakeover gameId={game.id} />
-
-      <GameHero
-        game={game}
-        chronicle={chronicle}
-        serversCount={chronicle?.serversCount ?? game.serversCount}
-        playersOnline={chronicle?.playersOnline ?? game.playersOnline}
-        verifiedShare={verifiedShare}
-      />
+      <GameHero game={game} chronicle={chronicle} serversCount={servers.length} playersOnline={playersOnline} openings={openings.length} />
 
       <Container className="relative pb-16">
-        <div className="mb-8">
-          <ChronicleNav game={game} chronicles={game.chronicles} />
+        {/* chronicles + sort stay reachable while the list scrolls */}
+        <div className="sticky top-[60px] z-30 -mx-5 px-5 py-2.5 sm:mx-0 sm:px-0" style={{ background: `color-mix(in oklab, ${theme.colors.bg} 92%, transparent)`, backdropFilter: 'blur(12px)' }}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="min-w-0 flex-1">
+              <ChronicleNav game={game} chronicles={game.chronicles} />
+            </div>
+            <Segmented
+              value={sort}
+              onChange={setSort}
+              size="sm"
+              className="shrink-0 self-start"
+              options={[
+                { value: 'online', label: 'Онлайн' },
+                { value: 'new', label: 'Новые' },
+                { value: 'name', label: 'А–Я' },
+              ]}
+            />
+          </div>
         </div>
 
-        <TopBanner gameId={game.id} className="mb-10" />
+        <section className="mt-6">
+          <SectionHead
+            eyebrow={
+              <>
+                <Flame size={12} /> Серверы
+              </>
+            }
+            title={chronicle ? `Серверы ${chronicle.label}` : `Серверы ${game.shortName}`}
+            action={{ label: 'Фильтры в каталоге', to: `/catalog?game=${game.id}` }}
+          />
+          {listed.length > 0 ? (
+            <ServerList servers={listed} ranked={sort === 'online'} showGame={false} />
+          ) : loading ? null : (
+            <EmptyState title="В этой хронике пока нет серверов" description="Проекты появятся здесь после добавления в каталог." action="Открыть каталог" actionTo={`/catalog?game=${game.id}`} />
+          )}
+        </section>
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
-          <div className="min-w-0 space-y-14">
-            {/* live servers */}
-            <section>
-              <SectionHead
-                eyebrow={
-                  <>
-                    <Flame size={12} /> Сейчас высокий онлайн
-                  </>
-                }
-                title={chronicle ? `Серверы ${chronicle.label}` : `Серверы ${game.shortName}`}
-                description="У каждого числа указан источник: проверка GameScout, сайт проекта или сторонний мониторинг. VERIFIED — только то, что GameScout измерил сам."
-                action={{ label: 'Весь каталог', to: `/catalog?game=${game.id}` }}
-              />
+        {openings.length > 0 && (
+          <section className="mt-12">
+            <SectionHead
+              eyebrow={
+                <>
+                  <CalendarClock size={12} /> Скоро открытие
+                </>
+              }
+              title="Стартуют в ближайшие дни"
+              action={{ label: 'Все открытия', to: '/openings' }}
+            />
+            <div className="space-y-1.5">
+              {openings.map((server) => (
+                <LaunchRow key={server.slug} server={server} showGame={false} />
+              ))}
+            </div>
+          </section>
+        )}
 
-              {topOnline.length > 0 ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {topOnline.map((server) => (
-                    <ThemedServerCard key={server.slug} server={server} />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="В этой хронике пока нет серверов"
-                  description="Проекты появятся здесь после добавления в каталог."
-                  action="Открыть каталог"
-                  actionTo={`/catalog?game=${game.id}`}
-                />
-              )}
-            </section>
+        {organic.length >= 3 && (
+          <section id="rating" className="mt-12 scroll-mt-24">
+            <SectionHead
+              eyebrow={
+                <>
+                  <Trophy size={12} /> Рейтинг
+                </>
+              }
+              title={chronicle ? `ТОП серверов ${chronicle.label}` : `ТОП серверов ${game.shortName}`}
+              action={{ label: 'Полный рейтинг', to: '/rating' }}
+            />
+            <RatingPodium entries={organic} />
+          </section>
+        )}
 
-            <FeaturedServerCard gameId={game.id} />
-
-            {/* openings */}
-            {openings.length > 0 && (
-              <section>
-                <SectionHead
-                  eyebrow={
-                    <>
-                      <CalendarClock size={12} /> Скоро открытие
-                    </>
-                  }
-                  title="Новые миры этой игры"
-                  description="Серверы, которые стартуют в ближайшие дни."
-                  action={{ label: 'Все открытия', to: '/openings' }}
-                />
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {openings.map((server) => (
-                    <div key={server.slug} className="relative">
-                      <ThemedServerCard server={server} />
-                      <span
-                        className="pointer-events-none absolute top-2.5 left-1/2 z-[3] -translate-x-1/2 rounded-full border px-2.5 py-1 font-mono text-[10.5px] backdrop-blur-sm"
-                        style={{
-                          borderColor: theme.colors.borderStrong,
-                          background: `color-mix(in oklab, ${theme.colors.bgDeep} 70%, transparent)`,
-                          color: theme.colors.text,
-                        }}
-                      >
-                        старт {server.launch ? formatCountdown(server.launch.at) : '—'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* rating */}
-            <section id="rating" className="scroll-mt-24">
-              <SectionHead
-                eyebrow={
-                  <>
-                    <Trophy size={12} /> Рейтинг
-                  </>
-                }
-                title={chronicle ? `ТОП серверов ${chronicle.label}` : `ТОП серверов ${game.shortName}`}
-                description="Независимый рейтинг: проверенный онлайн, отзывы и стабильность. Продвижение на него не влияет."
-                action={{ label: 'Полный рейтинг', to: '/rating' }}
-              />
-
-              {organic.length > 0 ? (
-                <div className="space-y-8">
-                  <RatingPodium entries={organic} />
-                  <RatingList entries={organic} />
-                  <ThemedDivider />
-                  <BoostedStrip entries={entries} />
-                </div>
-              ) : (
-                <EmptyState title="Рейтинг пока не сформирован" description="Нужно минимум три сервера с проверенным онлайном." />
-              )}
-            </section>
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5" style={{ borderColor: theme.colors.border, background: theme.colors.surface }}>
+          <div>
+            <ThemedEyebrow className="mb-1.5">Владельцам</ThemedEyebrow>
+            <ThemedHeading size={17} as="h3">
+              Ваш сервер {game.shortName}?
+            </ThemedHeading>
+            <p className="mt-1 text-[13px]" style={{ color: theme.colors.textMuted }}>
+              Разместите проект бесплатно и подключите проверку онлайна.
+            </p>
           </div>
-
-          {/* sidebar */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-            <SidebarBanner gameId={game.id} />
-
-            <div
-              className="rounded-xl border p-5"
-              style={{ borderColor: theme.colors.border, background: theme.colors.surface }}
-            >
-              <ThemedEyebrow className="mb-3">Владельцам</ThemedEyebrow>
-              <ThemedHeading size={18} as="h3">
-                Ваш сервер {game.shortName}?
-              </ThemedHeading>
-              <p className="mt-2 text-[13px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
-                Разместите проект бесплатно, подключите Verified Online и получайте переходы игроков.
-              </p>
-              <div className="mt-4 space-y-2">
-                <ThemedButton to="/add-server" full icon={<Plus size={14} />}>
-                  Добавить сервер
-                </ThemedButton>
-                <ThemedButton to="/boost" full variant="outline" icon={<Zap size={13} />}>
-                  Продвинуть сервер
-                </ThemedButton>
-              </div>
-            </div>
-
-            <div
-              className="rounded-xl border p-5"
-              style={{ borderColor: theme.colors.border, background: theme.colors.surface }}
-            >
-              <ThemedEyebrow className="mb-3">Тема мира</ThemedEyebrow>
-              <p className="text-[13px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
-                {theme.mood}
-              </p>
-              <div className="mt-3 flex items-center gap-1.5">
-                {[theme.colors.primary, theme.colors.secondary, theme.colors.accent].map((color) => (
-                  <span key={color} className="h-5 w-5 rounded-md" style={{ background: color }} />
-                ))}
-                <span className="ml-2 font-mono text-[10.5px]" style={{ color: theme.colors.textFaint }}>
-                  {theme.id}
-                </span>
-              </div>
-            </div>
-          </aside>
+          <ThemedButton to="/add-server" icon={<Plus size={14} />}>
+            Добавить сервер
+          </ThemedButton>
         </div>
       </Container>
     </div>
   )
 }
 
-function SectionHead({
-  eyebrow,
-  title,
-  description,
-  action,
-}: {
-  eyebrow: React.ReactNode
-  title: string
-  description?: string
-  action?: { label: string; to: string }
-}) {
-  const theme = useGameTheme()
+function SectionHead({ eyebrow, title, action, right }: { eyebrow: React.ReactNode; title: string; action?: { label: string; to: string }; right?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <ThemedEyebrow className="mb-2.5">{eyebrow}</ThemedEyebrow>
-        <ThemedHeading size={26}>{title}</ThemedHeading>
-        {description && (
-          <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed" style={{ color: theme.colors.textMuted }}>
-            {description}
-          </p>
+        <ThemedEyebrow className="mb-1.5">{eyebrow}</ThemedEyebrow>
+        <ThemedHeading size={24}>{title}</ThemedHeading>
+      </div>
+      <div className="flex items-center gap-2">
+        {right}
+        {action && (
+          <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>
+            {action.label}
+          </ThemedButton>
         )}
       </div>
-      {action && (
-        <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>
-          {action.label}
-        </ThemedButton>
-      )}
     </div>
   )
 }

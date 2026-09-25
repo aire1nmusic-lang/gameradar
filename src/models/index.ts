@@ -176,6 +176,8 @@ export interface GameServer {
   screenshots?: string[]
 
   links: ServerLinks
+  /** join address for the game client (Minecraft / Rust / CS2); absent when only a website is known */
+  address?: string
 
   region: string
   country: string

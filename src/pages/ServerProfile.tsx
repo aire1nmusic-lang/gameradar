@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   CalendarClock,
+  Check,
   ChevronRight,
+  Copy,
   Globe,
   Heart,
   MessageSquare,
@@ -40,7 +42,7 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
-import { StatusBadge, VerifiedLine } from '@/components/trust/status'
+import { LiveDot, STATUS_META, StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { AreaChart } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
@@ -56,8 +58,28 @@ import {
   ThemeScope,
   ThemedButton,
 } from '@/theme'
-import { ServerCard } from '@/components/server/ServerCard'
+import { ServerList } from '@/components/server/ServerRow'
 import { breadcrumbs, useSeo } from '@/lib/seo'
+
+/** "mc.hypixel.net" → clipboard. The address is what a player actually needs from this page. */
+function CopyAddress({ address, serverId, size }: { address: string; serverId: string; size: 'md' | 'lg' }) {
+  const [copied, setCopied] = useState(false)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopied(true)
+      track(serverId, 'PLAY_CLICK', 'copy-address')
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // clipboard blocked: the address is visible in the button anyway
+    }
+  }
+  return (
+    <ThemedButton size={size} onClick={copy} icon={copied ? <Check size={16} /> : <Copy size={16} />} className="max-w-[60vw] lg:max-w-none">
+      <span className="truncate font-mono text-[13px]">{copied ? 'Скопировано' : address}</span>
+    </ThemedButton>
+  )
+}
 
 export default function ServerProfile() {
   const { slug } = useParams()
@@ -210,6 +232,7 @@ function Profile({ server }: { server: GameServer }) {
             <ServerLogo
               name={server.name}
               hue={server.hue}
+              src={server.logoUrl}
               size="xl"
               className="shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] ring-4 ring-ink-950"
             />
@@ -263,15 +286,17 @@ function Profile({ server }: { server: GameServer }) {
             >
               <Share2 size={16} />
             </button>
-            <span className="hidden lg:block">
+            <span className="hidden items-center gap-2 lg:flex">
+              {server.address && !upcoming && <CopyAddress address={server.address} serverId={server.id} size="lg" />}
               {site && (
                 <ThemedButton
                   size="lg"
+                  variant={server.address && !upcoming ? 'outline' : undefined}
                   href={site}
                   onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'hero')}
-                  icon={upcoming ? <Globe size={16} /> : <Play size={16} fill="currentColor" />}
+                  icon={upcoming || server.address ? <Globe size={16} /> : <Play size={16} fill="currentColor" />}
                 >
-                  {upcoming ? 'Сайт проекта' : 'Играть на сервере'}
+                  {upcoming || server.address ? 'Сайт проекта' : 'Играть на сервере'}
                 </ThemedButton>
               )}
             </span>
@@ -320,39 +345,38 @@ function Profile({ server }: { server: GameServer }) {
                 Все серверы {game.shortName}
               </Link>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {similar.map((item) => (
-                <ServerCard key={item.slug} server={item} />
-              ))}
-            </div>
+            <ServerList servers={similar} />
           </section>
         )}
       </Container>
 
-      {/* mobile sticky CTA */}
-      <div className="safe-bottom fixed inset-x-0 bottom-[58px] z-40 glass border-t border-white/8 px-4 py-2.5 lg:hidden">
+      {/* the one bottom bar on a phone: the navigation steps aside for it */}
+      <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
-            <div className="num text-[15px] font-semibold text-ink-50">
+            <div className="num truncate text-[17px] leading-tight font-semibold text-ink-50">
               {server.online.status === 'PENDING'
                 ? server.launch
                   ? formatCountdown(server.launch.at)
                   : '—'
-                : formatPlayers(server.online)}
-              {server.online.status !== 'PENDING' && (
-                <span className="text-[12px] font-normal text-ink-500"> / {formatSlots(server.online)}</span>
-              )}
+                : server.online.playersKnown === false
+                  ? '—'
+                  : formatPlayers(server.online)}
             </div>
-            <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
+              <LiveDot status={server.online.status} />
+              <span className="truncate">{STATUS_META[server.online.status].short}</span>
+            </div>
           </div>
+          {server.address && !upcoming && <CopyAddress address={server.address} serverId={server.id} size="md" />}
           {site && (
             <Button
-              variant="primary"
+              variant={server.address && !upcoming ? 'outline' : 'primary'}
               href={site}
               onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'sticky')}
-              icon={upcoming ? <Globe size={15} /> : <Play size={15} />}
+              icon={upcoming || server.address ? <Globe size={15} /> : <Play size={15} />}
             >
-              {upcoming ? 'Сайт' : 'Играть'}
+              {upcoming || server.address ? 'Сайт' : 'Играть'}
             </Button>
           )}
         </div>

@@ -1,21 +1,22 @@
 import { useMemo, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
-import { formatNumber, plural } from '@/lib/format'
+import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
-import { LaunchCard } from '@/components/server/LaunchCard'
+import { LaunchRow } from '@/components/server/LaunchRow'
 import { Segmented } from '@/components/ui/controls'
-import { EmptyState, Notice } from '@/components/ui/feedback'
+import { EmptyState } from '@/components/ui/feedback'
 import { useSeo } from '@/lib/seo'
 
 type Window = 'today' | 'week' | 'all'
 
 const DAY = 86_400_000
 
+/** Announced openings as a calendar: one row per server, grouped by day. */
 export default function Openings() {
   useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
-  const { data: all = [] } = useOpenings(undefined, 20)
+  const { data: all = [] } = useOpenings(undefined, 40)
 
   const filtered = useMemo(() => {
     const now = Date.now()
@@ -37,24 +38,17 @@ export default function Openings() {
     return Array.from(map.entries())
   }, [filtered])
 
-  const totalInterest = filtered.reduce((sum, server) => sum + (server.launch?.preRegistrations ?? 0), 0)
-
   return (
     <div className="pb-16">
-      <Container className="pt-10 lg:pt-14">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-2xl">
-            <div className="mb-3 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
+      <Container className="pt-6 lg:pt-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
               <CalendarClock size={13} />
               Открытия
             </div>
-            <h1 className="text-[30px] leading-tight sm:text-[40px]">Что открывается в ближайшие дни</h1>
-            <p className="mt-4 text-[15px] leading-relaxed text-ink-300">
-              Старт сервера — лучший момент, чтобы начать с нуля вместе со всеми. Здесь только заявленные открытия с
-              подтверждённой датой.
-            </p>
+            <h1 className="text-[26px] leading-tight sm:text-[30px]">Что открывается в ближайшие дни</h1>
           </div>
-
           <Segmented
             value={window}
             onChange={setWindow}
@@ -66,25 +60,9 @@ export default function Openings() {
           />
         </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          <Stat value={String(filtered.length)} label={plural(filtered.length, ['открытие', 'открытия', 'открытий'])} />
-          <Stat value={formatNumber(totalInterest)} label="предрегистраций суммарно" />
-          <Stat value="0" label="серверов с онлайном до старта" hint="GameScout не показывает онлайн до запуска" />
-        </div>
-
-        <Notice tone="info" className="mt-6">
-          До момента запуска GameScout не публикует никаких показателей онлайна — даже заявленных владельцем. Интерес
-          отражают только предрегистрации.
-        </Notice>
-
-        <div className="mt-10 space-y-10">
+        <div className="mt-6 space-y-8">
           {groups.length === 0 ? (
-            <EmptyState
-              title="В этом диапазоне открытий нет"
-              description="Попробуйте расширить период или посмотрите недавно добавленные серверы."
-              action="Смотреть каталог"
-              actionTo="/catalog?sort=new"
-            />
+            <EmptyState title="В этом диапазоне открытий нет" description="Попробуйте расширить период или посмотрите недавно добавленные серверы." action="Смотреть каталог" actionTo="/catalog?sort=new" />
           ) : (
             groups.map(([key, servers]) => {
               const date = new Date(servers[0].launch?.at ?? Date.now())
@@ -93,22 +71,16 @@ export default function Openings() {
               const isTomorrow = date.toDateString() === new Date(today.getTime() + DAY).toDateString()
               return (
                 <section key={key}>
-                  <div className="mb-4 flex items-center gap-3">
-                    <h2 className="text-[17px]">
-                      {isToday
-                        ? 'Сегодня'
-                        : isTomorrow
-                          ? 'Завтра'
-                          : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
-                    </h2>
+                  <div className="mb-3 flex items-center gap-3">
+                    <h2 className="text-[16px]">{isToday ? 'Сегодня' : isTomorrow ? 'Завтра' : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</h2>
                     <span className="h-px flex-1 bg-white/7" />
                     <span className="num text-[12.5px] text-ink-500">
                       {servers.length} {plural(servers.length, ['сервер', 'сервера', 'серверов'])}
                     </span>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="space-y-1.5">
                     {servers.map((server) => (
-                      <LaunchCard key={server.slug} server={server} fluid />
+                      <LaunchRow key={server.slug} server={server} />
                     ))}
                   </div>
                 </section>
@@ -117,16 +89,6 @@ export default function Openings() {
           )}
         </div>
       </Container>
-    </div>
-  )
-}
-
-function Stat({ value, label, hint }: { value: string; label: string; hint?: string }) {
-  return (
-    <div className="surface rounded-xl px-5 py-4">
-      <div className="num font-display text-[24px] font-semibold text-ink-50">{value}</div>
-      <div className="mt-1 text-[13px] text-ink-400">{label}</div>
-      {hint && <div className="mt-1 text-[11.5px] text-ink-500">{hint}</div>}
     </div>
   )
 }

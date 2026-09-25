@@ -55,10 +55,6 @@ export const highFiveTheme: ChronicleTheme = {
     color: '#F3DDA9',
     border: '1px solid rgba(239, 203, 124, 0.36)',
   },
-  typography: {
-    displayScale: 1.1,
-    accentSpacing: '0.24em',
-  },
   decor: {
     particles: 'embers',
     intensity: 0.7,

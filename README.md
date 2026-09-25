@@ -150,18 +150,19 @@ src/theme/
 
 ```
 public/media/worlds/
-  lineage-2/   citadel-sunset · moonlit-citadel · sky-citadel-gold · arcane-portal
-               classic- · interlude- · gracia-final- · essence-poster
-  minecraft/   survival- · anarchy- · skyblock- · prison- · minigames- · modded-rpg-poster
-  gta-rp/      roleplay- · gang-crime- · freeroam- · drift-racing- · pvp-poster
-  rust/        wasteland-outpost
-  cs2/         dawn-raid
+  lineage-2/   master · interlude · high-five · classic · essence
+  minecraft/   master · anarchy · skyblock · minigames
+  gta-rp/      master
+  rust/        master
+  cs2/         master
   shared/      obsidian-stage
 ```
 
-Арт опубликован в ширинах `-400.webp`, `-800.webp`, `-1600.webp`; постеры — ещё в `-2560`
-(и `-3840` у L2 Classic). Весь набор ≈ 17 МБ. Ширину выбирает браузер через `srcset` / `sizes`.
-Исходники постеров (папка `Постеры/`) в репозиторий не входят.
+Один мастер-арт на игру и по одному на хронику/режим с собственным лицом. Все мастера
+скомпонованы одинаково: объект в правых двух третях, левая треть спокойная — там стоят
+заголовок и поиск. Каждый файл опубликован в ширинах `-400 … -3840.webp` (весь набор ≈ 6 МБ),
+телефоны получают не больше 800 px. Публикация: `node scripts/publish-keyart.mjs Постеры/ai-keyart`
+(мастера 5504×3072 PNG в репозиторий не входят, папка `Постеры/` игнорируется).
 
 ### Слоты и резолвинг
 

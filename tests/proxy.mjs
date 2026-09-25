@@ -115,7 +115,7 @@ try {
   }
   const script = indexHtml.match(/src="(\/assets\/[^"]+\.js)"/)[1]
   assert.equal((await viaMirror(script, { status: 200 })).response.headers.get('content-type'), 'text/javascript')
-  const poster = 'media/worlds/lineage-2/classic-poster-1600.webp'
+  const poster = 'media/worlds/lineage-2/master-1600.webp'
   const image = await fetch(mirror + '/' + poster)
   assert.equal(image.status, 200)
   assert.equal(image.headers.get('content-type'), 'image/webp')

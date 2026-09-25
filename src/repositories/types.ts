@@ -1,4 +1,9 @@
 import type {
+  AdminClaim,
+  AdminLogo,
+  AdminOverview,
+  AdminServerItem,
+  AdminUser,
   AdProduct,
   Advertisement,
   AdSlot,
@@ -7,14 +12,18 @@ import type {
   Chronicle,
   Game,
   GameServer,
+  LoginProvider,
+  LogoStatus,
   Owner,
   OwnerProject,
   OnlineSample,
   Page,
   RankedServer,
   ServerClaim,
+  ServerLogoState,
   ServerQuery,
   User,
+  UserRole,
   Vote,
   VoteIntegration,
 } from '@/models'
@@ -124,12 +133,77 @@ export interface OwnerRepository {
   claims(userId: string): Promise<ServerClaim[]>
 }
 
+/** `/auth/me`: who is signed in and which ways to sign in this environment offers. */
+export interface AuthSession {
+  user: User | null
+  /** only the configured providers */
+  providers: LoginProvider[]
+  /** false until mail delivery is configured */
+  emailLogin: boolean
+  devAuthEnabled: boolean
+}
+
+/** A 6-digit code was mailed. */
+export interface CodeSent {
+  sent: true
+  email?: string
+  expiresInSec?: number
+}
+
 export interface UserRepository {
-  session(): Promise<{ user: User | null; devAuthEnabled: boolean; providers?: string[] }>
+  session(): Promise<AuthSession>
+  /** local development sign-in (POST /auth/dev) */
   login(input: { displayName: string; secret: string }): Promise<unknown>
   logout(): Promise<unknown>
 
   current(): Promise<User | undefined>
+}
+
+/** Sign-in and registration (docs/accounts-api.md → Session and sign-in). */
+export interface AuthRepository {
+  me(): Promise<AuthSession>
+  register(input: { email: string; password: string; displayName: string }): Promise<CodeSent>
+  confirmRegistration(input: { email: string; code: string }): Promise<{ user: User }>
+  /** 403 `email_unverified` means a confirmation code was mailed */
+  login(input: { email: string; password: string }): Promise<{ user: User }>
+  requestCode(input: { email: string; purpose: 'login' | 'reset' }): Promise<CodeSent>
+  verifyCode(input: { email: string; code: string }): Promise<{ user: User }>
+  resetPassword(input: { email: string; code: string; password: string }): Promise<{ user: User }>
+  logout(): Promise<unknown>
+  /** full-page URL that starts the provider flow; `link` attaches it to the signed-in user */
+  providerUrl(provider: LoginProvider, options?: { next?: string; link?: boolean }): string
+}
+
+/** The signed-in person's own account (docs/accounts-api.md → Account). */
+export interface AccountRepository {
+  updateProfile(input: { displayName: string }): Promise<{ user: User }>
+  changePassword(input: { currentPassword?: string; newPassword: string }): Promise<{ user: User }>
+  /** 409 `last_login_method` when it is the only way to sign in */
+  unlinkIdentity(provider: LoginProvider): Promise<{ user: User }>
+}
+
+/** Server logos uploaded by verified owners; shown after an admin approves them. */
+export interface LogoRepository {
+  upload(serverId: string, image: Blob): Promise<{ logo: { id: string; status: LogoStatus; createdAt: string } }>
+  status(serverId: string): Promise<ServerLogoState>
+}
+
+/** Moderation for accounts with the ADMIN role. */
+export interface AdminRepository {
+  overview(): Promise<AdminOverview>
+  logos(status?: LogoStatus): Promise<AdminLogo[]>
+  /** image bytes of a logo in any status */
+  logoImageUrl(id: string): string
+  approveLogo(id: string): Promise<{ ok: true }>
+  rejectLogo(id: string, reason: string): Promise<{ ok: true }>
+  /** `PENDING` (the default) lists cards waiting for moderation */
+  servers(status?: 'PENDING'): Promise<AdminServerItem[]>
+  publishServer(id: string): Promise<GameServer>
+  rejectServer(id: string, reason: string): Promise<{ ok: true }>
+  claims(status?: ServerClaim['status']): Promise<AdminClaim[]>
+  users(query?: string): Promise<AdminUser[]>
+  setRoles(userId: string, roles: UserRole[]): Promise<{ ok: true }>
+  ban(userId: string, banned: boolean): Promise<{ ok: true }>
 }
 
 /** Everything the app can reach, resolved once at boot. */
@@ -142,4 +216,8 @@ export interface Repositories {
   ads: AdRepository
   owners: OwnerRepository
   users: UserRepository
+  auth: AuthRepository
+  account: AccountRepository
+  logos: LogoRepository
+  admin: AdminRepository
 }

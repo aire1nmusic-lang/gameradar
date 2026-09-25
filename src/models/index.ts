@@ -20,6 +20,8 @@ import type {
   ServerStatus,
   UserRole,
   AuthProvider,
+  LoginProvider,
+  LogoStatus,
   VoteDelivery,
   VoteStatus,
 } from './enums'
@@ -225,13 +227,86 @@ export interface ServerProvenance {
 
 /* ── People ─────────────────────────────────────────────────────────────── */
 
+/** An external account linked to a GameScout user. */
+export interface UserIdentity {
+  provider: LoginProvider
+  linkedAt: string
+}
+
+/** The signed-in person, as `/auth/me` returns it (docs/accounts-api.md). */
 export interface User {
   id: string
   displayName: string
+  email?: string
+  emailVerified: boolean
   avatarUrl?: string
-  provider: AuthProvider
+  roles: UserRole[]
+  /** false for accounts created through a provider only */
+  hasPassword: boolean
+  identities: UserIdentity[]
+  createdAt: string
+  /** legacy: the provider of the first sign-in, before identities existed */
+  provider?: AuthProvider
+}
+
+/** Short user card inside admin lists. */
+export interface UserRef {
+  id: string
+  displayName: string
+  email?: string
+}
+
+/* ── Server logos ───────────────────────────────────────────────────────── */
+
+/** An owner's logo state: the approved one, one waiting for review, the last rejection. */
+export interface ServerLogoState {
+  current?: { id: string; url: string }
+  pending?: { id: string; createdAt: string }
+  rejected?: { id: string; reason: string; reviewedAt: string }
+}
+
+/* ── Admin ──────────────────────────────────────────────────────────────── */
+
+export interface AdminOverview {
+  pendingLogos: number
+  pendingServers: number
+  pendingClaims: number
+  users: number
+}
+
+export interface AdminLogo {
+  id: string
+  status: LogoStatus
+  createdAt: string
+  size: number
+  mime: string
+  server: { id: string; slug: string; name: string; gameId: string }
+  uploadedBy?: UserRef
+}
+
+export interface AdminServerItem {
+  server: GameServer
+  /** moderation details as the API returns them; the UI reads server.moderation */
+  moderation?: unknown
+  submittedBy?: UserRef
+  createdAt: string
+}
+
+export interface AdminClaim {
+  id: string
+  status: ClaimStatus
+  method: ClaimMethod
+  createdAt: string
+  server: { id: string; slug: string; name: string }
+  user: UserRef
+}
+
+export interface AdminUser extends UserRef {
   roles: UserRole[]
   createdAt: string
+  lastLoginAt?: string | null
+  bannedAt?: string | null
+  identities?: UserIdentity[]
 }
 
 export interface Owner {

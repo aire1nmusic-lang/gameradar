@@ -31,4 +31,8 @@ export const repo = {
   get ads() { return repositories.ads },
   get owners() { return repositories.owners },
   get users() { return repositories.users },
+  get auth() { return repositories.auth },
+  get account() { return repositories.account },
+  get logos() { return repositories.logos },
+  get admin() { return repositories.admin },
 }

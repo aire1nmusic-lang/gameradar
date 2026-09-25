@@ -127,6 +127,25 @@ export const AuthProvider = {
 } as const
 export type AuthProvider = (typeof AuthProvider)[keyof typeof AuthProvider]
 
+/** External sign-in providers of the accounts API — lowercase on the wire. */
+export const LoginProvider = {
+  Google: 'google',
+  Yandex: 'yandex',
+  Vk: 'vk',
+  Discord: 'discord',
+} as const
+export type LoginProvider = (typeof LoginProvider)[keyof typeof LoginProvider]
+/** Display order of the sign-in buttons. */
+export const LOGIN_PROVIDERS: LoginProvider[] = ['google', 'yandex', 'vk', 'discord']
+
+/** Review state of an uploaded server logo. */
+export const LogoStatus = {
+  Pending: 'PENDING',
+  Approved: 'APPROVED',
+  Rejected: 'REJECTED',
+} as const
+export type LogoStatus = (typeof LogoStatus)[keyof typeof LogoStatus]
+
 /** Advertising inventory. Every one of these is always labelled in the UI. */
 export const AdSlot = {
   TopBanner: 'TOP_BANNER',

@@ -1,6 +1,37 @@
-import type { Game, GameServer, OnlineSample, OwnerProject, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
-import type { Repositories } from '../types'
+import {
+  LOGIN_PROVIDERS,
+  type AdminClaim,
+  type AdminLogo,
+  type AdminOverview,
+  type AdminServerItem,
+  type AdminUser,
+  type Game,
+  type GameServer,
+  type LoginProvider,
+  type OnlineSample,
+  type OwnerProject,
+  type Page,
+  type RankedServer,
+  type ServerClaim,
+  type ServerLogoState,
+  type ServerQuery,
+  type User,
+  type Vote,
+  type VoteIntegration,
+} from '@/models'
+import type { AuthSession, CodeSent, Repositories } from '../types'
 import { cacheGames, hydrateGames } from '@/data/games'
+
+/** Older API builds answer without the account fields; the UI always gets the full shape. */
+function normalizeUser(user: User): User {
+  return {
+    ...user,
+    roles: user.roles ?? [],
+    identities: (user.identities ?? []).filter(identity => LOGIN_PROVIDERS.includes(identity.provider)),
+    hasPassword: user.hasPassword === true,
+    emailVerified: user.emailVerified === true,
+  }
+}
 
 export class HttpError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message) }
@@ -55,7 +86,20 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     }
     return gamesRequest
   }
-  const current = async () => (await request<{ user: User | null }>('/auth/me')).user ?? undefined
+  const me = async (): Promise<AuthSession> => {
+    const body = await request<Partial<AuthSession>>('/auth/me')
+    return {
+      user: body.user ? normalizeUser(body.user) : null,
+      providers: (body.providers ?? []).filter((provider): provider is LoginProvider => LOGIN_PROVIDERS.includes(provider)),
+      emailLogin: body.emailLogin === true,
+      devAuthEnabled: body.devAuthEnabled === true,
+    }
+  }
+  const current = async () => (await me()).user ?? undefined
+  /** every answer that signs in or changes the account carries the fresh user */
+  const withUser = async (pending: Promise<{ user: User }>) => ({ user: normalizeUser((await pending).user) })
+  const logout = () => send('/auth/logout', {})
+  const enc = encodeURIComponent
   const leaderboard = (gameId?: string, chronicleId?: string) => request<RankedServer[]>('/rating' + params({ gameId, chronicleId }))
   const unsupported = async (): Promise<never> => { throw new Error('Эта функция пока не подключена') }
 
@@ -107,9 +151,46 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     },
     users: {
       current,
-      session: () => request('/auth/me'),
+      session: me,
       login: input => send('/auth/dev', input),
-      logout: () => send('/auth/logout', {}),
+      logout,
+    },
+    auth: {
+      me,
+      register: input => send<CodeSent>('/auth/register', input),
+      confirmRegistration: input => withUser(send('/auth/register/confirm', input)),
+      login: input => withUser(send('/auth/login', input)),
+      requestCode: input => send<CodeSent>('/auth/code', input),
+      verifyCode: input => withUser(send('/auth/code/verify', input)),
+      resetPassword: input => withUser(send('/auth/password/reset', input)),
+      logout,
+      providerUrl: (provider, options = {}) =>
+        `${base}/auth/${enc(provider)}` + params({ link: options.link ? 1 : undefined, next: options.next }),
+    },
+    account: {
+      updateProfile: input => withUser(send('/me', input, 'PATCH')),
+      changePassword: input => withUser(send('/me/password', input)),
+      unlinkIdentity: provider => withUser(request('/me/identities/' + enc(provider), { method: 'DELETE' })),
+    },
+    logos: {
+      // Raw bytes, not JSON: the browser already resized the image to 256×256.
+      upload: (serverId, image) =>
+        request('/servers/' + enc(serverId) + '/logo', { method: 'POST', body: image, headers: { 'Content-Type': image.type || 'image/png' } }),
+      status: serverId => request<ServerLogoState>('/servers/' + enc(serverId) + '/logo'),
+    },
+    admin: {
+      overview: () => request<AdminOverview>('/admin/overview'),
+      logos: (status = 'PENDING') => request<AdminLogo[]>('/admin/logos' + params({ status })),
+      logoImageUrl: id => `${base}/admin/logos/${enc(id)}/image`,
+      approveLogo: id => send('/admin/logos/' + enc(id) + '/approve', {}),
+      rejectLogo: (id, reason) => send('/admin/logos/' + enc(id) + '/reject', { reason }),
+      servers: (status = 'PENDING') => request<AdminServerItem[]>('/admin/servers' + params({ status })),
+      publishServer: id => send<GameServer>('/admin/servers/' + enc(id) + '/publish', {}),
+      rejectServer: (id, reason) => send('/admin/servers/' + enc(id) + '/reject', { reason }),
+      claims: (status = 'PENDING') => request<AdminClaim[]>('/admin/claims' + params({ status })),
+      users: query => request<AdminUser[]>('/admin/users' + params({ query: query?.trim() })),
+      setRoles: (userId, roles) => send('/admin/users/' + enc(userId) + '/roles', { roles }),
+      ban: (userId, banned) => send('/admin/users/' + enc(userId) + '/ban', { banned }),
     },
     owners: {
       current: async () => { const user = await current(); return user ? { id: user.id, userId: user.id, serverIds: [], createdAt: user.createdAt } : undefined },

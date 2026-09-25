@@ -20,7 +20,11 @@ import { AD_INVENTORY, AD_PRODUCTS, type AdCreative } from '@/data/ads'
 import { OWNER_PROJECTS } from '@/data/dashboard'
 import { PLATFORM_STATS } from '@/data/servers'
 import type {
+  AccountRepository,
+  AdminRepository,
   AdRepository,
+  AuthRepository,
+  LogoRepository,
   BoostRepository,
   GameRepository,
   OwnerRepository,
@@ -339,6 +343,9 @@ const ads: AdRepository = {
 const DEMO_USER = {
   id: 'user-demo',
   displayName: 'Demo Owner',
+  emailVerified: false,
+  hasPassword: false,
+  identities: [],
   provider: AuthProvider.Discord,
   roles: [UserRole.Player, UserRole.Owner],
   createdAt: new Date(Date.now() - 400 * 86_400_000).toISOString(),
@@ -374,11 +381,42 @@ const owners: OwnerRepository = {
 }
 
 async function unsupported(): Promise<never> { throw new Error('Not available in explicit mock mode') }
+const NO_SESSION = { user: null, providers: [], emailLogin: false, devAuthEnabled: false }
 const users: UserRepository = {
-  session: () => reply({ user: null, devAuthEnabled: false }),
+  session: () => reply(NO_SESSION),
   login: unsupported,
   logout: unsupported,
   current: () => reply(undefined), // no auth in the prototype
+}
+
+/* Accounts and moderation need the real API; the demo mode only type-checks them. */
+async function demoOnly(): Promise<never> { throw new Error('Недоступно в демо-режиме') }
+const auth: AuthRepository = {
+  me: () => reply(NO_SESSION),
+  register: demoOnly,
+  confirmRegistration: demoOnly,
+  login: demoOnly,
+  requestCode: demoOnly,
+  verifyCode: demoOnly,
+  resetPassword: demoOnly,
+  logout: demoOnly,
+  providerUrl: () => '#',
+}
+const account: AccountRepository = { updateProfile: demoOnly, changePassword: demoOnly, unlinkIdentity: demoOnly }
+const logos: LogoRepository = { upload: demoOnly, status: () => reply({}) }
+const admin: AdminRepository = {
+  overview: demoOnly,
+  logos: demoOnly,
+  logoImageUrl: () => '',
+  approveLogo: demoOnly,
+  rejectLogo: demoOnly,
+  servers: demoOnly,
+  publishServer: demoOnly,
+  rejectServer: demoOnly,
+  claims: demoOnly,
+  users: demoOnly,
+  setRoles: demoOnly,
+  ban: demoOnly,
 }
 
 export const mockRepositories: Repositories = {
@@ -390,4 +428,8 @@ export const mockRepositories: Repositories = {
   ads,
   owners,
   users,
+  auth,
+  account,
+  logos,
+  admin,
 }

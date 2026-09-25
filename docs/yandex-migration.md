@@ -113,16 +113,23 @@ node ru-proxy/yandex/upload.mjs --bucket gamescout-ru-staging --dir ru-proxy/.de
 npx wrangler deploy --config ru-proxy/wrangler.staging.toml   # только если менялся worker/
 ```
 
-**Переключить new.gamescout.online на staging** (DNS менять не нужно: `new.` уже CNAME на общий ingress,
-шлюз выбирается по Host). Требует изменения списка доменов production-шлюза — на apex не влияет:
+**Переключить new.gamescout.online на staging.** Шлюзы выбираются по Host на любом ingress, но сертификат
+своего домена шлюз отдаёт **только на своём ingress**: production-шлюз — `158.160.184.183` (`…fovt0b64…`),
+staging — `158.160.140.116` (`…8wihnuyr…`). Поэтому нужны оба шага, иначе браузеры получают ошибку сертификата:
 
 ```
 yc serverless api-gateway remove-domain gamescout-ru --domain-id d5di3f0l9asjuhsmp158
 yc serverless api-gateway add-domain gamescout-staging --domain new.gamescout.online --certificate-id fpqvavmfp047p2rorn07
 ```
 
-Откат — те же команды наоборот (`add-domain gamescout-ru …`, затем `remove-domain gamescout-staging` с id домена
-из `yc serverless api-gateway get gamescout-staging`).
+и в Cloudflare DNS запись `new` (CNAME, DNS only): `d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net` →
+`d5d08arkk9drmr85tso5.8wihnuyr.apigw.yandexcloud.net`. TTL записи — 300 с. Запись apex не меняется.
+
+Статус на 25.09.2026 15:52 UTC: домен уже перенесён на `gamescout-staging` (15:33 UTC), DNS ещё не изменён.
+
+Откат: `yc serverless api-gateway add-domain gamescout-ru --domain new.gamescout.online --certificate-id fpqvavmfp047p2rorn07`,
+затем `remove-domain gamescout-staging` с id домена из `yc serverless api-gateway get gamescout-staging`
+(сейчас `d5dkp4eia4c6c25cimd9`); если DNS уже переключён — вернуть CNAME на `…fovt0b64…`.
 
 **Уборка:** `yc serverless api-gateway delete gamescout-staging`, `yc serverless function delete gamescout-api-proxy-staging`,
 `npx wrangler delete --config ru-proxy/wrangler.staging.toml`, очистить и удалить бакет `gamescout-ru-staging`.

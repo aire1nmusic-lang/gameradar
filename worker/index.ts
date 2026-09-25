@@ -46,6 +46,28 @@ import { deliverVotifierVotes } from './lib/votes.ts'
 type Vars = { store: Store; user?: Row; proxyIp?: string }
 const app = new Hono<{ Bindings: Env; Variables: Vars }>()
 
+/**
+ * Public lists are the same for every visitor and are asked for on every page:
+ * keep each answer in this isolate for a few seconds instead of reading D1 again.
+ * Free-plan D1 has a daily row-read limit; a warm isolate now serves repeats
+ * from memory. Keyed by path + sorted query, so filters never mix.
+ */
+const listCache = new Map<string, { at: number; body: string }>()
+async function cachedList(c: { req: { url: string }; body: (data: string, status: 200, headers: Record<string, string>) => Response }, ttlMs: number, produce: () => Promise<unknown>) {
+  const url = new URL(c.req.url)
+  const params = [...url.searchParams.entries()].sort(([a], [b]) => a.localeCompare(b))
+  const key = url.pathname + '?' + new URLSearchParams(params).toString()
+  const hit = listCache.get(key)
+  let body = hit && Date.now() - hit.at < ttlMs ? hit.body : undefined
+  if (!body) {
+    body = JSON.stringify(await produce())
+    listCache.delete(key)
+    listCache.set(key, { at: Date.now(), body })
+    if (listCache.size > 300) listCache.delete(listCache.keys().next().value!)
+  }
+  return c.body(body, 200, { 'Content-Type': 'application/json; charset=UTF-8' })
+}
+
 const SESSION_COOKIE = 'gs_session'
 const SESSION_DAYS = 30
 const CLAIM_FILE = '/.well-known/gamescout-verification.txt'
@@ -211,22 +233,26 @@ app.get('/sitemap.xml', c => sitemap(c))
 
 /* ── games ────────────────────────────────────────────────────────────────── */
 
-app.get('/api/v1/games', async c => {
+app.get('/api/v1/games', c => cachedList(c, 60_000, async () => {
   const s = store(c)
   const [games, chronicles, versions] = await Promise.all([s.games(), s.chronicles(), s.chronicleVersions()])
-  return c.json(games.map(game => gameDto(game, chronicles, versions)))
-})
+  return games.map(game => gameDto(game, chronicles, versions))
+}))
 
 /* ── catalogue ────────────────────────────────────────────────────────────── */
 
-app.get('/api/v1/servers', async c => {
-  const page = await store(c).servers(filters(new URL(c.req.url).searchParams))
-  return c.json({ items: page.items.map(serverDto), total: page.total, limit: page.limit, offset: page.offset })
+app.get('/api/v1/servers', c => {
+  const query = filters(new URL(c.req.url).searchParams) // validate before the cache: bad input never gets a cached 200
+  return cachedList(c, 30_000, async () => {
+    const page = await store(c).servers(query)
+    return { items: page.items.map(serverDto), total: page.total, limit: page.limit, offset: page.offset }
+  })
 })
 
-app.get('/api/v1/rating', async c => {
-  const params = new URL(c.req.url).searchParams
-  const page = await store(c).servers({ ...filters(params), limit: 100, offset: 0, sort: 'recommended' })
+app.get('/api/v1/rating', c => {
+  const query = filters(new URL(c.req.url).searchParams)
+  return cachedList(c, 30_000, async () => {
+  const page = await store(c).servers({ ...query, limit: 100, offset: 0, sort: 'recommended' })
   // Boost points are not sold yet; the organic and sponsored orders are identical
   // and the split stays visible so the UI never has to guess.
   const ranked = page.items.map((row, index) => ({
@@ -238,7 +264,8 @@ app.get('/api/v1/rating', async c => {
     organicRank: index + 1,
     boosted: false,
   }))
-  return c.json(ranked)
+  return ranked
+  })
 })
 
 app.get('/api/v1/servers/:key', async c => {

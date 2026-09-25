@@ -17,9 +17,14 @@ export function formatPlayers(online: Pick<OnlineData, 'status' | 'current' | 'p
   return online.freshness === 'stale' ? '—' : formatNumber(online.current)
 }
 
-/** Slot count as text, "—" when the server never told us. */
-export function formatSlots(online: Pick<OnlineData, 'max' | 'maxKnown'>): string {
-  return online.maxKnown === false ? '—' : formatNumber(online.max)
+/**
+ * Slot count as text, "—" when the server never told us or when the reported
+ * limit is below the current count (2b2t answers max = 1): that is not a limit.
+ */
+export function formatSlots(online: Pick<OnlineData, 'max' | 'maxKnown'> & { current?: number }): string {
+  if (online.maxKnown === false) return '—'
+  if (online.current !== undefined && online.max < online.current) return '—'
+  return formatNumber(online.max)
 }
 
 /** 184920 -> "185K" ; 1 240 000 -> "1,2M" */

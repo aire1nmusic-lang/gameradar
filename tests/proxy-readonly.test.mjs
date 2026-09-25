@@ -27,7 +27,7 @@ test('off by default: production relay behaviour is unchanged', async () => {
 
 test('reads pass through', async () => {
   const spy = upstreamSpy()
-  for (const path of ['/api/v1/games', '/api/v1/servers?limit=100', '/api/v1/servers/2b2t', '/api/v1/auth/me', '/api/v1/servers/2b2t/reward']) {
+  for (const path of ['/api/v1/games', '/api/v1/servers?limit=100', '/api/v1/servers/2b2t', '/api/v1/auth/me', '/api/v1/rating?gameId=minecraft']) {
     const res = await relay(req('GET', path), readOnly, '203.0.113.5', spy.fetchImpl)
     assert.equal(res.status, 200, path)
   }
@@ -58,5 +58,13 @@ test('sign-in cannot create users or sessions', async () => {
     const res = await relay(req('GET', path), readOnly, '203.0.113.5', spy.fetchImpl)
     assert.equal(res.status, 403, path)
   }
+  assert.deepEqual(spy.calls, [])
+})
+
+test('the reward lookup, which inserts a default row, never reaches the upstream', async () => {
+  const spy = upstreamSpy()
+  const res = await relay(req('GET', '/api/v1/servers/imp-mc-2b2t-org/reward'), readOnly, '203.0.113.5', spy.fetchImpl)
+  assert.equal(res.status, 204)
+  assert.equal(res.headers.get('x-gs-read-only'), '1')
   assert.deepEqual(spy.calls, [])
 })

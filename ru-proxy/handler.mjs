@@ -9,8 +9,9 @@
  * dropped here.
  *
  * GS_READ_ONLY=true (staging): nothing the page does can persist. Writes are
- * refused, view/click analytics are dropped with 204, and Discord sign-in is
- * closed so no users or sessions are created. The Worker behind is unchanged.
+ * refused, view/click analytics are dropped with 204, the reward lookup (it
+ * lazily inserts a default row) answers 204, and Discord sign-in is closed so
+ * no users or sessions are created. The Worker behind is unchanged.
  */
 
 /** Request headers the API reads; everything else stays at the proxy. */
@@ -45,6 +46,9 @@ const READ_ONLY_MESSAGE = 'Это тестовая копия GameScout: изм�
 const DROPPED_WHEN_READ_ONLY = new Set(['/api/v1/events'])
 /** GET routes that create users or sessions. */
 const SIGN_IN = /^\/api\/v1\/auth\/discord(?:\/|$)/
+/** A GET that lazily inserts a default vote-integration row; the page treats a missing answer as "no data". */
+const LAZY_WRITE_READS = /^\/api\/v1\/servers\/[^/]+\/reward$/
+const readOnlyEmpty = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'X-GS-Via': 'proxy', 'X-GS-Read-Only': '1' } })
 
 /** The visitor's IP as the hosting platform reports it, or undefined when it is not an IP. */
 export function normaliseIp(value) {
@@ -64,10 +68,11 @@ export async function relay(request, config, clientIp, fetchImpl = fetch) {
 
   if (config.readOnly) {
     if (!SAFE_METHODS.has(request.method)) {
-      if (DROPPED_WHEN_READ_ONLY.has(url.pathname)) return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'X-GS-Via': 'proxy', 'X-GS-Read-Only': '1' } })
+      if (DROPPED_WHEN_READ_ONLY.has(url.pathname)) return readOnlyEmpty()
       return problem(403, 'read_only', READ_ONLY_MESSAGE)
     }
     if (SIGN_IN.test(url.pathname)) return problem(403, 'read_only', READ_ONLY_MESSAGE)
+    if (LAZY_WRITE_READS.test(url.pathname)) return readOnlyEmpty()
   }
 
   const target = new URL(url.pathname + url.search, config.upstream)

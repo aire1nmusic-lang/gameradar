@@ -85,7 +85,7 @@ function Motif({ kind }: { kind: GameMotif }) {
  * so the art scrim is mixed from that world's palette — the tile is a small
  * preview of the world it opens.
  */
-export function GameTile({ game, className, compact }: { game: Game; className?: string; compact?: boolean }) {
+export function GameTile({ game, className, compact, priority = true }: { game: Game; className?: string; compact?: boolean; priority?: boolean }) {
   const art = worldArt('hero', game.id)
 
   return (
@@ -93,16 +93,20 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
     <Link
       to={`/${game.slug}`}
       className={cn(
-        'group relative overflow-hidden rounded-xl border border-white/7 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/16',
+        // No lift on hover: moving a clipped, rounded box while its art zooms makes the picture edge jump.
+        'group relative isolate overflow-hidden rounded-xl border border-white/7 transition-colors duration-300 hover:border-white/20',
         compact ? 'h-[104px]' : 'h-[148px]',
         className,
       )}
+      // The world's colours stand in for the picture until it arrives, so a tile is never an empty box.
+      style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${game.from} 38%, #0c0e13), color-mix(in oklab, ${game.to} 22%, #08090d))` }}
     >
       {art ? (
         <WorldArtSurface
           art={art}
           scrim="tile"
           zoom
+          priority={priority}
           width={800}
           sizes="(min-width: 1024px) 420px, 50vw"
         />
@@ -120,7 +124,7 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
       <svg
         viewBox="0 0 80 80"
         className={cn(
-          'absolute -right-2 -bottom-3 h-[118px] w-[118px] text-white transition-all duration-500 group-hover:-translate-y-1',
+          'absolute -right-2 -bottom-3 h-[118px] w-[118px] text-white transition-opacity duration-500',
           art ? 'opacity-[0.10] group-hover:opacity-[0.16]' : 'opacity-[0.13] group-hover:opacity-[0.2]',
         )}
         aria-hidden

@@ -428,8 +428,8 @@
       box-shadow 0.24s ease,
       border-color 0.24s ease;
   }
+  /* No lift: moving a clipped card while its art zooms makes the picture strip jump. */
   .gt-card--interactive:hover {
-    transform: translate3d(0, -3px, 0);
     box-shadow: var(--gt-card-shadow-hover);
     border-color: var(--gt-border-strong);
   }

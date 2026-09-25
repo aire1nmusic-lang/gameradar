@@ -1,6 +1,6 @@
 import type { Game, GameServer, OnlineSample, OwnerProject, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
 import type { Repositories } from '../types'
-import { hydrateGames } from '@/data/games'
+import { cacheGames, hydrateGames } from '@/data/games'
 
 export class HttpError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message) }
@@ -43,7 +43,18 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
       if (!page.items.length || offset >= page.total) return items
     }
   }
-  const listGames = async () => { const games = await request<Game[]>('/games'); hydrateGames(games); return games }
+  // One request serves every caller for a minute: a single page asks for the game list from up to five places.
+  let gamesRequest: Promise<Game[]> | undefined
+  let gamesRequestedAt = 0
+  const listGames = () => {
+    if (!gamesRequest || Date.now() - gamesRequestedAt > 60_000) {
+      gamesRequestedAt = Date.now()
+      const pending = request<Game[]>('/games').then((games) => { hydrateGames(games); cacheGames(games); return games })
+      pending.catch(() => { if (gamesRequest === pending) gamesRequest = undefined })
+      gamesRequest = pending
+    }
+    return gamesRequest
+  }
   const current = async () => (await request<{ user: User | null }>('/auth/me')).user ?? undefined
   const leaderboard = (gameId?: string, chronicleId?: string) => request<RankedServer[]>('/rating' + params({ gameId, chronicleId }))
   const unsupported = async (): Promise<never> => { throw new Error('Эта функция пока не подключена') }

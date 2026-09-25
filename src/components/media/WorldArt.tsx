@@ -114,11 +114,12 @@ export function WorldArtSurface({
   children?: ReactNode
 }) {
   return (
-    <div aria-hidden className={cn('absolute inset-0 overflow-hidden', className)}>
+    <div aria-hidden className={cn('absolute inset-0 isolate overflow-hidden', className)}>
       <div
         className={cn(
           'absolute inset-0',
-          zoom && 'transition-transform duration-700 ease-out group-hover:scale-[1.05]',
+          // own compositing layer: without it Chrome redraws the clipped edge as a moving strip while scaling
+          zoom && 'transition-transform duration-700 ease-out will-change-transform [backface-visibility:hidden] group-hover:scale-[1.04]',
         )}
       >
         {art ? <ArtImage art={art} sizes={sizes} priority={priority} width={width} /> : fallback}

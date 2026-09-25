@@ -12,7 +12,15 @@ export async function initializeRepositories() {
     repositories = (await import('./mock')).mockRepositories
     const { hydrateGames } = await import('@/data/games')
     hydrateGames(await repositories.games.list())
-  } else await repositories.games.list()
+  } else {
+    // A returning visitor starts from the cached structure; the fresh list follows in the background.
+    const { cachedGames, hydrateGames } = await import('@/data/games')
+    const cached = cachedGames()
+    if (cached) {
+      hydrateGames(cached)
+      void repositories.games.list().catch(() => undefined)
+    } else await repositories.games.list()
+  }
 }
 export const repo = {
   get games() { return repositories.games },

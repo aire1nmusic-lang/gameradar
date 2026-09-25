@@ -1,14 +1,13 @@
 import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { MARK_G, MARK_S, MARK_VIEWBOX, WORD_GAME, WORD_SCOUT, WORD_VIEWBOX } from './logoPaths'
+import { MARK_G, MARK_S, MARK_VIEWBOX } from './logoPaths'
 
 const ratio = (viewBox: string) => {
   const [, , w, h] = viewBox.split(' ').map(Number)
   return w / h
 }
 const MARK_RATIO = ratio(MARK_VIEWBOX)
-const WORD_RATIO = ratio(WORD_VIEWBOX)
 
 /**
  * The GS mark. Colours come from CSS variables (--gs-a* for the G, --gs-b* for
@@ -42,31 +41,17 @@ export function GsMark({ height = 30, live = false, className }: { height?: numb
   )
 }
 
-/** "GameScout" as drawn in the logo: "Game" in silver, "Scout" in the mark's accent. */
-export function GsWordmark({ height = 17, live = false, className }: { height?: number; live?: boolean; className?: string }) {
-  const id = useId().replace(/:/g, '')
+/**
+ * "GameScout" set in Saira ExtraBold (112.5 % width) — the typeface closest to
+ * the approved logo that stays crisp letter by letter at header size. "Game" is
+ * silver, "Scout" takes the mark's accent and follows the palette animation.
+ */
+export function GsWordmark({ size = 20, live = false, className }: { size?: number; live?: boolean; className?: string }) {
   return (
-    <svg
-      viewBox={WORD_VIEWBOX}
-      height={height}
-      width={Math.round(height * WORD_RATIO)}
-      className={cn('gs-logo shrink-0', live && 'gs-logo--live', className)}
-      role="img"
-      aria-label="GameScout"
-    >
-      <defs>
-        <linearGradient id={`${id}w`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--gs-w0)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--gs-w1)' }} />
-        </linearGradient>
-        <linearGradient id={`${id}b`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--gs-b0)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--gs-b1)' }} />
-        </linearGradient>
-      </defs>
-      <path d={WORD_GAME} fill={`url(#${id}w)`} />
-      <path d={WORD_SCOUT} fill={`url(#${id}b)`} />
-    </svg>
+    <span className={cn('gs-logo gs-wordmark', live && 'gs-logo--live', className)} style={{ fontSize: size }}>
+      <span className="gs-wordmark__game">Game</span>
+      <span className="gs-wordmark__scout">Scout</span>
+    </span>
   )
 }
 
@@ -74,7 +59,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
   return (
     <Link to="/" className={cn('group flex items-center gap-2.5', className)} aria-label="GameScout — на главную">
       <GsMark height={30} live />
-      {!compact && <GsWordmark height={17} live />}
+      {!compact && <GsWordmark size={20} live />}
     </Link>
   )
 }

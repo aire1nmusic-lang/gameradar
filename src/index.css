@@ -799,3 +799,25 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   html[data-motion='lively'] .gs-row,
   html[data-motion='lively'] .gs-hero .gt-art-img.is-loaded { animation: none; }
 }
+
+/* The wordmark: live text, so every letter stays sharp at header size. */
+.gs-wordmark {
+  font-family: 'Saira', var(--font-display);
+  font-weight: 800;
+  font-stretch: 112.5%;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.gs-wordmark__game {
+  background: linear-gradient(180deg, var(--gs-w0), var(--gs-w1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.gs-wordmark__scout {
+  background: linear-gradient(135deg, var(--gs-b0), var(--gs-b1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

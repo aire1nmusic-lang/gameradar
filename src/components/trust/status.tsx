@@ -104,14 +104,15 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
   },
 }
 
-export function LiveDot({ status, className }: { status: OnlineStatus; className?: string }) {
+/** A stale number never wears the live colour: the dot turns amber and stops pulsing. */
+export function LiveDot({ status, stale, className }: { status: OnlineStatus; stale?: boolean; className?: string }) {
   const meta = STATUS_META[status]
   return (
     <span
       className={cn(
         'inline-block h-[6px] w-[6px] rounded-full',
-        meta.dot,
-        (status === OnlineStatus.Verified || status === OnlineStatus.Live) && 'animate-pulse-dot',
+        stale ? 'bg-warn-400/80' : meta.dot,
+        !stale && (status === OnlineStatus.Verified || status === OnlineStatus.Live) && 'animate-pulse-dot',
         className,
       )}
     />

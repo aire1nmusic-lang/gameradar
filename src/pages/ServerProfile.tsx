@@ -162,6 +162,7 @@ function Profile({ server }: { server: GameServer }) {
     ],
   })
   const site = server.links.site || undefined
+  const ctaStale = server.online.freshness === 'stale' && server.online.status !== 'OFFLINE'
   const upcoming = server.online.status === 'PENDING' && !!server.launch
 
   useEffect(() => {
@@ -364,8 +365,8 @@ function Profile({ server }: { server: GameServer }) {
                   : formatPlayers(server.online)}
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
-              <LiveDot status={server.online.status} />
-              <span className="truncate">{STATUS_META[server.online.status].short}</span>
+              <LiveDot status={server.online.status} stale={ctaStale} />
+              <span className={cn('truncate', ctaStale && 'text-warn-400/85')}>{ctaStale ? 'устарело' : STATUS_META[server.online.status].short}</span>
             </div>
           </div>
           {server.address && !upcoming && <CopyAddress address={server.address} serverId={server.id} size="md" />}

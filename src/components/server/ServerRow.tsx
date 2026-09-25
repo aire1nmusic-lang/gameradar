@@ -110,7 +110,7 @@ export function ServerRow({
               {known ? formatPlayers(server.online) : '—'}
             </div>
             <div className="mt-1 flex items-center justify-end gap-1.5 text-[10.5px]">
-              <LiveDot status={status} />
+              <LiveDot status={status} stale={stale} />
               <span className={cn(stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
                 {stale ? 'устарело' : status === OnlineStatus.Verified ? 'проверено' : status === OnlineStatus.Offline ? 'офлайн' : known ? 'онлайн' : 'нет данных'}
               </span>

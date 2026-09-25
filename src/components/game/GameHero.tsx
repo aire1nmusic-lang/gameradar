@@ -32,6 +32,8 @@ export function GameHero({
   const art = worldArt('hero', game.id, chronicle?.id)
 
   const title = chronicle ? `${game.shortName} ${chronicle.label}` : game.name
+  // A chronicle without its own tagline shows none — the game's line would read as a mistake here.
+  const tagline = (chronicle ? chronicle.tagline : game.tagline)?.trim() || ''
   const facts = [
     playersOnline > 0 ? `${formatCompact(playersOnline)} онлайн` : null,
     `${formatNumber(serversCount)} ${plural(serversCount, ['сервер', 'сервера', 'серверов'])}`,
@@ -82,7 +84,7 @@ export function GameHero({
 
         <p className="num mt-2 text-[14px]" style={{ color: theme.colors.textMuted }}>
           {facts.join(' · ')}
-          {chronicle?.tagline || game.tagline ? <span className="hidden sm:inline"> · {chronicle?.tagline ?? game.tagline}</span> : null}
+          {tagline ? <span className="hidden sm:inline"> · {tagline}</span> : null}
         </p>
 
         <div

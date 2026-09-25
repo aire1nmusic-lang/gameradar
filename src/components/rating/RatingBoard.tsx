@@ -60,7 +60,8 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 <TierBadge rank={entry.rank} />
                 {isFirst && <Crown size={14} className="text-warn-300" />}
               </div>
-              <div className="absolute top-2.5 right-2.5 z-[2]">
+              {/* Three narrow columns on a tablet leave no room next to the tier chip; the body line carries the status there. */}
+              <div className="absolute top-2.5 right-2.5 z-[2] sm:hidden lg:block">
                 <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
               </div>
 

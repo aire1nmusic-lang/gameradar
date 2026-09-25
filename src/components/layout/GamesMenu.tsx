@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, Palette } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCompact } from '@/lib/format'
+import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { GAMES } from '@/data/games'
 
 /**
@@ -59,7 +59,9 @@ export function GamesMenu() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-medium text-ink-50">{game.shortName}</span>
                     <span className="num block text-[11.5px] text-ink-400">
-                      {formatCompact(game.playersOnline)} онлайн
+                      {game.playersOnline > 0
+                        ? `${formatCompact(game.playersOnline)} онлайн`
+                        : `${formatNumber(game.serversCount)} ${plural(game.serversCount, ['сервер', 'сервера', 'серверов'])}`}
                     </span>
                   </span>
                 </Link>

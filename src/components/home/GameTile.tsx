@@ -138,10 +138,12 @@ export function GameTile({ game, className, compact }: { game: Game; className?:
           <span className="num rounded-full border border-white/12 bg-ink-1000/45 px-2 py-[3px] text-white/85 backdrop-blur-sm">
             {formatNumber(game.serversCount)} {plural(game.serversCount, ['сервер', 'сервера', 'серверов'])}
           </span>
-          <span className="num flex items-center gap-1.5 text-white/70">
-            <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
-            {formatCompact(game.playersOnline)}
-          </span>
+          {game.playersOnline > 0 && (
+            <span className="num flex items-center gap-1.5 text-white/70">
+              <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
+              {formatCompact(game.playersOnline)}
+            </span>
+          )}
         </div>
       </div>
     </Link>

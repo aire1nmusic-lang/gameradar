@@ -48,7 +48,7 @@ const KEYART_WIDTHS = [400, 800, 1600, 2560, 3840]
 const LEGACY_WIDTHS = [400, 800, 1600]
 
 /** Every game with key art puts it at the centre of its first screen. */
-const SHOWCASE_GAMES = new Set(['lineage2', 'minecraft', 'gtarp', 'rust', 'cs2'])
+const SHOWCASE_GAMES = new Set(['lineage2', 'minecraft', 'gtarp', 'rust', 'cs2', 'dayz'])
 export const isShowcase = (gameId?: string) => !!gameId && SHOWCASE_GAMES.has(gameId)
 
 function art(base: string, alt: string, tone: ArtTone, focus: { desktop: string; mobile: string }, widths: number[] = KEYART_WIDTHS): WorldArt {
@@ -63,18 +63,19 @@ const keyart = (base: string, alt: string, tone: ArtTone, mobile: string, deskto
    ──────────────────────────────────────────────────────────────────────────── */
 
 const ART = {
-  l2Master: keyart('lineage-2/master', 'Lineage 2 — отряд из четырёх рас на скале перед готической крепостью на рассвете, дракон в тумане', 'dark', '68% 50%'),
-  l2Interlude: keyart('lineage-2/interlude', 'Lineage 2 Interlude — рыцарь и тёмный эльф идут к воротам каменного города на рассвете', 'medium', '70% 55%'),
-  l2HighFive: keyart('lineage-2/high-five', 'Lineage 2 High Five — отряд перед крепостью с осадными знамёнами', 'dark', '68% 50%'),
-  l2Classic: keyart('lineage-2/classic', 'Lineage 2 Classic — трое искателей приключений на дороге к деревне в сером тумане', 'medium', '45% 50%'),
-  l2Essence: keyart('lineage-2/essence', 'Lineage 2 Essence — камаэль, тёмный эльф и маг на кристальном мосту к небесной цитадели', 'bright', '50% 50%'),
-  mcMaster: keyart('minecraft/master', 'Minecraft — блочный замок над водопадом, портал и фонари на закате', 'medium', '72% 50%'),
+  l2Master: keyart('lineage-2/master', 'Lineage 2 — рыцарь, эльфийка, тёмная эльфийка, орк и гном на скале перед Башней Дерзости и Аденом на закате', 'medium', '74% 45%', '55% 40%'),
+  l2Interlude: keyart('lineage-2/interlude', 'Lineage 2 Interlude — эльфийка-маг и тёмный эльф на балконе у Древа Матери в Эльфийской деревне', 'medium', '84% 40%', '60% 35%'),
+  l2HighFive: keyart('lineage-2/high-five', 'Lineage 2 High Five — осада белого замка с синими крышами, паладин с заточенным мечом', 'medium', '80% 40%', '60% 40%'),
+  l2Classic: keyart('lineage-2/classic', 'Lineage 2 Classic — рейд на земляного дракона Антараса в каменном каньоне', 'medium', '66% 55%', '55% 45%'),
+  l2Essence: keyart('lineage-2/essence', 'Lineage 2 Essence — отряд рас Lineage 2 перед Башней Дерзости на закате', 'medium', '74% 45%', '55% 40%'),
+  mcMaster: keyart('minecraft/master', 'Minecraft — солнечная долина с деревней, каменным замком и водопадом, игрок в алмазной броне', 'bright', '82% 55%', '60% 50%'),
   mcAnarchy: keyart('minecraft/anarchy', 'Minecraft Anarchy — разрушенный блочный город с лавой ночью', 'dark', '70% 55%'),
-  mcSkyBlock: keyart('minecraft/skyblock', 'Minecraft SkyBlock — парящий остров с домом и деревом над облаками', 'bright', '40% 50%'),
+  mcSkyBlock: keyart('minecraft/skyblock', 'Minecraft SkyBlock — парящие острова с водопадами на рассвете, домик и сундук', 'bright', '70% 50%', '55% 50%'),
   mcMinigames: keyart('minecraft/minigames', 'Minecraft BedWars — цветные острова-базы и стеклянные мосты в пустоте', 'medium', '70% 45%'),
-  gtaMaster: keyart('gta-rp/master', 'GTA RP — ночной бульвар в дождь, неон, полицейская машина и пальмы', 'dark', '70% 60%'),
-  rustMaster: keyart('rust/master', 'Rust — база из ржавого металла на закате, выживший на крыше, вертолёт вдали', 'medium', '68% 50%'),
-  cs2Master: keyart('cs2/master', 'CS2 — боец с винтовкой в песчаном переулке, дым гранаты', 'bright', '62% 50%'),
+  gtaMaster: keyart('gta-rp/master', 'GTA RP — бульвар с пальмами на закате: полицейский, бизнесмен, байкер и девушка у спорткара', 'bright', '66% 55%', '55% 50%'),
+  rustMaster: keyart('rust/master', 'Rust — база из брёвен и металла на холме у моря, выживший у ворот на рассвете', 'bright', '72% 55%', '55% 50%'),
+  cs2Master: keyart('cs2/master', 'CS2 — отряд спецназа идёт через арку в солнечном городе из песчаника', 'bright', '84% 55%', '58% 50%'),
+  dayzMaster: keyart('dayz/master', 'DayZ — выживший с рюкзаком идёт по пустой дороге мимо брошенной машины к деревне с церковью, осень', 'bright', '86% 55%', '58% 55%'),
 
   stage: art('shared/obsidian-stage', 'Тёмная арена между мирами', 'dark', { desktop: '50% 58%', mobile: '50% 62%' }, LEGACY_WIDTHS),
 } satisfies Record<string, WorldArt>
@@ -116,8 +117,9 @@ const WORLDS: Record<string, Partial<WorldMedia>> = {
 
   rust: solo(ART.rustMaster),
   cs2: solo(ART.cs2Master),
+  dayz: solo(ART.dayzMaster),
 
-  // DayZ and newer games have no key art yet and fall back to procedural art.
+  // Newer games without key art fall back to procedural art.
 }
 
 /* ────────────────────────────────────────────────────────────────────────────

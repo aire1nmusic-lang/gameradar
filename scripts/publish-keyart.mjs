@@ -3,9 +3,12 @@
  *
  *   node scripts/publish-keyart.mjs <masters dir>
  *
- * Reads 16:9 PNG masters (any size ≥ 3840 px wide) named as in MASTERS and
- * writes public/media/worlds/<world>/<name>-<width>.webp at
- * 400/800/1600/2560/3840 px — the layout src/data/themeMedia.ts expects.
+ * Reads PNG masters named as in MASTERS and writes
+ * public/media/worlds/<world>/<name>-<width>.webp at 400/800/1600/2560/3840 px
+ * (never wider than the master) — the layout src/data/themeMedia.ts expects.
+ * The master's own aspect is kept (21:9 header art stays 21:9; the page crops
+ * with object-fit and a focus point). A master that is not in the folder is
+ * skipped and its published files stay as they are.
  * Masters are never modified; keep them outside the repo (Постеры/ is ignored).
  */
 import { existsSync, mkdirSync, statSync } from 'node:fs'
@@ -31,18 +34,21 @@ const MASTERS = [
   ['gta-master.png', 'gta-rp/master'],
   ['rust-master.png', 'rust/master'],
   ['cs2-master.png', 'cs2/master'],
+  ['dayz-master.png', 'dayz/master'],
 ]
 
 let total = 0
 for (const [source, base] of MASTERS) {
   const file = path.join(SOURCE, source)
-  if (!existsSync(file)) throw new Error(`Missing master: ${file}`)
+  if (!existsSync(file)) { console.log(`${base}  skipped (no master)`); continue }
+  const { width: masterWidth } = await sharp(file).metadata()
   mkdirSync(path.dirname(path.join(OUT, base)), { recursive: true })
   const sizes = []
-  for (const width of WIDTHS) {
-    const target = path.join(OUT, `${base}-${width}.webp`)
+  for (const wanted of WIDTHS) {
+    const width = Math.min(wanted, masterWidth)
+    const target = path.join(OUT, `${base}-${wanted}.webp`)
     await sharp(file)
-      .resize({ width, height: Math.round((width * 9) / 16), fit: 'cover', position: 'centre' })
+      .resize({ width })
       .webp({ quality: width >= 2560 ? 78 : width >= 1600 ? 80 : 74, effort: 6, smartSubsample: true })
       .toFile(target)
     const size = statSync(target).size

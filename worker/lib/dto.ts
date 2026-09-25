@@ -1,6 +1,7 @@
 import { FRESH_MS, parseList } from './core'
 import type { Row } from './store'
-export const userDto=(r:Row)=>({id:r.id,displayName:r.display_name,avatarUrl:r.avatar_url??undefined,provider:r.provider,roles:parseList(r.roles),createdAt:r.created_at})
+/** The signed-in account as its owner sees it. Never the password hash; identities only when loaded. */
+export const userDto=(r:Row,identities?:Row[])=>({id:r.id,displayName:r.display_name,email:r.email??undefined,emailVerified:!!r.email&&!!r.email_verified_at,avatarUrl:r.avatar_url??undefined,provider:r.provider,roles:parseList(r.roles),hasPassword:!!r.password_hash,identities:(identities??[]).map(i=>({provider:String(i.provider).toLowerCase(),linkedAt:i.created_at})),createdAt:r.created_at})
 export const claimDto=(r:Row,website?:string)=>({id:r.id,serverId:r.server_id,userId:r.user_id,method:r.method,status:r.status,proofToken:r.proof_token,createdAt:r.created_at,resolvedAt:r.resolved_at??undefined,...(website?{verificationUrl:new URL('/.well-known/gamescout-verification.txt',website).toString()}:{}),expiresAt:new Date(Date.parse(r.created_at)+86400000).toISOString()})
 export const voteDto=(r:Row)=>({id:r.id,serverId:r.server_id,nickname:r.nickname,status:r.status,delivery:r.delivery,createdAt:r.created_at,claimedAt:r.claimed_at??undefined,deliveredAt:r.delivered_at??undefined})
 /** What players see next to the vote button — never delivery endpoints or key state. */

@@ -26,6 +26,25 @@ export interface Env {
   DISCORD_CLIENT_SECRET?: string
   /** development/tests only: a local stand-in for https://discord.com/api */
   DISCORD_API_BASE?: string
+  /** Sign in with Google / Yandex / VK ID (see lib/oauth.ts) */
+  GOOGLE_CLIENT_ID?: string
+  GOOGLE_CLIENT_SECRET?: string
+  YANDEX_CLIENT_ID?: string
+  YANDEX_CLIENT_SECRET?: string
+  VK_CLIENT_ID?: string
+  VK_CLIENT_SECRET?: string
+  /** development/tests only: one local fixture for every OAuth provider */
+  OAUTH_TEST_BASE?: string
+  /** Server-side secret mixed into password and code hashes; never stored in D1 */
+  PASSWORD_PEPPER?: string
+  /** resend | unisender | log (development) — see lib/mailer.ts */
+  MAIL_DRIVER?: string
+  /** "GameScout <no-reply@gamescout.online>" */
+  MAIL_FROM?: string
+  RESEND_API_KEY?: string
+  UNISENDER_API_KEY?: string
+  /** Confirmed emails that get the ADMIN role on sign-in, comma-separated */
+  ADMIN_EMAILS?: string
 }
 export const now = () => new Date().toISOString()
 export const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString()

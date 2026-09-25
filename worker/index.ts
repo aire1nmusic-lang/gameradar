@@ -40,11 +40,11 @@ import { assertPort, assertPublicHost, assertPublicUrl } from './adapters/networ
 import { SubrequestBudget } from './lib/budget.ts'
 import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
 import { sitemapXml } from './lib/sitemap.ts'
-import { authorizeUrl, discordEnabled, discordProfile, safeNext } from './lib/discord.ts'
+import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, startSession, store, type AppEnv } from './lib/http.ts'
+import { accountRoutes } from './routes/accounts.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 
-type Vars = { store: Store; user?: Row; proxyIp?: string }
-const app = new Hono<{ Bindings: Env; Variables: Vars }>()
+const app = new Hono<AppEnv>()
 
 /**
  * Public lists are the same for every visitor and are asked for on every page:
@@ -68,8 +68,6 @@ async function cachedList(c: { req: { url: string }; body: (data: string, status
   return c.body(body, 200, { 'Content-Type': 'application/json; charset=UTF-8' })
 }
 
-const SESSION_COOKIE = 'gs_session'
-const SESSION_DAYS = 30
 const CLAIM_FILE = '/.well-known/gamescout-verification.txt'
 /** How long a claim's proof token is accepted. */
 const CLAIM_TTL_MS = 86400000
@@ -143,45 +141,7 @@ app.onError((error, c) => {
 
 app.notFound(c => c.json({ error: { code: 'not_found', message: 'Маршрут не найден' } }, 404))
 
-const store = (c: { get: (k: 'store') => Store }) => c.get('store')
-
-async function readJson(c: { req: { json: () => Promise<unknown> } }): Promise<Record<string, unknown>> {
-  try {
-    return object(await c.req.json())
-  } catch (error) {
-    if (error instanceof ApiError) throw error
-    throw badRequest('Ожидается JSON тело запроса')
-  }
-}
-
 /* ── identity ─────────────────────────────────────────────────────────────── */
-
-function readCookie(header: string | undefined, name: string): string | undefined {
-  return header
-    ?.split(';')
-    .map(part => part.trim())
-    .find(part => part.startsWith(name + '='))
-    ?.slice(name.length + 1)
-}
-
-async function currentUser(c: { req: { header: (n: string) => string | undefined }; get: (k: 'store') => Store }): Promise<Row | undefined> {
-  const raw = readCookie(c.req.header('Cookie'), SESSION_COOKIE)
-  if (!raw) return undefined
-  return (await store(c).session(await sha256(raw))) ?? undefined
-}
-
-/** Routes that need a signed-in user. */
-async function requireUser(c: Parameters<typeof currentUser>[0]): Promise<Row> {
-  const user = await currentUser(c)
-  if (!user) throw unauthorized()
-  return user
-}
-
-function requireAdmin(c: { req: { header: (n: string) => string | undefined }; env: Env }) {
-  const header = c.req.header('Authorization') ?? ''
-  const provided = header.startsWith('Bearer ') ? header.slice(7) : ''
-  if (!provided || !c.env.ADMIN_TOKEN || provided !== c.env.ADMIN_TOKEN) throw unauthorized('Требуется админ-токен')
-}
 
 /** The Bearer token a game server uses for the pull API. */
 async function requireServerKey(c: { req: { header: (n: string) => string | undefined }; get: (k: 'store') => Store }): Promise<Row> {
@@ -274,7 +234,7 @@ app.get('/api/v1/servers/:key', async c => {
   if (server.moderation !== 'PUBLISHED') {
     // A submission is private until moderation publishes it.
     const user = await currentUser(c)
-    if (!user || (server.owner_id !== user.id && server.submitted_by !== user.id)) throw notFound('Сервер не найден')
+    if (!user || (server.owner_id !== user.id && server.submitted_by !== user.id && !isAdmin(user))) throw notFound('Сервер не найден')
   }
   return c.json(serverDto(server))
 })
@@ -358,7 +318,7 @@ app.patch('/api/v1/servers/:id', async c => {
 /* ── moderation ───────────────────────────────────────────────────────────── */
 
 app.post('/api/v1/admin/servers/:id/publish', async c => {
-  requireAdmin(c)
+  await requireAdmin(c)
   const server = await store(c).server(c.req.param('id'))
   if (!server) throw notFound('Сервер не найден')
   await store(c).publish(server.id)
@@ -367,78 +327,12 @@ app.post('/api/v1/admin/servers/:id/publish', async c => {
 
 /* ── auth ─────────────────────────────────────────────────────────────────── */
 
-function sessionCookie(value: string, env: Env, maxAge: number): string {
-  const parts = [`${SESSION_COOKIE}=${value}`, 'Path=/', 'HttpOnly', 'SameSite=Lax', `Max-Age=${maxAge}`]
-  if (env.ENVIRONMENT !== 'development') parts.push('Secure')
-  return parts.join('; ')
-}
-
-app.get('/api/v1/auth/me', async c => {
-  const user = await currentUser(c)
-  return c.json({
-    user: user ? userDto(user) : null,
-    devAuthEnabled: devEnabled(c.env, c.req.raw),
-    providers: discordEnabled(c.env) ? ['discord'] : [],
-  })
-})
-
-/* ── Sign in with Discord ─────────────────────────────────────────────────── */
-
-const OAUTH_COOKIE = 'gs_oauth'
-const OAUTH_MAX_AGE = 600
-
-function oauthCookie(value: string, env: Env, maxAge: number): string {
-  const parts = [`${OAUTH_COOKIE}=${value}`, 'Path=/api/v1/auth', 'HttpOnly', 'SameSite=Lax', `Max-Age=${maxAge}`]
-  if (env.ENVIRONMENT !== 'development') parts.push('Secure')
-  return parts.join('; ')
-}
-
-app.get('/api/v1/auth/discord', c => {
-  if (!discordEnabled(c.env)) throw notFound('Вход через Discord не подключён')
-  // state and the return path travel in one short-lived HttpOnly cookie.
-  const state = token(16)
-  const next = encodeURIComponent(safeNext(c.req.query('next')))
-  c.header('Set-Cookie', oauthCookie(`${state}.${next}`, c.env, OAUTH_MAX_AGE))
-  c.header('Cache-Control', 'no-store')
-  return c.redirect(authorizeUrl(c.env, state), 302)
-})
-
-app.get('/api/v1/auth/discord/callback', async c => {
-  if (!discordEnabled(c.env)) throw notFound('Вход через Discord не подключён')
-  const stored = readCookie(c.req.header('Cookie'), OAUTH_COOKIE) ?? ''
-  const [expected, encodedNext] = stored.split('.')
-  const next = safeNext(decodeURIComponent(encodedNext ?? ''))
-  c.header('Cache-Control', 'no-store')
-  // The cookie is single-use whatever happens next.
-  c.header('Set-Cookie', oauthCookie('', c.env, 0), { append: true })
-  const failed = () => c.redirect(`${next}${next.includes('?') ? '&' : '?'}auth_error=discord`, 302)
-
-  const state = c.req.query('state') ?? ''
-  const code = c.req.query('code') ?? ''
-  if (!expected || !state || !(await sameSecret(state, expected))) return failed()
-  if (!code || code.length > 200) return failed()
-  try {
-    const profile = await discordProfile(c.env, code)
-    const s = store(c)
-    await s.deleteExpiredSessions()
-    const user = await s.upsertOAuthUser('DISCORD', profile.id, profile.displayName, profile.avatarUrl, id('usr'))
-    const raw = token(32)
-    await s.createSession(await sha256(raw), user.id, new Date(Date.now() + SESSION_DAYS * 86400000).toISOString())
-    c.header('Set-Cookie', sessionCookie(raw, c.env, SESSION_DAYS * 86400), { append: true })
-    return c.redirect(next, 302)
-  } catch (error) {
-    // The reason stays in the Worker log; the player sees a generic error.
-    console.error('discord_login_failed', String(error))
-    return failed()
-  }
-})
-
 /**
  * Local development sign-in.
  *
- * Deliberately not an account system: it exists so the owner flows can be
- * exercised before Discord OAuth lands, and it refuses to run outside a local
- * development Worker.
+ * Deliberately not an account system: it lets tests and local development
+ * sign in without mail or OAuth, and it refuses to run outside a local
+ * development Worker. Real sign-in lives in routes/accounts.ts.
  */
 app.post('/api/v1/auth/dev', async c => {
   if (!devEnabled(c.env, c.req.raw)) throw notFound('Маршрут недоступен')
@@ -449,22 +343,12 @@ app.post('/api/v1/auth/dev', async c => {
   if (!(await sameSecret(text(body.secret, 'secret', 1, 200), c.env.DEV_AUTH_SECRET))) throw unauthorized('Неверный секрет разработчика')
 
   const s = store(c)
-  await s.deleteExpiredSessions()
   const providerId = 'dev:' + (await sha256(displayName.toLowerCase())).slice(0, 32)
   const user = (await s.userByProvider(providerId)) ?? (await s.createDevUser({ id: id('usr'), displayName, providerId, createdAt: now() }))
-
-  const raw = token(32)
-  await s.createSession(await sha256(raw), user.id, new Date(Date.now() + SESSION_DAYS * 86400000).toISOString())
-  c.header('Set-Cookie', sessionCookie(raw, c.env, SESSION_DAYS * 86400))
-  return c.json({ user: userDto(user) })
+  return c.json({ user: userDto(await startSession(c, user)) })
 })
 
-app.post('/api/v1/auth/logout', async c => {
-  const raw = readCookie(c.req.header('Cookie'), SESSION_COOKIE)
-  if (raw) await store(c).deleteSession(await sha256(raw))
-  c.header('Set-Cookie', sessionCookie('', c.env, 0))
-  return c.json({ ok: true })
-})
+accountRoutes(app)
 
 /* ── owner ────────────────────────────────────────────────────────────────── */
 
@@ -754,7 +638,7 @@ function monitorBatch(env: Env): number {
 }
 
 app.post('/api/v1/admin/votes/deliver', async c => {
-  requireAdmin(c)
+  await requireAdmin(c)
   return c.json(
     await deliverVotifierVotes(new Store(c.env.DB), new SubrequestBudget(subrequestBudget(c.env)), {
       limit: 20,
@@ -764,7 +648,7 @@ app.post('/api/v1/admin/votes/deliver', async c => {
 })
 
 app.post('/api/v1/admin/monitor/run', async c => {
-  requireAdmin(c)
+  await requireAdmin(c)
   const body = await readJson(c).catch(() => ({}))
   return c.json(await runMonitoringPass(c.env, integer((body as Row).limit ?? 25, 'limit', 1, 200)))
 })
@@ -807,10 +691,6 @@ app.get('/api/v1/servers/:id/votes', async c => {
 })
 
 /* ── votes ────────────────────────────────────────────────────────────────── */
-
-function clientIp(c: { req: { header: (n: string) => string | undefined }; get: (k: 'proxyIp') => string | undefined }): string {
-  return c.get('proxyIp') ?? c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() ?? '127.0.0.1'
-}
 
 app.get('/api/v1/votes/eligibility', async c => {
   const s = store(c)

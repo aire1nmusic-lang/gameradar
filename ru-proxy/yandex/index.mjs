@@ -21,18 +21,22 @@ function requestUrl(event) {
   return `https://mirror.invalid${path.startsWith('/') ? path : '/' + path}${search ? '?' + search : ''}`
 }
 
+/** Text answers pass as they are; images (server logos) travel base64-encoded, as API Gateway expects. */
+const TEXT_TYPES = /^(?:text\/|application\/(?:json|xml|javascript)|image\/svg\+xml)|^$/i
+
 async function toGateway(response) {
   const headers = {}
   response.headers.forEach((value, name) => {
     if (name !== 'set-cookie') headers[name] = value
   })
   const cookies = response.headers.getSetCookie()
+  const binary = !TEXT_TYPES.test((response.headers.get('content-type') ?? '').trim())
   return {
     statusCode: response.status,
     headers,
     multiValueHeaders: cookies.length ? { 'Set-Cookie': cookies } : {},
-    body: await response.text(),
-    isBase64Encoded: false,
+    body: binary ? Buffer.from(await response.arrayBuffer()).toString('base64') : await response.text(),
+    isBase64Encoded: binary,
   }
 }
 

@@ -158,7 +158,7 @@ try {
   const start = await fetch(base + '/auth/discord?next=' + encodeURIComponent('/server/some-card'), { redirect: 'manual' })
   assert.equal(start.status, 302)
   const authorize = new URL(start.headers.get('location'))
-  assert.equal(authorize.searchParams.get('scope'), 'identify', 'only the identity is requested, never email')
+  assert.equal(authorize.searchParams.get('scope'), 'identify email', 'the identity and the address (to join an account registered with it), nothing more')
   const oauthState = authorize.searchParams.get('state')
   const oauthCookie = start.headers.getSetCookie().find(cookie => cookie.startsWith('gs_oauth='))
   assert.ok(oauthCookie.includes('HttpOnly'))
@@ -188,7 +188,7 @@ try {
   const secondState = new URL(second.headers.get('location')).searchParams.get('state')
   const secondCookie = second.headers.getSetCookie().find(cookie => cookie.startsWith('gs_oauth=')).split(';')[0]
   const secondCallback = await callback(`code=good-code&state=${secondState}`, secondCookie)
-  assert.equal(secondCallback.headers.get('location'), '/dashboard', 'an off-site next is replaced, never followed')
+  assert.equal(secondCallback.headers.get('location'), '/account', 'an off-site next is replaced, never followed')
   const meAgain = (await api('/auth/me', { cookie: secondCallback.headers.getSetCookie().find(cookie => cookie.startsWith('gs_session=')).split(';')[0] })).json.user
   assert.equal(meAgain.id, me.id, 'signing in again reuses the account')
   pass('Sign in with Discord: forged/missing state and bad codes create no session; success returns to the page; one account per Discord id')

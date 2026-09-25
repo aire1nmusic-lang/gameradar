@@ -17,7 +17,7 @@
     "dev:publish": "node scripts/publish.mjs",
     "dev:site": "node scripts/dev-site.mjs",
     "test:bundle": "node scripts/check-bundle.mjs",
-    "test:api": "node tests/api.mjs && node tests/owner.mjs",
+    "test:api": "node tests/api.mjs && node tests/owner.mjs && node tests/accounts.mjs",
     "test:monitoring": "node tests/monitoring.mjs",
     "test:proxy": "node --test tests/proxy-readonly.test.mjs && node tests/proxy.mjs",
     "mirror:build": "node ru-proxy/build.mjs --noindex",

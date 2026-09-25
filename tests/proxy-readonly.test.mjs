@@ -54,7 +54,8 @@ test('analytics are dropped quietly', async () => {
 
 test('sign-in cannot create users or sessions', async () => {
   const spy = upstreamSpy()
-  for (const path of ['/api/v1/auth/discord', '/api/v1/auth/discord/callback?code=x&state=y']) {
+  const paths = ['discord', 'google', 'yandex', 'vk'].flatMap(p => [`/api/v1/auth/${p}`, `/api/v1/auth/${p}/callback?code=x&state=y`])
+  for (const path of paths) {
     const res = await relay(req('GET', path), readOnly, '203.0.113.5', spy.fetchImpl)
     assert.equal(res.status, 403, path)
   }

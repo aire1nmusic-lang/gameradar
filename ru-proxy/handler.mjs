@@ -10,8 +10,8 @@
  *
  * GS_READ_ONLY=true (staging): nothing the page does can persist. Writes are
  * refused, view/click analytics are dropped with 204, the reward lookup (it
- * lazily inserts a default row) answers 204, and Discord sign-in is closed so
- * no users or sessions are created. The Worker behind is unchanged.
+ * lazily inserts a default row) answers 204, and sign-in through Google,
+ * Yandex, VK and Discord is closed so no users or sessions are created. The Worker behind is unchanged.
  */
 
 /** Request headers the API reads; everything else stays at the proxy. */
@@ -44,8 +44,8 @@ const problem = (status, code, message) =>
 const READ_ONLY_MESSAGE = 'Это тестовая копия GameScout: изменения здесь отключены'
 /** Analytics the page sends on its own; on a read-only copy they are dropped quietly. */
 const DROPPED_WHEN_READ_ONLY = new Set(['/api/v1/events'])
-/** GET routes that create users or sessions. */
-const SIGN_IN = /^\/api\/v1\/auth\/discord(?:\/|$)/
+/** GET routes that create users or sessions (OAuth starts and callbacks). */
+const SIGN_IN = /^\/api\/v1\/auth\/(?:discord|google|yandex|vk)(?:\/|$)/
 /** A GET that lazily inserts a default vote-integration row; the page treats a missing answer as "no data". */
 const LAZY_WRITE_READS = /^\/api\/v1\/servers\/[^/]+\/reward$/
 const readOnlyEmpty = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'X-GS-Via': 'proxy', 'X-GS-Read-Only': '1' } })

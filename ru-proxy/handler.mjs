@@ -7,6 +7,10 @@
  * The visitor's IP travels in X-GS-Client-IP next to the shared secret in
  * X-GS-Proxy-Auth; whatever a client sends in those or in X-Forwarded-For is
  * dropped here.
+ *
+ * GS_READ_ONLY=true (staging): nothing the page does can persist. Writes are
+ * refused, view/click analytics are dropped with 204, and Discord sign-in is
+ * closed so no users or sessions are created. The Worker behind is unchanged.
  */
 
 /** Request headers the API reads; everything else stays at the proxy. */
@@ -27,7 +31,7 @@ export function proxyConfig(env) {
   // Comma- or semicolon-separated (yc --environment reserves the comma).
   const publicOrigins = (env.GS_PUBLIC_ORIGINS ?? '').split(/[,;]/).map(o => o.trim()).filter(Boolean)
   if (!publicOrigins.length) throw new Error('GS_PUBLIC_ORIGINS is empty')
-  return { upstream: upstream.origin, secret, publicOrigins, timeoutMs: Number(env.GS_TIMEOUT_MS ?? 25000) }
+  return { upstream: upstream.origin, secret, publicOrigins, timeoutMs: Number(env.GS_TIMEOUT_MS ?? 25000), readOnly: env.GS_READ_ONLY === 'true' }
 }
 
 const problem = (status, code, message) =>
@@ -35,6 +39,12 @@ const problem = (status, code, message) =>
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-GS-Via': 'proxy' },
   })
+
+const READ_ONLY_MESSAGE = 'Это тестовая копия GameScout: изменения здесь отключены'
+/** Analytics the page sends on its own; on a read-only copy they are dropped quietly. */
+const DROPPED_WHEN_READ_ONLY = new Set(['/api/v1/events'])
+/** GET routes that create users or sessions. */
+const SIGN_IN = /^\/api\/v1\/auth\/discord(?:\/|$)/
 
 /** The visitor's IP as the hosting platform reports it, or undefined when it is not an IP. */
 export function normaliseIp(value) {
@@ -51,6 +61,14 @@ export async function relay(request, config, clientIp, fetchImpl = fetch) {
   const url = new URL(request.url)
   if (!url.pathname.startsWith('/api/')) return problem(404, 'not_found', 'Маршрут не найден')
   if (!METHODS.has(request.method)) return problem(405, 'method_not_allowed', 'Метод не поддерживается')
+
+  if (config.readOnly) {
+    if (!SAFE_METHODS.has(request.method)) {
+      if (DROPPED_WHEN_READ_ONLY.has(url.pathname)) return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'X-GS-Via': 'proxy', 'X-GS-Read-Only': '1' } })
+      return problem(403, 'read_only', READ_ONLY_MESSAGE)
+    }
+    if (SIGN_IN.test(url.pathname)) return problem(403, 'read_only', READ_ONLY_MESSAGE)
+  }
 
   const target = new URL(url.pathname + url.search, config.upstream)
   if (target.origin !== config.upstream) return problem(400, 'bad_path', 'Неверный путь')

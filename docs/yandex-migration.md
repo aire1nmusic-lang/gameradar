@@ -86,3 +86,32 @@ DNS-only записи TTL 60 с, резолверы переключатся з�
 - Мобильные «белые списки» в РФ: Yandex — лучший шанс, но гарантий нет.
 - Релиз фронтенда: Pages собирается сам, бакет — вручную:
   `npm run build && node ru-proxy/build.mjs --robots ru-proxy/yandex/robots.production.txt && node ru-proxy/yandex/upload.mjs --bucket gamescout-ru-site`.
+
+## Staging на new.gamescout.online (подготовлено 25.09.2026, не завершено)
+
+`new.gamescout.online` и apex сидят на одном шлюзе, бакете, функции и origin-Worker, поэтому выкатить
+кандидата «только на new.» можно лишь отдельной цепочкой. Все ресурсы — free tier, apex не затрагивается.
+
+| Ресурс | Состояние |
+| --- | --- |
+| Worker `gamescout-origin-staging` (`ru-proxy/wrangler.staging.toml`) | задеплоен: код кандидата, та же D1, `PROXY_ONLY`, секрет стоит; напрямую → 403 |
+| Функция `gamescout-api-proxy-staging` (`d4e1hgjf4m0g2cnpbuaj`) | создана, **версии нет** |
+| Шлюз `gamescout-staging` (`d5d08arkk9drmr85tso5`) | создан: бакет `gamescout-ru-site`, префикс `staging/`, функция выше; домен не привязан |
+| `new.gamescout.online` | **по-прежнему на шлюзе apex** (старая сборка). DNS менять не нужно: обе ingress-IP маршрутизируют по host |
+
+Осталось (каждый шаг — отдельное решение владельца):
+
+1. Версия функции: runtime `nodejs22`, entrypoint `index.handler`, 128 МБ, 30 с, concurrency 1, пакет —
+   `ru-proxy/handler.mjs` + `ru-proxy/yandex/index.mjs` (как `index.js`) + `package.json` `{"type":"module"}`;
+   env `GS_UPSTREAM=https://gamescout-origin-staging.aire1n-music.workers.dev`,
+   `GS_PUBLIC_ORIGINS=https://new.gamescout.online;https://d5d08arkk9drmr85tso5.8wihnuyr.apigw.yandexcloud.net`,
+   `GS_PROXY_SECRET` — тот же, что у production-функции.
+2. Сборка и загрузка под префикс (apex отдаёт корень бакета и префикс не видит в навигации):
+   `npm run build && node ru-proxy/build.mjs --noindex --out ru-proxy/.deploy-staging && node ru-proxy/yandex/upload.mjs --bucket gamescout-ru-site --dir ru-proxy/.deploy-staging/public --prefix staging`.
+3. Проверить шлюз по его собственному домену (`/`, `/lineage-2`, `/server/2b2t`, `/__gs/health`, `/api/v1/servers?limit=100`).
+4. Перенести домен: `yc serverless api-gateway remove-domain gamescout-ru --domain-id d5di3f0l9asjuhsmp158`,
+   затем `yc serverless api-gateway add-domain gamescout-staging --domain new.gamescout.online --certificate-id fpqvavmfp047p2rorn07`.
+   Откат — те же команды в обратную сторону.
+
+Уборка, если staging не нужен: удалить шлюз `gamescout-staging`, функцию `gamescout-api-proxy-staging`,
+`npx wrangler delete --config ru-proxy/wrangler.staging.toml` и объекты `staging/` в бакете.

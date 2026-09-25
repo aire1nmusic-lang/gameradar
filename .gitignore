@@ -20,3 +20,6 @@ public/sitemap.xml
 # RU mirror (Vercel) build output and local project link
 /ru-proxy/.deploy/
 /ru-proxy/.vercel/
+
+# staging build output of the RU mirror (ru-proxy/build.mjs --out ru-proxy/.deploy-staging)
+/ru-proxy/.deploy-*/

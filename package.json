@@ -8,6 +8,7 @@
     "dev:core-ui": "node scripts/dev-core-ui.mjs",
     "test:private": "node --test tests/private-core.test.mjs",
     "test:seo": "node tests/seo-http.mjs",
+    "seo:reconcile": "node scripts/reconcile-public-html.mjs",
     "dev": "vite",
     "build": "npm run typecheck && node scripts/sitemap.mjs && vite build && node scripts/prerender-public.mjs",
     "preview": "vite preview --port 4173",

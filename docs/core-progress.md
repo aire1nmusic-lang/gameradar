@@ -124,6 +124,14 @@ One PGlite/Hono scenario now uses the **same verified player account** to vote a
 
 **Verified:** the integrated test passes locally, alongside the focused invariants. This is API-level evidence, not a browser or deployed Yandex/Cloudflare end-to-end run. Registration mail transport, Google/VK/Яндекс OAuth, Turnstile, test Robokassa, OpenRouter, Telegram and real public projection still require their credentials and reachable callbacks. The authenticated browser journey and mobile/empty/error states remain to be exercised against the deployed topology. No new cloud resource or cost (0 ₽). Rollback: test-only change; remove the test without touching any production state.
 
+## Slice 7c: public HTML/catalog release reconciliation (local)
+
+`npm run seo:reconcile -- https://PUBLIC_API_ORIGIN/` is a read-only release gate after `npm run build`. It reads the public catalog in 100-card pages, ignores demo cards, and compares every published non-demo slug plus name, game, chronicle, version, rates/modes, opening date and region/country against the crawlable build. It also checks that each generated page and sitemap entry is present with its expected canonical and title. Removed, newly published or factually changed cards fail the command. Run it against the actual public API **immediately before** a proposed Pages release; a passing local or staging check is not production approval. A moderation change after the check requires another build and check. No deployment is automated by this command.
+
+**Verified:** three unit tests cover equality, changed/missing/extra cards and pagination. `npm run test:seo` passes for all 117 generated routes. Running the gate against local D1 correctly **failed**: 96 prerendered imported cards versus 0 published non-demo cards (the nine visible local cards are demos). This is a real release blocker, not a test failure to suppress. Import and moderate the same factual dataset in the intended public environment, or move HTML generation to the live public projection before indexing. Then rerun the gate and HTTP checks. No new cloud resource or cost (0 ₽).
+
+**Rollback:** remove the checker and command if the HTML source is replaced by D1-backed SSR; the command is read-only and changes no database or public page. Unknown-route HTTP 404 and webmaster verification remain pending.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

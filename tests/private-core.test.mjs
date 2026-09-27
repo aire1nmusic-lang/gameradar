@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { PGlite } from '@electric-sql/pglite'
+import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { createApp } from '../private-api/app.mjs'
 import { migrate } from '../private-api/db.mjs'
@@ -279,4 +280,59 @@ test('Coins ledger and Support: atomic balance, replay, anonymity and all core g
   assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,2)
   assert.equal((await h.db.query('SELECT min(balance) AS n FROM gs_coin_accounts')).rows[0].n,0)
   assert.equal((await h.request('/coins/transfer',{to:other.user.id,coins:1},player.cookie)).status,501)
+})
+
+test('Robokassa test order: signed ResultURL credits once, mismatches roll back, reconciliation is private',async t=>{
+  const robokassa={merchantLogin:'unit-test-shop',testPassword1:'test-one',testPassword2:'test-two',
+    receiptSno:'osn',receiptTax:'none',receiptPaymentObject:'service',receiptPaymentMethod:'full_payment',itemName:'GS Coins test'}
+  const h=await harness(t,{config:{enableTestPayments:true,robokassa}}),player=await h.register('payment@example.com')
+  const order=await h.request('/payments/test/orders',{coins:10},player.cookie,{'Idempotency-Key':'p'.repeat(32)})
+  assert.equal(order.status,200,JSON.stringify(order.body))
+  const checkout=order.body.checkout,fields=checkout.fields
+  assert.equal(checkout.action,'https://auth.robokassa.ru/Merchant/Index.aspx')
+  assert.equal(checkout.method,'POST')
+  assert.equal(fields.IsTest,'1')
+  assert.equal(fields.OutSum,'500.00')
+  assert.equal(fields.Email,'payment@example.com')
+  assert.equal(JSON.parse(decodeURIComponent(fields.Receipt)).items[0].sum,500)
+  assert.equal((await h.request('/payments/test/orders',{coins:10},player.cookie,{'Idempotency-Key':'p'.repeat(32)})).body.id,order.body.id)
+  assert.equal((await h.request('/payments/test/orders',{coins:11},player.cookie,{'Idempotency-Key':'p'.repeat(32)})).status,409)
+  const nonce=fields.Shp_order,id=order.body.id
+  const notice=(amount,secret=robokassa.testPassword2)=>{
+    const signature=createHash('md5').update(`${amount}:${id}:${secret}:Shp_order=${nonce}`).digest('hex')
+    return new URLSearchParams({OutSum:amount,InvId:id,Shp_order:nonce,SignatureValue:signature}).toString()
+  }
+  const callback=async body=>{
+    const response=await h.app.request(origin+'/api/v1/payments/robokassa/result',
+      {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body})
+    return {status:response.status,body:await response.text()}
+  }
+  assert.equal((await callback(notice('500.00','wrong-password'))).status,400)
+  assert.equal((await callback(notice('550.00'))).status,400)
+  assert.equal((await callback(notice('500.001000'))).status,400)
+  assert.equal((await callback(notice('500.00')+'&Shp_order=duplicate')).status,400)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,0)
+  await h.db.query(`CREATE FUNCTION gs_fail_test_purchase() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN IF NEW.kind='PURCHASE' THEN RAISE EXCEPTION 'simulated ledger failure'; END IF; RETURN NEW; END $$`)
+  await h.db.query('CREATE TRIGGER gs_test_purchase_failure BEFORE INSERT ON gs_coin_ledger FOR EACH ROW EXECUTE FUNCTION gs_fail_test_purchase()')
+  assert.equal((await callback(notice('500.00'))).status,500)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,0)
+  assert.equal((await h.db.query('SELECT status FROM gs_test_payments WHERE id=$1',[id])).rows[0].status,'TEST_PENDING')
+  await h.db.query('DROP TRIGGER gs_test_purchase_failure ON gs_coin_ledger')
+  await h.db.query('DROP FUNCTION gs_fail_test_purchase()')
+  const accepted=await callback(notice('500.00'))
+  assert.deepEqual(accepted,{status:200,body:`OK${id}`})
+  assert.equal((await callback(notice('500.000000'))).body,`OK${id}`)
+  assert.equal((await h.request('/payments/test/orders',{coins:10},player.cookie,{'Idempotency-Key':'p'.repeat(32)})).body.checkout,null)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,10)
+  const ledger=(await h.db.query("SELECT * FROM gs_coin_ledger WHERE kind='PURCHASE'")).rows
+  assert.equal(ledger.length,1);assert.equal(ledger[0].delta,10)
+  assert.equal((await h.request('/admin/payments/reconciliation',undefined,player.cookie)).status,403)
+  await h.db.query("INSERT INTO gs_permissions(user_id,permission) VALUES($1,'payments.read')",[player.user.id])
+  const reconciled=(await h.request('/admin/payments/reconciliation',undefined,player.cookie)).body
+  assert.deepEqual(reconciled,{orderMismatch:[],balanceMismatch:[]})
+  const disabled=await harness(t)
+  const another=await disabled.register('disabled-pay@example.com')
+  assert.equal((await disabled.request('/payments/test/orders',{coins:1},another.cookie,{'Idempotency-Key':'d'.repeat(32)})).status,503)
+  assert.equal((await disabled.request('/payments/test/config')).body.available,false)
 })

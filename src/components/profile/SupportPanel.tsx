@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/Button'
 
 type Summary={coins:number;participants:number;recent:Array<{public_nick:string;anonymous:boolean;coins:number;created_at:string}>}
 type Wallet={balance:number;nominalRub:number}
+type TestPaymentConfig={available:boolean;testOnly:boolean;realSalesEnabled:boolean}
+type TestOrder={checkout:{action:string;method:'POST';fields:Record<string,string>}|null}
 
 export function SupportPanel({server}:{server:GameServer}) {
   const auth=useAuth()
   const [summary,setSummary]=useState<Summary>(),[wallet,setWallet]=useState<Wallet>()
+  const [testPayment,setTestPayment]=useState(false)
   const [coins,setCoins]=useState(1),[anonymous,setAnonymous]=useState(true)
   const [error,setError]=useState(''),[busy,setBusy]=useState(false)
-  const supportKey=useRef(crypto.randomUUID()),creditKey=useRef(crypto.randomUUID())
+  const supportKey=useRef(crypto.randomUUID()),creditKey=useRef(crypto.randomUUID()),paymentKey=useRef(crypto.randomUUID())
   const local=['127.0.0.1','localhost'].includes(window.location.hostname)
   const refresh=useCallback(async()=>{
     const [next,wallet]=await Promise.all([
@@ -27,6 +30,7 @@ export function SupportPanel({server}:{server:GameServer}) {
   ]).then(([next,wallet])=>{if(live){setSummary(next);setWallet(wallet)}})
     .catch(()=>{if(live)setError('Поддержка сейчас недоступна')});return()=>{live=false}
   },[server.id,auth.user?.id])
+  useEffect(()=>{apiRequest<TestPaymentConfig>('/payments/test/config').then(value=>setTestPayment(value.available&&value.testOnly&&!value.realSalesEnabled)).catch(()=>setTestPayment(false))},[])
   async function support() {
     if(!Number.isSafeInteger(coins)||coins<1||coins>10000) {setError('Укажите от 1 до 10000 Coins');return}
     setBusy(true);setError('')
@@ -45,6 +49,21 @@ export function SupportPanel({server}:{server:GameServer}) {
       await refresh()
     } catch(e) {setError(e instanceof Error?e.message:'Тестовое начисление не удалось')}
     finally {setBusy(false)}
+  }
+  async function buyTestCoins() {
+    if(!Number.isSafeInteger(coins)||coins<1||coins>10000) {setError('Укажите от 1 до 10000 Coins');return}
+    setBusy(true);setError('')
+    try {
+      const order=await apiRequest<TestOrder>('/payments/test/orders',{method:'POST',
+        headers:{'Idempotency-Key':paymentKey.current},body:JSON.stringify({coins})})
+      paymentKey.current=crypto.randomUUID()
+      if(!order.checkout) {await refresh();setError('Тестовый заказ уже оплачен');setBusy(false);return}
+      const form=document.createElement('form');form.method=order.checkout.method;form.action=order.checkout.action
+      for(const [name,value] of Object.entries(order.checkout.fields)) {
+        const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.append(input)
+      }
+      document.body.append(form);form.submit()
+    } catch(e) {setError(e instanceof Error?e.message:'Не удалось создать тестовый заказ');setBusy(false)}
   }
   return <section className="surface space-y-3 rounded-xl p-5 sm:p-6" id="support">
     <h2 className="text-[18px]">Поддержка</h2>
@@ -65,6 +84,10 @@ export function SupportPanel({server}:{server:GameServer}) {
       </label>
       <label className="flex items-center gap-2 text-[13px]"><input type="checkbox" checked={anonymous} onChange={event=>setAnonymous(event.target.checked)} />Показывать меня анонимно</label>
       <Button disabled={busy||wallet===undefined||wallet.balance<coins} onClick={()=>void support()}>{busy?'Обрабатываем…':'Поддержать сервер'}</Button>
+      {testPayment&&<div className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-[12px] text-ink-400">
+        Robokassa: только тестовая оплата без списания денег. {coins} Coins — {coins*50} ₽ по номиналу, без скидок.
+        <Button variant="outline" className="mt-2" disabled={busy} onClick={()=>void buyTestCoins()}>Открыть тестовую оплату</Button>
+      </div>}
       {local && <div className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-[12px] text-ink-400">
         Локальный стенд: тестовое начисление — не покупка и не платёж.
         <Button variant="outline" className="mt-2" disabled={busy} onClick={()=>void localCredit()}>Начислить 10 тестовых Coins</Button>

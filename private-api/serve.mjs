@@ -35,6 +35,11 @@ if (development) {
     oauth:Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(GOOGLE|VK|YANDEX|DISCORD)_CLIENT_(ID|SECRET)$/.test(key)))}
   // No implicit production migration; mail stays disabled until verified provider secrets exist.
 }
+config.enableTestPayments=process.env.ENABLE_TEST_PAYMENTS==='1'
+config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:process.env.ROBOKASSA_TEST_PASSWORD_1,
+  testPassword2:process.env.ROBOKASSA_TEST_PASSWORD_2,receiptSno:process.env.ROBOKASSA_RECEIPT_SNO,
+  receiptTax:process.env.ROBOKASSA_RECEIPT_TAX,receiptPaymentObject:process.env.ROBOKASSA_RECEIPT_PAYMENT_OBJECT,
+  receiptPaymentMethod:process.env.ROBOKASSA_RECEIPT_PAYMENT_METHOD,itemName:process.env.ROBOKASSA_RECEIPT_ITEM_NAME}
 const app=createApp({db,config})
 const server=createServer(async(req,res)=>{
   try {

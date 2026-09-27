@@ -48,11 +48,19 @@ The private API returns aggregate Coins/participant counts and recent public nam
 
 **Rollback:** stop Support writes, revert this application commit, and preserve migration 004 data for reconciliation. Do not delete ledger rows or reverse transactions by editing them; a correction is a new ledger entry. This is a local-only database, with no production billing or migration.
 
+## Slice 4b: Robokassa test adapter (local, provider credentials absent)
+
+Migration `005_test_payments.sql` and the [test integration runbook](robokassa-test.md) add test-only orders, a signed POST checkout with `IsTest=1`, a merchant-configured `Receipt`, a server-to-server ResultURL, atomic one-time `PURCHASE` credit, and an admin reconciliation query. The ResultURL checks the test Password #2 signature, invoice, signed order nonce, exact amount and duplicate delivery before credit. A browser success redirect never credits Coins. Both checkout and ResultURL remain disabled until an explicit test switch and separate test credentials plus fiscal fields are configured. There is no live-sales mode or approved discounted package grid.
+
+**Verified:** PGlite invariant tests cover invalid signatures/amounts, duplicate callbacks, atomic rollback on ledger failure, one-time credit, receipt sum, mandatory `IsTest=1`, and permission-gated reconciliation. TypeScript and Vite build pass. The browser-facing test purchase control appears only when test mode is configured; provider end-to-end remains **BLOCKED** on Robokassa test merchant credentials, test ResultURL access and merchant-approved fiscal values. No payment was sent to Robokassa, no production sales enabled, and no new paid resource created (0 ₽).
+
+**Rollback:** disable the test switch, preserve orders and ledger for reconciliation, then revert the application commit. Migration 005 is additive and local only. Do not delete or edit ledger entries. A deployed migration needs a separate backup/rollback review.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
-4. Add Robokassa **test-only** notifications/receipt/reconciliation with invariant and rollback tests. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
+4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Expand scoped admin permissions and pages; local nickname filter plus OpenRouter only for ambiguous cases.
 6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.
 7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.

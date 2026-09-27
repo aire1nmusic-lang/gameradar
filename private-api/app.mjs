@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { digest, equal, hashPassword, keyed, passwordValid, seal, token, verifyPassword } from './crypto.mjs'
 import { outboxHealth } from './outbox.mjs'
 import { classifyLocalNickname } from './nickname.mjs'
+import { paymentReceipt, parseTestResult, testCheckoutForm, testPaymentConfig } from './robokassa.mjs'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 
@@ -29,6 +30,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   const local = config.environment === 'development' && ['127.0.0.1','localhost'].includes(new URL(origin).hostname)
   if (!local && !origin.startsWith('https://')) throw new Error('https_required')
   const oauthEnv = { ...config.oauth, ALLOWED_ORIGIN:origin, ENVIRONMENT:local?'development':'production' }
+  const paymentConfig=config.enableTestPayments===true?testPaymentConfig(config):null
   const app = new Hono()
   const cookie = (name,value,seconds) => `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local?'':'; Secure'}`
   const sessionHash = c => digest(cookieValue(c,'gs_private_session'))
@@ -92,12 +94,14 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.use('*',async(c,next)=>{
     c.header('Cache-Control','no-store'); c.header('X-Content-Type-Options','nosniff'); c.header('Referrer-Policy','no-referrer')
     if (!['GET','HEAD','OPTIONS'].includes(c.req.method)) {
-      if (c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
+      const paymentCallback=c.req.method==='POST' && new URL(c.req.url).pathname==='/api/v1/payments/robokassa/result'
+      if (!paymentCallback && c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
       // Bound bytes, including chunked requests, before parsing or password hashing.
       const bytes=await c.req.raw.arrayBuffer()
       if (bytes.byteLength>16384) fail(413,'body_too_large','Запрос слишком большой')
       c.req.raw=new Request(c.req.url,{method:c.req.method,headers:c.req.raw.headers,body:bytes})
-      if (!(c.req.header('Content-Type')??'').startsWith('application/json')) fail(415,'content_type','Ожидается JSON')
+      const expected=paymentCallback?'application/x-www-form-urlencoded':'application/json'
+      if (!(c.req.header('Content-Type')??'').startsWith(expected)) fail(415,'content_type',`Ожидается ${expected}`)
     }
     await next()
   })
@@ -349,6 +353,61 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       WHERE user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[user.id])).rows
     return c.json({balance,nominalRub:50,ledger})
   })
+  app.get('/api/v1/payments/test/config',c=>c.json({available:!!paymentConfig,testOnly:true,realSalesEnabled:false}))
+  app.get('/api/v1/payments/me',async c=>{
+    const user=await requireUser(c)
+    const rows=(await db.query(`SELECT id,coins,amount_kopecks,status,created_at,paid_at FROM gs_test_payments
+      WHERE user_id=$1 ORDER BY id DESC LIMIT 100`,[user.id])).rows
+    return c.json(rows)
+  })
+  app.post('/api/v1/payments/test/orders',async c=>{
+    if(!paymentConfig) fail(503,'test_payments_disabled','Тестовая Robokassa не настроена')
+    const user=await requireUser(c,true),body=await json(c),coins=body.coins
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    if(!Number.isSafeInteger(coins)||coins<1||coins>10000) fail(400,'invalid_coins','Укажите от 1 до 10000 Coins')
+    await limit(c,'payment_order',user.id,10)
+    const order=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[user.id])
+      const prior=(await tx.query('SELECT * FROM gs_test_payments WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+      if(prior) {
+        if(prior.coins!==coins) fail(409,'idempotency_conflict','Ключ уже использован для другого заказа')
+        return prior
+      }
+      const amount=coins*5000,receipt=paymentReceipt(paymentConfig,amount),nonce=digest(token())
+      const inserted=(await tx.query(`INSERT INTO gs_test_payments(user_id,coins,amount_kopecks,nonce,receipt,idempotency_key)
+        VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,[user.id,coins,amount,nonce,JSON.stringify(receipt),idem])).rows[0]
+      await audit(tx,user.id,'payment.test_created',String(inserted.id),{coins,amountKopecks:amount})
+      return inserted
+    })
+    return c.json({id:String(order.id),coins:order.coins,amountRub:order.amount_kopecks/100,status:order.status,
+      testOnly:true,checkout:order.status==='TEST_PENDING'?testCheckoutForm(paymentConfig,order,user.email):null})
+  })
+  // Robokassa ResultURL: a provider-to-server form callback, never a browser success redirect.
+  app.post('/api/v1/payments/robokassa/result',async c=>{
+    if(!paymentConfig) fail(503,'test_payments_disabled','Тестовая Robokassa не настроена')
+    let result
+    try { result=parseTestResult(paymentConfig,await c.req.text()) }
+    catch { fail(400,'invalid_payment_notice','Некорректное уведомление об оплате') }
+    await db.transaction(async tx=>{
+      const order=(await tx.query('SELECT * FROM gs_test_payments WHERE id=$1 FOR UPDATE',[result.id])).rows[0]
+      if(!order || order.nonce!==result.nonce || order.amount_kopecks!==result.kopecks)
+        fail(400,'payment_mismatch','Уведомление не совпадает с заказом')
+      if(order.status==='TEST_PAID') {
+        if(!(await tx.query('SELECT 1 FROM gs_coin_ledger WHERE id=$1 AND kind=$2 AND delta=$3',
+          [order.ledger_id,'PURCHASE',order.coins])).rows.length) fail(409,'payment_reconciliation','Платёж требует сверки')
+        return
+      }
+      const ledgerId=token()
+      await tx.query('INSERT INTO gs_coin_accounts(user_id,balance) VALUES($1,0) ON CONFLICT DO NOTHING',[order.user_id])
+      await tx.query('UPDATE gs_coin_accounts SET balance=balance+$1 WHERE user_id=$2',[order.coins,order.user_id])
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,related_id,idempotency_key,details)
+        VALUES($1,$2,'PURCHASE',$3,$4,$5,$6)`,[ledgerId,order.user_id,order.coins,String(order.id),`robokassa-test:${order.id}`,
+        JSON.stringify({provider:'robokassa',test:true,amountKopecks:order.amount_kopecks})])
+      await tx.query(`UPDATE gs_test_payments SET status='TEST_PAID',paid_at=now(),ledger_id=$1 WHERE id=$2`,[ledgerId,order.id])
+      await audit(tx,order.user_id,'payment.test_paid',String(order.id),{coins:order.coins,amountKopecks:order.amount_kopecks})
+    })
+    return c.text(`OK${result.id}`)
+  })
   // A local-only fixture lets the player→Support path run without claiming a real payment.
   if(local) app.post('/api/v1/__dev/coins',async c=>{
     const user=await requireUser(c,true),body=await json(c)
@@ -420,6 +479,19 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       return {id,replay:false,balance:updated.balance}
     })
     return c.json(result,result.replay?200:201)
+  })
+  app.get('/api/v1/admin/payments/reconciliation',async c=>{
+    await permission(c,'payments.read')
+    const orderMismatch=(await db.query(`SELECT p.id,p.status,p.coins,p.amount_kopecks,p.created_at
+      FROM gs_test_payments p LEFT JOIN gs_coin_ledger l ON l.id=p.ledger_id
+      WHERE (p.status='TEST_PAID' AND (l.id IS NULL OR l.kind IS DISTINCT FROM 'PURCHASE'
+        OR l.delta IS DISTINCT FROM p.coins OR l.related_id IS DISTINCT FROM p.id::text))
+         OR (p.status='TEST_PENDING' AND p.created_at<now()-interval '1 hour')
+      ORDER BY p.id DESC LIMIT 100`)).rows
+    const balanceMismatch=(await db.query(`SELECT a.user_id,a.balance,COALESCE(sum(l.delta),0)::integer AS ledger_balance
+      FROM gs_coin_accounts a LEFT JOIN gs_coin_ledger l ON l.user_id=a.user_id
+      GROUP BY a.user_id HAVING a.balance<>COALESCE(sum(l.delta),0) LIMIT 100`)).rows
+    return c.json({orderMismatch,balanceMismatch})
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')

@@ -6,6 +6,7 @@ import { migrate, postgresStore } from './db.mjs'
 import { dispatch } from './outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from './copyright.mjs'
+import { checkProjectionLag } from './projection-alert.mjs'
 import { mailEnabled, sendMail } from '../worker/lib/mailer.ts'
 
 const development=process.argv.includes('--local')
@@ -46,6 +47,9 @@ config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUT
 config.copyrightAI={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_COPYRIGHT_MODEL}
 config.telegram={botToken:process.env.TELEGRAM_BOT_TOKEN,chatId:process.env.TELEGRAM_ADMIN_CHAT_ID}
 const app=createApp({db,config})
+const projectionAlertSeconds=Number(process.env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
+if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
+  throw new Error('PUBLIC_PROJECTION_ALERT_SECONDS_must_be_60_to_3600')
 const server=createServer(async(req,res)=>{
   try {
     const chunks=[]; let size=0
@@ -69,6 +73,7 @@ const server=createServer(async(req,res)=>{
 // This service is local-only until a separately reviewed Yandex deployment is configured.
 server.listen(port,'127.0.0.1',()=>console.log(`Private API: http://127.0.0.1:${port}; local mail: /__dev/mail`))
 let busy=false
+let lastProjectionCheck=0
 const timer=setInterval(async()=>{
   if (busy) return
   busy=true
@@ -86,6 +91,10 @@ const timer=setInterval(async()=>{
         body:JSON.stringify(payload),redirect:'error',signal:AbortSignal.timeout(10000)})
       if(!response.ok) throw new Error('projection_unavailable')
     })
+    if(Date.now()-lastProjectionCheck>=30000) {
+      lastProjectionCheck=Date.now()
+      await checkProjectionLag(db,projectionAlertSeconds)
+    }
     if(config.openrouter.key && config.openrouter.model) await dispatchNicknameReview(db,
       nickname=>reviewNickname(config.openrouter,nickname),config.openrouter.model)
     if(config.copyrightAI.key && config.copyrightAI.model) await dispatchCopyrightAI(db,

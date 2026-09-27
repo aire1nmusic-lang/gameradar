@@ -88,13 +88,21 @@ The public `/copyright` form, private migration `008_copyright.sql`, D1 migratio
 
 **Limitations:** these are build-time import snapshots, not live D1 SSR. An owner-added, removed or newly moderated card is not reflected until a rebuild; the Pages test did not supply the API, so browser hydration there showed a network error over the visible snapshot. Do not deploy/index server snapshots until they have been reconciled against the current published D1 projection or replaced with live D1-backed HTML. Unknown route fallback can still return the root shell with 200; a proper HTTP 404 gate is pending. Search Console, Яндекс Вебмастер, Bing and IndexNow remain **BLOCKED** on site access and verification credentials. Rollback is the previous build command without the post-build prerender step; no database state changed.
 
+## Slice 6b: projection delay alert (local)
+
+Private migration `009_projection_alerts.sql` records the current operational alert state. The backend checks its public outbox every 30 seconds: pending events older than `PUBLIC_PROJECTION_ALERT_SECONDS` (default 300, allowed 60–3600), or events with at least three delivery attempts, open a single `projection.lag` alert. Recovery closes it. Both transitions are audited and queued for Telegram with only counts and timing, never an event payload, user ID or secret. The admin system endpoint and tab show the alert state. Repeat checks do not flood Telegram. Delivery still uses the existing leased, retried Telegram outbox.
+
+**Verified:** PGlite test covers threshold and retry triggers, deduplication, recovery, admin visibility and removal of private payload from messages. The restarted local private API applied migration 009 without a production change; TypeScript and build pass. Live Telegram delivery and public projection delivery are **BLOCKED** on the private deployment and credentials. No paid resource was created (0 ₽).
+
+**Rollback:** stop the background service and revert the application commit while preserving alert, audit and Telegram outbox rows; migration 009 is additive. Do not drop the table during a live alert. A production rollout must apply the reviewed migration before running this service and include a backup/restore plan.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
-3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
+3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
-6. Complete non-link material scopes, live AI/Telegram/email delivery, projection lag alert and low OpenRouter balance alert. The local link workflow is not full stage 6 acceptance.
+6. Complete non-link material scopes, live AI/Telegram/email delivery, production verification of the projection alert and low OpenRouter balance alert. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

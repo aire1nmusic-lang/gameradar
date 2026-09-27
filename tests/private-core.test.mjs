@@ -9,6 +9,7 @@ import { digest, unseal } from '../private-api/crypto.mjs'
 import { dispatch, outboxHealth } from '../private-api/outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../private-api/copyright.mjs'
+import { checkProjectionLag } from '../private-api/projection-alert.mjs'
 import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
@@ -469,4 +470,33 @@ test('copyright: exact link scope, AI triage, reversible restriction, public all
   const ai=await analyzeCopyright({key:'fake',model:'test'},(await h.db.query('SELECT * FROM gs_copyright_claims WHERE id=$1',[claim.body.id])).rows[0],
     async(_url,init)=>{assert.ok(!init.body.includes('rights@example.com'));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({classification:'VALID',reason:'Specific link requires review'})}}]}),{status:200})})
   assert.equal(ai.classification,'VALID')
+})
+
+test('projection lag alert is deduplicated, private and resolves after delivery',async t=>{
+  const h=await harness(t),admin=await h.register('ops-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('alert-l2','lineage2','Alert L2','alert-l2')")
+  assert.equal((await checkProjectionLag(h.db,300)).changed,false)
+  await h.db.query(`INSERT INTO gs_public_outbox(server_id,version,payload,created_at)
+    VALUES('alert-l2',1,$1,now()-interval '400 seconds')`,[JSON.stringify({name:'Private recipient should not appear',contact:'secret@example.com'})])
+  const first=await checkProjectionLag(h.db,300)
+  assert.equal(first.changed,true);assert.equal(first.active,true)
+  assert.equal((await checkProjectionLag(h.db,300)).changed,false)
+  let messages=(await h.db.query('SELECT event,message FROM gs_telegram_outbox')).rows
+  assert.equal(messages.length,1);assert.equal(messages[0].event,'projection.lag')
+  assert.ok(!messages[0].message.includes('secret@example.com'))
+  const system=(await h.request('/admin/system',undefined,admin.cookie)).body
+  assert.equal(system.alerts[0].active,true)
+  assert.equal(system.projection.pending,1)
+  await h.db.query("UPDATE gs_public_outbox SET delivered_at=now() WHERE server_id='alert-l2'")
+  assert.equal((await checkProjectionLag(h.db,300)).active,false)
+  assert.equal((await checkProjectionLag(h.db,300)).changed,false)
+  messages=(await h.db.query('SELECT event FROM gs_telegram_outbox ORDER BY created_at')).rows
+  assert.deepEqual(messages.map(x=>x.event),['projection.lag','projection.recovered'])
+  const audit=(await h.db.query("SELECT action FROM gs_audit WHERE action LIKE 'projection.%' ORDER BY id")).rows
+  assert.deepEqual(audit.map(x=>x.action),['projection.lag','projection.recovered'])
+  await h.db.query(`INSERT INTO gs_public_outbox(server_id,version,payload,attempts)
+    VALUES('alert-l2',2,'{}',3)`)
+  assert.equal((await checkProjectionLag(h.db,300)).active,true,'failed retries also alert before the age threshold')
+  await assert.rejects(checkProjectionLag(h.db,1),/invalid_projection_threshold/)
 })

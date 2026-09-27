@@ -60,6 +60,7 @@ export default function Admin() {
         ['Голоса','votes'],['События Поддержки','support_events'],['Ожидают тестовой оплаты','pending_test_payments'],
       ].map(([label,key])=><div key={key} className="surface rounded-xl p-4"><p className="text-sm text-ink-400">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
       {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
+        <h2 className="text-lg">Оповещения</h2>{(Array.isArray(summary.alerts)?summary.alerts as Row[]:[]).map(row=><article key={value(row,'key')} className="surface rounded-xl p-4 text-sm"><strong>{value(row,'key')}</strong> · {row.active?'Требует внимания':'В норме'} · {row.active?date(row,'opened_at'):date(row,'resolved_at')}</article>)}
         <h2 className="text-lg">Очереди проверки и уведомлений</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.queues??{},null,2)}</pre>
         <h2 className="text-lg">Последние системные события</h2>{(Array.isArray(summary.events)?summary.events as Row[]:[]).map(row=><article key={value(row,'id')} className="surface rounded-xl p-4 text-sm">{value(row,'action')} · {value(row,'target')} · {date(row,'created_at')}</article>)}
       </section>}

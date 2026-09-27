@@ -7,6 +7,7 @@ import { createApp } from '../private-api/app.mjs'
 import { migrate } from '../private-api/db.mjs'
 import { digest, unseal } from '../private-api/crypto.mjs'
 import { dispatch, outboxHealth } from '../private-api/outbox.mjs'
+import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-review.mjs'
 import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
@@ -359,4 +360,38 @@ test('admin roles enforce section permissions and audit role changes',async t=>{
   assert.equal((await h.request('/admin/votes',undefined,player.cookie)).status,403)
   const audit=(await h.db.query("SELECT action FROM gs_audit WHERE action LIKE 'role.%' ORDER BY id")).rows
   assert.deepEqual(audit.map(x=>x.action),['role.grant','role.revoke'])
+})
+
+test('ambiguous nickname review never reverses Support or ledger; AI and manual decisions are scoped',async t=>{
+  const h=await harness(t),player=await h.register('nickname@example.com'),admin=await h.register('nick-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'MODERATOR')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('nick-mc','minecraft','Nick MC','nick-mc')")
+  await h.db.query("UPDATE gs_users SET display_name='Player!!!' WHERE id=$1",[player.user.id])
+  assert.equal((await h.request('/__dev/coins',{coins:2},player.cookie,{'Idempotency-Key':'n'.repeat(32)})).status,201)
+  const support=await h.request('/support',{serverId:'nick-mc',coins:1,anonymous:false},player.cookie,{'Idempotency-Key':'s'.repeat(32)})
+  assert.equal(support.status,201)
+  assert.equal((await h.request('/support/servers/nick-mc')).body.recent[0].public_nick,'Анонимно')
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,1)
+  assert.equal((await h.request('/admin/moderation/nicknames',undefined,player.cookie)).status,403)
+  assert.equal((await h.request('/admin/moderation/nicknames',undefined,admin.cookie)).body.length,1)
+  await dispatchNicknameReview(h.db,async()=>{throw new Error('provider_failed')},'test-model')
+  assert.equal((await h.db.query('SELECT status FROM gs_nickname_reviews')).rows[0].status,'PENDING')
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,1)
+  await h.db.query("UPDATE gs_nickname_reviews SET available_at=now()-interval '1 second'")
+  await dispatchNicknameReview(h.db,async nick=>{assert.equal(nick,'Player!!!');return 'ALLOW'},'test-model')
+  assert.equal((await h.request('/support/servers/nick-mc')).body.recent[0].public_nick,'Player!!!')
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='SUPPORT'")).rows[0].n,1)
+  const second=await h.request('/support',{serverId:'nick-mc',coins:1,anonymous:false},player.cookie,{'Idempotency-Key':'t'.repeat(32)})
+  assert.equal(second.status,201)
+  assert.equal((await h.request(`/admin/moderation/nicknames/${second.body.id}/resolve`,
+    {decision:'ANONYMOUS',reason:'Публичный ник требует ручного ограничения'},admin.cookie)).status,200)
+  assert.equal((await h.request('/support/servers/nick-mc')).body.recent[0].public_nick,'Анонимно')
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,0)
+  const ai=await reviewNickname({key:'test-key',model:'test-model'},'Ambiguous',async(url,init)=>{
+    assert.equal(url,'https://openrouter.ai/api/v1/chat/completions')
+    assert.equal(init.headers.Authorization,'Bearer test-key')
+    assert.ok(!init.body.includes('nickname@example.com'))
+    return new Response(JSON.stringify({choices:[{message:{content:'REVIEW'}}]}),{status:200})
+  })
+  assert.equal(ai,'REVIEW')
 })

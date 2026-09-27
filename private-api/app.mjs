@@ -480,6 +480,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
         VALUES($1,$2,'SUPPORT',$3,$4,$5,$6)`,[ledgerId,user.id,-coins,id,idem,JSON.stringify({serverId})])
       await tx.query(`INSERT INTO gs_support(id,server_id,user_id,ledger_id,coins,anonymous,public_nick,nickname_decision,idempotency_key)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[id,serverId,user.id,ledgerId,coins,anonymous,decision.publicNick,decision.decision,idem])
+      if(decision.decision==='REVIEW') await tx.query('INSERT INTO gs_nickname_reviews(support_id,nickname) VALUES($1,$2)',[id,user.display_name])
       await audit(tx,user.id,'support.created',id,{serverId,coins,anonymous,decision:decision.decision})
       return {id,replay:false,balance:updated.balance}
     })
@@ -556,6 +557,30 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     await permission(c,'payments.read')
     return c.json((await db.query(`SELECT id,user_id,coins,amount_kopecks,status,created_at,paid_at
       FROM gs_test_payments ORDER BY id DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/moderation/nicknames',async c=>{
+    await permission(c,'moderation.manage')
+    return c.json((await db.query(`SELECT n.support_id,n.nickname,n.status,n.attempts,n.last_error,n.created_at,
+      s.server_id,s.user_id FROM gs_nickname_reviews n JOIN gs_support s ON s.id=n.support_id
+      WHERE n.status IN ('PENDING','REVIEW') ORDER BY n.created_at LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/moderation/nicknames/:id/resolve',async c=>{
+    const admin=await permission(c,'moderation.manage'),body=await json(c)
+    if(!['ALLOW','ANONYMOUS'].includes(body.decision)) fail(400,'invalid_decision','Укажите решение')
+    const reason=textOf(body.reason,10,1000)
+    await db.transaction(async tx=>{
+      const review=(await tx.query('SELECT * FROM gs_nickname_reviews WHERE support_id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
+      if(!review) fail(404,'not_found','Ник не найден')
+      const support=(await tx.query('SELECT * FROM gs_support WHERE id=$1',[review.support_id])).rows[0]
+      if(support.user_id===admin.id) fail(403,'self_review','Нельзя проверять свой ник')
+      if(!['PENDING','REVIEW'].includes(review.status)) fail(409,'review_closed','Ник уже рассмотрен')
+      await tx.query(`UPDATE gs_nickname_reviews SET status=$1,reviewed_at=now(),lease_token=NULL,lease_until=NULL
+        WHERE support_id=$2`,[body.decision,review.support_id])
+      await tx.query('UPDATE gs_support SET nickname_decision=$1,public_nick=$2 WHERE id=$3',
+        [body.decision,body.decision==='ALLOW'?review.nickname:'Анонимно',review.support_id])
+      await audit(tx,admin.id,'nickname.manual_review',review.support_id,{decision:body.decision,reason})
+    })
+    return c.json({ok:true})
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')

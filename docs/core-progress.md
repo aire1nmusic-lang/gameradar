@@ -64,12 +64,20 @@ Migration `006_admin_roles.sql` defines ADMIN, MODERATOR, FINANCE, COPYRIGHT and
 
 **Remaining in this stage:** server/user actions, moderation and copyright tabs, OpenRouter AI settings and review workflow. Production role bootstrap and live admin scenario depend on the private deployment. Rollback: revert application changes while retaining additive migration 006 and role/audit records; revoke an erroneous role with a recorded compensating action, not by editing audit history.
 
+## Slice 5b: asynchronous nickname review (local)
+
+Migration `007_nickname_review.sql` queues only ambiguous public nicknames after a Support transaction. The local filter allows ordinary names at zero cost, immediately anonymizes disallowed names, and leaves ambiguous names as «Анонимно» pending review. When `OPENROUTER_API_KEY` and an explicit `OPENROUTER_NICKNAME_MODEL` are configured on the private API, a leased worker sends only the nickname to OpenRouter and accepts `ALLOW / ANONYMOUS / REVIEW`. Failures retry with backoff; no AI request runs inside the Coins/Support transaction. A moderator can resolve pending or uncertain names with a reason and audit entry; a moderator cannot review their own support. Ledger and balance never change on AI failure or nickname decision.
+
+**Verified:** 11 PGlite tests include provider failure and retry, manual moderation, permissions, unchanged Support ledger, and a mocked OpenRouter request without email. TypeScript check passes. [OpenRouter chat completion](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request) was checked; live model calls and pricing remain **BLOCKED** on a selected model, API key and an approved per-request budget. 0 ₽ new cost because no external call or resource was made.
+
+**Rollback:** stop the nickname worker by removing its key/model, keep pending rows anonymous, and revert the code while retaining review/audit records. A completed decision currently needs an audited operator correction; the moderator re-review UI is not yet implemented. Do not alter financial records.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
-5. Complete scoped admin actions and moderation pages; wire OpenRouter only for ambiguous nicknames. The current role/read-only base is not full stage 5 acceptance.
+5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
 6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.
 7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.
 

@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { createApp } from './app.mjs'
 import { migrate, postgresStore } from './db.mjs'
 import { dispatch } from './outbox.mjs'
+import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
 import { mailEnabled, sendMail } from '../worker/lib/mailer.ts'
 
 const development=process.argv.includes('--local')
@@ -40,6 +41,7 @@ config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:p
   testPassword2:process.env.ROBOKASSA_TEST_PASSWORD_2,receiptSno:process.env.ROBOKASSA_RECEIPT_SNO,
   receiptTax:process.env.ROBOKASSA_RECEIPT_TAX,receiptPaymentObject:process.env.ROBOKASSA_RECEIPT_PAYMENT_OBJECT,
   receiptPaymentMethod:process.env.ROBOKASSA_RECEIPT_PAYMENT_METHOD,itemName:process.env.ROBOKASSA_RECEIPT_ITEM_NAME}
+config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_NICKNAME_MODEL}
 const app=createApp({db,config})
 const server=createServer(async(req,res)=>{
   try {
@@ -77,6 +79,8 @@ const timer=setInterval(async()=>{
         body:JSON.stringify(payload),redirect:'error',signal:AbortSignal.timeout(10000)})
       if(!response.ok) throw new Error('projection_unavailable')
     })
+    if(config.openrouter.key && config.openrouter.model) await dispatchNicknameReview(db,
+      nickname=>reviewNickname(config.openrouter,nickname),config.openrouter.model)
   } catch { console.error('outbox_dispatch_failed') }
   finally { busy=false }
 },1000)

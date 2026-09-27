@@ -15,6 +15,7 @@ const tabs:Tab[]=[
   {id:'support',label:'Поддержка',permission:'support.read',path:'/admin/support'},
   {id:'coins',label:'Coins',permission:'coins.read',path:'/admin/coins/ledger'},
   {id:'payments',label:'Платежи',permission:'payments.read',path:'/admin/payments'},
+  {id:'moderation',label:'Модерация',permission:'moderation.manage',path:'/admin/moderation/nicknames'},
   {id:'system',label:'События',permission:'system.read',path:'/admin/system'},
 ]
 type Row=Record<string,unknown>
@@ -81,6 +82,13 @@ export default function Admin() {
           {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p></>}
           {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p></>}
           {active.id==='payments'&&<><strong>Тестовый заказ {value(row,'id')} · {value(row,'status')}</strong><p>{value(row,'coins')} Coins · {Number(row.amount_kopecks)/100} ₽ · пользователь {value(row,'user_id')} · {date(row,'created_at')}</p></>}
+          {active.id==='moderation'&&<><strong>{value(row,'nickname')} · {value(row,'status')}</strong><p>Сервер {value(row,'server_id')} · попыток AI: {value(row,'attempts')} · {date(row,'created_at')}</p>
+            <Textarea aria-label="Основание модерации" minLength={10} maxLength={1000} value={reasons[value(row,'support_id')]??''}
+              onChange={e=>setReasons({...reasons,[value(row,'support_id')]:e.target.value})}/>
+            <div className="flex gap-2">{(['ALLOW','ANONYMOUS'] as const).map(decision=><Button key={decision} disabled={busy||(reasons[value(row,'support_id')]??'').trim().length<10}
+              onClick={()=>void act(()=>apiSend(`/admin/moderation/nicknames/${encodeURIComponent(value(row,'support_id'))}/resolve`,
+                {decision,reason:reasons[value(row,'support_id')]}))}>{decision==='ALLOW'?'Показать ник':'Оставить анонимно'}</Button>)}</div>
+          </>}
         </article>)}
       </section>}
     </>}

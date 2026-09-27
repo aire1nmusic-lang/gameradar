@@ -72,13 +72,21 @@ Migration `007_nickname_review.sql` queues only ambiguous public nicknames after
 
 **Rollback:** stop the nickname worker by removing its key/model, keep pending rows anonymous, and revert the code while retaining review/audit records. A completed decision currently needs an audited operator correction; the moderator re-review UI is not yet implemented. Do not alter financial records.
 
+## Slice 6a: scoped copyright link workflow (local)
+
+The public `/copyright` form, private migration `008_copyright.sql`, D1 migration `0008_public_restrictions.sql`, review/restore API and [workflow runbook](copyright-workflow.md) implement an exact-link complaint for site/Discord/Telegram slots. A complete claim is checked against the public card, queued for AI triage, and restricted only after a `VALID`/`DOUBTFUL` analysis or an audited human decision. `FAKE` does not disable a link; incomplete or mismatched scope requests clarification. A temporary restriction changes only the named slot, keeps the card, and has a manual RESTORE action. Private transaction + monotonic public outbox avoid a dual-database atomic write. The Worker strips restricted URLs from its public DTO after delivery; the private-mode profile fails closed on link loading. Claimant identity/evidence stay private. Telegram outbox contains only event, claim ID, server ID, scope and classification.
+
+**Verified:** 12 PGlite tests cover complete/incomplete/fake triage, overlapping active claims, scoped restore, rollback and retry when the projection insert fails, permissions, no legal PII in the public snapshot or Telegram payload, and a mocked AI/Telegram request. Build passes. D1 migration 0008 was applied **locally only**. The actual local Worker HTTP response hid the `site` link for a version-1 test projection and restored it at version 2. The in-app browser showed the public form and required fields; provider delivery has not been tested. OpenRouter/Telegram credentials, a real email sender, and paid-model budget remain **BLOCKED**. 0 ₽ new cost.
+
+**Limitations:** media assets other than these three external links do not yet have a restriction target; no live provider classification or Telegram delivery was verified. The public D1 projection is eventually consistent, so production needs an actionable lag alert and cutover test before treating restrictions as immediate. Low OpenRouter balance notification is not yet implemented. No production migration, DNS or legal decision occurred.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
-6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.
+6. Complete non-link material scopes, live AI/Telegram/email delivery, projection lag alert and low OpenRouter balance alert. The local link workflow is not full stage 6 acceptance.
 7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

@@ -5,6 +5,7 @@ import { createApp } from './app.mjs'
 import { migrate, postgresStore } from './db.mjs'
 import { dispatch } from './outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
+import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from './copyright.mjs'
 import { mailEnabled, sendMail } from '../worker/lib/mailer.ts'
 
 const development=process.argv.includes('--local')
@@ -42,6 +43,8 @@ config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:p
   receiptTax:process.env.ROBOKASSA_RECEIPT_TAX,receiptPaymentObject:process.env.ROBOKASSA_RECEIPT_PAYMENT_OBJECT,
   receiptPaymentMethod:process.env.ROBOKASSA_RECEIPT_PAYMENT_METHOD,itemName:process.env.ROBOKASSA_RECEIPT_ITEM_NAME}
 config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_NICKNAME_MODEL}
+config.copyrightAI={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_COPYRIGHT_MODEL}
+config.telegram={botToken:process.env.TELEGRAM_BOT_TOKEN,chatId:process.env.TELEGRAM_ADMIN_CHAT_ID}
 const app=createApp({db,config})
 const server=createServer(async(req,res)=>{
   try {
@@ -72,6 +75,10 @@ const timer=setInterval(async()=>{
   try {
     if (config.mailEnabled) await dispatch(db,'mail',async mail=>{
       if (development) inbox=[mail,...inbox].slice(0,20)
+      else if(mail.purpose==='COPYRIGHT_INFO') await sendMail(config.mailEnv,{to:mail.to,
+        subject:'GameScout: нужны уточнения по обращению',
+        text:`По обращению ${mail.claimId} нужны уточнения о правах, доказательствах или точной ссылке. Отправьте форму повторно с полными сведениями и укажите этот номер в поле доказательств.`,
+        html:`<p>По вашему обращению нужны уточнения. Отправьте форму повторно с полными сведениями и укажите номер ${mail.claimId} в поле доказательств.</p>`})
       else await sendMail(config.mailEnv,{to:mail.to,subject:`GameScout: ${mail.purpose}`,text:`Откройте ссылку в течение 20 минут: ${mail.link}`,html:`<p>Подтвердите действие по ссылке из текстовой версии письма.</p>`})
     },config.mailKey)
     if (config.publicProjection && config.projectionSecret) await dispatch(db,'public',async payload=>{
@@ -81,6 +88,9 @@ const timer=setInterval(async()=>{
     })
     if(config.openrouter.key && config.openrouter.model) await dispatchNicknameReview(db,
       nickname=>reviewNickname(config.openrouter,nickname),config.openrouter.model)
+    if(config.copyrightAI.key && config.copyrightAI.model) await dispatchCopyrightAI(db,
+      claim=>analyzeCopyright(config.copyrightAI,claim),config.copyrightAI.model,config.mailKey)
+    if(config.telegram.botToken && config.telegram.chatId) await dispatchTelegram(db,config.telegram)
   } catch { console.error('outbox_dispatch_failed') }
   finally { busy=false }
 },1000)

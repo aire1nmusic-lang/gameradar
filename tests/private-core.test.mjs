@@ -8,6 +8,7 @@ import { migrate } from '../private-api/db.mjs'
 import { digest, unseal } from '../private-api/crypto.mjs'
 import { dispatch, outboxHealth } from '../private-api/outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-review.mjs'
+import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../private-api/copyright.mjs'
 import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
@@ -18,7 +19,7 @@ async function harness(t,options={}) {
   const db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}
   await migrate(db);await migrate(db)
   t.after(()=>pg.close())
-  const app=createApp({db,config:{...config,...options.config},captchaVerify:options.captchaVerify,
+  const app=createApp({db,config:{...config,...options.config},captchaVerify:options.captchaVerify,publicFetch:options.publicFetch,
     oauthExchange:async(_env,provider,code)=>({id:code,displayName:`Player ${provider}`,email:'player@example.com',emailVerified:true})})
   const request=async(path,body,cookie='',extra={},env={})=>{
     const r=await app.request(origin+'/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})},{clientIp:'127.0.0.1',...env})
@@ -138,7 +139,7 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
   }
   const outbox=(await h.db.query('SELECT * FROM gs_public_outbox')).rows
   assert.equal(outbox.length,3)
-  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','serverId','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
+  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','restrictedLinks','serverId','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
   assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body.length,3)
   await assert.rejects(h.db.query("DELETE FROM gs_audit"),/append only/)
   // Simulate outbox failure: ownership and audit must roll back as one transaction.
@@ -154,8 +155,8 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
 test('public delivery: missing ACK, retries, stale versions, PII allowlist, mail encryption',async t=>{
   const h=await harness(t)
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec('CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,received_at TEXT)')
-  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,new Date().toISOString())}
+  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',received_at TEXT)")
+  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),new Date().toISOString())}
   assert.throws(()=>receive({serverId:'mc',version:1,claimed:true,email:'private@example.com'}))
   receive({serverId:'mc',version:2,claimed:false});receive({serverId:'mc',version:1,claimed:true})
   assert.equal(sqlite.prepare('SELECT claimed FROM public_server_projection').get().claimed,0)
@@ -394,4 +395,78 @@ test('ambiguous nickname review never reverses Support or ledger; AI and manual 
     return new Response(JSON.stringify({choices:[{message:{content:'REVIEW'}}]}),{status:200})
   })
   assert.equal(ai,'REVIEW')
+})
+
+test('copyright: exact link scope, AI triage, reversible restriction, public allowlist and Telegram privacy',async t=>{
+  const publicFetch=async()=>new Response(JSON.stringify({id:'rights-mc',links:{site:'https://rights.example/work',
+    discord:'https://discord.example/rights',telegram:'https://t.me/rights'}}),{status:200})
+  const h=await harness(t,{publicFetch,config:{publicApi:'https://catalog.example'}}),admin=await h.register('rights-admin@example.com'),viewer=await h.register('rights-viewer@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'COPYRIGHT')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('rights-mc','minecraft','Rights MC','rights-mc')")
+  const base={serverId:'rights-mc',materialKey:'site',materialUrl:'https://rights.example/work',
+    claimantName:'Rights Holder',contactEmail:'rights@example.com',rightsBasis:'I own the artwork identified here.',
+    workDescription:'The original game artwork and the disputed image.',evidence:'Original publication and registration details.'}
+  const incomplete=await h.request('/copyright/claims',{...base,rightsBasis:'unclear'})
+  assert.equal(incomplete.status,201);assert.equal(incomplete.body.status,'NEEDS_INFO')
+  const infoMail=(await h.db.query('SELECT ciphertext FROM gs_mail_outbox ORDER BY created_at DESC LIMIT 1')).rows[0]
+  assert.equal(unseal(config.mailKey,infoMail.ciphertext).purpose,'COPYRIGHT_INFO')
+  assert.ok(!infoMail.ciphertext.includes('rights@example.com'))
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,[])
+  const wrong=await h.request('/copyright/claims',{...base,materialUrl:'https://different.example/work'})
+  assert.equal(wrong.body.status,'NEEDS_INFO')
+  const claim=await h.request('/copyright/claims',base)
+  assert.equal(claim.body.status,'PENDING_AI')
+  assert.equal((await h.request('/admin/copyright',undefined,viewer.cookie)).status,403)
+  assert.equal((await h.request('/admin/copyright',undefined,admin.cookie)).body.length,3)
+  await dispatchCopyrightAI(h.db,async()=>({classification:'DOUBTFUL',reason:'Specific linked material needs human review'}),'mock-model')
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,['site'])
+  const saved=(await h.db.query('SELECT status FROM gs_copyright_claims WHERE id=$1',[claim.body.id])).rows[0]
+  assert.equal(saved.status,'REVIEW_RESTRICTED')
+  const snapshot=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id DESC LIMIT 1')).rows[0].payload
+  assert.deepEqual(snapshot.restrictedLinks,['site'])
+  assert.ok(!JSON.stringify(snapshot).includes('rights@example.com'))
+  assert.ok(!JSON.stringify(snapshot).includes('artwork'))
+  const overlapping=await h.request('/copyright/claims',base)
+  await dispatchCopyrightAI(h.db,async()=>({classification:'VALID',reason:'Second claimant requires separate review'}),'mock-model')
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,['site'])
+  assert.equal((await h.request(`/admin/copyright/${claim.body.id}/resolve`,
+    {action:'RESTORE',reason:'Manual evidence review completed'},viewer.cookie)).status,403)
+  assert.equal((await h.request(`/admin/copyright/${claim.body.id}/resolve`,
+    {action:'RESTORE',reason:'Manual evidence review completed'},admin.cookie)).status,200)
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,['site'],
+    'a different active claim still restricts the same link')
+  assert.equal((await h.request(`/admin/copyright/${overlapping.body.id}/resolve`,
+    {action:'RESTORE',reason:'Second evidence review completed'},admin.cookie)).status,200)
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,[])
+  assert.deepEqual((await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id DESC LIMIT 1')).rows[0].payload.restrictedLinks,[])
+  const fake=await h.request('/copyright/claims',{...base,materialKey:'discord',materialUrl:'https://discord.example/rights'})
+  await dispatchCopyrightAI(h.db,async()=>({classification:'FAKE',reason:'Clearly irrelevant asserted work'}),'mock-model')
+  assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims WHERE id=$1',[fake.body.id])).rows[0].status,'REJECTED_FAKE')
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,[])
+  const retry=await h.request('/copyright/claims',{...base,contactEmail:'retry@example.com',materialKey:'telegram',materialUrl:'https://t.me/rights'})
+  assert.equal(retry.status,201,JSON.stringify(retry.body))
+  await h.db.query(`CREATE FUNCTION fail_copyright_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated projection failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_copyright_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_copyright_outbox()')
+  await dispatchCopyrightAI(h.db,async()=>({classification:'VALID',reason:'Specific URL needs review'}),'mock-model')
+  assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims WHERE id=$1',[retry.body.id])).rows[0].status,'PENDING_AI')
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,[])
+  await h.db.query('DROP TRIGGER fail_copyright_outbox ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION fail_copyright_outbox()')
+  await h.db.query("UPDATE gs_copyright_ai_jobs SET available_at=now()-interval '1 second' WHERE claim_id=$1",[retry.body.id])
+  await dispatchCopyrightAI(h.db,async()=>({classification:'VALID',reason:'Specific URL needs review'}),'mock-model')
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-mc')).body.restrictedLinks,['telegram'])
+  assert.equal((await h.request(`/admin/copyright/${retry.body.id}/resolve`,
+    {action:'RESTORE',reason:'Reviewed after transient projection failure'},admin.cookie)).status,200)
+  const messages=(await h.db.query('SELECT message FROM gs_telegram_outbox')).rows.map(x=>x.message).join('\n')
+  assert.ok(messages.includes('copyright.suspected_fake'))
+  assert.ok(!messages.includes('rights@example.com'));assert.ok(!messages.includes('Original publication'))
+  await dispatchTelegram(h.db,{botToken:'fake',chatId:'123'},async(url,init)=>{
+    assert.ok(url.endsWith('/sendMessage'));assert.ok(!init.body.includes('rights@example.com'))
+    return new Response(JSON.stringify({ok:true}),{status:200})
+  })
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_telegram_outbox WHERE delivered_at IS NOT NULL')).rows[0].n,1)
+  const ai=await analyzeCopyright({key:'fake',model:'test'},(await h.db.query('SELECT * FROM gs_copyright_claims WHERE id=$1',[claim.body.id])).rows[0],
+    async(_url,init)=>{assert.ok(!init.body.includes('rights@example.com'));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({classification:'VALID',reason:'Specific link requires review'})}}]}),{status:200})})
+  assert.equal(ai.classification,'VALID')
 })

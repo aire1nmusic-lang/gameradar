@@ -49,6 +49,7 @@ import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
 import { SupportPanel } from '@/components/profile/SupportPanel'
 import { useAuth } from '@/hooks/useAuth'
+import { apiRequest } from '@/repositories/http/client'
 import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
@@ -127,8 +128,22 @@ function ServerNotFound() {
   )
 }
 
-function Profile({ server }: { server: GameServer }) {
+function Profile({ server: source }: { server: GameServer }) {
   const { privateCore } = useAuth()
+  const [restrictedLinks,setRestrictedLinks]=useState<string[]|null>(null)
+  useEffect(()=>{
+    if(!privateCore)return
+    let live=true;setRestrictedLinks(null)
+    apiRequest<{restrictedLinks:string[]}>(`/copyright/restrictions/${encodeURIComponent(source.id)}`)
+      .then(result=>{if(live)setRestrictedLinks(result.restrictedLinks)})
+      .catch(()=>{if(live)setRestrictedLinks(null)})
+    return()=>{live=false}
+  },[privateCore,source.id])
+  // Hide every outbound link until the private restriction gate answers; failures stay closed.
+  const server=privateCore?{...source,links:{...source.links,
+    site:restrictedLinks&&!restrictedLinks.includes('site')?source.links.site:'',
+    discord:restrictedLinks&&!restrictedLinks.includes('discord')?source.links.discord:'',
+    telegram:restrictedLinks&&!restrictedLinks.includes('telegram')?source.links.telegram:undefined}}:source
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
@@ -329,7 +344,7 @@ function Profile({ server }: { server: GameServer }) {
           <aside className="space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <TrustPanel online={server.online} />
-              <LinksCard server={server} />
+              <LinksCard server={server} restricted={restrictedLinks??[]} />
               <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />
             </div>
           </aside>
@@ -777,7 +792,7 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
   )
 }
 
-function LinksCard({ server }: { server: GameServer }) {
+function LinksCard({ server,restricted=[] }: { server: GameServer;restricted?:string[] }) {
   const links = [
     { key: 'site', icon: <Globe size={15} />, url: server.demo ? undefined : server.links.site, event: true },
     { key: 'discord', icon: <MessageSquare size={15} />, url: server.demo ? undefined : server.links.discord, event: false },
@@ -786,6 +801,7 @@ function LinksCard({ server }: { server: GameServer }) {
   return (
     <div className="surface rounded-xl p-5">
       <h3 className="mb-3.5 text-[14px] font-medium text-ink-50">Ссылки проекта</h3>
+      {restricted.length>0&&<p className="mb-3 text-[12px] text-ink-400">Одна или несколько ссылок временно ограничены на время проверки претензии. Карточка сервера доступна.</p>}
       {links.length ? (
         <div className="space-y-2">
           {links.map(link => (

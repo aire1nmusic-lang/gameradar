@@ -3,6 +3,8 @@ import { digest, equal, hashPassword, keyed, passwordValid, seal, token, verifyP
 import { outboxHealth } from './outbox.mjs'
 import { classifyLocalNickname } from './nickname.mjs'
 import { paymentReceipt, parseTestResult, testCheckoutForm, testPaymentConfig } from './robokassa.mjs'
+import { createPublicSnapshot } from './public-snapshot.mjs'
+import { enqueueTelegram } from './copyright.mjs'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 
@@ -582,6 +584,91 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     })
     return c.json({ok:true})
   })
+  app.get('/api/v1/copyright/restrictions/:id',async c=>{
+    const links=(await db.query(`SELECT DISTINCT material_key FROM gs_material_restrictions
+      WHERE server_id=$1 AND active=true ORDER BY material_key`,[c.req.param('id')])).rows.map(row=>row.material_key)
+    return c.json({restrictedLinks:links})
+  })
+  app.post('/api/v1/copyright/claims',async c=>{
+    const body=await json(c)
+    const serverId=textOf(body.serverId,1,100),materialKey=textOf(body.materialKey,1,20)
+    if(!['site','discord','telegram'].includes(materialKey)) fail(400,'invalid_scope','Укажите конкретную ссылку')
+    const contact=emailOf(body.contactEmail),claimant=textOf(body.claimantName,2,120)
+    const rights=typeof body.rightsBasis==='string'?body.rightsBasis.trim().slice(0,3000):''
+    const work=typeof body.workDescription==='string'?body.workDescription.trim().slice(0,3000):''
+    const evidence=typeof body.evidence==='string'?body.evidence.trim().slice(0,3000):''
+    const materialUrl=typeof body.materialUrl==='string'?body.materialUrl.trim().slice(0,2048):''
+    await limit(c,'copyright',contact,5)
+    if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
+      fail(404,'not_found','Сервер не найден')
+    let complete=rights.length>=20&&work.length>=20&&evidence.length>=20
+    let target
+    try {target=new URL(materialUrl);if(!['http:','https:'].includes(target.protocol)||target.username||target.password) complete=false} catch {complete=false}
+    if(complete) {
+      if(!config.publicApi) fail(503,'public_catalog_unavailable','Проверка ссылки сейчас недоступна')
+      const response=await publicFetch(new URL(`/api/v1/servers/${encodeURIComponent(serverId)}`,config.publicApi),
+        {signal:AbortSignal.timeout(8000),redirect:'error'})
+      if(!response.ok) fail(503,'public_catalog_unavailable','Проверка ссылки сейчас недоступна')
+      const server=await response.json()
+      let current
+      try {current=new URL(server.links?.[materialKey]).toString()} catch {current=''}
+      if(server.id!==serverId || current!==target.toString()) complete=false
+    }
+    const id=token(),status=complete?'PENDING_AI':'NEEDS_INFO'
+    await db.transaction(async tx=>{
+      await tx.query(`INSERT INTO gs_copyright_claims(id,server_id,claimant_name,contact_email,rights_basis,
+        work_description,material_key,material_url,evidence,status)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,[id,serverId,claimant,contact,rights,work,materialKey,materialUrl,evidence,status])
+      if(complete) await tx.query('INSERT INTO gs_copyright_ai_jobs(claim_id) VALUES($1)',[id])
+      else await tx.query('INSERT INTO gs_mail_outbox(id,ciphertext) VALUES($1,$2)',[token(),seal(config.mailKey,
+        {to:contact,purpose:'COPYRIGHT_INFO',claimId:id})])
+      await audit(tx,null,'copyright.submitted',id,{serverId,scope:materialKey,status})
+      await enqueueTelegram(tx,'copyright.submitted',id,serverId,materialKey)
+    })
+    return c.json({id,status,message:complete?'Претензия передана на проверку.':'Нужны уточнения по правам, доказательствам или точной ссылке.'},201)
+  })
+  app.get('/api/v1/admin/copyright',async c=>{
+    await permission(c,'copyright.read')
+    return c.json((await db.query(`SELECT id,server_id,claimant_name,contact_email,rights_basis,work_description,
+      material_key,material_url,evidence,status,ai_classification,ai_reason,created_at,resolution_reason
+      FROM gs_copyright_claims ORDER BY created_at DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/copyright/:id/resolve',async c=>{
+    const admin=await permission(c,'copyright.review'),body=await json(c)
+    if(!['RESTRICT','RESTORE','REJECT','REQUEST_INFO'].includes(body.action)) fail(400,'invalid_action','Укажите действие')
+    const reason=textOf(body.reason,10,1000)
+    await db.transaction(async tx=>{
+      const claim=(await tx.query('SELECT * FROM gs_copyright_claims WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
+      if(!claim) fail(404,'not_found','Претензия не найдена')
+      if(body.action==='RESTORE'&&claim.status!=='REVIEW_RESTRICTED') fail(409,'invalid_state','Активного ограничения нет')
+      if(body.action==='RESTRICT'&&!['PENDING_AI','NEEDS_INFO'].includes(claim.status)) fail(409,'invalid_state','Претензия уже рассмотрена')
+      if(['REJECT','REQUEST_INFO'].includes(body.action)&&claim.status==='REVIEW_RESTRICTED')
+        fail(409,'restore_first','Сначала явно восстановите ограничение')
+      if(['REJECT','REQUEST_INFO'].includes(body.action)&&!['PENDING_AI','NEEDS_INFO'].includes(claim.status))
+        fail(409,'invalid_state','Претензия уже рассмотрена')
+      const restricting=body.action==='RESTRICT',restoring=body.action==='RESTORE'
+      if(restricting) await tx.query(`INSERT INTO gs_material_restrictions(id,claim_id,server_id,material_key)
+        VALUES($1,$2,$3,$4)`,[token(),claim.id,claim.server_id,claim.material_key])
+      if(restoring) await tx.query(`UPDATE gs_material_restrictions SET active=false,restored_at=now(),restored_by=$1,restore_reason=$2
+        WHERE claim_id=$3 AND active=true`,[admin.id,reason,claim.id])
+      const status=restricting?'REVIEW_RESTRICTED':restoring?'RESTORED':body.action==='REJECT'?'REJECTED':'NEEDS_INFO'
+      await tx.query(`UPDATE gs_copyright_claims SET status=$1,reviewer_id=$2,resolution_reason=$3,resolved_at=now()
+        WHERE id=$4`,[status,admin.id,reason,claim.id])
+      if(restricting||restoring) {
+        const server=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
+          [claim.server_id])).rows[0]
+        const snapshot=await createPublicSnapshot(tx,claim.server_id,server.version)
+        await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+          [claim.server_id,server.version,JSON.stringify(snapshot)])
+      }
+      await audit(tx,admin.id,`copyright.${body.action.toLowerCase()}`,claim.id,
+        {serverId:claim.server_id,scope:claim.material_key,reason})
+      if(body.action==='REQUEST_INFO') await tx.query('INSERT INTO gs_mail_outbox(id,ciphertext) VALUES($1,$2)',
+        [token(),seal(config.mailKey,{to:claim.contact_email,purpose:'COPYRIGHT_INFO',claimId:claim.id})])
+      await enqueueTelegram(tx,`copyright.${body.action.toLowerCase()}`,claim.id,claim.server_id,claim.material_key)
+    })
+    return c.json({ok:true})
+  })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')
     return c.json((await db.query("SELECT c.*,s.name,s.game_id FROM gs_claims c JOIN gs_server_registry s USING(server_id) WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100")).rows)
@@ -601,7 +688,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       if (body.status==='VERIFIED') {
         if (server.owner_id && server.owner_id!==claim.user_id) fail(409,'already_claimed','Владелец уже подтверждён')
         const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=$1,version=version+1 WHERE server_id=$2 RETURNING version',[claim.user_id,server.server_id])).rows[0]
-        const snapshot={serverId:server.server_id,version:Number(changed.version),claimed:true}
+        const snapshot=await createPublicSnapshot(tx,server.server_id,changed.version)
         await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[server.server_id,changed.version,JSON.stringify(snapshot)])
       }
       const updated=(await tx.query('UPDATE gs_claims SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4 RETURNING *',[body.status,admin.id,reason,claim.id])).rows[0]
@@ -612,7 +699,14 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/system',async c=>{
     await permission(c,'system.read')
-    return c.json({projection:await outboxHealth(db),events:(await db.query('SELECT id,action,target,created_at FROM gs_audit ORDER BY id DESC LIMIT 50')).rows})
+    const queues=(await db.query(`SELECT
+      (SELECT count(*)::integer FROM gs_nickname_reviews WHERE status='PENDING') AS nickname_reviews,
+      (SELECT count(*)::integer FROM gs_copyright_ai_jobs WHERE completed_at IS NULL) AS copyright_ai,
+      (SELECT count(*)::integer FROM gs_telegram_outbox WHERE delivered_at IS NULL) AS telegram,
+      (SELECT COALESCE(EXTRACT(EPOCH FROM now()-min(created_at)),0)::integer
+        FROM gs_telegram_outbox WHERE delivered_at IS NULL) AS telegram_oldest_seconds`)).rows[0]
+    return c.json({projection:await outboxHealth(db),queues,
+      events:(await db.query('SELECT id,action,target,created_at FROM gs_audit ORDER BY id DESC LIMIT 50')).rows})
   })
   // Explicit public allowlist. Private cookies and identifying headers never reach D1.
   app.get('*',async c=>{

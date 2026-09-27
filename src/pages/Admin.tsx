@@ -16,6 +16,7 @@ const tabs:Tab[]=[
   {id:'coins',label:'Coins',permission:'coins.read',path:'/admin/coins/ledger'},
   {id:'payments',label:'Платежи',permission:'payments.read',path:'/admin/payments'},
   {id:'moderation',label:'Модерация',permission:'moderation.manage',path:'/admin/moderation/nicknames'},
+  {id:'copyright',label:'Copyright',permission:'copyright.read',path:'/admin/copyright'},
   {id:'system',label:'События',permission:'system.read',path:'/admin/system'},
 ]
 type Row=Record<string,unknown>
@@ -59,6 +60,7 @@ export default function Admin() {
         ['Голоса','votes'],['События Поддержки','support_events'],['Ожидают тестовой оплаты','pending_test_payments'],
       ].map(([label,key])=><div key={key} className="surface rounded-xl p-4"><p className="text-sm text-ink-400">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
       {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
+        <h2 className="text-lg">Очереди проверки и уведомлений</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.queues??{},null,2)}</pre>
         <h2 className="text-lg">Последние системные события</h2>{(Array.isArray(summary.events)?summary.events as Row[]:[]).map(row=><article key={value(row,'id')} className="surface rounded-xl p-4 text-sm">{value(row,'action')} · {value(row,'target')} · {date(row,'created_at')}</article>)}
       </section>}
       {active.id==='payments'&&<PaymentReconciliation />}
@@ -88,6 +90,22 @@ export default function Admin() {
             <div className="flex gap-2">{(['ALLOW','ANONYMOUS'] as const).map(decision=><Button key={decision} disabled={busy||(reasons[value(row,'support_id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/moderation/nicknames/${encodeURIComponent(value(row,'support_id'))}/resolve`,
                 {decision,reason:reasons[value(row,'support_id')]}))}>{decision==='ALLOW'?'Показать ник':'Оставить анонимно'}</Button>)}</div>
+          </>}
+          {active.id==='copyright'&&<><strong>Претензия {value(row,'id')} · {value(row,'status')}</strong>
+            <p>Сервер {value(row,'server_id')} · ссылка {value(row,'material_key')} · {date(row,'created_at')}</p>
+            <p className="break-all">{value(row,'material_url')}</p>
+            <p>Заявитель: {value(row,'claimant_name')} · {value(row,'contact_email')}</p>
+            <p className="whitespace-pre-wrap break-words">Права: {value(row,'rights_basis')}</p>
+            <p className="whitespace-pre-wrap break-words">Произведение: {value(row,'work_description')}</p>
+            <p className="whitespace-pre-wrap break-words">Сведения: {value(row,'evidence')}</p>
+            <p>AI: {value(row,'ai_classification')} · {value(row,'ai_reason')}</p>
+            {permissions.includes('copyright.review')&&<><Textarea aria-label="Основание решения по претензии" minLength={10} maxLength={1000}
+              value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+              <div className="flex flex-wrap gap-2">{(['RESTRICT','RESTORE','REJECT','REQUEST_INFO'] as const).map(action=><Button key={action} variant="outline"
+                disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
+                onClick={()=>void act(()=>apiSend(`/admin/copyright/${encodeURIComponent(value(row,'id'))}/resolve`,{action,reason:reasons[value(row,'id')]}))}>
+                  {{RESTRICT:'Временно ограничить',RESTORE:'Восстановить',REJECT:'Отклонить',REQUEST_INFO:'Запросить уточнения'}[action]}</Button>)}</div>
+            </>}
           </>}
         </article>)}
       </section>}

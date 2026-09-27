@@ -4,8 +4,8 @@ import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
-import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, type CatalogFilters } from '@/services'
-import { useServerPage } from '@/hooks/data'
+import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, searchServers, peopleSortedServers, type CatalogFilters } from '@/services'
+import { useAsync } from '@/hooks/data'
 import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
@@ -14,7 +14,7 @@ import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
 import { Select } from '@/components/ui/controls'
-import { EmptyState } from '@/components/ui/feedback'
+import { EmptyState, Notice } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { themeForGame } from '@/data/themes'
 import { InlinePromo } from '@/components/ads/AdSlots'
@@ -39,10 +39,6 @@ export default function Catalog() {
     verifiedOnly: params.get('verified') === '1',
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
-  useEffect(() => {
-    // The legacy D1 votes column is not the private rolling People's rating.
-    if (privateCore && sort === 'votes') setSort('recommended')
-  }, [privateCore, sort])
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
@@ -55,7 +51,9 @@ export default function Catalog() {
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
-  const { data: page, loading } = useServerPage(query)
+  const { data: page, loading, error, reload } = useAsync(
+    () => privateCore && sort === 'votes' ? peopleSortedServers(query) : searchServers(query),
+    [JSON.stringify(query),privateCore], true)
   const results = page?.items ?? []
   const total = page?.total ?? 0
   const activeCount = countActiveFilters(filters)
@@ -171,7 +169,7 @@ export default function Catalog() {
           <Select
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
-            options={SORT_OPTIONS.filter(option => !privateCore || option.key !== 'votes').map((option) => ({ value: option.key, label: option.label }))}
+            options={SORT_OPTIONS.map((option) => ({ value: option.key, label: privateCore && option.key === 'votes' ? 'Народный рейтинг' : option.label }))}
             className="w-[150px] shrink-0 [&_select]:h-9 [&_select]:text-[13px]"
           />
 
@@ -187,7 +185,9 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
-        {loading ? (
+        {error ? (
+          <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
+        ) : loading ? (
           view === 'grid' ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (

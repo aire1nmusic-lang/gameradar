@@ -11,14 +11,15 @@ import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-project
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
   oauth:{GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test',YANDEX_CLIENT_ID:'test',YANDEX_CLIENT_SECRET:'test',VK_CLIENT_ID:'test'}}
-async function harness(t) {
+async function harness(t,options={}) {
   const pg=new PGlite()
   const db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}
   await migrate(db);await migrate(db)
   t.after(()=>pg.close())
-  const app=createApp({db,config,oauthExchange:async(_env,provider,code)=>({id:code,displayName:`Player ${provider}`,email:'player@example.com',emailVerified:true})})
-  const request=async(path,body,cookie='',extra={})=>{
-    const r=await app.request(origin+'/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})},{clientIp:'127.0.0.1'})
+  const app=createApp({db,config:{...config,...options.config},captchaVerify:options.captchaVerify,
+    oauthExchange:async(_env,provider,code)=>({id:code,displayName:`Player ${provider}`,email:'player@example.com',emailVerified:true})})
+  const request=async(path,body,cookie='',extra={},env={})=>{
+    const r=await app.request(origin+'/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})},{clientIp:'127.0.0.1',...env})
     return {r,status:r.status,body:await r.clone().json().catch(()=>null),cookie:r.headers.getSetCookie().filter(x=>x.startsWith('gs_private_session=')).map(x=>x.split(';')[0]).join('; ')}
   }
   async function link(email,purpose) {
@@ -177,7 +178,7 @@ test('People rating: verified accounts only, rolling window, idempotency and ris
   for(const game of ['lineage2','minecraft','gtarp'])
     await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$1,$1,$1)',[game])
   const cast=(serverId,idem,cookie=player.cookie,deviceSignal='device_signal_12345')=>h.request('/people-rating/votes',
-    {serverId,deviceSignal},cookie,{'Idempotency-Key':idem})
+    {serverId,deviceSignal,pageAgeMs:5000},cookie,{'Idempotency-Key':idem})
   assert.equal((await cast('lineage2','1'.repeat(32),'')).status,401)
   const google=await oauth(h,'google','another-subject')
   assert.equal((await cast('lineage2','2'.repeat(32),google.result.cookie)).status,403)
@@ -190,6 +191,8 @@ test('People rating: verified accounts only, rolling window, idempotency and ris
   assert.equal((await cast('minecraft','3'.repeat(32))).status,409,'idempotency key cannot change server')
   const rating=(await h.request('/people-rating')).body
   assert.equal(rating.filter(r=>r.votes===1).length,3)
+  assert.equal((await h.request('/people-rating?limit=1&offset=1')).body.length,1)
+  assert.equal((await h.request('/people-rating?limit=101')).status,400)
   assert.equal((await h.request('/people-rating/eligibility?serverId=lineage2',undefined,player.cookie)).body.eligible,false)
   const storage=(await h.db.query('SELECT * FROM gs_votes')).rows
   assert.equal(storage.length,3)
@@ -201,4 +204,32 @@ test('People rating: verified accounts only, rolling window, idempotency and ris
   assert.equal((await h.request('/people-rating/eligibility?serverId=lineage2',undefined,player.cookie)).body.eligible,true)
   assert.equal((await h.request('/people-rating')).body.find(r=>r.server_id==='lineage2').votes,0)
   assert.equal((await h.db.query('SELECT count(*)::int n FROM gs_votes')).rows[0].n,3)
+})
+
+test('vote risk: missing/fast signals and ASN threshold require a real server-validated challenge',async t=>{
+  const h=await harness(t,{config:{turnstileSecret:'test-secret',turnstileSiteKey:'test-site'},
+    captchaVerify:async token=>({success:token==='valid',hostname:'127.0.0.1',action:'vote'})})
+  const first=await h.register('risk-one@example.com'),second=await h.register('risk-two@example.com')
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('risk-mc','minecraft','Risk MC','risk-mc')")
+  const headers=key=>({'Idempotency-Key':key})
+  const info=(await h.request('/people-rating/eligibility?serverId=risk-mc',undefined,first.cookie)).body
+  assert.equal(info.captchaSiteKey,'test-site')
+  const missing=await h.request('/people-rating/votes',{serverId:'risk-mc',pageAgeMs:5000},first.cookie,headers('m'.repeat(32)))
+  assert.equal(missing.body.error.code,'captcha_required')
+  const fast=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'device_signal_12345',pageAgeMs:10},first.cookie,headers('f'.repeat(32)))
+  assert.equal(fast.body.error.code,'captcha_required')
+  const bad=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'device_signal_12345',pageAgeMs:5000,captcha:'bad'},first.cookie,headers('b'.repeat(32)))
+  await h.db.query('UPDATE gs_vote_rules SET asn_daily_limit=1,ip_daily_limit=100,device_daily_limit=100 WHERE id=1')
+  assert.equal(bad.status,201,'a low-risk vote never consumes an unnecessary captcha token')
+  const asnRisk=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'different_device_signal',pageAgeMs:5000},second.cookie,headers('a'.repeat(32)),{clientAsn:'64500'})
+  assert.equal(asnRisk.status,201,'first ASN vote is below threshold')
+  await h.db.query("UPDATE gs_votes SET asn='64500' WHERE user_id=$1",[first.user.id])
+  const third=await h.register('risk-three@example.com')
+  const challenged=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'third_device_signal_123',pageAgeMs:5000},third.cookie,headers('c'.repeat(32)),{clientAsn:'64500'})
+  assert.equal(challenged.body.error.code,'captcha_required')
+  const rejected=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'third_device_signal_123',pageAgeMs:5000,captcha:'invalid'},third.cookie,headers('c'.repeat(32)),{clientAsn:'64500'})
+  assert.equal(rejected.body.error.code,'captcha_invalid')
+  const accepted=await h.request('/people-rating/votes',{serverId:'risk-mc',deviceSignal:'third_device_signal_123',pageAgeMs:5000,captcha:'valid'},third.cookie,headers('c'.repeat(32)),{clientAsn:'64500'})
+  assert.equal(accepted.status,201)
+  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM gs_votes')).rows[0].n,3)
 })

@@ -21,9 +21,9 @@ export async function migrate(db) {
     // Serialize startup migrations across replicas without runtime schema edits elsewhere.
     await tx.query('SELECT pg_advisory_xact_lock(19770927)')
     await tx.query('CREATE TABLE IF NOT EXISTS gs_migrations(version integer PRIMARY KEY, applied_at timestamptz DEFAULT now())')
-    for (const version of [1,2]) {
+    for (const [version,name] of [[1,'identity'],[2,'votes'],[3,'vote_risk']]) {
       if ((await tx.query('SELECT version FROM gs_migrations WHERE version=$1',[version])).rows.length) continue
-      const schema=await readFile(new URL(`./migrations/${String(version).padStart(3,'0')}_${version===1?'identity':'votes'}.sql`, import.meta.url), 'utf8')
+      const schema=await readFile(new URL(`./migrations/${String(version).padStart(3,'0')}_${name}.sql`, import.meta.url), 'utf8')
       if (tx.exec) await tx.exec(schema)
       else await tx.query(schema)
       await tx.query('INSERT INTO gs_migrations(version) VALUES($1)',[version])

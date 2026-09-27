@@ -31,7 +31,7 @@ if (development) {
   config={origin:process.env.PUBLIC_ORIGIN,environment:'production',mailKey:process.env.MAIL_ENCRYPTION_KEY,
     rateKey:process.env.RATE_HASH_KEY,mailEnabled:mailEnabled(mailEnv),mailEnv,publicApi:process.env.PUBLIC_CATALOG_ORIGIN,
     publicProjection:process.env.PUBLIC_PROJECTION_URL,projectionSecret:process.env.PUBLIC_PROJECTION_SECRET,
-    turnstileSecret:process.env.TURNSTILE_SECRET,
+    turnstileSecret:process.env.TURNSTILE_SECRET,turnstileSiteKey:process.env.TURNSTILE_SITE_KEY,
     oauth:Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(GOOGLE|VK|YANDEX|DISCORD)_CLIENT_(ID|SECRET)$/.test(key)))}
   // No implicit production migration; mail stays disabled until verified provider secrets exist.
 }

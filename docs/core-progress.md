@@ -28,10 +28,20 @@ Catalog and server page edits remove VIP/TOP visual treatment and show **«Он�
 
 **Rollback/cost:** presentation-only changes can be reverted at this commit; private schema and production state were not touched. 0 ₽ additional cloud resources. Next: complete organic ordering and risk challenges, then append-only Coins and Support.
 
+## Slice 3: organic catalog order and vote risk challenge (local)
+
+The catalog's «Народный рейтинг» order now reads rolling accepted votes from the private PostgreSQL API and hydrates only public server cards from D1. Equal or zero-vote cards get a stable name/id tie-breaker; the old D1 votes counter, paid promotion and ownership are absent from this formula. Current implementation reads all matching public cards client-side, so it needs a bounded server-side join or public aggregate projection before a large-scale release. API pagination prevents a fixed top-100 cutoff.
+
+Migration `003_vote_risk.sql` adds an adjustable ASN threshold; device/IP/ASN counts, missing device signal and implausibly fast page interaction trigger a challenge. The browser can render Turnstile explicitly when configured, then send its token to the private API. The server validates the token, hostname and `vote` action using Siteverify; it never treats a browser claim as proof. [Cloudflare's official client](https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/) and [server validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/) documentation were checked. IP/ASN must be supplied by a trusted ingress; the current local listener knows the socket IP but has no trustworthy ASN feed.
+
+**Verified:** seven PGlite tests cover voting in all three games, pagination, missing/fast signals, an ASN threshold, invalid and valid challenge responses; TypeScript check passes. The in-app browser displayed `sort=votes` as «Народный рейтинг» and loaded the GTA RP cards. Live Turnstile remains **BLOCKED** until a real sitekey/secret and approved hostname are available. Local low-risk voting remains possible. No new resources or costs.
+
+**Rollback:** the migration adds a column/index and does not rewrite accepted votes; disable client challenge rendering by leaving the paired keys unset, then roll back the application commit. Do not drop a used risk column before reading its configured threshold. The private ranking source stays PostgreSQL.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
-3. Finish separate organic sorting in catalogs, background expiry refresh/lag alarms and Turnstile client challenge. Re-test with real deployment signals. Keep money out of the formula.
+3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Add private append-only Coins ledger, Support and separate sort, Robokassa **test-only** notifications/receipt/reconciliation, with invariant and rollback tests. Do not enable the unapproved discount grid or sales.
 5. Expand scoped admin permissions and pages; local nickname filter plus OpenRouter only for ambiguous cases.
 6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.

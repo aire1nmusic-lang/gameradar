@@ -23,6 +23,7 @@ const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_au
 
 export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify }) {
   if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
+  if (!!config.turnstileSecret !== !!config.turnstileSiteKey) throw new Error('turnstile_key_pair_required')
   const origin = new URL(config.origin).origin
   const local = config.environment === 'development' && ['127.0.0.1','localhost'].includes(new URL(origin).hostname)
   if (!local && !origin.startsWith('https://')) throw new Error('https_required')
@@ -278,17 +279,21 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   // The People's rating uses only accepted gs_votes. Paid support never enters this query.
   app.get('/api/v1/people-rating',async c=>{
     const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
+    const limit=Number(c.req.query('limit')??100),offset=Number(c.req.query('offset')??0)
+    if(!Number.isSafeInteger(limit)||limit<1||limit>100||!Number.isSafeInteger(offset)||offset<0||offset>1000000)
+      fail(400,'invalid_page','Некорректная страница рейтинга')
     return c.json((await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,count(v.id)::integer AS votes
       FROM gs_server_registry r LEFT JOIN gs_votes v ON v.server_id=r.server_id
         AND v.created_at>now()-($1*interval '1 hour')
-      GROUP BY r.server_id ORDER BY votes DESC,r.server_id LIMIT 100`,[rules.window_hours])).rows)
+      GROUP BY r.server_id ORDER BY votes DESC,r.server_id LIMIT $2 OFFSET $3`,[rules.window_hours,limit,offset])).rows)
   })
   app.get('/api/v1/people-rating/eligibility',async c=>{
     const user=await requireUser(c,true), serverId=c.req.query('serverId')??''
     const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
     const recent=(await db.query(`SELECT count(*)::integer AS n,max(created_at) AS last FROM gs_votes
       WHERE user_id=$1 AND server_id=$2 AND created_at>now()-($3*interval '1 hour')`,[user.id,serverId,rules.window_hours])).rows[0]
-    return c.json({eligible:recent.n<rules.max_per_window,used:recent.n,limit:rules.max_per_window,windowHours:rules.window_hours})
+    return c.json({eligible:recent.n<rules.max_per_window,used:recent.n,limit:rules.max_per_window,windowHours:rules.window_hours,
+      captchaSiteKey:config.turnstileSecret?config.turnstileSiteKey??null:null})
   })
   app.post('/api/v1/people-rating/votes',async c=>{
     const user=await requireUser(c,true), body=await json(c)
@@ -296,22 +301,26 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const device=typeof body.deviceSignal==='string' && /^[a-zA-Z0-9_-]{16,128}$/.test(body.deviceSignal)?body.deviceSignal:null
     const ip=c.env?.clientIp??'unknown', ipHash=keyed(config.rateKey,'ip:'+ip), deviceHash=device?keyed(config.rateKey,'device:'+device):null
     const asn=typeof c.env?.clientAsn==='string' && /^\d{1,10}$/.test(c.env.clientAsn)?c.env.clientAsn:null
+    const pageAgeMs=Number.isSafeInteger(body.pageAgeMs) && body.pageAgeMs>=0 && body.pageAgeMs<=86400000?body.pageAgeMs:null
     await limit(c,'vote',user.id,20)
     const existing=(await db.query('SELECT id,server_id FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
     if(existing) { if(existing.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован для другого сервера');return c.json({id:existing.id,accepted:true,replay:true}) }
     const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
     const totals=(await db.query(`SELECT
       count(*) FILTER(WHERE ip_hash=$1 AND created_at>now()-interval '1 day')::integer AS ip_count,
-      count(*) FILTER(WHERE device_hash=$2 AND created_at>now()-interval '1 day')::integer AS device_count
-      FROM gs_votes WHERE created_at>now()-interval '1 day'`,[ipHash,deviceHash])).rows[0]
-    const suspicious=totals.ip_count>=rules.ip_daily_limit || (deviceHash && totals.device_count>=rules.device_daily_limit)
+      count(*) FILTER(WHERE device_hash=$2 AND created_at>now()-interval '1 day')::integer AS device_count,
+      count(*) FILTER(WHERE asn=$3 AND created_at>now()-interval '1 day')::integer AS asn_count
+      FROM gs_votes WHERE created_at>now()-interval '1 day'`,[ipHash,deviceHash,asn])).rows[0]
+    // Browser signals are weak evidence: they raise scrutiny, never establish a unique person.
+    const suspicious=!deviceHash || pageAgeMs===null || pageAgeMs<2000 || totals.ip_count>=rules.ip_daily_limit
+      || totals.device_count>=rules.device_daily_limit || (asn && totals.asn_count>=rules.asn_daily_limit)
     if(suspicious) {
-      if(!config.turnstileSecret || typeof body.captcha!=='string') fail(403,'captcha_required','Требуется дополнительная проверка')
+      if(!config.turnstileSecret || typeof body.captcha!=='string' || body.captcha.length>2048) fail(403,'captcha_required','Требуется дополнительная проверка')
       let valid=false
       try {
         const result=captchaVerify?await captchaVerify(body.captcha,ip):await (await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
           method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:config.turnstileSecret,response:body.captcha,remoteip:ip}),signal:AbortSignal.timeout(5000)})).json()
-        valid=result.success===true && (!result.hostname || result.hostname===new URL(origin).hostname)
+        valid=result.success===true && result.hostname===new URL(origin).hostname && result.action==='vote'
       } catch {}
       if(!valid) fail(403,'captcha_invalid','Дополнительная проверка не пройдена')
     }

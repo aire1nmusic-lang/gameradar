@@ -2,7 +2,7 @@ import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, p.restricted_links, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
+const serverSelect = `SELECT s.*, p.restricted_links, p.support_coins, p.support_participants, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
 /** A number counts only while it is fresh; an old one is history, not "online". */
 const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
 const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`
@@ -45,6 +45,11 @@ export class Store {
   async ownerServers(userId: string) { return (await this.db.prepare(`${serverSelect} WHERE s.owner_id=? OR (s.owner_id IS NULL AND s.submitted_by=?) ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
   /** Public cards for the sitemap. DEMO rows never appear here. */
   async sitemapServers() { return (await this.db.prepare("SELECT slug, updated_at FROM servers WHERE moderation='PUBLISHED' AND is_demo=0 ORDER BY updated_at DESC LIMIT 45000").all<Row>()).results }
+  async supportRanking(limit:number,offset:number) { return (await this.db.prepare(`SELECT s.id AS server_id,s.slug,s.name,s.game_id,
+    COALESCE(p.support_coins,0) AS coins,COALESCE(p.support_participants,0) AS participants
+    FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id
+    WHERE s.moderation='PUBLISHED'${this.live}
+    ORDER BY coins DESC,participants DESC,s.id LIMIT ? OFFSET ?`).bind(limit,offset).all<Row>()).results }
   async slugTaken(slug:string) { return !!(await this.db.prepare('SELECT 1 AS hit FROM servers WHERE slug=?').bind(slug).first<Row>()) }
   /** Same game and name, or same site host and version, among cards that are not archived. */
   findDuplicate(gameId:string,name:string,website:string,version:string) {

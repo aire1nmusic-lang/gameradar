@@ -110,11 +110,19 @@ Migration `010_owner_summary.sql` gives a verified owner of a specific server a 
 
 **Limitations:** this first owner operation covers a neutral short summary only. Version/rates/mode/opening date/region, media, external links, monitoring and vote integration still need separately scoped edits and moderation. The build-time SEO snapshot will not reflect an approved edit until the public HTML source is reconciled with D1. Rollback: stop new submissions, revert application code, preserve submitted decisions/audit/outbox, and roll forward with compensating approved text if a public correction is needed; never delete a delivered projection version.
 
+## Slice 4c: public Support aggregate projection (local)
+
+D1 migration `0009_public_support.sql` adds only `support_coins` and `support_participants` to the public server projection. Every private Support transaction now writes its ledger row, balance change, aggregate snapshot and outbox event atomically in PostgreSQL; an idempotent replay adds no second event. The same monotonic D1 version gate used for Claim/copyright/owner changes applies the aggregate. Public cards show “Поддержка: X · Y участников” with equal styling across games, and the D1 Worker exposes a separate `/api/v1/support/ranking`. The private-mode Support sort hydrates current aggregate counts from PostgreSQL while D1 delivery is pending. Individual supporters, their user IDs, ledger and payments stay private; recent public nicknames still come from the private API.
+
+**Verified:** PGlite tests cover repeated Support, two participants, absence of private identifiers in the projection, and rollback of the financial transaction if enqueue fails. The actual local D1 migration 0009 applied, the Worker returned `/api/v1/support/ranking` and card aggregate fields over HTTP, and the in-app browser showed equal Support labels on all three GTA RP cards. TypeScript check passed. No cloud resource was created (0 ₽). Actual private→D1 delivery and projection lag alert delivery remain **BLOCKED** until the private API, signing secret and bot are deployed. Production must apply D1 migration 0009 before deploying this Worker build; this was **not** done.
+
+**Rollback:** stop Support writes, revert the Worker/UI/private code together and preserve the ledger and outbox; migration 0009 is additive. Do not reset a live public count by replaying an older version. A production migration needs a reviewed backup and cutover order.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
-4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
+4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
 5. Complete other server/user admin actions and owner fields, copyright and AI settings. A reviewed summary is only the first owner operation and does not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.

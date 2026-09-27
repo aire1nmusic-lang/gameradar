@@ -185,6 +185,8 @@ export interface GameServer {
   languages: string[]
 
   online: OnlineData
+  /** Public, eventually consistent Support aggregate; never part of People's rating. */
+  support?: { coins: number; participants: number }
   history: Record<ChartRange, number[]>
 
   rating: number

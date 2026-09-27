@@ -52,18 +52,20 @@ export function searchServers(query: ServerQuery): Promise<Page<GameServer>> {
 /** Read-only join at the UI boundary: private vote counts order public cards. */
 async function privateAggregateSort(query: ServerQuery, path: string, field: 'votes' | 'coins'): Promise<Page<GameServer>> {
   const ranking = async () => {
-    const rows: Array<{server_id:string;votes?:number;coins?:number}> = []
+    const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
     for (let offset=0; ; offset+=100) {
-      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number}>>(`${path}?limit=100&offset=${offset}`)
+      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number;participants?:number}>>(`${path}?limit=100&offset=${offset}`)
       rows.push(...page)
       if (page.length<100) return rows
     }
   }
-  const [catalog, votes]=await Promise.all([
+  const [catalog, rankingRows]=await Promise.all([
     repo.servers.query({...query,sort:'recommended',offset:0,limit:Number.MAX_SAFE_INTEGER}),ranking(),
   ])
-  const score=new Map(votes.map(row=>[row.server_id,row[field]??0]))
-  const sorted=[...catalog.items].sort((a,b)=>(score.get(b.id)??0)-(score.get(a.id)??0) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
+  const score=new Map(rankingRows.map(row=>[row.server_id,row[field]??0]))
+  const support=new Map(rankingRows.map(row=>[row.server_id,{coins:row.coins??0,participants:row.participants??0}]))
+  const cards=field==='coins'?catalog.items.map(card=>({...card,support:support.get(card.id)??{coins:0,participants:0}})):catalog.items
+  const sorted=[...cards].sort((a,b)=>(score.get(b.id)??0)-(score.get(a.id)??0) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
   const offset=query.offset??0,limit=query.limit??24
   return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
 }

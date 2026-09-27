@@ -508,6 +508,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       await tx.query(`INSERT INTO gs_support(id,server_id,user_id,ledger_id,coins,anonymous,public_nick,nickname_decision,idempotency_key)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[id,serverId,user.id,ledgerId,coins,anonymous,decision.publicNick,decision.decision,idem])
       if(decision.decision==='REVIEW') await tx.query('INSERT INTO gs_nickname_reviews(support_id,nickname) VALUES($1,$2)',[id,user.display_name])
+      const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',[serverId])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,serverId,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+        [serverId,changed.version,JSON.stringify(snapshot)])
       await audit(tx,user.id,'support.created',id,{serverId,coins,anonymous,decision:decision.decision})
       return {id,replay:false,balance:updated.balance}
     })

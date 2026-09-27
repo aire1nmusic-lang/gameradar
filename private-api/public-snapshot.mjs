@@ -4,6 +4,9 @@ export async function createPublicSnapshot(tx,serverId,version) {
     WHERE server_id=$1 AND active=true ORDER BY material_key`,[serverId])).rows.map(row=>row.material_key)
   const approved=(await tx.query(`SELECT summary FROM gs_owner_summary_edits
     WHERE server_id=$1 AND status='APPROVED' ORDER BY resolved_at DESC,id DESC LIMIT 1`,[serverId])).rows[0]
+  const support=(await tx.query(`SELECT COALESCE(sum(coins),0)::bigint AS coins,
+    count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
   return {serverId,version:Number(version),claimed:!!server.owner_id,restrictedLinks:restricted,
+    supportCoins:Number(support.coins),supportParticipants:support.participants,
     ...(approved?{summary:approved.summary}:{})}
 }

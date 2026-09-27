@@ -141,7 +141,7 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
   }
   const outbox=(await h.db.query('SELECT * FROM gs_public_outbox')).rows
   assert.equal(outbox.length,3)
-  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','restrictedLinks','serverId','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
+  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','restrictedLinks','serverId','supportCoins','supportParticipants','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
   assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body.length,3)
   await assert.rejects(h.db.query("DELETE FROM gs_audit"),/append only/)
   // Simulate outbox failure: ownership and audit must roll back as one transaction.
@@ -157,8 +157,8 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
 test('public delivery: missing ACK, retries, stale versions, PII allowlist, mail encryption',async t=>{
   const h=await harness(t)
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',received_at TEXT)")
-  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),new Date().toISOString())}
+  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT)")
+  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString())}
   assert.throws(()=>receive({serverId:'mc',version:1,claimed:true,email:'private@example.com'}))
   receive({serverId:'mc',version:2,claimed:false});receive({serverId:'mc',version:1,claimed:true})
   assert.equal(sqlite.prepare('SELECT claimed FROM public_server_projection').get().claimed,0)
@@ -587,7 +587,7 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
     INSERT INTO servers(id,summary) VALUES('mc','Original summary')`)
   const db={
     prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
@@ -596,14 +596,46 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   }
   const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
   const approved='Проверенное нейтральное описание Minecraft-сервера.'
-  await project({serverId:'mc',version:2,claimed:true,restrictedLinks:[],summary:approved})
+  await project({serverId:'mc',version:2,claimed:true,restrictedLinks:[],summary:approved,supportCoins:3,supportParticipants:2})
   await project({serverId:'mc',version:1,claimed:false,summary:'Старый вариант описания Minecraft-сервера.'})
   assert.equal(sqlite.prepare("SELECT summary FROM servers WHERE id='mc'").get().summary,approved)
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,2)
+  assert.equal(sqlite.prepare("SELECT support_coins FROM public_server_projection WHERE server_id='mc'").get().support_coins,3)
   await project({serverId:'mc',version:3,claimed:true,restrictedLinks:['site']})
   assert.equal(sqlite.prepare("SELECT summary FROM servers WHERE id='mc'").get().summary,approved)
   assert.throws(()=>parsePublicSnapshot({serverId:'mc',version:4,claimed:true,summary:'<script>alert(1)</script>'}))
   sqlite.exec("CREATE TRIGGER reject_summary BEFORE UPDATE ON servers BEGIN SELECT RAISE(ABORT,'failed'); END")
   await assert.rejects(project({serverId:'mc',version:4,claimed:true,summary:'Следующее нейтральное описание игрового сервера.'}),/failed/)
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,3)
+})
+
+test('Support projects only public aggregates with ledger rollback and idempotency',async t=>{
+  const h=await harness(t),one=await h.register('support-projection-1@example.com'),two=await h.register('support-projection-2@example.com')
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('support-gta','gtarp','Support GTA','support-gta')")
+  assert.equal((await h.request('/__dev/coins',{coins:5},one.cookie,{'Idempotency-Key':'a'.repeat(32)})).status,201)
+  assert.equal((await h.request('/__dev/coins',{coins:5},two.cookie,{'Idempotency-Key':'b'.repeat(32)})).status,201)
+  const first=await h.request('/support',{serverId:'support-gta',coins:2,anonymous:true},one.cookie,{'Idempotency-Key':'c'.repeat(32)})
+  assert.equal(first.status,201)
+  assert.equal((await h.request('/support',{serverId:'support-gta',coins:2,anonymous:true},one.cookie,{'Idempotency-Key':'c'.repeat(32)})).body.replay,true)
+  const second=await h.request('/support',{serverId:'support-gta',coins:1,anonymous:false},two.cookie,{'Idempotency-Key':'d'.repeat(32)})
+  assert.equal(second.status,201)
+  let snapshots=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id')).rows.map(x=>x.payload)
+  assert.equal(snapshots.length,2)
+  assert.deepEqual(snapshots.map(x=>[x.supportCoins,x.supportParticipants]),[[2,1],[3,2]])
+  for(const snapshot of snapshots) {
+    assert.ok(!JSON.stringify(snapshot).includes(one.user.id))
+    assert.ok(!JSON.stringify(snapshot).includes('support-projection'))
+    assert.ok(!JSON.stringify(snapshot).includes('Анонимно'))
+    assert.deepEqual(parsePublicSnapshot(snapshot),snapshot)
+  }
+  await h.db.query(`CREATE FUNCTION fail_support_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated queue failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_support_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_support_outbox()')
+  assert.equal((await h.request('/support',{serverId:'support-gta',coins:1,anonymous:false},one.cookie,{'Idempotency-Key':'e'.repeat(32)})).status,500)
+  assert.equal((await h.request('/coins/me',undefined,one.cookie)).body.balance,3)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='SUPPORT'")).rows[0].n,2)
+  await h.db.query('DROP TRIGGER fail_support_outbox ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION fail_support_outbox()')
+  snapshots=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id')).rows.map(x=>x.payload)
+  assert.equal(snapshots.length,2)
 })

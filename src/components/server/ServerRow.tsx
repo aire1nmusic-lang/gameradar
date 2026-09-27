@@ -91,6 +91,7 @@ export function ServerRow({
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
         <div className="mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
+        {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} участников</div>}
       </div>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (

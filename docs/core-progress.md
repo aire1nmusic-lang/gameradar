@@ -132,6 +132,14 @@ One PGlite/Hono scenario now uses the **same verified player account** to vote a
 
 **Rollback:** remove the checker and command if the HTML source is replaced by D1-backed SSR; the command is read-only and changes no database or public page. Unknown-route HTTP 404 and webmaster verification remain pending.
 
+## Slice 7d: unknown-route HTTP 404 (local)
+
+A top-level `public/404.html` makes Cloudflare Pages return an actual HTTP 404 with `noindex` and a catalog link for paths absent from the prerendered build, instead of serving the home shell with HTTP 200. This follows [Cloudflare Pages' documented serving behavior](https://developers.cloudflare.com/pages/configuration/serving-pages/). `tests/seo-http.mjs` now checks the missing page both in the build and over local Pages HTTP.
+
+**Verified:** `npm run build` passed; local Cloudflare Pages at `127.0.0.1:4180` passed `SEO_BASE_URL=... npm run test:seo`, including the unknown URL's 404 status and robots tag. No new cloud resource or cost (0 ₽). A newly published server absent from the build will likewise be unavailable by direct URL until a new build; the reconciliation gate from slice 7c deliberately catches this. The full release needs either a rebuild on moderation changes or D1-backed HTML for dynamic cards. Browser-side SPA navigation still needs error-state acceptance.
+
+**Rollback:** revert the 404 file and HTTP assertion; no database or production state changed.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
@@ -139,6 +147,6 @@ One PGlite/Hono scenario now uses the **same verified player account** to vote a
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
 5. Complete other server/user admin actions and owner fields, copyright and AI settings. A reviewed summary is only the first owner operation and does not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
-7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP and shared-state API checks pass, but production acceptance has not been verified.
+7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP 404 and shared-state API checks pass, but production acceptance has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

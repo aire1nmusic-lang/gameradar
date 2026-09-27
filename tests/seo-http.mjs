@@ -22,6 +22,9 @@ for (const path of ['/rating', '/openings', '/account', '/admin', '/dashboard'])
 }
 assert.match(html('/catalog'), /Онлайн не указан/)
 assert.ok(!html('/catalog').includes('https://example.com'))
+const missing = readFileSync('dist/404.html', 'utf8')
+assert.match(missing, /<meta name="robots" content="noindex, nofollow"/)
+assert.match(missing, /Страница не найдена/)
 
 const base = process.env.SEO_BASE_URL
 if (base) {
@@ -35,5 +38,8 @@ if (base) {
     if (!['/rating', '/admin'].includes(logicalPath)) assert.equal(extract(source, /<link rel="canonical" href="([^"]+)"/), ORIGIN + logicalPath, `${path}: canonical`)
     assert.match(source, /<h1>/, `${path}: content`)
   }
+  const unknown = await fetch(new URL('/nonexistent-seo-route-7249', base), { redirect: 'follow' })
+  assert.equal(unknown.status, 404, 'unknown route must return HTTP 404')
+  assert.match(await unknown.text(), /<meta name="robots" content="noindex, nofollow"/)
 }
 console.log(`SEO snapshot: ${pages.length} public routes; ${base ? 'HTTP passed' : 'set SEO_BASE_URL for HTTP verification'}`)

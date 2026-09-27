@@ -5,24 +5,11 @@
  * served from the API (see README).
  */
 import { writeFileSync } from 'node:fs'
-import { importSql, loadDataset } from './import/dataset.mjs'
+import { ORIGIN, publicPages } from './public-pages.mjs'
 
-const ORIGIN = 'https://gamescout.online'
-const GAME_SLUG = { lineage2: 'lineage-2', minecraft: 'minecraft', gtarp: 'gta-rp', rust: 'rust', cs2: 'cs2', dayz: 'dayz' }
-const WORLDS = ['lineage-2/interlude', 'lineage-2/high-five', 'lineage-2/essence', 'lineage-2/classic']
-
-const records = loadDataset().filter(record => record.confidence === 'confirmed')
-const { plan } = importSql(records)
-const today = new Date().toISOString().slice(0, 10)
-const byKey = new Map(records.map(record => [record.key, record]))
-
-const urls = [
-  { loc: '/', priority: '1.0' },
-  ...['catalog', 'games', 'openings', 'rating', 'owners'].map(path => ({ loc: '/' + path, priority: '0.7' })),
-  ...[...new Set(records.map(record => GAME_SLUG[record.game]))].map(slug => ({ loc: '/' + slug, priority: '0.8' })),
-  ...WORLDS.map(path => ({ loc: '/' + path, priority: '0.6' })),
-  ...plan.map(item => ({ loc: '/server/' + item.slug, priority: '0.6', lastmod: byKey.get(item.key)?.checkedAt?.slice(0, 10) ?? today })),
-]
+// Keep the sitemap equal to the URLs that actually receive route-specific HTML.
+// Thin dynamic routes such as /rating and /openings join after factual SSR exists.
+const urls = publicPages().map(page => ({ loc: page.path, lastmod: page.lastmod, priority: page.path === '/' ? '1.0' : page.path.startsWith('/server/') ? '0.6' : '0.7' }))
 
 const escape = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 const xml = [

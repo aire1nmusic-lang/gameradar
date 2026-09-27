@@ -80,6 +80,14 @@ The public `/copyright` form, private migration `008_copyright.sql`, D1 migratio
 
 **Limitations:** media assets other than these three external links do not yet have a restriction target; no live provider classification or Telegram delivery was verified. The public D1 projection is eventually consistent, so production needs an actionable lag alert and cutover test before treating restrictions as immediate. Low OpenRouter balance notification is not yet implemented. No production migration, DNS or legal decision occurred.
 
+## Slice 7a: crawlable build snapshots (local)
+
+`scripts/public-pages.mjs` now derives route-specific visible HTML from the confirmed import dataset. `scripts/prerender-public.mjs` writes factual catalog/game/world/server pages plus home, owners and copyright, with route-specific title, description, canonical, generic WebPage JSON-LD and internal links. Unknown online is explicitly unknown; the snapshot contains no external server URLs, votes, paid positions or fake statistics. The build also writes `noindex` HTML for account/admin/dashboard and thin dynamic rating/openings pages. `scripts/sitemap.mjs` lists only 117 routes that get indexable prerendered HTML; the generated `public/sitemap.xml` is a build artifact. The existing React app replaces the visible snapshot after the API initializes.
+
+**Verified:** `npm run build` and `SEO_BASE_URL=http://127.0.0.1:4180 npm run test:seo` passed. Local Cloudflare Pages dev (not Vite Preview) returned the correct route-specific HTML over HTTP for `/`, `/catalog?game=gtarp`, `/lineage-2`, `/minecraft`, `/gta-rp`, `/server/new-day-rp`, `/copyright`, `/rating` and `/admin`; the latter two carried `noindex`. The in-app browser showed visible catalog cards without API data. Cloudflare Pages' clean-URL handling was necessary: Vite Preview serves `/catalog/` correctly but falls back to `/` for `/catalog`. [Cloudflare Pages local development](https://developers.cloudflare.com/pages/functions/local-development/) and [routing](https://developers.cloudflare.com/pages/functions/routing/) were checked. No cloud resource or cost was added (0 ₽).
+
+**Limitations:** these are build-time import snapshots, not live D1 SSR. An owner-added, removed or newly moderated card is not reflected until a rebuild; the Pages test did not supply the API, so browser hydration there showed a network error over the visible snapshot. Do not deploy/index server snapshots until they have been reconciled against the current published D1 projection or replaced with live D1-backed HTML. Unknown route fallback can still return the root shell with 200; a proper HTTP 404 gate is pending. Search Console, Яндекс Вебмастер, Bing and IndexNow remain **BLOCKED** on site access and verification credentials. Rollback is the previous build command without the post-build prerender step; no database state changed.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
@@ -87,6 +95,6 @@ The public `/copyright` form, private migration `008_copyright.sql`, D1 migratio
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, projection lag alert and low OpenRouter balance alert. The local link workflow is not full stage 6 acceptance.
-7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.
+7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

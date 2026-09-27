@@ -55,8 +55,8 @@ function jsonLd(objects: Record<string, unknown>[] | undefined) {
 /**
  * Title, description, canonical, Open Graph and JSON-LD for a page.
  *
- * The app is a SPA, so this matters for crawlers that render JavaScript and
- * for link previews; the static sitemap and robots.txt cover discovery.
+ * The build prerenders factual public snapshots. Client navigation updates
+ * their metadata here after the live API has loaded.
  */
 export function useSeo(input: SeoInput) {
   const { title, description, path, noindex } = input

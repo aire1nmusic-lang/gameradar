@@ -74,6 +74,7 @@ export default function Account() {
         {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="space-y-3"><Field label="Email"><Input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field><Button type="submit" disabled={busy}>Подтвердить email</Button></form>}
         <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)}>Привязать {providerLabels[p]??p}</Button>)}</div>
         <Button disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')}>Выйти</Button>
+        {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
         {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><p key={s.server_id}><a href={`/server/${s.slug}`}>{s.name}</a> · {s.game_id}</p>)}

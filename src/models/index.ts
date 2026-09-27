@@ -233,6 +233,7 @@ export interface User {
   avatarUrl?: string
   provider: AuthProvider
   roles: UserRole[]
+  permissions?: string[]
   createdAt: string
 }
 

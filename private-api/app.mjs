@@ -44,14 +44,19 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   }
   const permission = async (c,name) => {
     const user=await requireUser(c,true)
-    if (!(await db.query('SELECT 1 FROM gs_permissions WHERE user_id=$1 AND permission=$2',[user.id,name])).rows.length) fail(403,'forbidden','Недостаточно прав')
+    if (!(await db.query(`SELECT 1 FROM gs_permissions WHERE user_id=$1 AND permission=$2
+      UNION SELECT 1 FROM gs_user_roles ur JOIN gs_role_permissions rp ON rp.role=ur.role
+      WHERE ur.user_id=$1 AND rp.permission=$2 LIMIT 1`,[user.id,name])).rows.length) fail(403,'forbidden','Недостаточно прав')
     return user
   }
   async function dto(user) {
     const identities=(await db.query('SELECT provider,created_at FROM gs_identities WHERE user_id=$1',[user.id])).rows
-    const permissions=(await db.query('SELECT permission FROM gs_permissions WHERE user_id=$1',[user.id])).rows.map(x=>x.permission)
+    const permissions=(await db.query(`SELECT permission FROM gs_permissions WHERE user_id=$1
+      UNION SELECT rp.permission FROM gs_user_roles ur JOIN gs_role_permissions rp ON rp.role=ur.role WHERE ur.user_id=$1`,[user.id])).rows.map(x=>x.permission)
+    const assigned=(await db.query('SELECT role FROM gs_user_roles WHERE user_id=$1 ORDER BY role',[user.id])).rows.map(x=>x.role)
+    const owns=(await db.query('SELECT 1 FROM gs_server_registry WHERE owner_id=$1 LIMIT 1',[user.id])).rows.length>0
     return { id:user.id,email:user.email,displayName:user.display_name,provider:'EMAIL',emailVerified:!!user.email_verified_at,
-      hasPassword:!!user.password_hash,roles:['PLAYER'],permissions,createdAt:user.created_at,
+      hasPassword:!!user.password_hash,roles:['PLAYER',...(owns?['OWNER']:[]),...assigned],permissions,createdAt:user.created_at,
       identities:identities.map(x=>({provider:x.provider,linkedAt:x.created_at})) }
   }
   async function startSession(c,tx,userId) {
@@ -492,6 +497,65 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       FROM gs_coin_accounts a LEFT JOIN gs_coin_ledger l ON l.user_id=a.user_id
       GROUP BY a.user_id HAVING a.balance<>COALESCE(sum(l.delta),0) LIMIT 100`)).rows
     return c.json({orderMismatch,balanceMismatch})
+  })
+  app.get('/api/v1/admin/overview',async c=>{
+    await permission(c,'system.read')
+    const row=(await db.query(`SELECT
+      (SELECT count(*)::integer FROM gs_users) AS users,
+      (SELECT count(*)::integer FROM gs_server_registry) AS servers,
+      (SELECT count(*)::integer FROM gs_claims WHERE status='PENDING') AS pending_claims,
+      (SELECT count(*)::integer FROM gs_votes) AS votes,
+      (SELECT count(*)::integer FROM gs_support) AS support_events,
+      (SELECT count(*)::integer FROM gs_test_payments WHERE status='TEST_PENDING') AS pending_test_payments`)).rows[0]
+    return c.json(row)
+  })
+  app.get('/api/v1/admin/users',async c=>{
+    await permission(c,'users.read')
+    return c.json((await db.query(`SELECT u.id,u.email,u.display_name,u.email_verified_at,u.banned_at,u.created_at,
+      COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL),'{}') AS roles
+      FROM gs_users u LEFT JOIN gs_user_roles ur ON ur.user_id=u.id
+      GROUP BY u.id ORDER BY u.created_at DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/users/:id/roles',async c=>{
+    const admin=await permission(c,'roles.manage'),body=await json(c)
+    if(!['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'].includes(body.role)||!['GRANT','REVOKE'].includes(body.action))
+      fail(400,'invalid_role_change','Недопустимое изменение роли')
+    if(admin.id===c.req.param('id')) fail(403,'self_role_change','Нельзя менять собственные роли')
+    await db.transaction(async tx=>{
+      if(!(await tx.query('SELECT 1 FROM gs_users WHERE id=$1',[c.req.param('id')])).rows.length) fail(404,'not_found','Пользователь не найден')
+      if(body.action==='GRANT') await tx.query('INSERT INTO gs_user_roles(user_id,role,granted_by) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',
+        [c.req.param('id'),body.role,admin.id])
+      else await tx.query('DELETE FROM gs_user_roles WHERE user_id=$1 AND role=$2',[c.req.param('id'),body.role])
+      await audit(tx,admin.id,`role.${body.action.toLowerCase()}`,c.req.param('id'),{role:body.role})
+    })
+    return c.json({ok:true})
+  })
+  app.get('/api/v1/admin/servers',async c=>{
+    await permission(c,'servers.read')
+    return c.json((await db.query(`SELECT r.server_id,r.game_id,r.name,r.slug,r.owner_id,r.version,
+      count(c.id) FILTER (WHERE c.status='PENDING')::integer AS pending_claims
+      FROM gs_server_registry r LEFT JOIN gs_claims c ON c.server_id=r.server_id
+      GROUP BY r.server_id ORDER BY r.game_id,r.name LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/votes',async c=>{
+    await permission(c,'votes.read')
+    return c.json((await db.query(`SELECT id,server_id,user_id,asn,created_at FROM gs_votes
+      ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/support',async c=>{
+    await permission(c,'support.read')
+    return c.json((await db.query(`SELECT id,server_id,user_id,coins,anonymous,public_nick,nickname_decision,created_at
+      FROM gs_support ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/coins/ledger',async c=>{
+    await permission(c,'coins.read')
+    return c.json((await db.query(`SELECT id,user_id,kind,delta,related_id,created_at
+      FROM gs_coin_ledger ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/payments',async c=>{
+    await permission(c,'payments.read')
+    return c.json((await db.query(`SELECT id,user_id,coins,amount_kopecks,status,created_at,paid_at
+      FROM gs_test_payments ORDER BY id DESC LIMIT 100`)).rows)
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')

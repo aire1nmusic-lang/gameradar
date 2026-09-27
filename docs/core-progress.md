@@ -56,12 +56,20 @@ Migration `005_test_payments.sql` and the [test integration runbook](robokassa-t
 
 **Rollback:** disable the test switch, preserve orders and ledger for reconciliation, then revert the application commit. Migration 005 is additive and local only. Do not delete or edit ledger entries. A deployed migration needs a separate backup/rollback review.
 
+## Slice 5a: private admin roles and read-only operations (local)
+
+Migration `006_admin_roles.sql` defines ADMIN, MODERATOR, FINANCE, COPYRIGHT and SUPPORT roles with explicit section permissions. Effective rights are the union of role permissions and existing direct grants; owner access remains scoped by `gs_server_registry.owner_id`, so a player can also own a server. `/admin` shows only allowed sections: overview, servers, users, Claim review, votes, Support, Coins ledger, test payments and system events. Each private endpoint checks its own permission. Authorized admins can grant/revoke non-ADMIN roles with an audit entry; self-change and API assignment of ADMIN are blocked. The first verified, unbanned ADMIN can be provisioned once via `private-api/bootstrap-admin.mjs` with an operator-supplied reason after database deployment; that script has **not** been run.
+
+**Verified:** 10 PGlite tests cover all section access denials, ADMIN access, role grant/revoke, self/ADMIN restrictions and audit. TypeScript check passes. The in-app browser showed `/admin` denying an unauthenticated viewer; an authenticated admin UI session has not been browser-tested yet. No new paid resources (0 ₽).
+
+**Remaining in this stage:** server/user actions, moderation and copyright tabs, OpenRouter AI settings and review workflow. Production role bootstrap and live admin scenario depend on the private deployment. Rollback: revert application changes while retaining additive migration 006 and role/audit records; revoke an erroneous role with a recorded compensating action, not by editing audit history.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
-5. Expand scoped admin permissions and pages; local nickname filter plus OpenRouter only for ambiguous cases.
+5. Complete scoped admin actions and moderation pages; wire OpenRouter only for ambiguous nicknames. The current role/read-only base is not full stage 5 acceptance.
 6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.
 7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.
 

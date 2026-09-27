@@ -336,3 +336,27 @@ test('Robokassa test order: signed ResultURL credits once, mismatches roll back,
   assert.equal((await disabled.request('/payments/test/orders',{coins:1},another.cookie,{'Idempotency-Key':'d'.repeat(32)})).status,503)
   assert.equal((await disabled.request('/payments/test/config')).body.available,false)
 })
+
+test('admin roles enforce section permissions and audit role changes',async t=>{
+  const h=await harness(t),admin=await h.register('admin@example.com'),player=await h.register('ordinary@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  const me=(await h.request('/auth/me',undefined,admin.cookie)).body.user
+  assert.ok(me.roles.includes('ADMIN'))
+  assert.ok(me.permissions.includes('roles.manage'))
+  for(const path of ['/admin/overview','/admin/users','/admin/servers','/admin/votes','/admin/support',
+    '/admin/coins/ledger','/admin/payments','/admin/system']) {
+    assert.equal((await h.request(path,undefined,player.cookie)).status,403,path)
+    assert.equal((await h.request(path,undefined,admin.cookie)).status,200,path)
+  }
+  assert.equal((await h.request('/admin/users',undefined,admin.cookie)).body.length,2)
+  assert.equal((await h.request(`/admin/users/${player.user.id}/roles`,{role:'ADMIN',action:'GRANT'},admin.cookie)).status,400)
+  assert.equal((await h.request(`/admin/users/${admin.user.id}/roles`,{role:'MODERATOR',action:'GRANT'},admin.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${player.user.id}/roles`,{role:'MODERATOR',action:'GRANT'},player.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${player.user.id}/roles`,{role:'MODERATOR',action:'GRANT'},admin.cookie)).status,200)
+  assert.equal((await h.request('/admin/votes',undefined,player.cookie)).status,200)
+  assert.equal((await h.request('/admin/payments',undefined,player.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${player.user.id}/roles`,{role:'MODERATOR',action:'REVOKE'},admin.cookie)).status,200)
+  assert.equal((await h.request('/admin/votes',undefined,player.cookie)).status,403)
+  const audit=(await h.db.query("SELECT action FROM gs_audit WHERE action LIKE 'role.%' ORDER BY id")).rows
+  assert.deepEqual(audit.map(x=>x.action),['role.grant','role.revoke'])
+})

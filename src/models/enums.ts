@@ -116,6 +116,9 @@ export const UserRole = {
   Owner: 'OWNER',
   Moderator: 'MODERATOR',
   Admin: 'ADMIN',
+  Finance: 'FINANCE',
+  Copyright: 'COPYRIGHT',
+  Support: 'SUPPORT',
 } as const
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 

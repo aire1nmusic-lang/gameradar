@@ -118,6 +118,12 @@ D1 migration `0009_public_support.sql` adds only `support_coins` and `support_pa
 
 **Rollback:** stop Support writes, revert the Worker/UI/private code together and preserve the ledger and outbox; migration 0009 is additive. Do not reset a live public count by replaying an older version. A production migration needs a reviewed backup and cutover order.
 
+## Slice 7b: shared-state API journey (local)
+
+One PGlite/Hono scenario now uses the **same verified player account** to vote and support one L2, Minecraft and GTA RP server, then submit three Claims. A separate ADMIN reviews the Claims, the player gains server-scoped management access and submits factual summary changes, and the ADMIN approves them. A copyright claim on the Minecraft site's exact link is classified `DOUBTFUL`, restricts only that link and is manually restored. The test checks rating, separate Support totals, remaining Coins, monotonic public versions, ledger count and absence of personal emails in public events. It uses the labelled local Coin fixture, a mocked public catalog response and a mocked AI decision; it does not touch Robokassa or live providers.
+
+**Verified:** the integrated test passes locally, alongside the focused invariants. This is API-level evidence, not a browser or deployed Yandex/Cloudflare end-to-end run. Registration mail transport, Google/VK/Яндекс OAuth, Turnstile, test Robokassa, OpenRouter, Telegram and real public projection still require their credentials and reachable callbacks. The authenticated browser journey and mobile/empty/error states remain to be exercised against the deployed topology. No new cloud resource or cost (0 ₽). Rollback: test-only change; remove the test without touching any production state.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
@@ -125,6 +131,6 @@ D1 migration `0009_public_support.sql` adds only `support_coins` and `support_pa
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
 5. Complete other server/user admin actions and owner fields, copyright and AI settings. A reviewed summary is only the first owner operation and does not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
-7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.
+7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP and shared-state API checks pass, but production acceptance has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

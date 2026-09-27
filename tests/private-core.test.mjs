@@ -639,3 +639,57 @@ test('Support projects only public aggregates with ledger rollback and idempoten
   snapshots=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id')).rows.map(x=>x.payload)
   assert.equal(snapshots.length,2)
 })
+
+test('local player → owner → admin journey spans L2, Minecraft and GTA RP without cross-database writes',async t=>{
+  const publicFetch=async url=>new Response(JSON.stringify({id:new URL(url).pathname.split('/').at(-1),
+    links:{site:'https://official.example/game'}}),{status:200})
+  const h=await harness(t,{publicFetch,config:{publicApi:'https://catalog.example'}})
+  const player=await h.register('journey-player@example.com'),admin=await h.register('journey-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  const games=[['journey-l2','lineage2'],['journey-mc','minecraft'],['journey-gta','gtarp']]
+  for(const [id,game] of games)
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[id,game,id,id])
+  assert.equal((await h.request('/__dev/coins',{coins:9},player.cookie,{'Idempotency-Key':'c'.repeat(32)})).status,201)
+  for(const [index,[id]] of games.entries()) {
+    const vote=await h.request('/people-rating/votes',{serverId:id,deviceSignal:'journey_device_123456',pageAgeMs:5000},
+      player.cookie,{'Idempotency-Key':String(index+1).repeat(32)})
+    assert.equal(vote.status,201,JSON.stringify(vote.body))
+    assert.equal((await h.request('/support',{serverId:id,coins:index+1,anonymous:index===1},
+      player.cookie,{'Idempotency-Key':String(index+4).repeat(32)})).status,201)
+    const claim=await h.request('/claims',{serverId:id,evidence:'Official website proof and operator contact are available.'},player.cookie)
+    assert.equal(claim.status,201)
+    assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,
+      {status:'VERIFIED',reason:'Official ownership proof verified'},admin.cookie)).status,200)
+    assert.equal((await h.request(`/servers/${id}/manage-access`,undefined,player.cookie)).body.canManage,true)
+    const edit=await h.request(`/owners/me/servers/${id}/summary-edits`,
+      {summary:`Нейтральное описание проекта для игры ${id} с проверенными фактами.`},player.cookie)
+    assert.equal(edit.status,201)
+    assert.equal((await h.request(`/admin/server-edits/${edit.body.id}/resolve`,
+      {status:'APPROVED',reason:'Описание соответствует фактам'},admin.cookie)).status,200)
+  }
+  assert.equal((await h.request('/owners/me/servers',undefined,player.cookie)).body.length,3)
+  assert.equal((await h.request('/people-rating')).body.filter(row=>row.votes===1).length,3)
+  const support=(await h.request('/support/ranking')).body.filter(row=>row.coins>0)
+  assert.deepEqual(support.map(row=>row.coins),[3,2,1])
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,3)
+  const copyright=await h.request('/copyright/claims',{serverId:'journey-mc',materialKey:'site',
+    materialUrl:'https://official.example/game',claimantName:'Rights Holder',contactEmail:'rights@example.com',
+    rightsBasis:'I own the identified artwork and seek review.',workDescription:'Artwork on the linked project page.',
+    evidence:'Original publication and ownership records are available.'})
+  assert.equal(copyright.status,201)
+  assert.equal(copyright.body.status,'PENDING_AI')
+  await dispatchCopyrightAI(h.db,async()=>({classification:'DOUBTFUL',reason:'Specific link merits human review'}),'mock-model')
+  assert.deepEqual((await h.request('/copyright/restrictions/journey-mc')).body.restrictedLinks,['site'])
+  assert.equal((await h.request(`/admin/copyright/${copyright.body.id}/resolve`,
+    {action:'RESTORE',reason:'Human reviewed and cleared the linked material'},admin.cookie)).status,200)
+  assert.deepEqual((await h.request('/copyright/restrictions/journey-mc')).body.restrictedLinks,[])
+  const outbox=(await h.db.query('SELECT server_id,version,payload FROM gs_public_outbox ORDER BY id')).rows
+  for(const [id] of games) {
+    const events=outbox.filter(row=>row.server_id===id)
+    assert.deepEqual(events.map(row=>Number(row.version)),id==='journey-mc'?[1,2,3,4,5]:[1,2,3],id)
+    assert.equal(events.at(-1).payload.supportCoins,games.findIndex(row=>row[0]===id)+1)
+  }
+  assert.ok(!JSON.stringify(outbox).includes('journey-player@example.com'))
+  assert.ok(!JSON.stringify(outbox).includes('rights@example.com'))
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='SUPPORT'")).rows[0].n,3)
+})

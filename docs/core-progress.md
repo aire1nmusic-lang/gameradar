@@ -140,6 +140,14 @@ A top-level `public/404.html` makes Cloudflare Pages return an actual HTTP 404 w
 
 **Rollback:** revert the 404 file and HTTP assertion; no database or production state changed.
 
+## Slice 7e: build public HTML from D1 catalog (local)
+
+`npm run build:catalog -- https://PUBLIC_API_ORIGIN/` captures the published non-demo public catalog, writes only allowlisted card facts to ignored `output/seo-public-snapshot.json`, and uses that captured source for the sitemap and prerendered HTML. It then runs the SEO build check and fetches the public catalog again for reconciliation. This includes newly published owner cards and approved factual changes without copying private IDs, links, Support or vote data into build artifacts. The command refuses an empty non-demo catalog, malformed/unpublished rows, insecure remote HTTP, and post-build drift. The default `npm run build` still uses the checked import dataset for local development; it is **not** a release substitute. Keep the capture file with the release artifact to diagnose what was indexed. No production build or deploy was run.
+
+**Verified:** five focused tests cover the source switch, allowlisted capture, pagination, mismatch detection and invalid inputs. A separate HTTP fixture test ran the **full** `build:catalog` command with one published card, checked its generated HTML and absence of a private owner ID, passed the second API reconciliation, then restored the default build. Default build, typecheck and local Pages HTTP SEO test also passed. Running `build:catalog` against local D1 correctly stopped before generating HTML because it has only nine demo cards. A run against the intended public D1 remains **BLOCKED** until its published cards and deployment endpoint can be read. No new cloud resource or cost (0 ₽).
+
+**Rollback:** use the prior import-only build command or revert this optional build path; it writes only an ignored local snapshot and generated HTML. Rebuild and rerun reconciliation after any public moderation change. Direct URLs for cards absent from the build return 404 until rebuilt.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

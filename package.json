@@ -11,6 +11,7 @@
     "seo:reconcile": "node scripts/reconcile-public-html.mjs",
     "dev": "vite",
     "build": "npm run typecheck && node scripts/sitemap.mjs && vite build && node scripts/prerender-public.mjs",
+    "build:catalog": "node scripts/build-from-catalog.mjs",
     "preview": "vite preview --port 4173",
     "dev:api": "node scripts/setup-dev.mjs && wrangler dev --local --ip 127.0.0.1 --port 8787 --local-upstream 127.0.0.1:8787 --persist-to .wrangler/state",
     "dev:setup": "node scripts/setup-dev.mjs",

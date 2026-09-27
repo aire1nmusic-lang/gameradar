@@ -8,6 +8,7 @@ import { Notice } from '@/components/ui/feedback'
 
 type Claim = { id:string; server_id:string; status:string; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
+type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
 
@@ -77,7 +78,7 @@ export default function Account() {
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><p key={s.server_id}><a href={`/server/${s.slug}`}>{s.name}</a> · {s.game_id}</p>)}
+        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><OwnerSummary key={s.server_id} server={s}/>)}
         <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>
         <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
           <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
@@ -96,4 +97,29 @@ export default function Account() {
       </section>}
     </>}
   </main>
+}
+
+function OwnerSummary({server}:{server:Owned}) {
+  const [edits,setEdits]=useState<SummaryEdit[]>([]),[summary,setSummary]=useState('')
+  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
+  const path=`/owners/me/servers/${encodeURIComponent(server.server_id)}/summary-edits`
+  useEffect(()=>{let active=true;apiRequest<SummaryEdit[]>(path).then(rows=>{if(active)setEdits(rows)})
+    .catch(e=>{if(active)setError(e instanceof Error?e.message:'Не удалось загрузить правки')})
+    return()=>{active=false}},[path])
+  async function submit(event:React.FormEvent) {
+    event.preventDefault();setBusy(true);setError('');setMessage('')
+    try {await apiSend(path,{summary});setEdits(await apiRequest<SummaryEdit[]>(path));setSummary('');setMessage('Правка отправлена на проверку.')}
+    catch(e){setError(e instanceof Error?e.message:'Не удалось отправить правку')}
+    finally{setBusy(false)}
+  }
+  return <div className="surface space-y-3 rounded-xl p-4">
+    <p><a href={`/server/${server.slug}`}>{server.name}</a> · {server.game_id}</p>
+    <p className="text-sm text-ink-400">Краткое фактическое описание публикуется после проверки администратором.</p>
+    {edits.slice(0,2).map(edit=><p key={edit.id} className="text-sm">{edit.status==='PENDING'?'На проверке':edit.status==='APPROVED'?'Опубликовано':'Отклонено'}: {edit.summary}{edit.reason?` · ${edit.reason}`:''}</p>)}
+    {error&&<p role="alert" className="text-danger-300">{error}</p>}{message&&<p role="status" className="text-signal-400">{message}</p>}
+    {!edits.some(edit=>edit.status==='PENDING')&&<form onSubmit={submit} className="space-y-3">
+      <Field label="Новое краткое описание"><Textarea required minLength={20} maxLength={280} value={summary} onChange={e=>setSummary(e.target.value)}/></Field>
+      <Button type="submit" disabled={busy}>Отправить на проверку</Button>
+    </form>}
+  </div>
 }

@@ -288,6 +288,31 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     if (!allowed) fail(403,'forbidden','Нет подтверждённых прав на сервер')
     return c.json({canManage:true})
   })
+  app.get('/api/v1/owners/me/servers/:id/summary-edits',async c=>{
+    const user=await requireUser(c,true),serverId=c.req.param('id')
+    if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1 AND owner_id=$2',[serverId,user.id])).rows.length)
+      fail(403,'forbidden','Нет подтверждённых прав на сервер')
+    return c.json((await db.query(`SELECT id,summary,status,reason,created_at,resolved_at
+      FROM gs_owner_summary_edits WHERE server_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 20`,[serverId,user.id])).rows)
+  })
+  app.post('/api/v1/owners/me/servers/:id/summary-edits',async c=>{
+    const user=await requireUser(c,true),body=await json(c),serverId=c.req.param('id')
+    const summary=textOf(body.summary,20,280)
+    if(/<|>|\b(?:https?:\/\/|www\.)|\[[^\]]+\]\(/i.test(summary))
+      fail(400,'invalid_summary','Описание должно содержать только нейтральный текст без ссылок и разметки')
+    await limit(c,'owner_summary',user.id,10)
+    const edit=await db.transaction(async tx=>{
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server||server.owner_id!==user.id) fail(403,'forbidden','Нет подтверждённых прав на сервер')
+      if((await tx.query("SELECT 1 FROM gs_owner_summary_edits WHERE server_id=$1 AND status='PENDING'",[serverId])).rows.length)
+        fail(409,'pending_edit','Изменение уже ждёт проверки')
+      const row=(await tx.query('INSERT INTO gs_owner_summary_edits(id,server_id,user_id,summary) VALUES($1,$2,$3,$4) RETURNING *',
+        [token(),serverId,user.id,summary])).rows[0]
+      await audit(tx,user.id,'server.summary_submitted',row.id,{serverId})
+      return row
+    })
+    return c.json({id:edit.id,status:edit.status},201)
+  })
   // The People's rating uses only accepted gs_votes. Paid support never enters this query.
   app.get('/api/v1/people-rating',async c=>{
     const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
@@ -668,6 +693,40 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       await enqueueTelegram(tx,`copyright.${body.action.toLowerCase()}`,claim.id,claim.server_id,claim.material_key)
     })
     return c.json({ok:true})
+  })
+  app.get('/api/v1/admin/server-edits',async c=>{
+    await permission(c,'servers.review')
+    return c.json((await db.query(`SELECT e.id,e.server_id,e.user_id,e.summary,e.status,e.created_at,
+      r.name,r.game_id FROM gs_owner_summary_edits e JOIN gs_server_registry r USING(server_id)
+      WHERE e.status='PENDING' ORDER BY e.created_at LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/server-edits/:id/resolve',async c=>{
+    const reviewer=await permission(c,'servers.review'),body=await json(c)
+    const status=body.status,reason=textOf(body.reason,10,1000)
+    if(!['APPROVED','REJECTED'].includes(status)) fail(400,'invalid_status','Укажите решение')
+    const result=await db.transaction(async tx=>{
+      const edit=(await tx.query('SELECT * FROM gs_owner_summary_edits WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
+      if(!edit)fail(404,'not_found','Изменение не найдено')
+      if(edit.user_id===reviewer.id)fail(403,'self_review','Нельзя утверждать своё изменение')
+      if(edit.status!=='PENDING') {
+        if(edit.status===status)return {id:edit.id,status:edit.status,replay:true}
+        fail(409,'edit_closed','Изменение уже рассмотрено')
+      }
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[edit.server_id])).rows[0]
+      if(!server||server.owner_id!==edit.user_id)fail(409,'owner_changed','Права владельца изменились')
+      await tx.query('UPDATE gs_owner_summary_edits SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4',
+        [status,reviewer.id,reason,edit.id])
+      if(status==='APPROVED') {
+        const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
+          [edit.server_id])).rows[0]
+        const snapshot=await createPublicSnapshot(tx,edit.server_id,changed.version)
+        await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+          [edit.server_id,changed.version,JSON.stringify(snapshot)])
+      }
+      await audit(tx,reviewer.id,'server.summary_'+status.toLowerCase(),edit.id,{serverId:edit.server_id,reason})
+      return {id:edit.id,status,replay:false}
+    })
+    return c.json(result)
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')

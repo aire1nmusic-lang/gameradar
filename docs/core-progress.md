@@ -102,12 +102,20 @@ The private backend can check `GET /api/v1/credits` once an hour with a separate
 
 **Verified:** mocked PGlite test covers the official response shape, disabled mode, one low-balance warning during repeated checks, provider 403, recovery and omission of the key from messages. No real OpenRouter request or charge occurred (0 ₽). Live acceptance remains **BLOCKED** on a management key, an approved paid-model budget and Telegram credentials; approval is needed before any billable model calls. Rollback: remove the management key to stop checks, then revert this application change while retaining alert/audit rows.
 
+## Slice 5c: owner summary edit with human review (local)
+
+Migration `010_owner_summary.sql` gives a verified owner of a specific server a way to submit one pending factual summary at a time. The private `/account` page shows this form on owned L2, Minecraft and GTA RP cards. The admin's new “Правки серверов” tab requires `servers.review`; the reviewer cannot approve their own submission. Rejection leaves the public card untouched. Approval and the owner edit, server version, audit entry and public outbox snapshot commit in one PostgreSQL transaction. The public snapshot carries only the approved summary, Claim flag and scoped link restrictions. D1 updates `servers.summary` only when its monotonic projection version matches, in the same D1 batch as the version write; stale deliveries cannot replace a newer summary. No approval depends on an atomic write across databases.
+
+**Verified:** targeted PGlite test exercises Claim, ownership isolation, self-review denial, duplicate pending edit, approval and rejection in all three games, and rollback when enqueue fails. SQLite executes the actual D1 projection SQL for newer/stale versions and a simulated failed update; TypeScript check passes. The local private API restarted with migration 010 and denied unauthenticated admin access over HTTP. Live private→D1 delivery is still **BLOCKED** on the deployment and projection secret. No new cloud resource or cost (0 ₽).
+
+**Limitations:** this first owner operation covers a neutral short summary only. Version/rates/mode/opening date/region, media, external links, monitoring and vote integration still need separately scoped edits and moderation. The build-time SEO snapshot will not reflect an approved edit until the public HTML source is reconciled with D1. Rollback: stop new submissions, revert application code, preserve submitted decisions/audit/outbox, and roll forward with compensating approved text if a public correction is needed; never delete a delivered projection version.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
-5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
+5. Complete other server/user admin actions and owner fields, copyright and AI settings. A reviewed summary is only the first owner operation and does not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.
 

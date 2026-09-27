@@ -11,7 +11,7 @@ import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../private-api/copyright.mjs'
 import { checkProjectionLag } from '../private-api/projection-alert.mjs'
 import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
-import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
+import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
@@ -532,4 +532,78 @@ test('OpenRouter balance monitor uses management endpoint, deduplicates alerts a
   const messages=(await h.db.query('SELECT message FROM gs_telegram_outbox')).rows.map(row=>row.message).join('\n')
   assert.ok(!messages.includes('management-secret'))
   await assert.rejects(checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:0},request),/invalid_balance_threshold/)
+})
+
+test('L2, Minecraft and GTA owners submit moderated summaries through a versioned public outbox',async t=>{
+  const h=await harness(t),owner=await h.register('summary-owner@example.com'),admin=await h.register('summary-admin@example.com'),stranger=await h.register('summary-stranger@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  for(const [id,game] of [['edit-l2','lineage2'],['edit-mc','minecraft'],['edit-gta','gtarp']]) {
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[id,game,id,id])
+    const claim=await h.request('/claims',{serverId:id,evidence:'Official site ownership proof is available.'},owner.cookie)
+    assert.equal(claim.status,201)
+    assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,
+      {status:'VERIFIED',reason:'Ownership proof checked against official site'},admin.cookie)).status,200)
+  }
+  assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body.length,3)
+  const summary='Нейтральное описание сервера с подтверждёнными характеристиками.'
+  assert.equal((await h.request('/owners/me/servers/edit-l2/summary-edits',{summary},stranger.cookie)).status,403)
+  assert.equal((await h.request('/owners/me/servers/edit-l2/summary-edits',{summary:'https://example.com advertising text'},owner.cookie)).status,400)
+  const ids=[]
+  for(const id of ['edit-l2','edit-mc','edit-gta']) {
+    const edit=await h.request(`/owners/me/servers/${id}/summary-edits`,{summary:`${summary} ${id}`},owner.cookie)
+    assert.equal(edit.status,201,JSON.stringify(edit.body));ids.push(edit.body.id)
+    assert.equal((await h.request(`/owners/me/servers/${id}/summary-edits`,{summary},owner.cookie)).status,409)
+  }
+  assert.equal((await h.request('/admin/server-edits',undefined,stranger.cookie)).status,403)
+  assert.equal((await h.request('/admin/server-edits',undefined,admin.cookie)).body.length,3)
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'MODERATOR')",[owner.user.id])
+  assert.equal((await h.request(`/admin/server-edits/${ids[0]}/resolve`,
+    {status:'APPROVED',reason:'Neutral description verified'},owner.cookie)).status,403)
+  await h.db.query(`CREATE FUNCTION fail_summary_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated D1 queue failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_summary_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_summary_outbox()')
+  assert.equal((await h.request(`/admin/server-edits/${ids[0]}/resolve`,
+    {status:'APPROVED',reason:'Neutral description verified'},admin.cookie)).status,500)
+  assert.equal((await h.db.query('SELECT status FROM gs_owner_summary_edits WHERE id=$1',[ids[0]])).rows[0].status,'PENDING')
+  await h.db.query('DROP TRIGGER fail_summary_outbox ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION fail_summary_outbox()')
+  for(const id of ids)assert.equal((await h.request(`/admin/server-edits/${id}/resolve`,
+    {status:'APPROVED',reason:'Neutral description verified'},admin.cookie)).status,200)
+  const snapshots=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id')).rows.map(row=>row.payload)
+  assert.equal(snapshots.filter(row=>row.summary).length,3)
+  for(const row of snapshots.filter(row=>row.summary)) {
+    assert.equal(parsePublicSnapshot(row).summary.includes('Нейтральное описание'),true)
+    assert.ok(!JSON.stringify(row).includes('summary-owner@example.com'))
+  }
+  const denied=await h.request('/owners/me/servers/edit-gta/summary-edits',undefined,stranger.cookie)
+  assert.equal(denied.status,403)
+  const newEdit=await h.request('/owners/me/servers/edit-gta/summary-edits',{summary:'Другое нейтральное описание игрового сервера.'},owner.cookie)
+  assert.equal((await h.request(`/admin/server-edits/${newEdit.body.id}/resolve`,
+    {status:'REJECTED',reason:'Факты не подтверждены источником'},admin.cookie)).status,200)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_public_outbox')).rows[0].n,snapshots.length)
+})
+
+test('D1 summary projection is atomic and ignores older versions',async t=>{
+  const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
+    CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
+      version INTEGER,claimed INTEGER,restricted_links TEXT,received_at TEXT);
+    INSERT INTO servers(id,summary) VALUES('mc','Original summary')`)
+  const db={
+    prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
+    async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
+      catch(error){sqlite.exec('ROLLBACK');throw error}},
+  }
+  const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
+  const approved='Проверенное нейтральное описание Minecraft-сервера.'
+  await project({serverId:'mc',version:2,claimed:true,restrictedLinks:[],summary:approved})
+  await project({serverId:'mc',version:1,claimed:false,summary:'Старый вариант описания Minecraft-сервера.'})
+  assert.equal(sqlite.prepare("SELECT summary FROM servers WHERE id='mc'").get().summary,approved)
+  assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,2)
+  await project({serverId:'mc',version:3,claimed:true,restrictedLinks:['site']})
+  assert.equal(sqlite.prepare("SELECT summary FROM servers WHERE id='mc'").get().summary,approved)
+  assert.throws(()=>parsePublicSnapshot({serverId:'mc',version:4,claimed:true,summary:'<script>alert(1)</script>'}))
+  sqlite.exec("CREATE TRIGGER reject_summary BEFORE UPDATE ON servers BEGIN SELECT RAISE(ABORT,'failed'); END")
+  await assert.rejects(project({serverId:'mc',version:4,claimed:true,summary:'Следующее нейтральное описание игрового сервера.'}),/failed/)
+  assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,3)
 })

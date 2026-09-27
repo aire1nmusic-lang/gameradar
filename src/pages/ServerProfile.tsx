@@ -161,7 +161,8 @@ function Profile({ server }: { server: GameServer }) {
       },
     ],
   })
-  const site = server.links.site || undefined
+  const site = server.demo ? undefined : server.links.site || undefined
+  const playableAddress = server.demo ? undefined : server.address
   const ctaStale = server.online.freshness === 'stale' && server.online.status !== 'OFFLINE'
   const upcoming = server.online.status === 'PENDING' && !!server.launch
 
@@ -288,16 +289,16 @@ function Profile({ server }: { server: GameServer }) {
               <Share2 size={16} />
             </button>
             <span className="hidden items-center gap-2 lg:flex">
-              {server.address && !upcoming && <CopyAddress address={server.address} serverId={server.id} size="lg" />}
+              {playableAddress && !upcoming && <CopyAddress address={playableAddress} serverId={server.id} size="lg" />}
               {site && (
                 <ThemedButton
                   size="lg"
-                  variant={server.address && !upcoming ? 'outline' : undefined}
+                  variant={playableAddress && !upcoming ? 'outline' : undefined}
                   href={site}
                   onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'hero')}
-                  icon={upcoming || server.address ? <Globe size={16} /> : <Play size={16} fill="currentColor" />}
+                  icon={upcoming || playableAddress ? <Globe size={16} /> : <Play size={16} fill="currentColor" />}
                 >
-                  {upcoming || server.address ? 'Сайт проекта' : 'Играть на сервере'}
+                  {upcoming || playableAddress ? 'Сайт проекта' : 'Играть на сервере'}
                 </ThemedButton>
               )}
             </span>
@@ -352,7 +353,7 @@ function Profile({ server }: { server: GameServer }) {
       </Container>
 
       {/* the one bottom bar on a phone: the navigation steps aside for it */}
-      <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
+      {(playableAddress || site) && <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="num truncate text-[17px] leading-tight font-semibold text-ink-50">
@@ -369,19 +370,19 @@ function Profile({ server }: { server: GameServer }) {
               <span className={cn('truncate', ctaStale && 'text-warn-400/85')}>{ctaStale ? 'устарело' : STATUS_META[server.online.status].short}</span>
             </div>
           </div>
-          {server.address && !upcoming && <CopyAddress address={server.address} serverId={server.id} size="md" />}
+          {playableAddress && !upcoming && <CopyAddress address={playableAddress} serverId={server.id} size="md" />}
           {site && (
             <Button
-              variant={server.address && !upcoming ? 'outline' : 'primary'}
+              variant={playableAddress && !upcoming ? 'outline' : 'primary'}
               href={site}
               onClick={() => track(server.id, upcoming ? 'WEBSITE_CLICK' : 'PLAY_CLICK', 'sticky')}
-              icon={upcoming || server.address ? <Globe size={15} /> : <Play size={15} />}
+              icon={upcoming || playableAddress ? <Globe size={15} /> : <Play size={15} />}
             >
-              {upcoming || server.address ? 'Сайт' : 'Играть'}
+              {upcoming || playableAddress ? 'Сайт' : 'Играть'}
             </Button>
           )}
         </div>
-      </div>
+      </div>}
 
       <Modal
         open={reviewOpen}
@@ -407,6 +408,7 @@ function Profile({ server }: { server: GameServer }) {
 function OnlineSection({ server }: { server: GameServer }) {
   const [range, setRange] = useState<ChartRange>('24h')
   const { status, change24h, peak24h, avg7d, peak30d } = server.online
+  const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
   const { data: samples } = useAsync(() => repo.servers.onlineHistory(server.id, range).catch(() => []), [server.id, range])
   const data = (samples ?? []).map(sample => sample.players).filter((players): players is number => typeof players === 'number')
 
@@ -423,11 +425,11 @@ function OnlineSection({ server }: { server: GameServer }) {
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <StatTile label="До открытия" value={formatCountdown(server.launch.at)} accent />
           <StatTile label="Дата и время" value={formatLaunch(server.launch.at)} />
-          <StatTile
+          {server.launch.preRegistrations > 0 && <StatTile
             label="Предрегистрации"
             value={formatNumber(server.launch.preRegistrations)}
             extra={<TrendChip value={server.launch.interestChange} />}
-          />
+          />}
         </div>
 
         <Notice tone="info" className="mt-5">
@@ -457,22 +459,23 @@ function OnlineSection({ server }: { server: GameServer }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-[18px]">Онлайн</h2>
-          <div className="mt-3 flex items-end gap-3">
+          <div className="mt-3 flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-3">
             <span
               className={cn(
-                'num font-display text-[40px] leading-none font-semibold tracking-tight sm:text-[48px]',
+                'num font-display leading-none font-semibold tracking-tight',
+                currentKnown ? 'text-[40px] sm:text-[48px]' : 'text-[26px] sm:text-[30px]',
                 status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {formatPlayers(server.online)}
+              {currentKnown ? formatPlayers(server.online) : 'Онлайн не указан'}
             </span>
             <span className="pb-1.5 text-[14px] text-ink-400">
-              {status === 'OFFLINE' ? 'сервер не отвечает' : `игроков сейчас · из ${formatSlots(server.online)}`}
+              {status === 'OFFLINE' ? 'сервер не отвечает' : currentKnown ? `игроков сейчас${server.online.maxKnown ? ` · из ${formatSlots(server.online)}` : ''}` : 'достоверных текущих данных нет'}
             </span>
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-3">
             <VerifiedLine online={server.online} launching={!!server.launch} />
-            {status !== 'OFFLINE' && <TrendChip value={change24h} />}
+            {currentKnown && server.online.checksPerDay > 0 && <TrendChip value={change24h} />}
           </div>
         </div>
 
@@ -532,7 +535,7 @@ function OnlineSection({ server }: { server: GameServer }) {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Сейчас" value={formatPlayers(server.online)} accent={status === 'VERIFIED'} />
+        <StatTile label="Сейчас" value={currentKnown ? formatPlayers(server.online) : '—'} accent={status === 'VERIFIED' && currentKnown} />
         <StatTile label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
         <StatTile label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
         <StatTile label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
@@ -567,8 +570,8 @@ function InfoSection({ server }: { server: GameServer }) {
   const game = getGame(server.gameId)
   const specs: Array<[string, string]> = [
     ['Игра', game.name],
-    ['Версия / хроники', server.version],
-    ['Режимы', server.modes.join(' · ')],
+    ['Версия / хроники', server.version || 'Не указана'],
+    ['Режимы', server.modes.join(' · ') || 'Не указаны'],
     ['Регион', [server.region, server.country].filter(Boolean).join(' · ') || '—'],
     ['Языки', server.languages.join(', ') || '—'],
   ]
@@ -586,7 +589,7 @@ function InfoSection({ server }: { server: GameServer }) {
   return (
     <section className="surface rounded-xl p-5 sm:p-6">
       <h2 className="text-[18px]">Информация</h2>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.description}</p>
+      <p className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.description || 'Описание проекта не добавлено.'}</p>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {server.highlights.map((item) => (
@@ -772,9 +775,9 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
 
 function LinksCard({ server }: { server: GameServer }) {
   const links = [
-    { key: 'site', icon: <Globe size={15} />, url: server.links.site, event: true },
-    { key: 'discord', icon: <MessageSquare size={15} />, url: server.links.discord, event: false },
-    { key: 'telegram', icon: <Send size={15} />, url: server.links.telegram, event: false },
+    { key: 'site', icon: <Globe size={15} />, url: server.demo ? undefined : server.links.site, event: true },
+    { key: 'discord', icon: <MessageSquare size={15} />, url: server.demo ? undefined : server.links.discord, event: false },
+    { key: 'telegram', icon: <Send size={15} />, url: server.demo ? undefined : server.links.telegram, event: false },
   ].filter(link => !!link.url)
   return (
     <div className="surface rounded-xl p-5">

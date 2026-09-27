@@ -20,9 +20,17 @@ Catalog and server page edits remove VIP/TOP visual treatment and show **«Он�
 
 **Cost.** 0 ₽ in newly created cloud resources. Yandex price estimate and assumptions are in the Reality Check; approve the exact region, HA topology, disk, backup, and monthly budget before creating resources.
 
+## Slice 2: factual catalogs and responsive server pages (local)
+
+`ServerRow` now exposes the same version, rates/mode, opening date and region facts for L2, Minecraft and GTA RP at phone and desktop widths, with a visible «Подробнее» action. Missing values say so. Current online appears only for a fresh known measurement, with its source and relative update time; missing measurement hides the capacity bar and trend. The server page no longer labels an unknown count as current, shows an unknown position when no rolling votes exist, and re-reads the ranking after a vote instead of incrementing the UI on an idempotent replay. Demo `example.com` links and their «Играть» CTA are suppressed.
+
+**Verified:** TypeScript check and an in-app browser at 390 px for all three game catalogs and the L2/Minecraft profiles. Missing online and peaks stayed unknown; the mobile Minecraft headline no longer overflowed. The browser viewport was restored. This does not verify non-demo pages against a live measurement. Support and its position/statistics block remain part of slice 4; stage 2 is not fully accepted until those data are present.
+
+**Rollback/cost:** presentation-only changes can be reverted at this commit; private schema and production state were not touched. 0 ₽ additional cloud resources. Next: complete organic ordering and risk challenges, then append-only Coins and Support.
+
 ## Remaining slices
 
-2. Finish factual, uniform cards and server pages for L2/Minecraft/GTA, including opening dates, position/statistics when known and explicit empty states. Verify mobile behavior and public HTTP data.
+2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Finish separate organic sorting in catalogs, background expiry refresh/lag alarms and Turnstile client challenge. Re-test with real deployment signals. Keep money out of the formula.
 4. Add private append-only Coins ledger, Support and separate sort, Robokassa **test-only** notifications/receipt/reconciliation, with invariant and rollback tests. Do not enable the unapproved discount grid or sales.
 5. Expand scoped admin permissions and pages; local nickname filter plus OpenRouter only for ambiguous cases.

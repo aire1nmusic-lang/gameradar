@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCountdown, formatPlayers, formatSeconds } from '@/lib/format'
+import { formatCountdown, formatDate, formatPlayers, formatSeconds } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { GameServer } from '@/models'
@@ -13,11 +13,7 @@ import { LiveDot, STATUS_META } from '@/components/trust/status'
 /**
  * The default way a server is listed: one dense row, the same everywhere.
  *
- * Hierarchy: name → online now → game · chronicle · modes → trust dot.
- * Everything about *where* the number came from lives in the tooltip and on
- * the profile; the row itself stays quiet so many rows can be compared.
- *
- * 64 px on desktop, 72 px on phones: 10+ servers fit one screen.
+ * The same factual fields are visible in every game and on phones.
  */
 export function ServerRow({
   server,
@@ -47,7 +43,7 @@ export function ServerRow({
   // third-party monitor, or the project itself. Phones have no tooltip.
   const sourceLabel =
     status === OnlineStatus.Verified
-      ? 'проверено'
+      ? 'GameScout'
       : status === OnlineStatus.Offline
         ? 'офлайн'
         : !known
@@ -55,18 +51,21 @@ export function ServerRow({
           : status === OnlineStatus.External
             ? server.online.source || 'внешний'
             : status === OnlineStatus.OwnerReported
-              ? 'от проекта'
-              : 'онлайн'
+              ? server.online.sourceTier === 'OFFICIAL' ? 'сайт проекта' : 'от проекта'
+              : server.online.source || 'источник не указан'
 
-  const identity = [showGame ? game.shortName : null, chronicle?.label ?? server.version].filter(Boolean)
-  // Phones get the identity only; modes need the room a desktop row has.
-  const sub = [...identity, ...server.modes.slice(0, 2)]
+  const identity = [showGame ? game.shortName : null, (chronicle?.label ?? server.version) || 'Версия не указана'].filter(Boolean)
+  const mode = server.rates ? `Рейты ${server.rates}` : server.modes.length ? `Режим: ${server.modes.join(', ')}` : 'Режим не указан'
+  const opening = server.openedAt ?? server.launch?.at
+  const facts = [mode, opening ? `Открытие: ${formatDate(opening)}` : 'Дата открытия не указана', server.region || server.country || 'Регион не указан']
+  const measured = known && freshness === 'fresh'
+  const sourceTime = measured ? `${sourceLabel} · ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}` : sourceLabel
 
   return (
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'gs-row group relative flex min-h-[72px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[64px] sm:gap-4 sm:px-4',
+        'gs-row group relative flex min-h-[92px] flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:flex-nowrap sm:gap-x-4 sm:px-4',
         className,
       )}
     >
@@ -74,7 +73,7 @@ export function ServerRow({
         <span
           className={cn(
             'num w-6 shrink-0 text-center font-display text-[14px] font-semibold tabular-nums',
-            rank <= 3 ? 'text-ink-50' : 'text-ink-500',
+            'text-ink-500',
           )}
         >
           {rank}
@@ -89,14 +88,10 @@ export function ServerRow({
         </div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
-          <span className="truncate sm:hidden">{identity.join(' · ')}</span>
-          <span className="hidden truncate sm:inline">{sub.join(' · ')}</span>
+          <span className="truncate">{identity.join(' · ')}</span>
         </div>
+        <div className="mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
       </div>
-
-      <span className="hidden w-[52px] shrink-0 text-[12px] text-ink-500 lg:block" title={[server.country, server.region].filter(Boolean).join(' · ')}>
-        {server.flag} {server.region}
-      </span>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
         // Wrapped: TrendChip's own inline-flex would override a `hidden` passed to it, and phones need the room for the name.
@@ -105,7 +100,7 @@ export function ServerRow({
         </span>
       )}
 
-      <div className="w-[124px] shrink-0 text-right sm:w-[140px]" title={tooltip}>
+      <div className="w-full shrink-0 border-t border-white/5 pt-2 text-left sm:w-[150px] sm:border-0 sm:pt-0 sm:text-right" title={tooltip}>
         {launching ? (
           <>
             <div className="num text-[13px] font-semibold text-promo-200">{formatCountdown(server.launch!.at)}</div>
@@ -115,16 +110,17 @@ export function ServerRow({
           <>
             <div
               className={cn(
-                'num text-[17px] leading-none font-semibold tabular-nums',
+                'num flex items-center justify-between text-[17px] leading-none font-semibold tabular-nums sm:block',
                 status === OnlineStatus.Offline ? 'text-ink-500' : known ? 'text-ink-50' : 'text-ink-500',
               )}
             >
-              {known && !stale ? formatPlayers(server.online) : 'Онлайн не указан'}
+              {measured ? formatPlayers(server.online) : 'Онлайн не указан'}
+              <span className="ml-2 shrink-0 font-sans text-[11px] font-normal text-ink-400 sm:hidden">Подробнее →</span>
             </div>
-            <div className="mt-1 flex min-w-0 items-center justify-end gap-1.5 text-[10.5px]">
+            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10.5px] sm:justify-end">
               <LiveDot status={status} stale={stale} className="shrink-0" />
               <span className={cn('truncate', stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
-                {stale ? 'устарело' : sourceLabel}
+                {stale ? 'устарело' : sourceTime}
               </span>
             </div>
           </>
@@ -132,6 +128,8 @@ export function ServerRow({
       </div>
 
       <RowFavorite slug={server.slug} />
+
+      <span className="hidden shrink-0 text-[11px] text-ink-400 sm:block">Подробнее</span>
 
       <ChevronRight
         size={16}

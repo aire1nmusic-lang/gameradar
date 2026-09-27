@@ -45,7 +45,8 @@ function lifecycleLabel(server: GameServer): string {
 export function ServerCard({ server, className }: { server: GameServer; className?: string }) {
   const game = getGame(server.gameId)
   const { status, current, max, change24h } = server.online
-  const capacity = max > 0 ? Math.min(100, (current / max) * 100) : 0
+  const measured = server.online.playersKnown === true && server.online.freshness === 'fresh'
+  const capacity = measured && server.online.maxKnown && max > 0 ? Math.min(100, (current / max) * 100) : null
   const art = serverArt(server)
 
   return (
@@ -116,16 +117,16 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
                 status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {server.online.playersKnown && server.online.freshness === 'fresh' ? formatPlayers(server.online) : 'Онлайн не указан'}
+              {measured ? formatPlayers(server.online) : 'Онлайн не указан'}
             </span>
-            {server.online.maxKnown && <span className="num text-[13px] text-ink-500">/ {formatSlots(server.online)}</span>}
+            {measured && server.online.maxKnown && <span className="num text-[13px] text-ink-500">/ {formatSlots(server.online)}</span>}
           </div>
           <div className="mt-1.5">
             <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          {status !== 'PENDING' && status !== 'OFFLINE' && <TrendChip value={change24h} />}
+          {measured && server.online.checksPerDay > 0 && <TrendChip value={change24h} />}
           {server.history['24h'].length > 1 && (
             <Sparkline
               data={server.history['24h']}
@@ -146,7 +147,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         <span>{server.region || 'Регион не указан'}</span>
       </div>
 
-      <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/6">
+      {capacity !== null && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/6">
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-700',
@@ -154,7 +155,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
           )}
           style={{ width: `${capacity}%` }}
         />
-      </div>
+      </div>}
 
       <div className="mt-3.5 flex flex-wrap gap-1.5">
         {server.tags.slice(0, 3).map((tag) => (
@@ -162,13 +163,13 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         ))}
       </div>
 
-      <p className="clamp-2 mt-3 min-h-[40px] text-[13px] leading-[1.55] text-ink-300">{server.summary}</p>
+      <p className="clamp-2 mt-3 min-h-[40px] text-[13px] leading-[1.55] text-ink-300">{server.summary || 'Описание проекта не добавлено.'}</p>
 
       <div className="mt-auto pt-3.5">
         <div className="flex items-center justify-between gap-2 border-t border-white/6 pt-3 text-[12px] text-ink-400">
           <span className="flex min-w-0 items-center gap-1.5">
             <span>{server.flag}</span>
-            <span className="truncate">{server.region}</span>
+            <span className="truncate">{server.region || server.country || 'Регион не указан'}</span>
             <span className="text-ink-600">·</span>
             <span className="truncate">{lifecycleLabel(server)}</span>
           </span>

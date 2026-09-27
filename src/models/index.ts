@@ -404,7 +404,7 @@ export interface AdProduct {
 
 /* ── Query shapes shared by repositories and services ───────────────────── */
 
-export type SortKey = 'recommended' | 'online' | 'growth' | 'rating' | 'new' | 'launch' | 'votes'
+export type SortKey = 'recommended' | 'online' | 'growth' | 'rating' | 'new' | 'launch' | 'votes' | 'support'
 
 export interface ServerQuery {
   query?: string

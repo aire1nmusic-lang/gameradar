@@ -233,3 +233,50 @@ test('vote risk: missing/fast signals and ASN threshold require a real server-va
   assert.equal(accepted.status,201)
   assert.equal((await h.db.query('SELECT count(*)::int AS n FROM gs_votes')).rows[0].n,3)
 })
+
+test('Coins ledger and Support: atomic balance, replay, anonymity and all core games',async t=>{
+  const h=await harness(t),player=await h.register('support-player@example.com'),other=await h.register('support-other@example.com')
+  for(const game of ['lineage2','minecraft','gtarp'])
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$1,$1,$1)',[game])
+  const post=(path,body,cookie,key)=>h.request(path,body,cookie,{'Idempotency-Key':key})
+  assert.equal((await post('/support',{serverId:'lineage2',coins:1},player.cookie,'n'.repeat(32))).body.error.code,'insufficient_coins')
+  assert.equal((await h.db.query('SELECT count(*)::int n FROM gs_coin_ledger')).rows[0].n,0)
+  const credit=await post('/__dev/coins',{coins:20},player.cookie,'g'.repeat(32))
+  assert.equal(credit.status,201)
+  assert.equal((await post('/__dev/coins',{coins:20},player.cookie,'g'.repeat(32))).status,200)
+  assert.equal((await post('/__dev/coins',{coins:21},player.cookie,'g'.repeat(32))).status,409)
+  const l2=await post('/support',{serverId:'lineage2',coins:5,anonymous:false},player.cookie,'s'.repeat(32))
+  assert.equal(l2.status,201,JSON.stringify(l2.body))
+  assert.equal((await post('/support',{serverId:'lineage2',coins:5,anonymous:false},player.cookie,'s'.repeat(32))).status,200)
+  assert.equal((await post('/support',{serverId:'minecraft',coins:5,anonymous:false},player.cookie,'s'.repeat(32))).status,409)
+  assert.equal((await post('/support',{serverId:'minecraft',coins:3,anonymous:true},player.cookie,'t'.repeat(32))).status,201)
+  assert.equal((await post('/support',{serverId:'gtarp',coins:2,anonymous:false},player.cookie,'u'.repeat(32))).status,201)
+  const balance=(await h.request('/coins/me',undefined,player.cookie)).body
+  assert.equal(balance.balance,10)
+  assert.deepEqual(balance.ledger.map(row=>row.kind).sort(),['ADJUSTMENT','SUPPORT','SUPPORT','SUPPORT'].sort())
+  assert.equal(balance.ledger.reduce((sum,row)=>sum+row.delta,0),10)
+  const l2Summary=(await h.request('/support/servers/lineage2')).body
+  assert.equal(l2Summary.coins,5);assert.equal(l2Summary.participants,1)
+  assert.equal(l2Summary.recent[0].public_nick,'Player')
+  const mcSummary=(await h.request('/support/servers/minecraft')).body
+  assert.equal(mcSummary.recent[0].public_nick,'Анонимно')
+  assert.ok(!JSON.stringify(mcSummary).includes(player.user.id))
+  assert.equal((await h.request('/support/ranking')).body.filter(row=>row.coins>0).length,3)
+  const ledgerId=balance.ledger[0].id
+  await assert.rejects(h.db.query('UPDATE gs_coin_ledger SET delta=100 WHERE id=$1',[ledgerId]),/append only/)
+  await assert.rejects(h.db.query('DELETE FROM gs_coin_ledger WHERE id=$1',[ledgerId]),/append only/)
+  await h.db.query("UPDATE gs_users SET display_name='https://spam.example' WHERE id=$1",[other.user.id])
+  await post('/__dev/coins',{coins:2},other.cookie,'x'.repeat(32))
+  const hidden=await post('/support',{serverId:'lineage2',coins:2,anonymous:false},other.cookie,'y'.repeat(32))
+  assert.equal(hidden.status,201)
+  assert.equal((await h.request('/support/servers/lineage2')).body.recent[0].public_nick,'Анонимно')
+  assert.equal((await h.request('/coins/me',undefined,other.cookie)).body.balance,0)
+  const raced=await Promise.all([
+    post('/support',{serverId:'lineage2',coins:8,anonymous:true},player.cookie,'1'.repeat(32)),
+    post('/support',{serverId:'minecraft',coins:8,anonymous:true},player.cookie,'2'.repeat(32)),
+  ])
+  assert.equal(raced.filter(result=>result.status===201).length,1)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,2)
+  assert.equal((await h.db.query('SELECT min(balance) AS n FROM gs_coin_accounts')).rows[0].n,0)
+  assert.equal((await h.request('/coins/transfer',{to:other.user.id,coins:1},player.cookie)).status,501)
+})

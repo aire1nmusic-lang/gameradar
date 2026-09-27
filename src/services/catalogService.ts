@@ -14,6 +14,7 @@ export const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
   { key: 'online', label: 'По онлайну' },
   { key: 'growth', label: 'По росту' },
   { key: 'votes', label: 'По голосам' },
+  { key: 'support', label: 'Поддержка' },
   { key: 'rating', label: 'По рейтингу' },
   { key: 'new', label: 'Новые' },
   { key: 'launch', label: 'Скоро открытие' },
@@ -49,11 +50,11 @@ export function searchServers(query: ServerQuery): Promise<Page<GameServer>> {
 }
 
 /** Read-only join at the UI boundary: private vote counts order public cards. */
-export async function peopleSortedServers(query: ServerQuery): Promise<Page<GameServer>> {
+async function privateAggregateSort(query: ServerQuery, path: string, field: 'votes' | 'coins'): Promise<Page<GameServer>> {
   const ranking = async () => {
-    const rows: Array<{server_id:string;votes:number}> = []
+    const rows: Array<{server_id:string;votes?:number;coins?:number}> = []
     for (let offset=0; ; offset+=100) {
-      const page=await apiRequest<Array<{server_id:string;votes:number}>>(`/people-rating?limit=100&offset=${offset}`)
+      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number}>>(`${path}?limit=100&offset=${offset}`)
       rows.push(...page)
       if (page.length<100) return rows
     }
@@ -61,11 +62,13 @@ export async function peopleSortedServers(query: ServerQuery): Promise<Page<Game
   const [catalog, votes]=await Promise.all([
     repo.servers.query({...query,sort:'recommended',offset:0,limit:Number.MAX_SAFE_INTEGER}),ranking(),
   ])
-  const score=new Map(votes.map(row=>[row.server_id,row.votes]))
+  const score=new Map(votes.map(row=>[row.server_id,row[field]??0]))
   const sorted=[...catalog.items].sort((a,b)=>(score.get(b.id)??0)-(score.get(a.id)??0) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
   const offset=query.offset??0,limit=query.limit??24
   return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
 }
+export const peopleSortedServers = (query: ServerQuery) => privateAggregateSort(query,'/people-rating','votes')
+export const supportSortedServers = (query: ServerQuery) => privateAggregateSort(query,'/support/ranking','coins')
 
 export async function listServers(query: ServerQuery): Promise<GameServer[]> {
   const page = await repo.servers.query(query)

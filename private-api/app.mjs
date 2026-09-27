@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { digest, equal, hashPassword, keyed, passwordValid, seal, token, verifyPassword } from './crypto.mjs'
 import { outboxHealth } from './outbox.mjs'
+import { classifyLocalNickname } from './nickname.mjs'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 
@@ -340,6 +341,85 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       return {id,replay:false}
     })
     return c.json({id:result.id,accepted:true,replay:result.replay},result.replay?200:201)
+  })
+  app.get('/api/v1/coins/me',async c=>{
+    const user=await requireUser(c)
+    const balance=(await db.query('SELECT balance FROM gs_coin_accounts WHERE user_id=$1',[user.id])).rows[0]?.balance??0
+    const ledger=(await db.query(`SELECT id,kind,delta,related_id,created_at FROM gs_coin_ledger
+      WHERE user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[user.id])).rows
+    return c.json({balance,nominalRub:50,ledger})
+  })
+  // A local-only fixture lets the player→Support path run without claiming a real payment.
+  if(local) app.post('/api/v1/__dev/coins',async c=>{
+    const user=await requireUser(c,true),body=await json(c)
+    const coins=body.coins,idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    if(!Number.isSafeInteger(coins)||coins<1||coins>1000) fail(400,'invalid_coins','Тестовое начисление: 1–1000 Coins')
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[user.id])
+      const prior=(await tx.query('SELECT * FROM gs_coin_ledger WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+      if(prior) {
+        if(prior.kind!=='ADJUSTMENT'||prior.delta!==coins||prior.details?.source!=='local-fixture') fail(409,'idempotency_conflict','Ключ уже использован')
+        return {id:prior.id,replay:true}
+      }
+      await tx.query('INSERT INTO gs_coin_accounts(user_id,balance) VALUES($1,0) ON CONFLICT DO NOTHING',[user.id])
+      await tx.query('UPDATE gs_coin_accounts SET balance=balance+$1 WHERE user_id=$2',[coins,user.id])
+      const id=token()
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,idempotency_key,details)
+        VALUES($1,$2,'ADJUSTMENT',$3,$4,$5)`,[id,user.id,coins,idem,JSON.stringify({source:'local-fixture'})])
+      await audit(tx,user.id,'coins.local_fixture',id,{coins})
+      return {id,replay:false}
+    })
+    return c.json(result,result.replay?200:201)
+  })
+  app.get('/api/v1/support/ranking',async c=>{
+    const pageLimit=Number(c.req.query('limit')??100),offset=Number(c.req.query('offset')??0)
+    if(!Number.isSafeInteger(pageLimit)||pageLimit<1||pageLimit>100||!Number.isSafeInteger(offset)||offset<0||offset>1000000)
+      fail(400,'invalid_page','Некорректная страница Поддержки')
+    const rows=(await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,
+      COALESCE(sum(s.coins),0)::integer AS coins,count(DISTINCT s.user_id)::integer AS participants
+      FROM gs_server_registry r LEFT JOIN gs_support s ON s.server_id=r.server_id
+      GROUP BY r.server_id ORDER BY coins DESC,participants DESC,r.server_id LIMIT $1 OFFSET $2`,[pageLimit,offset])).rows
+    return c.json(rows)
+  })
+  app.get('/api/v1/support/servers/:id',async c=>{
+    const serverId=c.req.param('id')
+    if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
+      fail(404,'not_found','Сервер не найден')
+    const summary=(await db.query(`SELECT COALESCE(sum(coins),0)::integer AS coins,
+      count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
+    const recent=(await db.query(`SELECT public_nick,anonymous,coins,created_at FROM gs_support
+      WHERE server_id=$1 ORDER BY created_at DESC,id DESC LIMIT 10`,[serverId])).rows
+    return c.json({...summary,recent})
+  })
+  app.post('/api/v1/support',async c=>{
+    const user=await requireUser(c,true),body=await json(c)
+    const serverId=textOf(body.serverId,1,100),coins=body.coins,anonymous=body.anonymous===true
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    if(!Number.isSafeInteger(coins)||coins<1||coins>10000) fail(400,'invalid_coins','Укажите от 1 до 10000 Coins')
+    await limit(c,'support',user.id,20)
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[user.id])
+      const prior=(await tx.query('SELECT * FROM gs_support WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+      if(prior) {
+        if(prior.server_id!==serverId||prior.coins!==coins||prior.anonymous!==anonymous)
+          fail(409,'idempotency_conflict','Ключ уже использован для другой поддержки')
+        return {id:prior.id,replay:true}
+      }
+      if(!(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
+        fail(404,'not_found','Сервер не найден')
+      const updated=(await tx.query(`UPDATE gs_coin_accounts SET balance=balance-$1
+        WHERE user_id=$2 AND balance>=$1 RETURNING balance`,[coins,user.id])).rows[0]
+      if(!updated) fail(409,'insufficient_coins','Недостаточно Coins')
+      const id=token(),ledgerId=token(),nick=classifyLocalNickname(user.display_name)
+      const decision=anonymous?{decision:'ANONYMOUS',publicNick:'Анонимно'}:nick
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,related_id,idempotency_key,details)
+        VALUES($1,$2,'SUPPORT',$3,$4,$5,$6)`,[ledgerId,user.id,-coins,id,idem,JSON.stringify({serverId})])
+      await tx.query(`INSERT INTO gs_support(id,server_id,user_id,ledger_id,coins,anonymous,public_nick,nickname_decision,idempotency_key)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[id,serverId,user.id,ledgerId,coins,anonymous,decision.publicNick,decision.decision,idem])
+      await audit(tx,user.id,'support.created',id,{serverId,coins,anonymous,decision:decision.decision})
+      return {id,replay:false,balance:updated.balance}
+    })
+    return c.json(result,result.replay?200:201)
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')

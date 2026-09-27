@@ -4,7 +4,7 @@ import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
-import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, searchServers, peopleSortedServers, type CatalogFilters } from '@/services'
+import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, searchServers, peopleSortedServers, supportSortedServers, type CatalogFilters } from '@/services'
 import { useAsync } from '@/hooks/data'
 import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
@@ -26,7 +26,7 @@ type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 
 export default function Catalog() {
-  const { privateCore } = useAuth()
+  const { privateCore, loading: authLoading } = useAuth()
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
   const [params, setParams] = useSearchParams()
 
@@ -39,6 +39,7 @@ export default function Catalog() {
     verifiedOnly: params.get('verified') === '1',
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
+  useEffect(() => { if (!authLoading && !privateCore && sort === 'support') setSort('recommended') },[authLoading,privateCore,sort])
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
@@ -52,8 +53,10 @@ export default function Catalog() {
 
   const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
   const { data: page, loading, error, reload } = useAsync(
-    () => privateCore && sort === 'votes' ? peopleSortedServers(query) : searchServers(query),
-    [JSON.stringify(query),privateCore], true)
+    () => privateCore && sort === 'votes' ? peopleSortedServers(query)
+      : privateCore && sort === 'support' ? supportSortedServers(query)
+        : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query),
+    [JSON.stringify(query),privateCore,authLoading], true)
   const results = page?.items ?? []
   const total = page?.total ?? 0
   const activeCount = countActiveFilters(filters)
@@ -169,7 +172,7 @@ export default function Catalog() {
           <Select
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
-            options={SORT_OPTIONS.map((option) => ({ value: option.key, label: privateCore && option.key === 'votes' ? 'Народный рейтинг' : option.label }))}
+            options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: privateCore && option.key === 'votes' ? 'Народный рейтинг' : option.label }))}
             className="w-[150px] shrink-0 [&_select]:h-9 [&_select]:text-[13px]"
           />
 

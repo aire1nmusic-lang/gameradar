@@ -38,11 +38,21 @@ Migration `003_vote_risk.sql` adds an adjustable ASN threshold; device/IP/ASN co
 
 **Rollback:** the migration adds a column/index and does not rewrite accepted votes; disable client challenge rendering by leaving the paired keys unset, then roll back the application commit. Do not drop a used risk column before reading its configured threshold. The private ranking source stays PostgreSQL.
 
+## Slice 4a: private Coins ledger and Support (local)
+
+Migration `004_coins.sql` adds integer nonnegative balances, an append-only ledger, and per-server Support records in PostgreSQL. Support deducts Coins and writes its ledger entry and public nickname decision in one private transaction; a per-user lock and idempotency key guard concurrent and repeated requests. There is no transfer or withdrawal route. Purchases, Support, avatar, link slot, refund, and adjustment have distinct ledger kinds; only local `--local` mode exposes a clearly labeled test adjustment to exercise Support without a payment. One Coin has a displayed nominal value of 50 ₽; the unapproved discount grid and real sales are not enabled.
+
+The private API returns aggregate Coins/participant counts and recent public names without exposing supporter user IDs. An opted-out or disallowed local nickname displays «Анонимно», while the transaction and ledger remain. The server page shows Support and its honest empty state for all three games; `/rating` and catalog `sort=support` use a separate Support order. People's rating still reads only accepted votes. OpenRouter review for ambiguous nicknames is pending. The Support aggregate is currently read from the private API; the eventual D1 public projection and lag monitoring remain necessary before a full cutover.
+
+**Verified:** eight PGlite tests, including insufficient balance, 3-game Support, concurrent spending, idempotency, anonymity, ledger immutability, and no transfer endpoint. TypeScript and Vite build pass. The in-app browser showed the Support empty state on a GTA RP server, separate ranking toggle, and GTA RP catalog `sort=support` with equal cards. No paid resource created; 0 ₽ new cost.
+
+**Rollback:** stop Support writes, revert this application commit, and preserve migration 004 data for reconciliation. Do not delete ledger rows or reverse transactions by editing them; a correction is a new ledger entry. This is a local-only database, with no production billing or migration.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, add lag alarms and re-test Turnstile with real deployment signals. Keep money out of the formula.
-4. Add private append-only Coins ledger, Support and separate sort, Robokassa **test-only** notifications/receipt/reconciliation, with invariant and rollback tests. Do not enable the unapproved discount grid or sales.
+4. Add Robokassa **test-only** notifications/receipt/reconciliation with invariant and rollback tests. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Expand scoped admin permissions and pages; local nickname filter plus OpenRouter only for ambiguous cases.
 6. Add scoped copyright claims/reversible restrictions, audit and Telegram notifications with minimal data.
 7. Add crawlable route-specific HTML, search-console integrations when access exists, end-to-end tests, rollback runbook and release review. Current SPA HTTP response fails the SEO criterion.

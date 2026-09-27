@@ -47,6 +47,8 @@ import { AreaChart } from '@/components/charts/AreaChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
+import { SupportPanel } from '@/components/profile/SupportPanel'
+import { useAuth } from '@/hooks/useAuth'
 import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
@@ -126,6 +128,7 @@ function ServerNotFound() {
 }
 
 function Profile({ server }: { server: GameServer }) {
+  const { privateCore } = useAuth()
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
@@ -315,6 +318,7 @@ function Profile({ server }: { server: GameServer }) {
           <div className="min-w-0 space-y-6">
             <OnlineSection server={server} />
             <VotePanel server={server} />
+            {privateCore && <SupportPanel server={server} />}
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
             {server.demo && <ServerMedia server={server} />}
             <InfoSection server={server} />

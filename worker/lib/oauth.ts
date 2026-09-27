@@ -149,12 +149,14 @@ export async function exchangeProfile(env: Env, provider: Provider, code: string
     }
     case 'vk': {
       const deviceId = query.get('device_id') ?? ''
+      if (!deviceId || deviceId.length>512) throw new Error('oauth_device_missing')
       const t = await postForm(urls.token, {
         grant_type: 'authorization_code', code, code_verifier: verifier, client_id: env.VK_CLIENT_ID!, device_id: deviceId,
         redirect_uri: redirect, state: query.get('state') ?? '', ...(env.VK_CLIENT_SECRET ? { client_secret: env.VK_CLIENT_SECRET } : {}),
       })
       const access = str(t.access_token)
       if (!access) throw new Error('oauth_token_missing')
+      if (t.state !== query.get('state')) throw new Error('oauth_state_mismatch')
       const info = await postForm(urls.profile, { client_id: env.VK_CLIENT_ID!, access_token: access })
       const u = (info.user ?? {}) as Record<string, unknown>
       const id = str(u.user_id) ?? (typeof u.user_id === 'number' ? String(u.user_id) : undefined)

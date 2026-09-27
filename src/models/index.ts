@@ -227,6 +227,8 @@ export interface ServerProvenance {
 
 export interface User {
   id: string
+  email?: string
+  emailVerified?: boolean
   displayName: string
   avatarUrl?: string
   provider: AuthProvider

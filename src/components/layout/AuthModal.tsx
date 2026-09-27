@@ -25,6 +25,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     {auth.user ? <div className="space-y-4"><p>Вы вошли как {auth.user.displayName}</p><Button to="/dashboard" onClick={onClose}>Кабинет владельца</Button><Button onClick={async () => { await auth.logout(); onClose() }}>Выйти</Button></div> :
       auth.loading ? <p>Проверяем сессию…</p> :
       <div className="space-y-4">
+      {auth.privateCore && <Button to="/account" onClick={onClose} full>Войти или зарегистрироваться</Button>}
       {authError && <Notice tone="danger">Не удалось войти через Discord. Попробуйте ещё раз.</Notice>}
       {auth.providers.includes('discord') && (
         <Button variant="primary" full onClick={() => window.location.assign(discordHref)}>Войти через Discord</Button>
@@ -35,7 +36,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         <Field label="Локальный ключ входа" required><Input name="secret" type="password" autoComplete="off" value={secret} onChange={e => setSecret(e.target.value)} required /></Field>
         {error && <p role="alert" className="text-danger-300">{error}</p>}
         <Button type="submit" variant="primary" disabled={busy} full>{busy ? 'Входим…' : 'Войти'}</Button>
-      </form> : !auth.providers.length && <Notice tone="info">{auth.error || 'Вход владельцев в этом окружении ещё не подключён.'}</Notice>}
+      </form> : !auth.providers.length && !auth.privateCore && <Notice tone="info">{auth.error || 'Вход владельцев в этом окружении ещё не подключён.'}</Notice>}
       </div>}
   </Modal>
 }

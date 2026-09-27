@@ -19,12 +19,14 @@ import { ThemeScope } from '@/theme'
 import { themeForGame } from '@/data/themes'
 import { InlinePromo } from '@/components/ads/AdSlots'
 import { useSeo } from '@/lib/seo'
+import { useAuth } from '@/hooks/useAuth'
 
 const PAGE_SIZE = 24
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 
 export default function Catalog() {
+  const { privateCore } = useAuth()
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
   const [params, setParams] = useSearchParams()
 
@@ -37,6 +39,10 @@ export default function Catalog() {
     verifiedOnly: params.get('verified') === '1',
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
+  useEffect(() => {
+    // The legacy D1 votes column is not the private rolling People's rating.
+    if (privateCore && sort === 'votes') setSort('recommended')
+  }, [privateCore, sort])
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
@@ -165,7 +171,7 @@ export default function Catalog() {
           <Select
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
-            options={SORT_OPTIONS.map((option) => ({ value: option.key, label: option.label }))}
+            options={SORT_OPTIONS.filter(option => !privateCore || option.key !== 'votes').map((option) => ({ value: option.key, label: option.label }))}
             className="w-[150px] shrink-0 [&_select]:h-9 [&_select]:text-[13px]"
           />
 

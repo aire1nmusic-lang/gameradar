@@ -1,5 +1,8 @@
 /** Shared primitives for GameScout's Worker. */
 export interface Env {
+  /** Enabled only after the private Yandex routes are ready; denies legacy private D1 routes. */
+  PUBLIC_ONLY?: string
+  PUBLIC_PROJECTION_SECRET?: string
   DB: D1Database
   ENVIRONMENT?: string
   DEV_AUTH_ENABLED?: string

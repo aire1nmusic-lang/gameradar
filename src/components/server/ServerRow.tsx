@@ -86,11 +86,6 @@ export function ServerRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[15px] font-semibold text-ink-50">{server.name}</span>
-          {server.promo && (
-            <span className="hidden shrink-0 rounded-sm border border-promo-500/30 px-1.5 py-px text-[9.5px] font-semibold tracking-[0.08em] text-promo-200 uppercase sm:inline">
-              {server.promo === 'VIP' ? 'VIP' : 'TOP'}
-            </span>
-          )}
         </div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
@@ -110,7 +105,7 @@ export function ServerRow({
         </span>
       )}
 
-      <div className="w-[86px] shrink-0 text-right sm:w-[104px]" title={tooltip}>
+      <div className="w-[124px] shrink-0 text-right sm:w-[140px]" title={tooltip}>
         {launching ? (
           <>
             <div className="num text-[13px] font-semibold text-promo-200">{formatCountdown(server.launch!.at)}</div>
@@ -124,7 +119,7 @@ export function ServerRow({
                 status === OnlineStatus.Offline ? 'text-ink-500' : known ? 'text-ink-50' : 'text-ink-500',
               )}
             >
-              {known ? formatPlayers(server.online) : '—'}
+              {known && !stale ? formatPlayers(server.online) : 'Онлайн не указан'}
             </div>
             <div className="mt-1 flex min-w-0 items-center justify-end gap-1.5 text-[10.5px]">
               <LiveDot status={status} stale={stale} className="shrink-0" />

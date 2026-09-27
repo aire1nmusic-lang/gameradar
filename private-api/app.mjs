@@ -1,0 +1,382 @@
+import { Hono } from 'hono'
+import { digest, equal, hashPassword, keyed, passwordValid, seal, token, verifyPassword } from './crypto.mjs'
+import { outboxHealth } from './outbox.mjs'
+// Keep the provider-specific transports already present in the repository.
+import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
+
+class Failure extends Error {
+  constructor(status, code, message) { super(message); this.status=status; this.code=code }
+}
+const fail = (status, code, message) => { throw new Failure(status,code,message) }
+const emailOf = value => {
+  const email = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  if (email.length>254 || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]+$/.test(email)) fail(400,'email_invalid','Введите корректный email')
+  return email
+}
+const textOf = (v,min,max) => {
+  if (typeof v !== 'string' || v.trim().length<min || v.length>max || /[\u0000-\u001f]/.test(v)) fail(400,'invalid_input',`Ожидается текст от ${min} до ${max} символов`)
+  return v.trim()
+}
+const passwordOf = v => { if (!passwordValid(v)) fail(400,'password_weak','Пароль — от 12 до 128 символов'); return v }
+const cookieValue = (c,name) => (c.req.header('Cookie')??'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1) ?? ''
+const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_audit(actor_id,action,target,details) VALUES($1,$2,$3,$4)',[actor,action,target,JSON.stringify(details)])
+
+export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify }) {
+  if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
+  const origin = new URL(config.origin).origin
+  const local = config.environment === 'development' && ['127.0.0.1','localhost'].includes(new URL(origin).hostname)
+  if (!local && !origin.startsWith('https://')) throw new Error('https_required')
+  const oauthEnv = { ...config.oauth, ALLOWED_ORIGIN:origin, ENVIRONMENT:local?'development':'production' }
+  const app = new Hono()
+  const cookie = (name,value,seconds) => `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local?'':'; Secure'}`
+  const sessionHash = c => digest(cookieValue(c,'gs_private_session'))
+  const queryUser = async c => (await db.query(`SELECT u.*,s.created_at AS authenticated_at FROM gs_sessions s
+    JOIN gs_users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.banned_at IS NULL`,[sessionHash(c)])).rows[0]
+  const requireUser = async (c,verified=false) => {
+    const user = await queryUser(c)
+    if (!user) fail(401,'unauthorized','Войдите в аккаунт')
+    if (verified && !user.email_verified_at) fail(403,'email_unverified','Подтвердите email')
+    return user
+  }
+  const permission = async (c,name) => {
+    const user=await requireUser(c,true)
+    if (!(await db.query('SELECT 1 FROM gs_permissions WHERE user_id=$1 AND permission=$2',[user.id,name])).rows.length) fail(403,'forbidden','Недостаточно прав')
+    return user
+  }
+  async function dto(user) {
+    const identities=(await db.query('SELECT provider,created_at FROM gs_identities WHERE user_id=$1',[user.id])).rows
+    const permissions=(await db.query('SELECT permission FROM gs_permissions WHERE user_id=$1',[user.id])).rows.map(x=>x.permission)
+    return { id:user.id,email:user.email,displayName:user.display_name,provider:'EMAIL',emailVerified:!!user.email_verified_at,
+      hasPassword:!!user.password_hash,roles:['PLAYER'],permissions,createdAt:user.created_at,
+      identities:identities.map(x=>({provider:x.provider,linkedAt:x.created_at})) }
+  }
+  async function startSession(c,tx,userId) {
+    const raw=token()
+    // Rotate the incoming session even when switching accounts.
+    await tx.query('DELETE FROM gs_sessions WHERE token_hash=$1',[sessionHash(c)])
+    await tx.query("INSERT INTO gs_sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(raw),userId])
+    return raw
+  }
+  async function json(c) {
+    let body
+    try { body=JSON.parse(await c.req.text()) } catch { fail(400,'invalid_json','Ожидается JSON') }
+    if (!body || typeof body!=='object' || Array.isArray(body)) fail(400,'invalid_json','Ожидается объект')
+    return body
+  }
+  async function limit(c,bucket,subject,max=10) {
+    // Direct client IP is set by our HTTP server / trusted Yandex event adapter, never a public header.
+    const ip=c.env?.clientIp??'unknown'
+    for (const [value,bound] of [[`ip:${ip}`,max*4],[`subject:${subject}`,max]]) {
+      const key=keyed(config.rateKey,`${bucket}:${value}`)
+      const window=Math.floor(Date.now()/900000)
+      const row=(await db.query(`INSERT INTO gs_rate_limits(key,bucket_window,count) VALUES($1,$2,1)
+        ON CONFLICT(key,bucket_window) DO UPDATE SET count=gs_rate_limits.count+1 RETURNING count`,[key,window])).rows[0]
+      if (row.count>bound) fail(429,'rate_limited','Слишком много запросов. Повторите через 15 минут.')
+    }
+  }
+  async function issue(tx,email,purpose,payload) {
+    const raw=token()
+    await tx.query(`INSERT INTO gs_tokens(token_hash,email,purpose,payload,expires_at) VALUES($1,$2,$3,$4,now()+interval '20 minutes')
+      ON CONFLICT(email,purpose) DO UPDATE SET token_hash=excluded.token_hash,payload=excluded.payload,expires_at=excluded.expires_at`,[digest(raw),email,purpose,JSON.stringify(payload)])
+    const link=`${origin}/account#${new URLSearchParams({token:raw,purpose:purpose.toLowerCase()})}`
+    await tx.query('INSERT INTO gs_mail_outbox(id,ciphertext) VALUES($1,$2)',[token(),seal(config.mailKey,{to:email,purpose,link})])
+  }
+  async function consume(tx,raw,purpose) {
+    if (typeof raw!=='string' || raw.length>128) fail(400,'token_invalid','Ссылка недействительна или устарела')
+    const row=(await tx.query('DELETE FROM gs_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now() RETURNING *',[digest(raw),purpose])).rows[0]
+    if (!row) fail(400,'token_invalid','Ссылка недействительна или устарела')
+    return row
+  }
+  app.use('*',async(c,next)=>{
+    c.header('Cache-Control','no-store'); c.header('X-Content-Type-Options','nosniff'); c.header('Referrer-Policy','no-referrer')
+    if (!['GET','HEAD','OPTIONS'].includes(c.req.method)) {
+      if (c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
+      // Bound bytes, including chunked requests, before parsing or password hashing.
+      const bytes=await c.req.raw.arrayBuffer()
+      if (bytes.byteLength>16384) fail(413,'body_too_large','Запрос слишком большой')
+      c.req.raw=new Request(c.req.url,{method:c.req.method,headers:c.req.raw.headers,body:bytes})
+      if (!(c.req.header('Content-Type')??'').startsWith('application/json')) fail(415,'content_type','Ожидается JSON')
+    }
+    await next()
+  })
+  app.onError((error,c)=>{
+    if (error instanceof Failure) return c.json({error:{code:error.code,message:error.message}},error.status)
+    if (error.code==='23505') return c.json({error:{code:'conflict',message:'Запись уже существует. Обновите страницу.'}},409)
+    // Never log request bodies, email, DB query parameters, tokens or provider responses.
+    console.error('private_api_error',error.code??error.name)
+    return c.json({error:{code:'internal_error',message:'Внутренняя ошибка'}},500)
+  })
+  app.get('/api/v1/health',async c=>{ await db.query('SELECT 1'); return c.json({status:'ok',storage:'private-postgresql'}) })
+  app.get('/api/v1/auth/me',async c=>{
+    const user=await queryUser(c)
+    return c.json({user:user?await dto(user):null,providers:enabledProviders(oauthEnv),emailLogin:!!config.mailEnabled,privateCore:true,devAuthEnabled:false})
+  })
+  app.post('/api/v1/auth/register',async c=>{
+    if (!config.mailEnabled) fail(503,'mail_disabled','Почта ещё не подключена')
+    const body=await json(c), email=emailOf(body.email), password=passwordOf(body.password), name=textOf(body.displayName,2,40)
+    await limit(c,'mail',email,5)
+    const hash=await hashPassword(password)
+    await db.transaction(async tx=>{
+      // Serialize concurrent registration/resend/reset for the same email.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[email])
+      if (!(await tx.query('SELECT 1 FROM gs_users WHERE email=$1',[email])).rows.length) await issue(tx,email,'REGISTER',{hash,name})
+    })
+    return c.json({sent:true,message:'Если адрес доступен для регистрации, письмо отправлено.'},202)
+  })
+  app.post('/api/v1/auth/register/confirm',async c=>{
+    const body=await json(c)
+    const result=await db.transaction(async tx=>{
+      const row=await consume(tx,body.token,'REGISTER'), userId=token()
+      await tx.query('INSERT INTO gs_users(id,email,display_name,password_hash,email_verified_at) VALUES($1,$2,$3,$4,now())',[userId,row.email,row.payload.name,row.payload.hash])
+      await audit(tx,userId,'account.verified',userId)
+      return {raw:await startSession(c,tx,userId),userId}
+    })
+    c.header('Set-Cookie',cookie('gs_private_session',result.raw,604800))
+    return c.json({user:await dto((await db.query('SELECT * FROM gs_users WHERE id=$1',[result.userId])).rows[0])})
+  })
+  // Same-cost failure path when the email is unknown.
+  const dummyHash=hashPassword(token())
+  app.post('/api/v1/auth/login',async c=>{
+    const body=await json(c), email=emailOf(body.email), password=passwordOf(body.password)
+    await limit(c,'login',email)
+    const user=(await db.query('SELECT * FROM gs_users WHERE email=$1',[email])).rows[0]
+    const valid=await verifyPassword(password,user?.password_hash??await dummyHash)
+    if (!user || !valid || user.banned_at) fail(401,'invalid_credentials','Неверный email или пароль')
+    const raw=await db.transaction(async tx=>{
+      const current=(await tx.query('SELECT * FROM gs_users WHERE id=$1 FOR UPDATE',[user.id])).rows[0]
+      if (current.banned_at || current.password_hash!==user.password_hash) fail(401,'invalid_credentials','Повторите вход')
+      return startSession(c,tx,user.id)
+    })
+    c.header('Set-Cookie',cookie('gs_private_session',raw,604800)); return c.json({user:await dto(user)})
+  })
+  app.post('/api/v1/auth/password/reset/request',async c=>{
+    if (!config.mailEnabled) fail(503,'mail_disabled','Почта ещё не подключена')
+    const email=emailOf((await json(c)).email); await limit(c,'mail',email,5)
+    await db.transaction(async tx=>{
+      const user=(await tx.query('SELECT * FROM gs_users WHERE email=$1 AND email_verified_at IS NOT NULL AND banned_at IS NULL',[email])).rows[0]
+      if (user) await issue(tx,email,'RESET',{userId:user.id})
+    })
+    return c.json({sent:true},202)
+  })
+  app.post('/api/v1/auth/password/reset',async c=>{
+    const body=await json(c); await limit(c,'reset',digest(String(body.token??'')))
+    const hash=await hashPassword(passwordOf(body.password))
+    await db.transaction(async tx=>{
+      const row=await consume(tx,body.token,'RESET')
+      const user=(await tx.query('SELECT * FROM gs_users WHERE id=$1 FOR UPDATE',[row.payload.userId])).rows[0]
+      if (!user || user.banned_at || user.email!==row.email) fail(400,'token_invalid','Ссылка недействительна')
+      await tx.query('UPDATE gs_users SET password_hash=$1 WHERE id=$2',[hash,user.id])
+      await tx.query('DELETE FROM gs_sessions WHERE user_id=$1',[user.id])
+      await audit(tx,user.id,'password.reset',user.id)
+    })
+    c.header('Set-Cookie',cookie('gs_private_session','',0)); return c.json({ok:true})
+  })
+  app.post('/api/v1/auth/logout',async c=>{
+    await db.query('DELETE FROM gs_sessions WHERE token_hash=$1',[sessionHash(c)])
+    c.header('Set-Cookie',cookie('gs_private_session','',0)); return c.json({ok:true})
+  })
+  app.post('/api/v1/me/email',async c=>{
+    if (!config.mailEnabled) fail(503,'mail_disabled','Почта ещё не подключена')
+    const user=await requireUser(c), email=emailOf((await json(c)).email)
+    if (user.email) fail(409,'email_exists','Email уже привязан; изменение требует отдельной проверки')
+    await limit(c,'mail',email,5)
+    await db.transaction(tx=>issue(tx,email,'EMAIL',{userId:user.id}))
+    return c.json({sent:true},202)
+  })
+  app.post('/api/v1/me/email/confirm',async c=>{
+    const user=await requireUser(c), body=await json(c)
+    await db.transaction(async tx=>{
+      const row=await consume(tx,body.token,'EMAIL')
+      if (row.payload.userId!==user.id) fail(403,'forbidden','Ссылка выдана другому аккаунту')
+      await tx.query('UPDATE gs_users SET email=$1,email_verified_at=now() WHERE id=$2 AND email IS NULL',[row.email,user.id])
+      await audit(tx,user.id,'email.verified',user.id)
+    })
+    return c.json({ok:true})
+  })
+  app.get('/api/v1/auth/:provider',async c=>{
+    const provider=c.req.param('provider')
+    if (!isProvider(provider) || !enabledProviders(oauthEnv).includes(provider)) fail(404,'provider_disabled','Провайдер не подключён')
+    await limit(c,'oauth',provider,30)
+    const link=c.req.query('link')==='1'
+    if (link) {
+      const user=await requireUser(c)
+      if (Date.now()-new Date(user.authenticated_at).getTime()>600000) fail(401,'reauth_required','Войдите повторно перед привязкой')
+    }
+    const state=token(), browser=token(), verifier=token()
+    await db.query(`INSERT INTO gs_oauth_states(state_hash,browser_hash,provider,verifier,next_path,link_session_hash,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,now()+interval '10 minutes')`,[digest(state),digest(browser),provider,verifier,safeNext(c.req.query('next')),link?sessionHash(c):null])
+    c.header('Set-Cookie',cookie('gs_private_oauth',browser,600))
+    return c.redirect(await authorizeUrl(oauthEnv,provider,state,verifier))
+  })
+  app.get('/api/v1/auth/:provider/callback',async c=>{
+    const provider=c.req.param('provider'), state=c.req.query('state')??'', code=c.req.query('code')??''
+    if (!isProvider(provider) || !enabledProviders(oauthEnv).includes(provider)) fail(404,'provider_disabled','Провайдер не подключён')
+    if (!code || code.length>1024 || state.length>128) fail(400,'oauth_invalid','Вход не подтверждён')
+    const row=(await db.query(`DELETE FROM gs_oauth_states WHERE state_hash=$1 AND browser_hash=$2 AND provider=$3 AND expires_at>now() RETURNING *`,
+      [digest(state),digest(cookieValue(c,'gs_private_oauth')),provider])).rows[0]
+    c.header('Set-Cookie',cookie('gs_private_oauth','',0))
+    if (!row) fail(400,'oauth_invalid','Вход не подтверждён или ссылка уже использована')
+    let profile
+    try { profile=await oauthExchange(oauthEnv,provider,code,new URL(c.req.url).searchParams,row.verifier) }
+    catch { fail(502,'oauth_failed','Провайдер не подтвердил вход') }
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${provider}:${profile.id}`])
+      const identity=(await tx.query('SELECT * FROM gs_identities WHERE provider=$1 AND subject=$2',[provider,profile.id])).rows[0]
+      let userId=identity?.user_id
+      if (row.link_session_hash) {
+        if (!equal(row.link_session_hash,sessionHash(c))) fail(403,'session_changed','Аккаунт изменился, повторите привязку')
+        const me=(await tx.query(`SELECT u.id FROM gs_sessions s JOIN gs_users u ON u.id=s.user_id
+          WHERE s.token_hash=$1 AND s.expires_at>now() AND u.banned_at IS NULL FOR UPDATE OF u`,[sessionHash(c)])).rows[0]
+        if (!me) fail(401,'unauthorized','Войдите повторно')
+        if (identity && userId!==me.id) fail(409,'linked_elsewhere','Провайдер уже привязан к другому аккаунту')
+        userId=me.id
+      }
+      if (!userId) {
+        userId=token()
+        // No provider email enters the account email column. Separate mailbox proof is required.
+        await tx.query('INSERT INTO gs_users(id,display_name) VALUES($1,$2)',[userId,textOf(profile.displayName,1,40)])
+      }
+      const user=(await tx.query('SELECT * FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
+      if (user.banned_at) fail(403,'banned','Аккаунт заблокирован')
+      if (!identity) await tx.query('INSERT INTO gs_identities(provider,subject,user_id) VALUES($1,$2,$3)',[provider,profile.id,userId])
+      await audit(tx,userId,row.link_session_hash?'identity.linked':'identity.login',provider)
+      return row.link_session_hash?null:await startSession(c,tx,userId)
+    })
+    if (result) c.header('Set-Cookie',cookie('gs_private_session',result,604800),{append:true})
+    return c.redirect(row.next_path)
+  })
+
+  app.post('/api/v1/claims',async c=>{
+    const user=await requireUser(c,true), body=await json(c), serverId=textOf(body.serverId,1,100), evidence=textOf(body.evidence,20,3000)
+    await limit(c,'claims',user.id,10)
+    const claim=await db.transaction(async tx=>{
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if (!server) fail(404,'not_found','Сервер ещё не импортирован в приватный реестр')
+      if (server.owner_id && server.owner_id!==user.id) fail(409,'already_claimed','Владелец уже подтверждён')
+      const existing=(await tx.query("SELECT * FROM gs_claims WHERE server_id=$1 AND user_id=$2 AND status='PENDING'",[serverId,user.id])).rows[0]
+      if (existing) return existing
+      const created=(await tx.query('INSERT INTO gs_claims(id,server_id,user_id,evidence) VALUES($1,$2,$3,$4) RETURNING *',[token(),serverId,user.id,evidence])).rows[0]
+      await audit(tx,user.id,'claim.created',created.id)
+      return created
+    })
+    return c.json(claim,201)
+  })
+  app.get('/api/v1/owners/me/claims',async c=>{
+    const user=await requireUser(c)
+    return c.json((await db.query('SELECT id,server_id,status,evidence,reason,created_at FROM gs_claims WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id])).rows)
+  })
+  app.get('/api/v1/owners/me/servers',async c=>{
+    const user=await requireUser(c)
+    return c.json((await db.query('SELECT server_id,game_id,name,slug FROM gs_server_registry WHERE owner_id=$1',[user.id])).rows)
+  })
+  app.get('/api/v1/servers/:id/manage-access',async c=>{
+    const user=await requireUser(c,true)
+    const allowed=(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1 AND owner_id=$2',[c.req.param('id'),user.id])).rows.length>0
+    if (!allowed) fail(403,'forbidden','Нет подтверждённых прав на сервер')
+    return c.json({canManage:true})
+  })
+  // The People's rating uses only accepted gs_votes. Paid support never enters this query.
+  app.get('/api/v1/people-rating',async c=>{
+    const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
+    return c.json((await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,count(v.id)::integer AS votes
+      FROM gs_server_registry r LEFT JOIN gs_votes v ON v.server_id=r.server_id
+        AND v.created_at>now()-($1*interval '1 hour')
+      GROUP BY r.server_id ORDER BY votes DESC,r.server_id LIMIT 100`,[rules.window_hours])).rows)
+  })
+  app.get('/api/v1/people-rating/eligibility',async c=>{
+    const user=await requireUser(c,true), serverId=c.req.query('serverId')??''
+    const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
+    const recent=(await db.query(`SELECT count(*)::integer AS n,max(created_at) AS last FROM gs_votes
+      WHERE user_id=$1 AND server_id=$2 AND created_at>now()-($3*interval '1 hour')`,[user.id,serverId,rules.window_hours])).rows[0]
+    return c.json({eligible:recent.n<rules.max_per_window,used:recent.n,limit:rules.max_per_window,windowHours:rules.window_hours})
+  })
+  app.post('/api/v1/people-rating/votes',async c=>{
+    const user=await requireUser(c,true), body=await json(c)
+    const serverId=textOf(body.serverId,1,100), idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    const device=typeof body.deviceSignal==='string' && /^[a-zA-Z0-9_-]{16,128}$/.test(body.deviceSignal)?body.deviceSignal:null
+    const ip=c.env?.clientIp??'unknown', ipHash=keyed(config.rateKey,'ip:'+ip), deviceHash=device?keyed(config.rateKey,'device:'+device):null
+    const asn=typeof c.env?.clientAsn==='string' && /^\d{1,10}$/.test(c.env.clientAsn)?c.env.clientAsn:null
+    await limit(c,'vote',user.id,20)
+    const existing=(await db.query('SELECT id,server_id FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+    if(existing) { if(existing.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован для другого сервера');return c.json({id:existing.id,accepted:true,replay:true}) }
+    const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
+    const totals=(await db.query(`SELECT
+      count(*) FILTER(WHERE ip_hash=$1 AND created_at>now()-interval '1 day')::integer AS ip_count,
+      count(*) FILTER(WHERE device_hash=$2 AND created_at>now()-interval '1 day')::integer AS device_count
+      FROM gs_votes WHERE created_at>now()-interval '1 day'`,[ipHash,deviceHash])).rows[0]
+    const suspicious=totals.ip_count>=rules.ip_daily_limit || (deviceHash && totals.device_count>=rules.device_daily_limit)
+    if(suspicious) {
+      if(!config.turnstileSecret || typeof body.captcha!=='string') fail(403,'captcha_required','Требуется дополнительная проверка')
+      let valid=false
+      try {
+        const result=captchaVerify?await captchaVerify(body.captcha,ip):await (await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
+          method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:config.turnstileSecret,response:body.captcha,remoteip:ip}),signal:AbortSignal.timeout(5000)})).json()
+        valid=result.success===true && (!result.hostname || result.hostname===new URL(origin).hostname)
+      } catch {}
+      if(!valid) fail(403,'captcha_invalid','Дополнительная проверка не пройдена')
+    }
+    const result=await db.transaction(async tx=>{
+      // Serialize a user's votes to this card even if two requests hit different replicas.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${user.id}:${serverId}`])
+      const replay=(await tx.query('SELECT id,server_id FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+      if(replay) { if(replay.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован'); return {id:replay.id,replay:true} }
+      const server=(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows[0]
+      if(!server) fail(404,'not_found','Сервер не найден')
+      const count=(await tx.query(`SELECT count(*)::integer AS n FROM gs_votes WHERE user_id=$1 AND server_id=$2
+        AND created_at>now()-($3*interval '1 hour')`,[user.id,serverId,rules.window_hours])).rows[0].n
+      if(count>=rules.max_per_window) fail(409,'vote_window','Вы уже голосовали в этом окне')
+      const id=token()
+      await tx.query('INSERT INTO gs_votes(id,server_id,user_id,idempotency_key,device_hash,ip_hash,asn) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,serverId,user.id,idem,deviceHash,ipHash,asn])
+      await audit(tx,user.id,'vote.accepted',id,{serverId})
+      return {id,replay:false}
+    })
+    return c.json({id:result.id,accepted:true,replay:result.replay},result.replay?200:201)
+  })
+  app.get('/api/v1/admin/claims',async c=>{
+    await permission(c,'claims.review')
+    return c.json((await db.query("SELECT c.*,s.name,s.game_id FROM gs_claims c JOIN gs_server_registry s USING(server_id) WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100")).rows)
+  })
+  app.post('/api/v1/admin/claims/:id/resolve',async c=>{
+    const admin=await permission(c,'claims.review'), body=await json(c), reason=textOf(body.reason,10,1000)
+    if (!['VERIFIED','REJECTED'].includes(body.status)) fail(400,'invalid_status','Укажите решение')
+    const result=await db.transaction(async tx=>{
+      const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
+      if (!claim) fail(404,'not_found','Заявка не найдена')
+      if (claim.user_id===admin.id) fail(403,'self_review','Нельзя подтверждать собственную заявку')
+      if (claim.status!== 'PENDING') {
+        if (claim.status===body.status) return claim
+        fail(409,'claim_closed','Заявка уже рассмотрена')
+      }
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[claim.server_id])).rows[0]
+      if (body.status==='VERIFIED') {
+        if (server.owner_id && server.owner_id!==claim.user_id) fail(409,'already_claimed','Владелец уже подтверждён')
+        const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=$1,version=version+1 WHERE server_id=$2 RETURNING version',[claim.user_id,server.server_id])).rows[0]
+        const snapshot={serverId:server.server_id,version:Number(changed.version),claimed:true}
+        await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[server.server_id,changed.version,JSON.stringify(snapshot)])
+      }
+      const updated=(await tx.query('UPDATE gs_claims SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4 RETURNING *',[body.status,admin.id,reason,claim.id])).rows[0]
+      await audit(tx,admin.id,'claim.'+body.status.toLowerCase(),claim.id,{serverId:server.server_id})
+      return updated
+    })
+    return c.json(result)
+  })
+  app.get('/api/v1/admin/system',async c=>{
+    await permission(c,'system.read')
+    return c.json({projection:await outboxHealth(db),events:(await db.query('SELECT id,action,target,created_at FROM gs_audit ORDER BY id DESC LIMIT 50')).rows})
+  })
+  // Explicit public allowlist. Private cookies and identifying headers never reach D1.
+  app.get('*',async c=>{
+    const path=new URL(c.req.url).pathname
+    if (config.publicApi && /^\/api\/v1\/(games|rating|servers(?:\/[^/]+(?:\/online-history)?)?|sitemap\.xml)$/.test(path)) {
+      const url=new URL(path+new URL(c.req.url).search,config.publicApi)
+      const response=await publicFetch(url,{headers:{Accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(10000)})
+      const headers=new Headers(response.headers)
+      // Node fetch decompresses upstream bytes; retaining these headers corrupts the relay response.
+      for(const name of ['Set-Cookie','Content-Encoding','Content-Length','Transfer-Encoding']) headers.delete(name)
+      return new Response(response.body,{status:response.status,headers})
+    }
+    fail(404,'not_found','Маршрут не найден')
+  })
+  app.notFound(c=>c.json({error:{code:'private_route_unavailable',message:'Этот сценарий ещё не перенесён в приватное хранилище'}},501))
+  return app
+}

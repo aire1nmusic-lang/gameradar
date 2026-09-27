@@ -53,6 +53,7 @@ cli(['d1', 'execute', 'gamescout', '--local', '--persist-to', state, '--file', s
 /* ── OAuth fixture: Google, Yandex and VK ID in one local server ─────────── */
 
 const PROFILES = {
+  'g-link': { provider: 'google', body: { sub: 'g-101', name: 'Alice Link', email: 'alice@example.com', email_verified: true } },
   'g-alice': { provider: 'google', body: { sub: 'g-100', name: 'Alice Google', picture: 'https://example.com/a.png', email: 'alice@example.com', email_verified: true } },
   'y-new': { provider: 'yandex', body: { id: 'y-200', display_name: 'Yan New', default_email: 'yan@example.com' } },
   'y-link': { provider: 'yandex', body: { id: 'y-300', display_name: 'Alice Yandex', default_email: 'alice.other@example.com' } },
@@ -75,7 +76,7 @@ const oauth = createServer(async (req, res) => {
     const profile = PROFILES[code]
     const secretOk = provider === 'vk' ? form.get('client_id') === 'vk-client' : form.get('client_secret') === `${provider}-secret`
     if (!profile || profile.provider !== provider || !secretOk) return json(400, { error: 'invalid_grant' })
-    return json(200, { access_token: 'tok-' + code, token_type: 'Bearer' })
+    return json(200, { access_token: 'tok-' + code, token_type: 'Bearer', state: form.get('state') })
   }
   if (step === 'profile') {
     const tokenValue = provider === 'vk' ? form.get('access_token') : (req.headers.authorization ?? '').split(' ')[1]
@@ -225,14 +226,14 @@ try {
   const google = await signInWith('google', 'g-alice')
   assert.equal(google.location, '/account')
   const viaGoogle = await me(google.cookie)
-  assert.equal(viaGoogle.id, aliceUser.id, 'Google vouches for alice@example.com: same account')
+  assert.notEqual(viaGoogle.id, aliceUser.id, 'Google email must never merge accounts')
   assert.deepEqual(viaGoogle.identities.map(i => i.provider), ['google'])
 
   const yandex = await signInWith('yandex', 'y-new')
   const yan = await me(yandex.cookie)
   assert.notEqual(yan.id, aliceUser.id)
-  assert.equal(yan.email, 'yan@example.com')
-  assert.equal(yan.emailVerified, true)
+  assert.equal(yan.email, undefined)
+  assert.equal(yan.emailVerified, false)
   assert.equal(yan.provider, 'YANDEX')
 
   const vk = await signInWith('vk', 'vk-1')
@@ -245,7 +246,9 @@ try {
   assert.equal(vkUser.email, undefined)
 
   const again = await signInWith('google', 'g-alice')
-  assert.equal((await me(again.cookie)).id, aliceUser.id, 'the second Google sign-in reuses the account')
+  assert.equal((await me(again.cookie)).id, viaGoogle.id, 'the second Google sign-in reuses its own account')
+
+  assert.equal((await signInWith('google', 'g-link', { cookie: alice, link: true })).location, '/account')
 
   const linked = await signInWith('yandex', 'y-link', { cookie: alice, link: true })
   assert.equal(linked.location, '/account')
@@ -257,7 +260,7 @@ try {
   assert.match(forged.headers.get('location'), /auth_error=google/)
   assert.ok(!forged.headers.getSetCookie().some(c => c.startsWith('gs_session=') && !c.startsWith('gs_session=;')))
   await api('/auth/discord', { status: 404 })
-  pass('Google / Yandex / VK sign-in: verified emails join accounts, VK never does, PKCE for VK, linking, forged state refused')
+  pass('Google / Yandex / VK: no email-based merging, explicit linking, PKCE/state for VK, forged state refused')
 
   /* ── cabinet ────────────────────────────────────────────────────────── */
   assert.equal((await api('/me', { method: 'PATCH', cookie: alice, body: { displayName: '  Алиса   Смит ' } })).json.user.displayName, 'Алиса Смит')
@@ -335,7 +338,7 @@ try {
   /* ── moderation, roles, bans ────────────────────────────────────────── */
   sql(`UPDATE servers SET moderation='PENDING_MODERATION', submitted_by='${yan.id}' WHERE id='${servers[1].id}'`)
   const pendingCards = (await api('/admin/servers?status=PENDING', { cookie: boss })).json
-  assert.ok(pendingCards.some(r => r.server.id === servers[1].id && r.submittedBy.email === 'yan@example.com'))
+  assert.ok(pendingCards.some(r => r.server.id === servers[1].id && r.submittedBy.id === yan.id))
   await api(`/admin/servers/${servers[1].id}/reject`, { method: 'POST', cookie: boss, body: { reason: 'Сервер не отвечает' } })
   assert.ok((await api('/admin/servers?status=REJECTED', { cookie: boss })).json.some(r => r.server.id === servers[1].id && r.note === 'Сервер не отвечает'))
   await api(`/admin/servers/${servers[1].id}/publish`, { method: 'POST', cookie: boss, body: {} })

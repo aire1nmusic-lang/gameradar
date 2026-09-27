@@ -43,6 +43,7 @@ import { sitemapXml } from './lib/sitemap.ts'
 import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, startSession, store, type AppEnv } from './lib/http.ts'
 import { accountRoutes } from './routes/accounts.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
+import { applyPublicSnapshot, parsePublicSnapshot } from './lib/public-projection.ts'
 
 const app = new Hono<AppEnv>()
 
@@ -94,6 +95,21 @@ function allowedOrigins(env: Env): string[] {
 
 app.use('*', async (c, next) => {
   c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
+
+  if (c.req.path === '/api/internal/public-projection' && c.req.method === 'POST') {
+    if (!(await sameSecret(c.req.header('Authorization')?.replace(/^Bearer /,'') ?? '', c.env.PUBLIC_PROJECTION_SECRET))) throw forbidden()
+    if (Number(c.req.header('Content-Length') ?? 0)>2048) throw badRequest('Payload too large')
+    const payloadText=await c.req.text()
+    if (payloadText.length>2048) throw badRequest('Payload too large')
+    let snapshot
+    try { snapshot=parsePublicSnapshot(JSON.parse(payloadText)) } catch { throw badRequest('Invalid public projection') }
+    await applyPublicSnapshot(c.env.DB,snapshot)
+    return c.json({ok:true})
+  }
+
+  if (c.env.PUBLIC_ONLY === 'true' && !(c.req.method === 'GET' && (
+    /^\/api\/v1\/(health|games|rating|servers(?:\/[^/]+(?:\/online-history)?)?|sitemap\.xml)$/.test(c.req.path) || c.req.path==='/sitemap.xml'
+  ))) throw new ApiError(503,'Приватный API обслуживается в Yandex Cloud','private_api_required')
 
   const proxyAuth = c.req.header(PROXY_AUTH_HEADER)
   if (proxyAuth && (await sameSecret(proxyAuth, c.env.PROXY_SECRET))) {

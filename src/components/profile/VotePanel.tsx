@@ -9,6 +9,8 @@ import { track } from '@/services/events'
 import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
+import { useAuth } from '@/hooks/useAuth'
+import { PrivateVotePanel } from './PrivateVotePanel'
 
 const NICK_KEY = 'gamescout:nickname'
 
@@ -32,16 +34,17 @@ type Result = { kind: 'done'; rewardTitle?: string } | { kind: 'cooldown'; nextA
  * cooldown window, enforced by the backend.
  */
 export function VotePanel({ server }: { server: GameServer }) {
+  const auth=useAuth()
   const [nickname, setNickname] = useState(savedNick)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<Result | undefined>()
   const [votes, setVotes] = useState(server.votes)
-  const { data: reward } = useAsync(() => repo.votes.reward(server.id).catch(() => undefined), [server.id])
+  const { data: reward } = useAsync(() => auth.privateCore?Promise.resolve(undefined):repo.votes.reward(server.id).catch(() => undefined), [server.id,auth.privateCore])
 
   // A returning voter learns about the cooldown before pressing the button.
   useEffect(() => {
     const nick = nickname.trim()
-    if (nick.length < 2) return
+    if (nick.length < 2 || auth.privateCore) return
     const timer = setTimeout(() => {
       repo.votes
         .eligibility(server.id, nick)
@@ -49,7 +52,7 @@ export function VotePanel({ server }: { server: GameServer }) {
         .catch(() => {})
     }, 400)
     return () => clearTimeout(timer)
-  }, [server.id, nickname])
+  }, [server.id, nickname,auth.privateCore])
 
   async function vote(event: React.FormEvent) {
     event.preventDefault()
@@ -79,6 +82,8 @@ export function VotePanel({ server }: { server: GameServer }) {
   }
 
   const cooldownHours = reward?.cooldownHours ?? 12
+
+  if(auth.privateCore) return <PrivateVotePanel server={server}/>
 
   return (
     <section className="surface rounded-xl p-5 sm:p-6" id="vote">

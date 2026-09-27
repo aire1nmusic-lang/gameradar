@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Heart, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatAge, formatCountdown, formatNumber, formatPlayers, formatRating, formatRelativeDays, formatSlots } from '@/lib/format'
+import { formatDate, formatNumber, formatPlayers, formatRating, formatSlots } from '@/lib/format'
 import { getGame } from '@/data/games'
 import type { GameServer } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -10,7 +10,7 @@ import { themeForGame } from '@/data/themes'
 import { ThemeScope } from '@/theme'
 import { ArtImage } from '@/components/media/WorldArt'
 import { ServerLogo } from '@/components/ui/ServerLogo'
-import { PromoLabel, Tag, TrendChip } from '@/components/ui/Badge'
+import { Tag, TrendChip } from '@/components/ui/Badge'
 import { StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { Sparkline } from '@/components/charts/AreaChart'
 
@@ -37,21 +37,15 @@ export function FavoriteButton({ slug, className }: { slug: string; className?: 
   )
 }
 
-/** The single most useful date for this server right now: launch, wipe, or age. */
+/** Opening date is never inferred from when a card was added or wiped. */
 function lifecycleLabel(server: GameServer): string {
-  if (server.launch) return `Старт ${formatCountdown(server.launch.at)}`
-  if (server.nextWipeAt) {
-    const days = Math.ceil((new Date(server.nextWipeAt).getTime() - Date.now()) / 86_400_000)
-    if (days >= 0 && days <= 14) return days === 0 ? 'Вайп сегодня' : `Вайп через ${days} дн.`
-  }
-  return server.openedAt ? `Открыт ${formatAge(server.openedAt)}` : `Добавлен ${formatRelativeDays(server.addedAt)}`
+  return server.openedAt ? `Открытие: ${formatDate(server.openedAt)}` : server.launch?.at ? `Открытие: ${formatDate(server.launch.at)}` : 'Дата открытия не указана'
 }
 
 export function ServerCard({ server, className }: { server: GameServer; className?: string }) {
   const game = getGame(server.gameId)
   const { status, current, max, change24h } = server.online
   const capacity = max > 0 ? Math.min(100, (current / max) * 100) : 0
-  const isVip = server.promo === 'VIP'
   const art = serverArt(server)
 
   return (
@@ -60,7 +54,6 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
       to={`/server/${server.slug}`}
       className={cn(
         'surface interactive group relative isolate flex h-full flex-col overflow-hidden rounded-xl p-4',
-        isVip && 'border-promo-500/25 bg-promo-900/20',
         className,
       )}
     >
@@ -91,9 +84,6 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         </span>
       )}
 
-      {isVip && (
-        <span className="pointer-events-none absolute inset-x-0 -top-px mx-4 h-px bg-gradient-to-r from-transparent via-promo-400/60 to-transparent" />
-      )}
 
       <div className="flex items-start gap-3">
         <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="md" />
@@ -107,7 +97,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
           <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
             <span className="truncate">
-              {game.shortName} · {server.version}
+              {game.shortName} · {server.version || 'Версия не указана'}
             </span>
           </div>
         </div>
@@ -115,7 +105,6 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
 
       <div className="mt-3.5 flex items-center justify-between gap-2">
         <StatusBadge status={status} size="sm" launching={!!server.launch} />
-        {server.promo && server.promo !== 'VIP' && <PromoLabel kind={server.promo} />}
       </div>
 
       <div className="mt-2.5 flex items-end justify-between gap-3">
@@ -127,9 +116,9 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
                 status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
               )}
             >
-              {formatPlayers(server.online)}
+              {server.online.playersKnown && server.online.freshness === 'fresh' ? formatPlayers(server.online) : 'Онлайн не указан'}
             </span>
-            <span className="num text-[13px] text-ink-500">/ {formatSlots(server.online)}</span>
+            {server.online.maxKnown && <span className="num text-[13px] text-ink-500">/ {formatSlots(server.online)}</span>}
           </div>
           <div className="mt-1.5">
             <VerifiedLine online={server.online} launching={!!server.launch} size="xs" />
@@ -150,6 +139,11 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
             />
           )}
         </div>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-ink-400">
+        <span>{server.rates ? `Рейты: ${server.rates}` : server.modes.length ? `Режим: ${server.modes.join(', ')}` : 'Режим не указан'}</span>
+        <span>{server.region || 'Регион не указан'}</span>
       </div>
 
       <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/6">

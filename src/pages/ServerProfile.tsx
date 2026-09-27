@@ -36,7 +36,7 @@ import type { ChartRange, GameServer, HistoryEvent } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
-import { Badge, PromoLabel, Tag, TrendChip } from '@/components/ui/Badge'
+import { Badge, Tag, TrendChip } from '@/components/ui/Badge'
 import { Rating } from '@/components/ui/Rating'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
@@ -241,7 +241,6 @@ function Profile({ server }: { server: GameServer }) {
             <div className="pb-1">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <StatusBadge status={server.online.status} launching={!!server.launch} />
-                {server.promo && <PromoLabel kind={server.promo} />}
               </div>
               <h1 className="text-[26px] leading-tight sm:text-[34px]">{server.name}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-300">
@@ -534,9 +533,9 @@ function OnlineSection({ server }: { server: GameServer }) {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Сейчас" value={formatPlayers(server.online)} accent={status === 'VERIFIED'} />
-        <StatTile label="Пик за 24 часа" value={formatNumber(peak24h)} />
-        <StatTile label="Среднее за 7 дней" value={formatNumber(avg7d)} />
-        <StatTile label="Пик за 30 дней" value={formatNumber(peak30d)} />
+        <StatTile label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
+        <StatTile label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
+        <StatTile label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
       </div>
     </section>
   )
@@ -827,7 +826,7 @@ function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) 
       <p className="mt-2 text-[13px] leading-relaxed text-ink-400">
         {owned
           ? 'Карточкой управляет подтверждённый владелец проекта.'
-          : 'Подтвердите владение, чтобы настроить награду за голос, мониторинг и видеть статистику переходов.'}
+          : 'Подтвердите владение, чтобы управлять данными сервера и видеть доступную статистику.'}
       </p>
       <Button variant="outline" full className="mt-4" onClick={onClaim} icon={owned ? undefined : <ShieldCheck size={15} />}>
         {owned ? 'Я владелец — открыть' : 'Это мой сервер'}

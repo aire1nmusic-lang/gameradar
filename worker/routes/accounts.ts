@@ -330,11 +330,11 @@ export function accountRoutes(app: Hono<AppEnv>) {
       }
 
       let user = linked ? await a.user(linked.user_id) : await a.legacyUser(provider, profile.id)
-      // A provider that vouches for the address joins the account registered with it.
-      if (!user && trustedEmail) user = await a.userByEmail(trustedEmail)
+      // An email match never grants access to an existing account. Linking requires
+      // an authenticated explicit link flow; new OAuth accounts confirm email separately.
       if (!user) {
         user = await a.createUser({
-          id: id('usr'), email: trustedEmail, displayName: profile.displayName, verified: !!trustedEmail,
+          id: id('usr'), displayName: profile.displayName, verified: false,
           avatarUrl: profile.avatarUrl, provider: provider.toUpperCase(), providerId: profile.id,
         })
       }

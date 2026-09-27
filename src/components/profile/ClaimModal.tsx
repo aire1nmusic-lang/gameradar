@@ -56,7 +56,7 @@ export function ClaimModal({ server, open, onClose }: { server: GameServer; open
 
   // Resume an open claim instead of issuing a new token every time.
   useEffect(() => {
-    if (!open || !auth.user || claim) return
+    if (!open || !auth.user || claim || auth.privateCore) return
     setLoadingClaims(true)
     ownerApi
       .claims()
@@ -85,7 +85,9 @@ export function ClaimModal({ server, open, onClose }: { server: GameServer; open
   const expiresAt = (claim as (ServerClaim & { expiresAt?: string }) | undefined)?.expiresAt
 
   let body: React.ReactNode
-  if (auth.loading || loadingClaims) {
+  if (auth.privateCore) {
+    body=<div className="space-y-4"><p>Войдите в единый аккаунт и подайте заявку на проверку прав.</p><Button to={`/account?claim=${encodeURIComponent(server.id)}`} onClick={onClose}>Открыть заявку Claim</Button></div>
+  } else if (auth.loading || loadingClaims) {
     body = (
       <div className="flex items-center gap-2 text-[13px] text-ink-300">
         <Spinner /> Проверяем…

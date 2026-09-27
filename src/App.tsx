@@ -14,6 +14,7 @@ import Boost from '@/pages/Boost'
 import UiStates from '@/pages/UiStates'
 import NotFound from '@/pages/NotFound'
 import GameWorld from '@/pages/GameWorld'
+import Account from '@/pages/Account'
 import Design from '@/pages/Design'
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="owners" element={<Owners />} />
         <Route path="add-server" element={<AddServer />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="account" element={<Account />} />
         <Route path="boost" element={<Boost />} />
         <Route path="states" element={<UiStates />} />
         <Route path="design" element={<Design />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Bell, CheckCircle2, Copy, ExternalLink, Info, KeyRound, LogIn, Plus, Radar, RefreshCw, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatNumber, formatPlayers, formatRelativeDays, formatSlots, formatTime } from '@/lib/format'
@@ -45,9 +45,11 @@ export default function Dashboard() {
   useSeo({ title: 'Кабинет владельца', noindex: true })
   const auth = useAuth()
   const [authOpen, setAuthOpen] = useState(false)
-  const servers = useAsync(() => (auth.user ? repo.owners.serversOf(auth.user.id) : Promise.resolve([] as GameServer[])), [auth.user?.id])
-  const claims = useAsync(() => (auth.user ? ownerApi.claims() : Promise.resolve([] as ServerClaim[])), [auth.user?.id])
+  const servers = useAsync(() => (auth.user && !auth.privateCore ? repo.owners.serversOf(auth.user.id) : Promise.resolve([] as GameServer[])), [auth.user?.id,auth.privateCore])
+  const claims = useAsync(() => (auth.user && !auth.privateCore ? ownerApi.claims() : Promise.resolve([] as ServerClaim[])), [auth.user?.id,auth.privateCore])
   const [selected, setSelected] = useState<string | undefined>()
+
+  if(auth.privateCore) return <Navigate to="/account" replace />
 
   if (auth.loading || (auth.user && servers.loading && !servers.data)) {
     return (

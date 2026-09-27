@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
 import { GAMES } from '@/data/games'
 import { useRating } from '@/hooks/data'
@@ -9,6 +10,49 @@ import { Notice } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { BoostedStrip, RatingList, RatingPodium } from '@/components/rating/RatingBoard'
 import { useSeo } from '@/lib/seo'
+import { useAuth } from '@/hooks/useAuth'
+import { apiRequest } from '@/repositories/http/client'
+
+type PeopleRow = { server_id: string; slug: string; name: string; game_id: string; votes: number }
+
+export default function RatingPage() {
+  const { privateCore } = useAuth()
+  return privateCore ? <PeopleRatingPage /> : <LegacyRatingPage />
+}
+
+function PeopleRatingPage() {
+  useSeo({ title: 'Народный рейтинг серверов', path: '/rating', noindex: true,
+    description: 'Серверы по голосам подтверждённых пользователей в текущем окне.' })
+  const [gameId, setGameId] = useState('all')
+  const [rows, setRows] = useState<PeopleRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let active = true
+    apiRequest<PeopleRow[]>('/people-rating').then(value => { if (active) setRows(value) })
+      .catch(() => { if (active) setError('Рейтинг сейчас недоступен') })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [])
+  const ranked = rows.filter(row => row.votes > 0 && (gameId === 'all' || row.game_id === gameId))
+  return <Container className="pb-16 pt-6 lg:pt-8">
+    <h1 className="text-[26px] leading-tight sm:text-[30px]">Народный рейтинг</h1>
+    <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">Порядок определяется только голосами подтверждённых аккаунтов в текущем окне. Поддержка за Coins не влияет на позиции. Регистрация не доказывает уникальность человека.</p>
+    <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
+      <ChipToggle active={gameId === 'all'} onClick={() => setGameId('all')}>Все игры</ChipToggle>
+      {GAMES.filter(game => ['lineage2', 'minecraft', 'gtarp'].includes(game.id)).map(game =>
+        <ChipToggle key={game.id} active={gameId === game.id} onClick={() => setGameId(game.id)}>{game.shortName}</ChipToggle>)}
+    </div>
+    {error ? <Notice tone="warn" className="mt-6">{error}</Notice> : loading ? <p className="mt-6 text-ink-400">Загрузка…</p> : ranked.length ?
+      <ol className="mt-6 space-y-2">{ranked.map((row, index) => <li key={row.server_id}>
+        <Link to={`/server/${row.slug}`} className="surface flex items-center gap-4 rounded-lg p-4 hover:border-white/20">
+          <span className="num w-8 text-ink-400">{index + 1}</span>
+          <span className="min-w-0 flex-1 truncate font-semibold">{row.name}</span>
+          <span className="num text-sm text-ink-300">{row.votes} {row.votes === 1 ? 'голос' : row.votes < 5 ? 'голоса' : 'голосов'}</span>
+        </Link>
+      </li>)}</ol> : <Notice tone="info" className="mt-6">В этой игре пока нет голосов в текущем окне.</Notice>}
+  </Container>
+}
 
 type View = 'organic' | 'combined'
 
@@ -16,7 +60,7 @@ type View = 'organic' | 'combined'
  * Platform-wide rating: top three as tiles, the rest as rows. The default is
  * the independent order; the boost-aware order is a labelled switch.
  */
-export default function RatingPage() {
+function LegacyRatingPage() {
   useSeo({ title: 'Рейтинг серверов', path: '/rating', description: 'Независимый рейтинг игровых серверов GameScout: онлайн с учётом доверия к источнику, голоса игроков, стабильность.' })
   const [gameId, setGameId] = useState<string>('all')
   const [view, setView] = useState<View>('organic')

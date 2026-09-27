@@ -10,6 +10,7 @@ import { dispatch, outboxHealth } from '../private-api/outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../private-api/copyright.mjs'
 import { checkProjectionLag } from '../private-api/projection-alert.mjs'
+import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
@@ -499,4 +500,36 @@ test('projection lag alert is deduplicated, private and resolves after delivery'
     VALUES('alert-l2',2,'{}',3)`)
   assert.equal((await checkProjectionLag(h.db,300)).active,true,'failed retries also alert before the age threshold')
   await assert.rejects(checkProjectionLag(h.db,1),/invalid_projection_threshold/)
+})
+
+test('OpenRouter balance monitor uses management endpoint, deduplicates alerts and reports check failures',async t=>{
+  const h=await harness(t)
+  let calls=0
+  const request=async(url,init)=>{
+    calls++
+    assert.equal(url,'https://openrouter.ai/api/v1/credits')
+    assert.equal(init.headers.Authorization,'Bearer management-secret')
+    return new Response(JSON.stringify({data:{total_credits:100.5,total_usage:97}}),{status:200})
+  }
+  assert.deepEqual(await checkOpenRouterBalance(h.db,{thresholdUsd:5},request),{status:'disabled'})
+  assert.equal(calls,0)
+  const low=await checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:5},request)
+  assert.equal(low.status,'low');assert.equal(low.remainingUsd,3.5);assert.equal(low.changed,true)
+  assert.equal((await checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:5},request)).changed,false)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='openrouter.low_balance'")).rows[0].n,1)
+  const unavailable=()=>checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:5},
+    async()=>new Response('{}',{status:403}))
+  assert.equal((await unavailable()).status,'unavailable')
+  assert.equal((await unavailable()).status,'unavailable')
+  assert.equal((await h.db.query("SELECT active FROM gs_system_alerts WHERE key='openrouter_low_balance'")).rows[0].active,true)
+  const recovered=await checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:5},
+    async()=>new Response(JSON.stringify({data:{total_credits:100,total_usage:80}}),{status:200}))
+  assert.equal(recovered.status,'ok')
+  const events=(await h.db.query('SELECT event FROM gs_telegram_outbox')).rows.map(row=>row.event)
+  assert.equal(events.filter(event=>event==='openrouter.balance_unavailable').length,1)
+  assert.equal(events.filter(event=>event==='openrouter.balance_check_recovered').length,1)
+  assert.equal(events.filter(event=>event==='openrouter.balance_recovered').length,1)
+  const messages=(await h.db.query('SELECT message FROM gs_telegram_outbox')).rows.map(row=>row.message).join('\n')
+  assert.ok(!messages.includes('management-secret'))
+  await assert.rejects(checkOpenRouterBalance(h.db,{key:'management-secret',thresholdUsd:0},request),/invalid_balance_threshold/)
 })

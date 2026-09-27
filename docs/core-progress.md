@@ -96,13 +96,19 @@ Private migration `009_projection_alerts.sql` records the current operational al
 
 **Rollback:** stop the background service and revert the application commit while preserving alert, audit and Telegram outbox rows; migration 009 is additive. Do not drop the table during a live alert. A production rollout must apply the reviewed migration before running this service and include a backup/restore plan.
 
+## Slice 6c: OpenRouter balance warning (local)
+
+The private backend can check `GET /api/v1/credits` once an hour with a separately provided `OPENROUTER_MANAGEMENT_KEY`. This endpoint requires a management key according to [OpenRouter's credits documentation](https://openrouter.ai/docs/api/api-reference/credits/get-credits); the ordinary inference key is never assumed to have this permission. `OPENROUTER_LOW_BALANCE_USD` sets the warning threshold (default 5 USD, allowed 0.01–1000). A low balance, failure to check and recovery each use the private deduplicated alert state, audit and Telegram outbox. The alert text contains no key or AI prompt. With no management key, the monitor makes no request and reports no observed balance.
+
+**Verified:** mocked PGlite test covers the official response shape, disabled mode, one low-balance warning during repeated checks, provider 403, recovery and omission of the key from messages. No real OpenRouter request or charge occurred (0 ₽). Live acceptance remains **BLOCKED** on a management key, an approved paid-model budget and Telegram credentials; approval is needed before any billable model calls. Rollback: remove the management key to stop checks, then revert this application change while retaining alert/audit rows.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Project permitted Support aggregates to D1 with retries/lag control.
 5. Complete server/user admin actions, copyright and AI settings. The role dashboard and nickname review do not complete stage 5 acceptance.
-6. Complete non-link material scopes, live AI/Telegram/email delivery, production verification of the projection alert and low OpenRouter balance alert. The local link workflow is not full stage 6 acceptance.
+6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, make unknown routes return HTTP 404, connect webmaster services when access exists, and complete end-to-end tests, rollback runbook and release review. The local Pages HTTP check passes for known routes, but production crawlability has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

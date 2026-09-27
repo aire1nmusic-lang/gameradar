@@ -7,6 +7,7 @@ import { dispatch } from './outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from './copyright.mjs'
 import { checkProjectionLag } from './projection-alert.mjs'
+import { checkOpenRouterBalance } from './openrouter-balance.mjs'
 import { mailEnabled, sendMail } from '../worker/lib/mailer.ts'
 
 const development=process.argv.includes('--local')
@@ -46,10 +47,14 @@ config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:p
 config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_NICKNAME_MODEL}
 config.copyrightAI={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_COPYRIGHT_MODEL}
 config.telegram={botToken:process.env.TELEGRAM_BOT_TOKEN,chatId:process.env.TELEGRAM_ADMIN_CHAT_ID}
+config.openrouterBalance={key:process.env.OPENROUTER_MANAGEMENT_KEY,
+  thresholdUsd:Number(process.env.OPENROUTER_LOW_BALANCE_USD??5)}
 const app=createApp({db,config})
 const projectionAlertSeconds=Number(process.env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
 if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
   throw new Error('PUBLIC_PROJECTION_ALERT_SECONDS_must_be_60_to_3600')
+if(!Number.isFinite(config.openrouterBalance.thresholdUsd)||config.openrouterBalance.thresholdUsd<0.01
+  ||config.openrouterBalance.thresholdUsd>1000)throw new Error('OPENROUTER_LOW_BALANCE_USD_must_be_0.01_to_1000')
 const server=createServer(async(req,res)=>{
   try {
     const chunks=[]; let size=0
@@ -74,6 +79,7 @@ const server=createServer(async(req,res)=>{
 server.listen(port,'127.0.0.1',()=>console.log(`Private API: http://127.0.0.1:${port}; local mail: /__dev/mail`))
 let busy=false
 let lastProjectionCheck=0
+let lastBalanceCheck=0
 const timer=setInterval(async()=>{
   if (busy) return
   busy=true
@@ -94,6 +100,10 @@ const timer=setInterval(async()=>{
     if(Date.now()-lastProjectionCheck>=30000) {
       lastProjectionCheck=Date.now()
       await checkProjectionLag(db,projectionAlertSeconds)
+    }
+    if(config.openrouterBalance.key&&Date.now()-lastBalanceCheck>=3600000) {
+      lastBalanceCheck=Date.now()
+      await checkOpenRouterBalance(db,config.openrouterBalance)
     }
     if(config.openrouter.key && config.openrouter.model) await dispatchNicknameReview(db,
       nickname=>reviewNickname(config.openrouter,nickname),config.openrouter.model)

@@ -190,6 +190,12 @@ The [unapplied gateway candidate](yandex-private-gateway.md) keeps the public ca
 
 **Verified:** three route-shape tests pass: every private app route (except the intentional public aggregate) resolves to the container, the public catalog remains GET-only, and old votes/Claim/events/server writes resolve to 404. The generator `--check` matches the committed YAML. This is source-level evidence, **not** Yandex gateway validation or HTTP acceptance; `yc` CLI, a staging container/database and credentials are unavailable locally. No cloud state or cost changed (0 ₽). Rollback: discard the candidate; the current gateway and D1 relay are untouched. Once deployed, rollback requires the preserved prior gateway spec and a write freeze/reconciliation for already accepted private transactions.
 
+## Slice 0d: explicit private migration preflight (local)
+
+`npm run db:private-plan` now reports an authoritative read-only list of pending PostgreSQL migrations and their SHA-256 fingerprint. `npm run db:private-apply -- --expect-sha256=…` requires a matching reviewed fingerprint and a recorded backup reference, then rechecks the plan under the migration lock before applying. Unknown or non-prefix migration history stops both paths. Production API startup still does not migrate automatically. This prepares deployment; it does **not** approve an irreversible production migration or certify an actual backup.
+
+**Verified:** two PGlite tests cover plan read-only behavior, missing backup/fingerprint rejection, changed-plan rollback, successful 001–014 application, idempotent re-run and history drift. The existing 23/23 private-core suite also passed after the migration refactor. The CLI has not connected to Yandex PostgreSQL because no cluster/credentials are available. New cost 0 ₽. Rollback: stop before `--apply`; after application, use the verified database backup or a reviewed forward migration, never delete private ledger/audit records to imitate a rollback.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

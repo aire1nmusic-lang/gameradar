@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev:private": "node private-api/serve.mjs --local",
+    "db:private-plan": "node private-api/migrate-cli.mjs --plan",
+    "db:private-apply": "node private-api/migrate-cli.mjs --apply",
     "dev:core-ui": "node scripts/dev-core-ui.mjs",
     "test:private": "node --test tests/private-core.test.mjs",
     "test:seo": "node tests/seo-http.mjs",

@@ -176,6 +176,14 @@ The actual apex serves via Yandex API Gateway/Object Storage, whose current wild
 
 **Verified:** two local tests checked all generated public object keys against the candidate route shape and checked over 100 staging HTML files for `noindex`, with no sitemap. [Yandex Object Storage integration](https://yandex.cloud/ru/docs/api-gateway/concepts/extensions/object-storage) and [greedy path parameters](https://yandex.cloud/en/docs/api-gateway/concepts/extensions/greedy-parameters) were reviewed. Actual gateway spec validation and HTTP responses remain **BLOCKED** on a staged deployment; no cloud resource or cost was added (0 ₽). Rollback: retain the current gateway spec and existing bucket objects; this commit changes only local build/candidate files.
 
+## Slice 0b: Yandex private-container candidate (local)
+
+The private API now has a Node 24 container definition, binds production HTTP to `0.0.0.0:$PORT`, and uses a Yandex timer-invoked, bounded maintenance endpoint instead of relying on background CPU while a Serverless Container is idle. Timer event type, folder, trigger ID and a SHA-256-checked payload are required; the runbook additionally requires a private IAM-only container and excludes the path from public gateways. Migration 014 persists the hourly OpenRouter balance cadence across instances. Yandex's appended caller IP is taken from the last validated `X-Forwarded-For` entry; a spoofed earlier entry cannot influence rate limits. [Topology, costs, inputs and rollback](yandex-private-container.md) are documented. The existing production Yandex gateway still routes API traffic to the old D1 relay; no cutover has happened.
+
+**Verified:** 23/23 private-core tests pass, including bounded mail dispatch, forged timer rejection, scheduler migration and IP-spoof handling. The restarted local API applied migration 014; `/api/v1/health` returned 200 and local `/__internal/maintenance` returned 403. TypeScript check passed. Docker client exists but its daemon is unavailable, so image build and container runtime remain **BLOCKED**. Yandex timer, PostgreSQL, gateway route split, trusted ASN and live projection remain unverified; no new cloud resource or cost (0 ₽).
+
+**Rollback:** restore the previous Node listener/interval code in local development. Migration 014 is additive and contains only a schedule timestamp; retain it if other migrations are already deployed. Production requires separate paid-resource and migration approval plus a tested gateway/backup rollback before any cutover.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

@@ -11,6 +11,8 @@ import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../private-api/copyright.mjs'
 import { checkProjectionLag } from '../private-api/projection-alert.mjs'
 import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
+import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
+import { localClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
@@ -70,6 +72,33 @@ test('email → confirmation → session → reset: atomic, single-use, no raw t
   assert.ok(sessions.every(x=>x.token_hash.length===64&&!login.cookie.includes(x.token_hash)))
   assert.equal((await h.request('/auth/logout',{},login.cookie)).status,200)
   assert.equal((await h.request('/auth/me',undefined,login.cookie)).body.user,null)
+})
+
+test('bounded maintenance drains mail on invocation and rejects forged timer events',async t=>{
+  const secret='maintenance-secret-with-at-least-32-characters',hash=createHash('sha256').update(secret).digest('hex')
+  const event={messages:[{event_metadata:{event_type:'yandex.cloud.events.serverless.triggers.TimerMessage',folder_id:'folder-1'},details:{trigger_id:'timer-1',payload:secret}}]}
+  assert.equal(isMaintenanceEvent(event,'timer-1','folder-1',hash),true)
+  assert.equal(isMaintenanceEvent(event,'timer-2','folder-1',hash),false)
+  assert.equal(isMaintenanceEvent({...event,messages:[...event.messages,...event.messages]},'timer-1','folder-1',hash),false)
+  assert.equal(isMaintenanceEvent(event,undefined,'folder-1',hash),false)
+  assert.equal(isMaintenanceEvent(event,'timer-1','folder-1','f'.repeat(64)),false)
+  const h=await harness(t)
+  await h.request('/auth/register',{email:'maintenance@example.com',password,displayName:'Maintenance'})
+  const sent=[]
+  const options={development:true,onLocalMail:mail=>sent.push(mail),maxPerQueue:2}
+  const first=await runMaintenance(h.db,config,options)
+  assert.equal(first.mail,1)
+  assert.equal(sent[0].to,'maintenance@example.com')
+  assert.equal((await runMaintenance(h.db,config,options)).mail,0)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_mail_outbox WHERE delivered_at IS NOT NULL')).rows[0].n,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_maintenance_schedule WHERE key='openrouter_balance'")).rows[0].n,1)
+})
+
+test('Yandex ingress uses the appended caller IP, not a spoofed first XFF entry',()=>{
+  assert.equal(yandexClientIp({'x-forwarded-for':'1.2.3.4, 203.0.113.19'},'10.0.0.1'),'203.0.113.19')
+  assert.equal(yandexClientIp({'x-forwarded-for':'spoofed, invalid'},'10.0.0.1'),'unknown')
+  assert.equal(yandexClientIp({},'10.0.0.1'),'unknown')
+  assert.equal(localClientIp('127.0.0.1'),'127.0.0.1')
 })
 
 test('expired tokens, concurrent consumption, rate limits and transactional rollback',async t=>{

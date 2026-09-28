@@ -100,10 +100,15 @@ export interface OnlineData {
 /** One stored measurement. The monitoring worker appends these. */
 export interface OnlineSample {
   serverId: string
+  /** When the measurement was true according to its source. */
   at: string
-  players: number
+  players: number | null
   status: OnlineStatus
   latencyMs?: number
+  sourceTier?: 'DIRECT' | 'OFFICIAL' | 'EXTERNAL'
+  sourceName?: string
+  /** When GameScout retrieved this measurement; may differ for cached sources. */
+  fetchedAt?: string
 }
 
 /** Connection details the monitor needs. Not shown to players in full. */

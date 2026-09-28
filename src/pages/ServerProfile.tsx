@@ -43,7 +43,7 @@ import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
 import { LiveDot, STATUS_META, StatusBadge, VerifiedLine } from '@/components/trust/status'
-import { AreaChart } from '@/components/charts/AreaChart'
+import { ObservedHistoryChart } from '@/components/charts/ObservedHistoryChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
@@ -434,8 +434,8 @@ function OnlineSection({ server }: { server: GameServer }) {
   const [range, setRange] = useState<ChartRange>('24h')
   const { status, change24h, peak24h, avg7d, peak30d } = server.online
   const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
-  const { data: samples } = useAsync(() => repo.servers.onlineHistory(server.id, range).catch(() => []), [server.id, range])
-  const data = (samples ?? []).map(sample => sample.players).filter((players): players is number => typeof players === 'number')
+  const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
+    useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range])
 
   if (status === 'PENDING' && server.launch) {
     return (
@@ -541,22 +541,10 @@ function OnlineSection({ server }: { server: GameServer }) {
       )}
 
       <div className="mt-6">
-        {data.length < 2 && (
-          <p className="text-[13px] text-ink-500">История онлайна появится после нескольких проверок за выбранный период.</p>
-        )}
-        <AreaChart
-          data={data}
-          range={range}
-          accent={
-            status === 'VERIFIED'
-              ? 'var(--color-signal-400)'
-              : status === 'OFFLINE'
-                ? 'var(--color-danger-400)'
-                : status === 'ANOMALY'
-                  ? 'var(--color-warn-400)'
-                  : 'var(--color-ink-300)'
-          }
-        />
+        {historyLoading?<p className="text-[13px] text-ink-400">Загрузка истории онлайна…</p>
+          :historyError?<Notice tone="warn" title="История сейчас недоступна">
+            <button type="button" className="underline" onClick={reloadHistory}>Повторить загрузку</button>
+          </Notice>:<ObservedHistoryChart samples={samples??[]} range={range}/>}
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

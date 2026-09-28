@@ -77,6 +77,7 @@ const worker = spawn(
 )
 worker.stdout.pipe(log)
 worker.stderr.pipe(log)
+worker.unref()
 
 async function api(route, { method = 'GET', body, cookie, key, status = 200 } = {}) {
   const response = await fetch(base + route, {
@@ -97,6 +98,10 @@ async function stop() {
   if (process.platform === 'win32') spawnSync('taskkill.exe', ['/PID', String(worker.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' })
   else worker.kill('SIGTERM')
   await new Promise(resolve => setTimeout(resolve, 800))
+  worker.stdout.unpipe(log)
+  worker.stderr.unpipe(log)
+  worker.stdout.destroy()
+  worker.stderr.destroy()
   log.end()
 }
 
@@ -232,5 +237,6 @@ try {
   throw error
 } finally {
   await stop()
+  fixture.closeAllConnections()
   await new Promise(resolve => fixture.close(resolve))
 }

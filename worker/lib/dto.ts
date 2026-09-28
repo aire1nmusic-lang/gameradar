@@ -40,5 +40,5 @@ export function freshness(r:Row):'fresh'|'stale'|'unknown' {
 const TRUST:Record<string,number>={VERIFIED:1,LIVE:0.6,EXTERNAL:0.4,OWNER_REPORTED:0.25}
 /** Sponsored fields are intentionally absent from organic score. */
 export function organicScore(r:Row) { return Math.round((r.players_known&&freshness(r)==='fresh'?Math.min(r.online_current??0,100000)*(TRUST[r.online_status]??0)/100:0)+(r.votes_count??0)*2+(r.owner_id?10:0)+(r.uptime_24h??0)/10) }
-export const sampleDto=(r:Row)=>({serverId:r.server_id,at:r.at,players:r.players_known?r.players:null,status:r.status,latencyMs:r.latency_ms??undefined,sourceTier:r.source_tier??undefined,sourceName:r.source_name??undefined})
+export const sampleDto=(r:Row)=>({serverId:r.server_id,at:r.at,players:r.players_known?r.players:null,status:r.status,latencyMs:r.latency_ms??undefined,sourceTier:r.source_tier??undefined,sourceName:r.source_name??undefined,fetchedAt:r.fetched_at??undefined})
 export const targetDto=(r:Row)=>({serverId:r.server_id,method:r.method,host:r.host??undefined,port:r.port??undefined,apiUrl:r.api_url??undefined,enabled:!!r.enabled})

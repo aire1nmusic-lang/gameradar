@@ -303,15 +303,16 @@ function CardBloom({ flight }: { flight: Flight }) {
 /** The central glass console: one line, search, shortcuts. */
 function GlassConsole({ players }: { players: number }) {
   return (
-    <div className="gs-glass relative z-20 mx-auto w-full max-w-[620px] rounded-3xl px-5 pt-5 pb-4 text-center sm:px-7">
+    <div className="gs-glass relative z-20 mx-auto w-full max-w-[620px] rounded-3xl px-4 pt-4 pb-3.5 text-center sm:px-5">
       {players > 0 && (
         <div className="mb-2 inline-flex items-center gap-2 text-[12.5px] text-white/70">
           <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
           <span className="num">{formatNumber(players)} игроков на серверах прямо сейчас</span>
         </div>
       )}
-      <h1 className="text-[26px] leading-[1.1] font-semibold text-white sm:text-[34px]">Выбери свой мир</h1>
-      <HeroSearch className="mt-4" />
+      {/* No visible title: the hall speaks for itself. Search engines and screen readers still get one. */}
+      <h1 className="sr-only">GameScout — каталог серверов Lineage 2, GTA RP и Minecraft</h1>
+      <HeroSearch className="mt-0" />
       <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
         {QUICK_SEARCHES.map((item) => (
           <Link

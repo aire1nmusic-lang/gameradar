@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { DatasetError, importSql, loadDataset, serverId, validateRecord } from '../scripts/import/dataset.mjs'
+import { DatasetError, cardText, importSql, loadDataset, serverId, validateRecord } from '../scripts/import/dataset.mjs'
 
 const base = {
   key: 'mc:play.example-network.net',
@@ -77,4 +77,8 @@ test('card text is written by GameScout from facts only', () => {
   const { sql } = importSql([validateRecord(base)])
   assert.match(sql, /Карточка собрана GameScout по открытым данным/)
   assert.match(sql, /статус LIVE, а не VERIFIED/)
+  const gta = { ...base, key: 'gta:example-city', game: 'gtarp', chronicle: 'fivem', version: 'FiveM', modes: [] }
+  const gtaWithEndpoint = cardText(validateRecord({ ...gta, endpoint: { method: 'SERVER_API', url: 'http://51.91.1.2:30120/', expectName: 'Example City' } }))
+  assert.match(gtaWithEndpoint.description, /Текущий онлайн появится только после успешного измерения/)
+  assert.doesNotMatch(gtaWithEndpoint.description, /считывает напрямую/)
 })

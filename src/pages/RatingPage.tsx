@@ -12,6 +12,7 @@ import { BoostedStrip, RatingList, RatingPodium } from '@/components/rating/Rati
 import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest } from '@/repositories/http/client'
+import { plural } from '@/lib/format'
 
 type PeopleRow = { server_id: string; slug: string; name: string; game_id: string; votes: number }
 type SupportRow = { server_id: string; slug: string; name: string; game_id: string; coins: number; participants: number }
@@ -56,7 +57,7 @@ function PeopleRatingPage() {
         <Link to={`/server/${row.slug}`} className="surface flex items-center gap-4 rounded-lg p-4 hover:border-white/20">
           <span className="num w-8 text-ink-400">{index + 1}</span>
           <span className="min-w-0 flex-1 truncate font-semibold">{row.name}</span>
-          <span className="num text-sm text-ink-300">{'votes' in row ? `${row.votes} ${row.votes === 1 ? 'голос' : row.votes < 5 ? 'голоса' : 'голосов'}` : `${row.coins} Coins · ${row.participants} участников`}</span>
+          <span className="num text-sm text-ink-300">{'votes' in row ? `${row.votes} ${plural(row.votes, ['голос', 'голоса', 'голосов'])}` : `${row.coins} Coins · ${row.participants} ${plural(row.participants, ['участник', 'участника', 'участников'])}`}</span>
         </Link>
       </li>)}</ol> : <Notice tone="info" className="mt-6">{view==='people'?'В этой игре пока нет голосов в текущем окне.':'В этой игре серверы пока не получили поддержку.'}</Notice>}
   </Container>

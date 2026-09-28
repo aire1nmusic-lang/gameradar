@@ -22,7 +22,12 @@ if (development) {
     keys={mailKey:randomBytes(32).toString('hex'),rateKey:randomBytes(32).toString('hex')}
     await writeFile('output/private-core/keys.json',JSON.stringify(keys),{flag:'wx'})
   }
-  config={...keys,origin:'http://127.0.0.1:5173',environment:'development',mailEnabled:true,publicApi:'http://127.0.0.1:8787'}
+  const localProjectionSecret=process.env.LOCAL_PUBLIC_PROJECTION_SECRET
+  if(localProjectionSecret && localProjectionSecret.length<16) throw new Error('LOCAL_PUBLIC_PROJECTION_SECRET_too_short')
+  config={...keys,origin:'http://127.0.0.1:5173',environment:'development',mailEnabled:true,
+    publicApi:'http://127.0.0.1:8787',
+    ...(localProjectionSecret?{publicProjection:'http://127.0.0.1:8787/api/internal/public-projection',
+      projectionSecret:localProjectionSecret}:{})}
   await migrate(db)
 } else {
   if (!process.env.DATABASE_URL || (!process.env.PG_CA_FILE && !process.env.PG_CA_PEM)) throw new Error('DATABASE_URL_and_PostgreSQL_CA_required')

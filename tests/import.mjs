@@ -220,8 +220,16 @@ try {
   writeFileSync(path.join(runDir, 'result.json'), JSON.stringify({ passed: false, checks: results, error: String(error) }, null, 2))
   throw error
 } finally {
-  if (process.platform === 'win32') spawnSync('taskkill.exe', ['/PID', String(worker.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' })
-  else worker.kill('SIGTERM')
+  if (process.platform === 'win32') {
+    const stopped=spawnSync('taskkill.exe', ['/PID', String(worker.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' })
+    if(stopped.status!==0)worker.kill('SIGTERM')
+  } else worker.kill('SIGTERM')
   await new Promise(resolve => setTimeout(resolve, 800))
+  // Wrangler can leave inherited pipes open on Windows after its process tree exits.
+  worker.stdout.unpipe(log)
+  worker.stderr.unpipe(log)
+  worker.stdout.destroy()
+  worker.stderr.destroy()
+  worker.unref()
   log.end()
 }

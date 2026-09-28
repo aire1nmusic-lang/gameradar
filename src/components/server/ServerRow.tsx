@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCountdown, formatDate, formatPlayers, formatSeconds } from '@/lib/format'
+import { formatCountdown, formatDate, formatPlayers, formatSeconds, plural } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { GameServer } from '@/models'
@@ -91,7 +91,7 @@ export function ServerRow({
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
         <div className="mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
-        {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} участников</div>}
+        {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
       </div>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (

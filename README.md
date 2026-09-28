@@ -317,6 +317,7 @@ GameScout пишет сам по фактам.
 
 ```bash
 npm run import:check                                  # проверить датасет, БД не трогать
+npm run import:servers -- --games lineage2,minecraft,gtarp # только три игры ядра, локальная D1
 npm run import:servers -- --hide-demo                 # локальная D1 (.wrangler/state)
 npm run import:probe                                  # опросить endpoint'ы датасета кодом адаптеров
 npm run import:servers -- --remote --config <prod wrangler.toml>          # план, без записи
@@ -327,7 +328,8 @@ npm run import:servers -- --remote --config <prod wrangler.toml> --yes    # за
 только если изменился факт. Карточку с подтверждённым владельцем импорт не перезаписывает.
 `--hide-demo` переводит DEMO-карточки в `ARCHIVED` (они остаются в БД, dev-seed не меняется),
 `--show-demo` возвращает их, `--archive-missing` скрывает импортированные карточки,
-которых больше нет в датасете.
+которых больше нет в датасете. В сочетании с `--games` флаг `--archive-missing`
+затрагивает только выбранные игры; `--hide-demo` скрывает все DEMO-карточки.
 
 ### Источники онлайна и модель доверия
 

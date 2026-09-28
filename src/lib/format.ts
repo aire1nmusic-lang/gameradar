@@ -83,9 +83,12 @@ export function formatTime(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-/** "3 года" / "8 месяцев" — how long a project has been running. */
+/** Elapsed time since opening, without rounding a few days up to a month. */
 export function formatAge(iso: string, now = Date.now()): string {
-  const months = Math.max(1, Math.round((now - new Date(iso).getTime()) / (1000 * 60 * 60 * 24 * 30.4)))
+  const days = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 86_400_000))
+  if (days === 0) return 'сегодня'
+  if (days < 30) return `${days} ${plural(days, ['день', 'дня', 'дней'])}`
+  const months = Math.max(1, Math.floor(days / 30.4))
   if (months < 12) return `${months} ${plural(months, ['месяц', 'месяца', 'месяцев'])}`
   const years = Math.floor(months / 12)
   return `${years} ${plural(years, ['год', 'года', 'лет'])}`

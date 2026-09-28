@@ -8,6 +8,7 @@
  *                                                 production D1; without --yes only the plan is printed
  *
  * Other flags: --persist-to <dir>, --dry-run (write SQL + plan only),
+ * --games lineage2,minecraft,gtarp (limit this run to named games),
  * --include-likely (also import records confirmed by a single source),
  * --archive-missing (archive imported cards no longer in the dataset),
  * --show-demo (undo --hide-demo).
@@ -25,6 +26,12 @@ const option = name => {
   const index = args.indexOf(name)
   return index >= 0 ? args[index + 1] : undefined
 }
+const coreGames = new Set(['lineage2', 'minecraft', 'gtarp', 'rust', 'cs2', 'dayz'])
+const gameOption = option('--games')
+if (flag('--games') && (!gameOption || gameOption.startsWith('--'))) throw new Error('--games requires a comma-separated list')
+const selectedGames = gameOption ? new Set(gameOption.split(',').map(value => value.trim()).filter(Boolean)) : null
+if (selectedGames && (!selectedGames.size || [...selectedGames].some(game => !coreGames.has(game))))
+  throw new Error('--games contains an unknown game')
 
 let records
 try {
@@ -69,8 +76,9 @@ function query(sql) {
   return parsed.flatMap(result => result.results ?? [])
 }
 
-const importable = records.filter(record => record.confidence === 'confirmed' || flag('--include-likely'))
-const existing = query('SELECT id, slug, import_key, is_demo, moderation, owner_id FROM servers')
+const eligible = selectedGames ? records.filter(record => selectedGames.has(record.game)) : records
+const importable = eligible.filter(record => record.confidence === 'confirmed' || flag('--include-likely'))
+const existing = query('SELECT id, slug, game_id, import_key, is_demo, moderation, owner_id FROM servers')
 const chronicles = query('SELECT id, game_id FROM chronicles')
 const games = new Set(query('SELECT id FROM games').map(row => row.id))
 for (const game of new Set(importable.map(record => record.game))) {
@@ -81,7 +89,8 @@ for (const game of new Set(importable.map(record => record.game))) {
 }
 
 const wanted = new Set(importable.map(serverId))
-const missing = existing.filter(row => row.import_key && !wanted.has(row.id) && row.moderation === 'PUBLISHED')
+const missing = existing.filter(row => row.import_key && (!selectedGames || selectedGames.has(row.game_id))
+  && !wanted.has(row.id) && row.moderation === 'PUBLISHED')
 const { sql, plan } = importSql(importable, {
   existing,
   chronicles,
@@ -99,8 +108,9 @@ writeFileSync(sqlFile.replace(/\.sql$/, '.plan.json'), JSON.stringify(plan, null
 
 const inserts = plan.filter(item => item.action === 'insert').length
 console.log(`\nTarget: ${remote ? 'REMOTE (production) D1' : 'local D1 ' + persistTo}`)
+console.log(`Games: ${selectedGames ? [...selectedGames].join(', ') : 'all dataset games'}`)
 console.log(`Plan: ${plan.length} records — ${inserts} new, ${plan.length - inserts} existing (updated only if a fact changed)`)
-console.log(`Skipped (confidence: likely — use --include-likely): ${records.length - importable.length}`)
+console.log(`Skipped (confidence: likely — use --include-likely): ${eligible.length - importable.length}`)
 if (missing.length) console.log(`Imported cards no longer in the dataset: ${missing.map(row => row.id).join(', ')}${flag('--archive-missing') ? ' — archiving' : ' — kept (use --archive-missing)'}`)
 const demo = existing.filter(row => row.is_demo)
 if (demo.length) console.log(`DEMO cards: ${demo.length} (${demo.filter(row => row.moderation === 'PUBLISHED').length} published)${flag('--hide-demo') ? ' — hiding' : ''}${flag('--show-demo') ? ' — showing' : ''}`)

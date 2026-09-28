@@ -286,7 +286,7 @@ export function cardText(record) {
     const facts = [record.modes.length && `Режимы: ${record.modes.join(', ')}.`, record.version && `Версии: ${record.version}.`, record.endpoint && `Адрес: ${record.endpoint.host}${record.endpoint.port ? ':' + record.endpoint.port : ''}.`].filter(Boolean)
     return {
       summary: `Minecraft Java${record.modes.length ? ' · ' + record.modes.slice(0, 3).join(', ') : ''}`,
-      description: `Сервер Minecraft Java Edition. ${facts.join(' ')} ${provenance} Онлайн — ответ сервера на Server List Ping: число игроков сообщает сам сервер, поэтому статус LIVE, а не VERIFIED. Если прямая проверка не проходит, показывается число стороннего мониторинга с указанием источника.`,
+      description: `Сервер Minecraft Java Edition. ${facts.join(' ')} ${provenance} При успешной прямой проверке онлайн берётся из Server List Ping: число игроков сообщает сам сервер, поэтому статус LIVE, а не VERIFIED. Доступный сторонний мониторинг показывается только с указанием источника.`,
     }
   }
   if (['rust', 'cs2', 'dayz'].includes(record.game)) {
@@ -300,8 +300,8 @@ export function cardText(record) {
   }
   const platform = PLATFORM[record.chronicle] ?? record.version
   const monitoring = record.endpoint
-    ? 'Онлайн GameScout считывает напрямую с endpoint сервера (players.json).'
-    : 'Прямой endpoint сервера не опубликован — онлайн не измеряется.'
+    ? 'Для прямой проверки указан endpoint сервера (players.json). Текущий онлайн появится только после успешного измерения.'
+    : 'Прямой endpoint сервера не опубликован; текущий онлайн не указан.'
   return {
     summary: `GTA V RP · ${platform}`,
     description: `Ролевой сервер GTA V на платформе ${platform}. ${provenance} ${monitoring}`,

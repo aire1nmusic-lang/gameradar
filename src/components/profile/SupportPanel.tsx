@@ -3,6 +3,7 @@ import type { GameServer } from '@/models'
 import { apiRequest } from '@/repositories/http/client'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
+import { plural } from '@/lib/format'
 
 type Summary={coins:number;participants:number;recent:Array<{public_nick:string;anonymous:boolean;coins:number;created_at:string}>}
 type Wallet={balance:number;nominalRub:number}
@@ -67,7 +68,7 @@ export function SupportPanel({server}:{server:GameServer}) {
   }
   return <section className="surface space-y-3 rounded-xl p-5 sm:p-6" id="support">
     <h2 className="text-[18px]">Поддержка</h2>
-    <p className="text-[15px]">Поддержка: <strong>{summary?.coins ?? '—'}</strong> · {summary?.participants ?? '—'} участников</p>
+    <p className="text-[15px]">Поддержка: <strong>{summary?.coins ?? '—'}</strong> · {summary?.participants ?? '—'} {summary ? plural(summary.participants, ['участник', 'участника', 'участников']) : 'участников'}</p>
     <p className="text-[13px] text-ink-400">Отдельная сортировка за GS Coins. Карточки одинаковые; поддержка не влияет на Народный рейтинг. Номинал: 1 Coin = 50 ₽.</p>
     {summary?.recent.length ? <div className="space-y-1 border-t border-white/7 pt-3">
       <h3 className="text-[13px] text-ink-300">Последние поддержавшие</h3>

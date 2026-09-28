@@ -267,6 +267,36 @@ test('People rating: verified accounts only, rolling window, idempotency and ris
   assert.equal((await h.db.query('SELECT count(*)::int n FROM gs_votes')).rows[0].n,3)
 })
 
+test('vote review excludes one vote without deletion, preserves repeat guard and permits audited restore',async t=>{
+  const h=await harness(t),player=await h.register(),moderator=await h.register('vote-mod@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'MODERATOR')",[moderator.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('review-mc','minecraft','Review MC','review-mc')")
+  const headers={'Idempotency-Key':'v'.repeat(32)}
+  const payload={serverId:'review-mc',deviceSignal:'review_device_12345',pageAgeMs:5000}
+  const cast=await h.request('/people-rating/votes',payload,player.cookie,headers)
+  assert.equal(cast.status,201)
+  const id=cast.body.id,path=`/admin/votes/${id}/review`
+  const decision={action:'VOID',reason:'Подтверждённая аномалия сигналов голосования'}
+  assert.equal((await h.request(path,decision,player.cookie)).status,403)
+  assert.equal((await h.request('/admin/votes',undefined,player.cookie)).status,403)
+  assert.equal((await h.request(path,decision,moderator.cookie)).status,200)
+  assert.equal((await h.request(path,decision,moderator.cookie)).body.changed,false)
+  assert.equal((await h.request('/people-rating')).body.find(r=>r.server_id==='review-mc').votes,0)
+  assert.equal((await h.request('/people-rating/votes',payload,player.cookie,headers)).body.accepted,false)
+  assert.equal((await h.request('/people-rating/eligibility?serverId=review-mc',undefined,player.cookie)).body.eligible,false)
+  assert.equal((await h.request('/admin/votes',undefined,moderator.cookie)).body[0].review_status,'VOIDED')
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_votes')).rows[0].n,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='vote.void'")).rows[0].n,1)
+  assert.equal((await h.request(path,{action:'RESTORE',reason:'Повторная проверка оправдала голос'},moderator.cookie)).body.changed,true)
+  assert.equal((await h.request('/people-rating')).body.find(r=>r.server_id==='review-mc').votes,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='vote.restore'")).rows[0].n,1)
+  await h.db.query(`CREATE FUNCTION fail_vote_audit() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN IF NEW.action='vote.void' THEN RAISE EXCEPTION 'test'; END IF; RETURN NEW; END $$`)
+  await h.db.query('CREATE TRIGGER fail_vote_audit BEFORE INSERT ON gs_audit FOR EACH ROW EXECUTE FUNCTION fail_vote_audit()')
+  assert.equal((await h.request(path,decision,moderator.cookie)).status,500)
+  assert.equal((await h.db.query('SELECT review_status FROM gs_votes WHERE id=$1',[id])).rows[0].review_status,'ACCEPTED')
+})
+
 test('vote risk: missing/fast signals and ASN threshold require a real server-validated challenge',async t=>{
   const h=await harness(t,{config:{turnstileSecret:'test-secret',turnstileSiteKey:'test-site'},
     captchaVerify:async token=>({success:token==='valid',hostname:'127.0.0.1',action:'vote'})})

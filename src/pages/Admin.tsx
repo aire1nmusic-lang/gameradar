@@ -112,7 +112,18 @@ export default function Admin() {
             <div className="flex gap-2">{(['VERIFIED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
           </>}
-          {active.id==='votes'&&<><strong>{value(row,'server_id')}</strong><p>Голос {value(row,'id')} · пользователь {value(row,'user_id')} · ASN {value(row,'asn')} · {date(row,'created_at')}</p></>}
+          {active.id==='votes'&&<><strong>{value(row,'server_id')} · {row.review_status==='VOIDED'?'Исключён из рейтинга':'Учитывается'}</strong>
+            <p className="break-words">Голос {value(row,'id')} · пользователь {value(row,'user_id')} · ASN {value(row,'asn')} · {date(row,'created_at')}</p>
+            {row.review_reason&&<p className="text-ink-400">Последнее решение: {value(row,'review_reason')} · {date(row,'reviewed_at')}</p>}
+            {permissions.includes('votes.manage')&&row.user_id!==auth.user?.id&&<div className="space-y-2">
+              <Textarea aria-label={`Основание проверки голоса ${value(row,'id')}`} minLength={10} maxLength={1000}
+                value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+              <Button variant="outline" disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
+                onClick={()=>void act(()=>apiSend(`/admin/votes/${encodeURIComponent(value(row,'id'))}/review`,
+                  {action:row.review_status==='VOIDED'?'RESTORE':'VOID',reason:reasons[value(row,'id')]}))}>
+                {row.review_status==='VOIDED'?'Восстановить голос':'Исключить голос'}</Button>
+            </div>}
+          </>}
           {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p></>}
           {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p></>}
           {active.id==='payments'&&<><strong>Тестовый заказ {value(row,'id')} · {value(row,'status')}</strong><p>{value(row,'coins')} Coins · {Number(row.amount_kopecks)/100} ₽ · пользователь {value(row,'user_id')} · {date(row,'created_at')}</p></>}

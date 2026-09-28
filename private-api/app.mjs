@@ -428,7 +428,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       fail(400,'invalid_page','Некорректная страница рейтинга')
     return c.json((await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,count(v.id)::integer AS votes
       FROM gs_server_registry r LEFT JOIN gs_votes v ON v.server_id=r.server_id
-        AND v.created_at>now()-($1*interval '1 hour')
+        AND v.review_status='ACCEPTED' AND v.created_at>now()-($1*interval '1 hour')
       GROUP BY r.server_id ORDER BY votes DESC,r.server_id LIMIT $2 OFFSET $3`,[rules.window_hours,limit,offset])).rows)
   })
   app.get('/api/v1/people-rating/eligibility',async c=>{
@@ -447,8 +447,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const asn=typeof c.env?.clientAsn==='string' && /^\d{1,10}$/.test(c.env.clientAsn)?c.env.clientAsn:null
     const pageAgeMs=Number.isSafeInteger(body.pageAgeMs) && body.pageAgeMs>=0 && body.pageAgeMs<=86400000?body.pageAgeMs:null
     await limit(c,'vote',user.id,20)
-    const existing=(await db.query('SELECT id,server_id FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
-    if(existing) { if(existing.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован для другого сервера');return c.json({id:existing.id,accepted:true,replay:true}) }
+    const existing=(await db.query('SELECT id,server_id,review_status FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+    if(existing) { if(existing.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован для другого сервера');return c.json({id:existing.id,accepted:existing.review_status==='ACCEPTED',replay:true}) }
     const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
     const totals=(await db.query(`SELECT
       count(*) FILTER(WHERE ip_hash=$1 AND created_at>now()-interval '1 day')::integer AS ip_count,
@@ -471,8 +471,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const result=await db.transaction(async tx=>{
       // Serialize a user's votes to this card even if two requests hit different replicas.
       await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${user.id}:${serverId}`])
-      const replay=(await tx.query('SELECT id,server_id FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
-      if(replay) { if(replay.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован'); return {id:replay.id,replay:true} }
+      const replay=(await tx.query('SELECT id,server_id,review_status FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
+      if(replay) { if(replay.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован'); return {id:replay.id,replay:true,accepted:replay.review_status==='ACCEPTED'} }
       const server=(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows[0]
       if(!server) fail(404,'not_found','Сервер не найден')
       const count=(await tx.query(`SELECT count(*)::integer AS n FROM gs_votes WHERE user_id=$1 AND server_id=$2
@@ -481,9 +481,9 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const id=token()
       await tx.query('INSERT INTO gs_votes(id,server_id,user_id,idempotency_key,device_hash,ip_hash,asn) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,serverId,user.id,idem,deviceHash,ipHash,asn])
       await audit(tx,user.id,'vote.accepted',id,{serverId})
-      return {id,replay:false}
+      return {id,replay:false,accepted:true}
     })
-    return c.json({id:result.id,accepted:true,replay:result.replay},result.replay?200:201)
+    return c.json({id:result.id,accepted:result.accepted,replay:result.replay},result.replay?200:201)
   })
   app.get('/api/v1/coins/me',async c=>{
     const user=await requireUser(c)
@@ -729,8 +729,26 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/votes',async c=>{
     await permission(c,'votes.read')
-    return c.json((await db.query(`SELECT id,server_id,user_id,asn,created_at FROM gs_votes
+    return c.json((await db.query(`SELECT id,server_id,user_id,asn,created_at,review_status,review_reason,reviewed_at FROM gs_votes
       ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/votes/:id/review',async c=>{
+    const reviewer=await permission(c,'votes.manage'),body=await json(c)
+    const action=body.action,reason=textOf(body.reason,10,1000)
+    if(!['VOID','RESTORE'].includes(action)) fail(400,'invalid_action','Укажите действие')
+    const result=await db.transaction(async tx=>{
+      const vote=(await tx.query('SELECT id,user_id,server_id,review_status FROM gs_votes WHERE id=$1 FOR UPDATE',
+        [c.req.param('id')])).rows[0]
+      if(!vote)fail(404,'not_found','Голос не найден')
+      if(vote.user_id===reviewer.id)fail(403,'self_review','Нельзя проверять собственный голос')
+      const status=action==='VOID'?'VOIDED':'ACCEPTED'
+      if(vote.review_status===status)return {changed:false,status}
+      await tx.query(`UPDATE gs_votes SET review_status=$1,reviewed_by=$2,review_reason=$3,reviewed_at=now()
+        WHERE id=$4`,[status,reviewer.id,reason,vote.id])
+      await audit(tx,reviewer.id,`vote.${action.toLowerCase()}`,vote.id,{serverId:vote.server_id,reason})
+      return {changed:true,status}
+    })
+    return c.json(result)
   })
   app.get('/api/v1/admin/vote-rules',async c=>{
     await permission(c,'votes.read')

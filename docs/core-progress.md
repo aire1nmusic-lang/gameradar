@@ -162,12 +162,20 @@ Private migration `012_owner_modes_country.sql` extends the same Claim-scoped, h
 
 **Verified:** all 20 private-core tests pass, including the new mode/country approvals, invalid mode rejection, public allowlist and actual SQLite version-gated write. TypeScript check passes; local private API restarted and applied migration 012. No live provider or deployed projection check occurred, and no new cloud resource/cost was added (0 ₽). Rollback: stop submissions and revert application code while retaining decisions/audit/outbox; correct approved facts with a new reviewed version. No production migration was applied.
 
+## Slice 5f: audited user moderation (local)
+
+Private migration `013_user_moderation.sql` gives only ADMIN the `users.manage` permission. The admin user list can block or unblock a non-admin account with a required reason. A block locks the user row, records `banned_at`, removes active sessions and writes an audit event in one PostgreSQL transaction. Existing votes, Claims, Support, Coins, payments and ledger stay intact. Repeated action is a no-op without duplicate audit; unblocking never revives a revoked session. Self-blocking and blocking another ADMIN through this route are denied.
+
+**Verified:** targeted moderation test and the full 21/21 private-core suite passed, including session invalidation, role boundaries, one audit event per transition, retained ledger and fresh login after unblocking. TypeScript check passed; local private API restarted with migration 013. Authenticated admin browser interaction and deployed Yandex acceptance remain open. No new cloud resource or cost (0 ₽).
+
+**Rollback:** disable the UI/API route or revert code while retaining `banned_at` and audit history. A mistaken block is reversed by an audited UNBAN, followed by a new login; never restore a revoked session or erase the original event. Migration 013 is additive and has not run in production.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
-5. Complete other server/user admin actions and owner fields (chronicle, links, media and monitoring), copyright and AI settings. Reviewed summary and six factual fields do not complete stage 5 acceptance.
+5. Complete other server/user admin actions and owner fields (chronicle, links, media and monitoring), copyright and AI settings. Reviewed summary, six factual fields and user moderation do not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP 404 and shared-state API checks pass, but production acceptance has not been verified.
 

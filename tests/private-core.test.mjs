@@ -365,6 +365,28 @@ test('admin roles enforce section permissions and audit role changes',async t=>{
   assert.deepEqual(audit.map(x=>x.action),['role.grant','role.revoke'])
 })
 
+test('user moderation revokes sessions, preserves ledger and requires ADMIN audit',async t=>{
+  const h=await harness(t),admin=await h.register('ban-admin@example.com'),player=await h.register('ban-player@example.com'),moderator=await h.register('ban-moderator@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'MODERATOR')",[admin.user.id,moderator.user.id])
+  assert.equal((await h.request('/__dev/coins',{coins:5},player.cookie,{'Idempotency-Key':'b'.repeat(32)})).status,201)
+  const ledgerBefore=(await h.db.query('SELECT count(*)::integer n FROM gs_coin_ledger WHERE user_id=$1',[player.user.id])).rows[0].n
+  const path=`/admin/users/${player.user.id}/moderation`,reason='Повторное нарушение правил площадки'
+  assert.equal((await h.request(path,{action:'BAN',reason},moderator.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${admin.user.id}/moderation`,{action:'BAN',reason},admin.cookie)).status,403)
+  const ban=await h.request(path,{action:'BAN',reason},admin.cookie)
+  assert.equal(ban.status,200);assert.equal(ban.body.banned,true)
+  assert.equal((await h.request(path,{action:'BAN',reason},admin.cookie)).body.replay,true)
+  assert.equal((await h.request('/auth/me',undefined,player.cookie)).body.user,null)
+  assert.equal((await h.request('/auth/login',{email:'ban-player@example.com',password})).status,401)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_coin_ledger WHERE user_id=$1',[player.user.id])).rows[0].n,ledgerBefore)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE target=$1 AND action='user.ban'",[player.user.id])).rows[0].n,1)
+  const unban=await h.request(path,{action:'UNBAN',reason:'Апелляция рассмотрена и удовлетворена'},admin.cookie)
+  assert.equal(unban.status,200);assert.equal(unban.body.banned,false)
+  assert.equal((await h.request('/auth/me',undefined,player.cookie)).body.user,null)
+  assert.equal((await h.request('/auth/login',{email:'ban-player@example.com',password})).status,200)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE target=$1 AND action='user.unban'",[player.user.id])).rows[0].n,1)
+})
+
 test('ambiguous nickname review never reverses Support or ledger; AI and manual decisions are scoped',async t=>{
   const h=await harness(t),player=await h.register('nickname@example.com'),admin=await h.register('nick-admin@example.com')
   await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'MODERATOR')",[admin.user.id])

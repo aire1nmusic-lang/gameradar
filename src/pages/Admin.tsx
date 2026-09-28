@@ -70,12 +70,17 @@ export default function Admin() {
       {!['overview','system'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
         {!rows.length&&<p className="text-ink-400">В этом разделе пока нет записей.</p>}
         {rows.map((row,index)=><article key={value(row,'id')==='—'?`${active.id}-${index}`:value(row,'id')} className="surface space-y-2 rounded-xl p-4 text-sm">
-          {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {date(row,'created_at')}</p>
+          {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {row.banned_at?'Заблокирован':'Активен'} · {date(row,'created_at')}</p>
             <p className="break-all text-xs text-ink-400">ID {value(row,'id')} · роли: {Array.isArray(row.roles)&&row.roles.length?row.roles.join(', '):'PLAYER'}</p>
             {permissions.includes('roles.manage')&&row.id!==auth.user?.id&&<div className="flex flex-wrap gap-2">{(['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'] as const).map(role=>{
               const has=Array.isArray(row.roles)&&row.roles.includes(role)
               return <Button key={role} variant="outline" disabled={busy} onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/roles`,{role,action:has?'REVOKE':'GRANT'}))}>{has?'Снять':'Дать'} {role}</Button>
             })}</div>}
+            {permissions.includes('users.manage')&&row.id!==auth.user?.id&&!(Array.isArray(row.roles)&&row.roles.includes('ADMIN'))&&<div className="space-y-2">
+              <Textarea aria-label={`Основание модерации пользователя ${value(row,'display_name')}`} minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+              <Button variant="outline" disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
+                onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/moderation`,{action:row.banned_at?'UNBAN':'BAN',reason:reasons[value(row,'id')]}))}>{row.banned_at?'Разблокировать':'Заблокировать'}</Button>
+            </div>}
           </>}
           {active.id==='servers'&&<><strong>{value(row,'name')}</strong><p>{value(row,'game_id')} · {value(row,'server_id')} · владелец: {value(row,'owner_id')} · Claims: {value(row,'pending_claims')}</p></>}
           {active.id==='server-edits'&&<><strong>{value(row,'name')} · {value(row,'game_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'summary')}</p>

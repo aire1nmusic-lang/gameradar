@@ -585,6 +585,25 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       FROM gs_users u LEFT JOIN gs_user_roles ur ON ur.user_id=u.id
       GROUP BY u.id ORDER BY u.created_at DESC LIMIT 100`)).rows)
   })
+  app.post('/api/v1/admin/users/:id/moderation',async c=>{
+    const admin=await permission(c,'users.manage'),body=await json(c)
+    const action=body.action,reason=textOf(body.reason,10,1000),userId=c.req.param('id')
+    if(!['BAN','UNBAN'].includes(action))fail(400,'invalid_action','Укажите действие')
+    if(userId===admin.id)fail(403,'self_moderation','Нельзя блокировать собственный аккаунт')
+    const result=await db.transaction(async tx=>{
+      const target=(await tx.query('SELECT id,banned_at FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
+      if(!target)fail(404,'not_found','Пользователь не найден')
+      if((await tx.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[userId])).rows.length)
+        fail(403,'admin_protected','Блокировка ADMIN через этот API запрещена')
+      const banned=!!target.banned_at
+      if((action==='BAN')===banned)return {ok:true,replay:true,banned}
+      await tx.query('UPDATE gs_users SET banned_at=$1 WHERE id=$2',[action==='BAN'?new Date():null,userId])
+      if(action==='BAN')await tx.query('DELETE FROM gs_sessions WHERE user_id=$1',[userId])
+      await audit(tx,admin.id,`user.${action.toLowerCase()}`,userId,{reason})
+      return {ok:true,replay:false,banned:action==='BAN'}
+    })
+    return c.json(result)
+  })
   app.post('/api/v1/admin/users/:id/roles',async c=>{
     const admin=await permission(c,'roles.manage'),body=await json(c)
     if(!['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'].includes(body.role)||!['GRANT','REVOKE'].includes(body.action))

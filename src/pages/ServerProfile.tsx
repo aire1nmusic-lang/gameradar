@@ -130,20 +130,26 @@ function ServerNotFound() {
 
 function Profile({ server: source }: { server: GameServer }) {
   const { privateCore } = useAuth()
-  const [restrictedLinks,setRestrictedLinks]=useState<string[]|null>(null)
+  const [restrictions,setRestrictions]=useState<{restrictedLinks:string[];restrictedMaterials:string[]}|null>(null)
   useEffect(()=>{
     if(!privateCore)return
-    let live=true;setRestrictedLinks(null)
-    apiRequest<{restrictedLinks:string[]}>(`/copyright/restrictions/${encodeURIComponent(source.id)}`)
-      .then(result=>{if(live)setRestrictedLinks(result.restrictedLinks)})
-      .catch(()=>{if(live)setRestrictedLinks(null)})
+    let live=true;setRestrictions(null)
+    apiRequest<{restrictedLinks:string[];restrictedMaterials:string[]}>(`/copyright/restrictions/${encodeURIComponent(source.id)}`)
+      .then(result=>{if(live)setRestrictions(result)})
+      .catch(()=>{if(live)setRestrictions(null)})
     return()=>{live=false}
   },[privateCore,source.id])
-  // Hide every outbound link until the private restriction gate answers; failures stay closed.
-  const server=privateCore?{...source,links:{...source.links,
-    site:restrictedLinks&&!restrictedLinks.includes('site')?source.links.site:'',
-    discord:restrictedLinks&&!restrictedLinks.includes('discord')?source.links.discord:'',
-    telegram:restrictedLinks&&!restrictedLinks.includes('telegram')?source.links.telegram:undefined}}:source
+  // Hide restricted material while the private gate is pending or unavailable.
+  const descriptionRestricted=!!source.descriptionRestricted || !restrictions || restrictions.restrictedMaterials.includes('description')
+  const server=privateCore?{...source,
+    summary:descriptionRestricted?'':source.summary,
+    description:descriptionRestricted?'':source.description,
+    highlights:descriptionRestricted?[]:source.highlights,
+    descriptionRestricted,
+    links:{...source.links,
+      site:restrictions&&!restrictions.restrictedLinks.includes('site')?source.links.site:'',
+      discord:restrictions&&!restrictions.restrictedLinks.includes('discord')?source.links.discord:'',
+      telegram:restrictions&&!restrictions.restrictedLinks.includes('telegram')?source.links.telegram:undefined}}:source
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
@@ -344,7 +350,7 @@ function Profile({ server: source }: { server: GameServer }) {
           <aside className="space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <TrustPanel online={server.online} />
-              <LinksCard server={server} restricted={restrictedLinks??[]} />
+              <LinksCard server={server} restricted={restrictions?.restrictedLinks??[]} />
               <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />
             </div>
           </aside>
@@ -608,7 +614,9 @@ function InfoSection({ server }: { server: GameServer }) {
   return (
     <section className="surface rounded-xl p-5 sm:p-6">
       <h2 className="text-[18px]">Информация</h2>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.description || 'Описание проекта не добавлено.'}</p>
+      <p id="description" className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.descriptionRestricted
+        ? 'Описание временно скрыто на время проверки обращения правообладателя.'
+        : server.description || 'Описание проекта не добавлено.'}</p>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {server.highlights.map((item) => (

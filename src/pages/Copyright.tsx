@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input, Textarea } from '@/components/ui/controls'
 
 export default function Copyright() {
-  useSeo({title:'Правообладателям',description:'Как сообщить GameScout о спорной ссылке на странице игрового сервера.',path:'/copyright'})
+  useSeo({title:'Правообладателям',description:'Как сообщить GameScout о спорной ссылке или описании игрового сервера.',path:'/copyright'})
   const auth=useAuth()
   const [serverId,setServerId]=useState(()=>new URLSearchParams(location.search).get('serverId')??'')
   const [materialKey,setMaterialKey]=useState('site'),[materialUrl,setMaterialUrl]=useState('')
@@ -24,17 +24,18 @@ export default function Copyright() {
   }
   return <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
     <h1 className="text-3xl font-semibold">Правообладателям</h1>
-    <p className="text-ink-300">Если конкретная внешняя ссылка в карточке сервера затрагивает ваши права, укажите её и основание претензии. Мы проверим полноту обращения и передадим его на ручную проверку. Спорная ссылка может быть временно скрыта; карточка сервера автоматически не удаляется. AI помогает распределить обращения, но не принимает окончательное юридическое решение.</p>
-    <p className="text-sm text-ink-400">Сейчас форма принимает претензии к ссылкам «сайт», Discord и Telegram. Приём претензий к другим материалам ещё не подключён.</p>
+    <p className="text-ink-300">Если конкретная внешняя ссылка или описание в карточке сервера затрагивает ваши права, укажите материал и основание претензии. Мы проверим полноту обращения и передадим его на ручную проверку. Спорный материал может быть временно скрыт; карточка сервера автоматически не удаляется. AI помогает распределить обращения, но не принимает окончательное юридическое решение.</p>
+    <p className="text-sm text-ink-400">Форма принимает претензии к ссылкам «сайт», Discord, Telegram и к текстовому описанию сервера. Для другого материала обратитесь к администратору.</p>
     {!auth.privateCore?<p className="surface rounded-xl p-4 text-ink-400">Приём обращений в этом окружении ещё не подключён.</p>:<form onSubmit={e=>void submit(e)} className="surface space-y-4 rounded-xl p-5 sm:p-6">
       <h2 className="text-xl">Подать обращение</h2>
       <Field label="Ваше имя или организация"><Input required maxLength={120} value={claimantName} onChange={e=>setClaimantName(e.target.value)}/></Field>
       <Field label="Контактный email для уточнений"><Input type="email" required maxLength={254} value={contactEmail} onChange={e=>setContactEmail(e.target.value)}/></Field>
       <Field label="ID сервера"><Input required maxLength={100} value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
-      <label className="block space-y-1 text-sm">Спорная ссылка<select required value={materialKey} onChange={e=>setMaterialKey(e.target.value)} className="block w-full rounded-md border border-white/15 bg-ink-900 p-2 text-ink-50">
-        <option value="site">Сайт проекта</option><option value="discord">Discord</option><option value="telegram">Telegram</option>
+      <label className="block space-y-1 text-sm">Спорный материал<select required value={materialKey} onChange={e=>setMaterialKey(e.target.value)} className="block w-full rounded-md border border-white/15 bg-ink-900 p-2 text-ink-50">
+        <option value="site">Сайт проекта</option><option value="discord">Discord</option><option value="telegram">Telegram</option><option value="description">Описание сервера</option>
       </select></label>
-      <Field label="Точный URL спорной ссылки"><Input type="url" required maxLength={2048} value={materialUrl} onChange={e=>setMaterialUrl(e.target.value)}/></Field>
+      <Field label="Точный URL спорного материала"><Input type="url" required maxLength={2048} value={materialUrl} onChange={e=>setMaterialUrl(e.target.value)}/></Field>
+      {materialKey==='description'&&<p className="text-xs text-ink-400">Укажите адрес страницы сервера вида https://gamescout.online/server/имя-сервера#description. Ограничение затронет только текст описания.</p>}
       <Field label="Ваши права на материал"><Textarea required minLength={20} maxLength={3000} value={rightsBasis} onChange={e=>setRightsBasis(e.target.value)}/></Field>
       <Field label="Описание защищаемого произведения"><Textarea required minLength={20} maxLength={3000} value={workDescription} onChange={e=>setWorkDescription(e.target.value)}/></Field>
       <Field label="Сведения и доказательства"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>

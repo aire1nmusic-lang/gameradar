@@ -113,7 +113,7 @@ export default function Admin() {
                 {decision,reason:reasons[value(row,'support_id')]}))}>{decision==='ALLOW'?'Показать ник':'Оставить анонимно'}</Button>)}</div>
           </>}
           {active.id==='copyright'&&<><strong>Претензия {value(row,'id')} · {value(row,'status')}</strong>
-            <p>Сервер {value(row,'server_id')} · ссылка {value(row,'material_key')} · {date(row,'created_at')}</p>
+            <p>Сервер {value(row,'server_id')} · материал {value(row,'material_key')} · {date(row,'created_at')}</p>
             <p className="break-all">{value(row,'material_url')}</p>
             <p>Заявитель: {value(row,'claimant_name')} · {value(row,'contact_email')}</p>
             <p className="whitespace-pre-wrap break-words">Права: {value(row,'rights_basis')}</p>

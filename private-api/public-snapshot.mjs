@@ -8,7 +8,9 @@ export async function createPublicSnapshot(tx,serverId,version) {
     WHERE server_id=$1 AND status='APPROVED' ORDER BY field,resolved_at DESC,id DESC`,[serverId])).rows
   const support=(await tx.query(`SELECT COALESCE(sum(coins),0)::bigint AS coins,
     count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
-  return {serverId,version:Number(version),claimed:!!server.owner_id,restrictedLinks:restricted,
+  return {serverId,version:Number(version),claimed:!!server.owner_id,
+    restrictedLinks:restricted.filter(key=>key!=='description'),
+    restrictedMaterials:restricted.filter(key=>key==='description'),
     supportCoins:Number(support.coins),supportParticipants:support.participants,
     ...(approved?{summary:approved.summary}:{}),
     ...(facts.length?{facts:Object.fromEntries(facts.map(row=>[row.field,row.field==='modes'?row.value.split(',').map(mode=>mode.trim()):row.value]))}:{})}

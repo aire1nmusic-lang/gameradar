@@ -69,7 +69,13 @@ export function parseList(value: unknown): string[] {
   try { const v = JSON.parse(String(value)); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : [] } catch { return [] }
 }
 export class ApiError extends Error {
-  constructor(readonly status: number, message: string, readonly code = 'error') { super(message) }
+  readonly status: number
+  readonly code: string
+  constructor(status: number, message: string, code = 'error') {
+    super(message)
+    this.status = status
+    this.code = code
+  }
 }
 export const badRequest = (m: string, c = 'bad_request') => new ApiError(400,m,c)
 export const unauthorized = (m = 'Требуется авторизация') => new ApiError(401,m,'unauthorized')

@@ -695,14 +695,15 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return c.json({ok:true})
   })
   app.get('/api/v1/copyright/restrictions/:id',async c=>{
-    const links=(await db.query(`SELECT DISTINCT material_key FROM gs_material_restrictions
+    const scopes=(await db.query(`SELECT DISTINCT material_key FROM gs_material_restrictions
       WHERE server_id=$1 AND active=true ORDER BY material_key`,[c.req.param('id')])).rows.map(row=>row.material_key)
-    return c.json({restrictedLinks:links})
+    return c.json({restrictedLinks:scopes.filter(key=>key!=='description'),
+      restrictedMaterials:scopes.filter(key=>key==='description')})
   })
   app.post('/api/v1/copyright/claims',async c=>{
     const body=await json(c)
     const serverId=textOf(body.serverId,1,100),materialKey=textOf(body.materialKey,1,20)
-    if(!['site','discord','telegram'].includes(materialKey)) fail(400,'invalid_scope','Укажите конкретную ссылку')
+    if(!['site','discord','telegram','description'].includes(materialKey)) fail(400,'invalid_scope','Укажите конкретный материал')
     const contact=emailOf(body.contactEmail),claimant=textOf(body.claimantName,2,120)
     const rights=typeof body.rightsBasis==='string'?body.rightsBasis.trim().slice(0,3000):''
     const work=typeof body.workDescription==='string'?body.workDescription.trim().slice(0,3000):''
@@ -720,8 +721,11 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
         {signal:AbortSignal.timeout(8000),redirect:'error'})
       if(!response.ok) fail(503,'public_catalog_unavailable','Проверка ссылки сейчас недоступна')
       const server=await response.json()
-      let current
-      try {current=new URL(server.links?.[materialKey]).toString()} catch {current=''}
+      let current=''
+      if(materialKey==='description') {
+        if(server.slug && (server.summary?.trim() || server.description?.trim()))
+          current=new URL(`/server/${encodeURIComponent(server.slug)}#description`,'https://gamescout.online').toString()
+      } else try {current=new URL(server.links?.[materialKey]).toString()} catch {}
       if(server.id!==serverId || current!==target.toString()) complete=false
     }
     const id=token(),status=complete?'PENDING_AI':'NEEDS_INFO'
@@ -735,7 +739,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       await audit(tx,null,'copyright.submitted',id,{serverId,scope:materialKey,status})
       await enqueueTelegram(tx,'copyright.submitted',id,serverId,materialKey)
     })
-    return c.json({id,status,message:complete?'Претензия передана на проверку.':'Нужны уточнения по правам, доказательствам или точной ссылке.'},201)
+    return c.json({id,status,message:complete?'Претензия передана на проверку.':'Нужны уточнения по правам, доказательствам или точному материалу.'},201)
   })
   app.get('/api/v1/admin/copyright',async c=>{
     await permission(c,'copyright.read')

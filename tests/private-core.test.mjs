@@ -14,6 +14,7 @@ import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
 import { localClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
+import { serverDto } from '../worker/lib/dto.ts'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
@@ -196,7 +197,7 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
   }
   const outbox=(await h.db.query('SELECT * FROM gs_public_outbox')).rows
   assert.equal(outbox.length,3)
-  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','restrictedLinks','serverId','supportCoins','supportParticipants','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
+  for(const row of outbox) { assert.deepEqual(Object.keys(row.payload).sort(),['claimed','restrictedLinks','restrictedMaterials','serverId','supportCoins','supportParticipants','version']); assert.ok(!JSON.stringify(row.payload).includes(owner.user.id)) }
   assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body.length,3)
   await assert.rejects(h.db.query("DELETE FROM gs_audit"),/append only/)
   // Simulate outbox failure: ownership and audit must roll back as one transaction.
@@ -212,8 +213,8 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
 test('public delivery: missing ACK, retries, stale versions, PII allowlist, mail encryption',async t=>{
   const h=await harness(t)
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT)")
-  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString())}
+  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',restricted_materials TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT)")
+  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),JSON.stringify(p.restrictedMaterials??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString())}
   assert.throws(()=>receive({serverId:'mc',version:1,claimed:true,email:'private@example.com'}))
   receive({serverId:'mc',version:2,claimed:false});receive({serverId:'mc',version:1,claimed:true})
   assert.equal(sqlite.prepare('SELECT claimed FROM public_server_projection').get().claimed,0)
@@ -477,7 +478,7 @@ test('ambiguous nickname review never reverses Support or ledger; AI and manual 
 })
 
 test('copyright: exact link scope, AI triage, reversible restriction, public allowlist and Telegram privacy',async t=>{
-  const publicFetch=async()=>new Response(JSON.stringify({id:'rights-mc',links:{site:'https://rights.example/work',
+  const publicFetch=async()=>new Response(JSON.stringify({id:'rights-mc',slug:'rights-mc',summary:'Factual Minecraft project description.',links:{site:'https://rights.example/work',
     discord:'https://discord.example/rights',telegram:'https://t.me/rights'}}),{status:200})
   const h=await harness(t,{publicFetch,config:{publicApi:'https://catalog.example'}}),admin=await h.register('rights-admin@example.com'),viewer=await h.register('rights-viewer@example.com')
   await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'COPYRIGHT')",[admin.user.id])
@@ -548,6 +549,61 @@ test('copyright: exact link scope, AI triage, reversible restriction, public all
   const ai=await analyzeCopyright({key:'fake',model:'test'},(await h.db.query('SELECT * FROM gs_copyright_claims WHERE id=$1',[claim.body.id])).rows[0],
     async(_url,init)=>{assert.ok(!init.body.includes('rights@example.com'));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({classification:'VALID',reason:'Specific link requires review'})}}]}),{status:200})})
   assert.equal(ai.classification,'VALID')
+})
+
+test('copyright description: exact page scope, private restriction and reversible D1 redaction',async t=>{
+  const descriptionUrl='https://gamescout.online/server/rights-gta#description'
+  const publicFetch=async()=>new Response(JSON.stringify({id:'rights-gta',slug:'rights-gta',
+    summary:'Original factual description of the GTA RP server.',links:{site:'https://rights.example/site'}}),{status:200})
+  const h=await harness(t,{publicFetch,config:{publicApi:'https://catalog.example'}})
+  const admin=await h.register('description-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'COPYRIGHT')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('rights-gta','gtarp','Rights GTA','rights-gta')")
+  const base={serverId:'rights-gta',materialKey:'description',materialUrl:descriptionUrl,
+    claimantName:'Rights Holder',contactEmail:'description@example.com',
+    rightsBasis:'I own the original text used in this description.',
+    workDescription:'My original published description of the project.',
+    evidence:'Dated original publication and authorship records.'}
+  const wrong=await h.request('/copyright/claims',{...base,materialUrl:'https://gamescout.online/server/another#description'})
+  assert.equal(wrong.body.status,'NEEDS_INFO')
+  const claim=await h.request('/copyright/claims',base)
+  assert.equal(claim.body.status,'PENDING_AI')
+  await dispatchCopyrightAI(h.db,async()=>({classification:'DOUBTFUL',reason:'The description needs human review'}),'mock-model')
+  const active=(await h.request('/copyright/restrictions/rights-gta')).body
+  assert.deepEqual(active,{restrictedLinks:[],restrictedMaterials:['description']})
+  const snapshot=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id DESC LIMIT 1')).rows[0].payload
+  assert.deepEqual(snapshot.restrictedMaterials,['description'])
+  assert.deepEqual(snapshot.restrictedLinks,[])
+  assert.ok(!JSON.stringify(snapshot).includes('description@example.com'))
+  const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
+    CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+    INSERT INTO servers(id,summary) VALUES('rights-gta','Original factual description of the GTA RP server.')`)
+  const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
+    async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
+      catch(error){sqlite.exec('ROLLBACK');throw error}}}
+  await applyPublicSnapshot(db,parsePublicSnapshot(snapshot))
+  const projected=sqlite.prepare("SELECT s.summary,p.restricted_links,p.restricted_materials FROM servers s JOIN public_server_projection p ON p.server_id=s.id").get()
+  assert.equal(projected.summary,'Original factual description of the GTA RP server.')
+  const dto=serverDto({id:'rights-gta',slug:'rights-gta',name:'Rights GTA',game_id:'gtarp',
+    summary:projected.summary,description:'Other disputed description text.',highlights:'["Disputed highlight"]',
+    modes:'[]',tags:'[]',languages:'[]',website:'https://rights.example/site',
+    restricted_links:projected.restricted_links,restricted_materials:projected.restricted_materials})
+  assert.equal(dto.descriptionRestricted,true)
+  assert.equal(dto.summary,'');assert.equal(dto.description,'');assert.deepEqual(dto.highlights,[])
+  assert.equal(dto.links.site,'https://rights.example/site')
+  assert.throws(()=>parsePublicSnapshot({...snapshot,version:snapshot.version+1,
+    restrictedMaterials:['description','site']}),/invalid_projection/)
+  assert.equal((await h.request(`/admin/copyright/${claim.body.id}/resolve`,
+    {action:'RESTORE',reason:'Original publication verified; restore the description'},admin.cookie)).status,200)
+  assert.deepEqual((await h.request('/copyright/restrictions/rights-gta')).body.restrictedMaterials,[])
+  const restored=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id DESC LIMIT 1')).rows[0].payload
+  await applyPublicSnapshot(db,parsePublicSnapshot(restored))
+  const back=sqlite.prepare('SELECT restricted_materials FROM public_server_projection').get()
+  assert.equal(back.restricted_materials,'[]')
+  assert.equal(sqlite.prepare('SELECT count(*) n FROM servers').get().n,1)
 })
 
 test('projection lag alert is deduplicated, private and resolves after delivery',async t=>{
@@ -664,7 +720,7 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
     INSERT INTO servers(id,summary) VALUES('mc','Original summary')`)
   const db={
     prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
@@ -748,7 +804,7 @@ test('D1 factual correction is atomic and ignores stale versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,modes TEXT,region TEXT,country TEXT,opened_at TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
     INSERT INTO servers(id,version,region) VALUES('mc','1.20','EU')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}

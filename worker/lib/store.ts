@@ -2,7 +2,7 @@ import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, p.restricted_links, p.support_coins, p.support_participants, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
+const serverSelect = `SELECT s.*, p.restricted_links, p.restricted_materials, p.support_coins, p.support_participants, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
 /** A number counts only while it is fresh; an old one is history, not "online". */
 const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
 const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`
@@ -21,7 +21,7 @@ export class Store {
   async servers(q: Filters) {
     const where = ["s.moderation='PUBLISHED'" + this.live]; const values: unknown[] = []
     const add = (sql: string, ...v: unknown[]) => { where.push(sql); values.push(...v) }
-    if (q.query) add("(s.name LIKE ? ESCAPE '\\' OR s.summary LIKE ? ESCAPE '\\')", ...Array(2).fill('%'+q.query.replace(/[\\%_]/g,'\\$&')+'%'))
+    if (q.query) add("(s.name LIKE ? ESCAPE '\\' OR (COALESCE(p.restricted_materials,'[]') NOT LIKE '%description%' AND s.summary LIKE ? ESCAPE '\\'))", ...Array(2).fill('%'+q.query.replace(/[\\%_]/g,'\\$&')+'%'))
     if (q.gameId) add('s.game_id=?',q.gameId)
     if (q.chronicleId) add('s.chronicle_id=?',q.chronicleId)
     for (const [column,list] of [['game_id',q.gameIds],['version',q.versions],['region',q.regions]] as const) if (list?.length) add(`s.${column} IN (${list.map(()=>'?').join(',')})`,...list)
@@ -37,7 +37,7 @@ export class Store {
     const sorts: Record<string,string> = { online:`${fresh} DESC`, growth:'COALESCE(o.change_24h,0) DESC',rating:'s.rating DESC',new:'s.added_at DESC',launch:'s.launch_at ASC',votes:'s.votes_count DESC',recommended:`(MIN(${fresh},100000)*${TRUST}/100.0 + s.votes_count*2 + CASE WHEN s.owner_id IS NOT NULL THEN 10 ELSE 0 END + COALESCE(o.uptime_24h,0)/10.0) DESC` }
     const clause = where.join(' AND ')
     const rows = await this.db.prepare(`${serverSelect} WHERE ${clause} ORDER BY ${sorts[q.sort ?? 'recommended'] ?? sorts.recommended},s.id LIMIT ? OFFSET ?`).bind(...values,q.limit,q.offset).all<Row>()
-    const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM servers s LEFT JOIN server_online o ON o.server_id=s.id WHERE ${clause}`).bind(...values).first<Row>()
+    const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id WHERE ${clause}`).bind(...values).first<Row>()
     return { items:rows.results,total:Number(count?.total ?? 0),limit:q.limit,offset:q.offset }
   }
   server(key: string) { return this.db.prepare(`${serverSelect} WHERE (s.id=? OR s.slug=?)${this.live}`).bind(key,key).first<Row>() }

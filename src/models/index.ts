@@ -165,6 +165,8 @@ export interface GameServer {
 
   summary: string
   description: string
+  /** A scoped copyright restriction hides the description text while retaining the card. */
+  descriptionRestricted?: boolean
   highlights: string[]
   tags: string[]
   rates?: string

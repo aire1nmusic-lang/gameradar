@@ -1,4 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+const FxPreview = import.meta.env.DEV ? lazy(() => import('./pages/FxPreview')) : null
 import { Layout } from '@/components/layout/Layout'
 import Home from '@/pages/Home'
 import Games from '@/pages/Games'
@@ -39,6 +41,7 @@ export default function App() {
         <Route path="boost" element={<Boost />} />
         <Route path="states" element={<UiStates />} />
         <Route path="design" element={<Design />} />
+        {FxPreview && <Route path="__fx" element={<Suspense fallback={null}><FxPreview /></Suspense>} />}
 
         {/*
           Themed game worlds. React Router ranks static segments above dynamic

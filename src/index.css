@@ -904,7 +904,7 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   0%, 55% { opacity: 0; }
   100% { opacity: 1; }
 }
-.gs-veil { animation: gs-veil 900ms ease-in both; }
+.gs-veil { animation: gs-veil-late 900ms ease-in both; }
 
 /* The world page opens out of that colour, settling from a slight zoom. */
 @keyframes gs-world-enter {
@@ -958,4 +958,18 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 
 @media (prefers-reduced-motion: reduce) {
   .gs-float, .gs-sheen::before { animation: none; }
+}
+
+/* The chosen card charging before the teleport: a tremor and a pulse of light. */
+@keyframes gs-charge {
+  0%, 100% { transform: translate(0, 0); filter: brightness(1.1); }
+  20% { transform: translate(-1.5px, 1px); }
+  40% { transform: translate(1.5px, -1px); filter: brightness(1.5); }
+  60% { transform: translate(-1px, -1.5px); }
+  80% { transform: translate(1px, 1.5px); filter: brightness(1.8); }
+}
+.gs-charge { animation: gs-charge 120ms linear infinite; }
+@keyframes gs-veil-late {
+  0%, 82% { opacity: 0; }
+  100% { opacity: 1; }
 }

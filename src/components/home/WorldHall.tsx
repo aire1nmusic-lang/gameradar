@@ -6,6 +6,7 @@ import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { useGames } from '@/hooks/data'
 import { themeForGame } from '@/data/themes'
 import type { Game } from '@/models'
+import { TeleportFX } from './TeleportFX'
 
 /**
  * The first screen: an empty cathedral hall with three glass cards floating in
@@ -25,7 +26,9 @@ const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/nave-${w}.we
 const NAVE_PHONE_SRCSET = '/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w'
 
 /** How long the card takes to fill the screen before the world page takes over. */
-const FLIGHT_MS = 850
+const FLIGHT_MS = 1350
+/** The first part of the flight: the card charges up while sparks are pulled into it. */
+const CHARGE_MS = Math.round(FLIGHT_MS * 0.38)
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
@@ -260,34 +263,34 @@ function WorldCard({
 function CardBloom({ flight }: { flight: Flight }) {
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    let inner = 0
-    const outer = requestAnimationFrame(() => { inner = requestAnimationFrame(() => setOpen(true)) })
-    return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner) }
+    const timer = window.setTimeout(() => setOpen(true), CHARGE_MS)
+    return () => window.clearTimeout(timer)
   }, [])
   const { rect, game, color } = flight
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[70]">
+      <TeleportFX x={rect.left + rect.width / 2} y={rect.top + rect.height / 2} color={game.accent} duration={FLIGHT_MS} />
       <div
-        className="absolute overflow-hidden"
+        className={cn('absolute overflow-hidden', !open && 'gs-charge')}
         style={{
           top: open ? 0 : rect.top,
           left: open ? 0 : rect.left,
           width: open ? '100vw' : rect.width,
           height: open ? '100dvh' : rect.height,
           borderRadius: open ? 0 : 14,
-          boxShadow: `0 0 120px 20px color-mix(in oklab, ${game.accent} 45%, transparent)`,
-          transition: `all ${FLIGHT_MS - 150}ms cubic-bezier(0.76, 0, 0.24, 1)`,
+          boxShadow: `0 0 ${open ? 160 : 60}px ${open ? 30 : 10}px color-mix(in oklab, ${game.accent} 60%, transparent)`,
+          transition: `all ${FLIGHT_MS - CHARGE_MS - 120}ms cubic-bezier(0.7, 0, 0.2, 1)`,
         }}
       >
         <img
           src={cardSrc(game.id, 1600)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ transform: open ? 'scale(1.25)' : 'scale(1)', transition: `transform ${FLIGHT_MS + 200}ms cubic-bezier(0.5,0,0.2,1)` }}
+          style={{ transform: open ? 'scale(1.35)' : 'scale(1)', filter: open ? 'brightness(1.3) saturate(1.2)' : 'brightness(1.15)', transition: `transform ${FLIGHT_MS}ms cubic-bezier(0.5,0,0.2,1), filter ${FLIGHT_MS}ms ease` }}
         />
       </div>
       {/* the world's colour at the very end, so the world page grows out of it */}
-      <div className="gs-veil absolute inset-0" style={{ background: color }} />
+      <div className="gs-veil absolute inset-0" style={{ background: color, animationDuration: `${FLIGHT_MS}ms` }} />
     </div>
   )
 }

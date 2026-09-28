@@ -368,11 +368,14 @@ export function importSql(records, { existing = [], chronicles = [], at = new Da
     }
     const insert = { id, slug, ...row, hue: hue(record.key), moderation: 'PUBLISHED', added_at: at, updated_at: at, imported_at: at, is_demo: 0, tags: '[]', highlights: '[]' }
     const cols = Object.keys(insert)
+    // The new Claim authority is private. D1 receives only a public claimed bit;
+    // legacy owner_id alone cannot protect a reviewed owner edit from re-import.
+    const unclaimed = `(SELECT owner_id FROM servers WHERE id=${q(id)}) IS NULL AND COALESCE((SELECT claimed FROM public_server_projection WHERE server_id=${q(id)}),0)=0`
     sql.push(
       `INSERT INTO servers (${cols.join(',')}) VALUES (${cols.map(c => q(insert[c])).join(',')})\n` +
         `  ON CONFLICT(id) DO UPDATE SET ${SERVER_FACTS.map(c => `${c}=excluded.${c}`).join(',')},updated_at=excluded.updated_at\n` +
         // An owner-claimed card belongs to its owner; an unchanged record writes nothing.
-        `  WHERE servers.owner_id IS NULL AND (${SERVER_FACTS.map(c => `servers.${c} IS NOT excluded.${c}`).join(' OR ')});`,
+        `  WHERE ${unclaimed} AND (${SERVER_FACTS.map(c => `servers.${c} IS NOT excluded.${c}`).join(' OR ')});`,
     )
 
     const firstSource = record.onlineSources[0]
@@ -387,11 +390,11 @@ export function importSql(records, { existing = [], chronicles = [], at = new Da
       `INSERT OR IGNORE INTO server_online (server_id,status,current,max,source,method,note) VALUES (${[id, 'PENDING', 0, 0, measurable ? 'Ожидает проверки' : 'Нет источника', method, note].map(q).join(',')});`,
     )
 
-    const ownerless = `(SELECT owner_id FROM servers WHERE id=${q(id)}) IS NULL`
+    const ownerless = unclaimed
     if (record.endpoint) {
       const e = record.endpoint
       sql.push(
-        `INSERT INTO monitoring_targets (server_id,method,host,port,api_url,expect_name,enabled) VALUES (${[id, e.method, e.host, e.port, e.url, e.expectName, 1].map(q).join(',')})\n` +
+        `INSERT INTO monitoring_targets (server_id,method,host,port,api_url,expect_name,enabled) SELECT ${[id, e.method, e.host, e.port, e.url, e.expectName, 1].map(q).join(',')} WHERE ${ownerless}\n` +
           `  ON CONFLICT(server_id) DO UPDATE SET method=excluded.method,host=excluded.host,port=excluded.port,api_url=excluded.api_url,expect_name=excluded.expect_name,enabled=1\n` +
           `  WHERE ${ownerless} AND (monitoring_targets.method IS NOT excluded.method OR monitoring_targets.host IS NOT excluded.host OR monitoring_targets.port IS NOT excluded.port OR monitoring_targets.api_url IS NOT excluded.api_url OR monitoring_targets.expect_name IS NOT excluded.expect_name OR monitoring_targets.enabled<>1);`,
       )
@@ -402,7 +405,7 @@ export function importSql(records, { existing = [], chronicles = [], at = new Da
     const providers = record.onlineSources.map(item => item.provider)
     for (const item of record.onlineSources) {
       sql.push(
-        `INSERT INTO online_sources (id,server_id,tier,provider,name,url,config,enabled) VALUES (${[`${id}:${item.provider}`, id, item.tier, item.provider, item.name, item.url, JSON.stringify(item.config), 1].map(q).join(',')})\n` +
+        `INSERT INTO online_sources (id,server_id,tier,provider,name,url,config,enabled) SELECT ${[`${id}:${item.provider}`, id, item.tier, item.provider, item.name, item.url, JSON.stringify(item.config), 1].map(q).join(',')} WHERE ${ownerless}\n` +
           `  ON CONFLICT(id) DO UPDATE SET tier=excluded.tier,name=excluded.name,url=excluded.url,config=excluded.config,enabled=1\n` +
           `  WHERE ${ownerless} AND (online_sources.tier IS NOT excluded.tier OR online_sources.name IS NOT excluded.name OR online_sources.url IS NOT excluded.url OR online_sources.config IS NOT excluded.config OR online_sources.enabled<>1);`,
       )
@@ -412,7 +415,7 @@ export function importSql(records, { existing = [], chronicles = [], at = new Da
     plan.push({ key: record.key, id, slug, sources: providers, name: record.name, game: record.game, chronicleId, endpoint: record.endpoint ? record.endpoint.method : null, action: existing.some(row => row.id === id) ? 'update' : 'insert' })
   }
 
-  for (const id of archive) sql.push(`UPDATE servers SET moderation='ARCHIVED',updated_at=${q(at)} WHERE id=${q(id)} AND import_key IS NOT NULL AND owner_id IS NULL AND moderation='PUBLISHED';`)
+  for (const id of archive) sql.push(`UPDATE servers SET moderation='ARCHIVED',updated_at=${q(at)} WHERE id=${q(id)} AND import_key IS NOT NULL AND owner_id IS NULL AND COALESCE((SELECT claimed FROM public_server_projection WHERE server_id=${q(id)}),0)=0 AND moderation='PUBLISHED';`)
   // DEMO rows are hidden, never deleted: the development seed stays intact.
   if (hideDemo) sql.push(`UPDATE servers SET moderation='ARCHIVED',updated_at=${q(at)} WHERE is_demo=1 AND moderation='PUBLISHED';`)
   if (showDemo) sql.push(`UPDATE servers SET moderation='PUBLISHED',updated_at=${q(at)} WHERE is_demo=1 AND moderation='ARCHIVED';`)

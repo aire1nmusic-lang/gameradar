@@ -64,7 +64,9 @@ test('ids derive from the record key, so a repeat import upserts the same row', 
   assert.equal(first.plan[0].slug, again.plan[0].slug)
   assert.equal(again.plan[0].action, 'update')
   assert.match(first.sql, /ON CONFLICT\(id\) DO UPDATE/)
-  assert.match(first.sql, /WHERE servers\.owner_id IS NULL/)
+  assert.match(first.sql, /public_server_projection WHERE server_id=/)
+  assert.match(first.sql, /INSERT INTO monitoring_targets[^;]+WHERE[^;]+claimed/s)
+  assert.match(importSql([], {archive:[serverId(record)]}).sql,/UPDATE servers SET moderation='ARCHIVED'[^;]+public_server_projection/s)
 })
 
 test('a taken slug gets a suffix instead of colliding with another card', () => {

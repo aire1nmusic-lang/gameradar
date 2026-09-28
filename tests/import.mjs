@@ -102,16 +102,25 @@ assert.equal(read('SELECT COUNT(*) AS n FROM server_online').at(0).n, dataset.le
 pass('Second import: no duplicates, no rewritten rows, same slugs and timestamps')
 
 // A changed fact updates the existing card; a card with an owner is never overwritten.
-const [changed, owned] = [dataset.find(r => r.game === 'lineage2') ?? dataset[0], dataset.find(r => r.game === 'minecraft') ?? dataset[1]]
+const [changed, owned, projected] = [dataset.find(r => r.game === 'lineage2') ?? dataset[0],
+  dataset.find(r => r.game === 'minecraft') ?? dataset[1],dataset.find(r => r.game === 'gtarp')]
 const ownedId = first.find(row => row.import_key === owned.key).id
+const projectedId = first.find(row => row.import_key === projected.key).id
+const originalTarget = read('SELECT method,host,port,api_url,enabled FROM monitoring_targets WHERE server_id=?',projectedId)[0]
+const originalSources = read('SELECT COUNT(*) AS n FROM online_sources WHERE server_id=?',projectedId)[0].n
 const claimSql = path.join(runDir, 'claim.sql')
 writeFileSync(
   claimSql,
-  `INSERT INTO users (id,display_name,created_at) VALUES ('usr_import_test','Import test owner','2026-01-01T00:00:00.000Z');\nUPDATE servers SET owner_id='usr_import_test' WHERE id='${ownedId}';\n`,
+  `INSERT INTO users (id,display_name,created_at) VALUES ('usr_import_test','Import test owner','2026-01-01T00:00:00.000Z');\nUPDATE servers SET owner_id='usr_import_test' WHERE id='${ownedId}';\nINSERT INTO public_server_projection(server_id,version,claimed,received_at) VALUES('${projectedId}',1,1,'2026-09-28T00:00:00Z');\n`,
 )
 cli(['d1', 'execute', 'gamescout', '--local', '--persist-to', state, '--file', claimSql])
 const mutated = dataset.map(record =>
-  record.key === changed.key ? { ...record, rates: 'x999 test' } : record.key === owned.key ? { ...record, name: 'Overwritten by import' } : record,
+  record.key === changed.key ? { ...record, rates: 'x999 test' }
+    : record.key === owned.key ? { ...record, name: 'Overwritten by import' }
+      : record.key === projected.key ? { ...record,name:'Projected Claim must survive',
+        endpoint:{...record.endpoint,url:'http://other.example.org:30120/'},
+        onlineSources:[...record.onlineSources,{tier:'OFFICIAL',provider:'official_json',name:'Fixture source',
+          url:'https://example.org/online',config:{url:'https://example.org/api',path:'players'}}] } : record,
 )
 const updateSql = path.join(runDir, 'update.sql')
 writeFileSync(updateSql, importSql(mutated, { existing: read('SELECT id, slug FROM servers'), chronicles: read('SELECT id, game_id FROM chronicles') }).sql)
@@ -121,8 +130,11 @@ assert.equal(changedRow.length, 1)
 assert.equal(changedRow[0].rates, 'x999 test')
 assert.equal(changedRow[0].imported_at, first.find(row => row.import_key === changed.key).imported_at, 'imported_at keeps the first import')
 assert.equal(read('SELECT name FROM servers WHERE id=?', ownedId)[0].name, owned.name)
+assert.equal(read('SELECT name FROM servers WHERE id=?', projectedId)[0].name, projected.name)
+assert.deepEqual(read('SELECT method,host,port,api_url,enabled FROM monitoring_targets WHERE server_id=?',projectedId)[0],originalTarget)
+assert.equal(read('SELECT COUNT(*) AS n FROM online_sources WHERE server_id=?',projectedId)[0].n,originalSources)
 assert.equal(read('SELECT COUNT(*) AS n FROM servers WHERE import_key IS NOT NULL').at(0).n, dataset.length)
-pass('Changed fact updates the card in place; an owner-claimed card is untouched')
+pass('Changed fact updates the card; legacy and projected Claims protect facts, target and sources')
 importer('--hide-demo')
 assert.equal(read('SELECT rates FROM servers WHERE import_key=?', changed.key)[0].rates, changed.rates)
 pass('Re-running the importer restores the dataset facts')
@@ -213,6 +225,14 @@ try {
     }
     pass('Public API: VERIFIED appears only on directly counted FiveM endpoints')
   }
+
+  const archiveSql=path.join(runDir,'archive-check.sql')
+  writeFileSync(archiveSql,importSql([], {archive:[projectedId,ownedId,changedRow[0].id]}).sql)
+  cli(['d1','execute','gamescout','--local','--persist-to',state,'--file',archiveSql])
+  assert.equal(read('SELECT moderation FROM servers WHERE id=?',projectedId)[0].moderation,'PUBLISHED')
+  assert.equal(read('SELECT moderation FROM servers WHERE id=?',ownedId)[0].moderation,'PUBLISHED')
+  assert.equal(read('SELECT moderation FROM servers WHERE id=?',changedRow[0].id)[0].moderation,'ARCHIVED')
+  pass('Archive-missing cannot hide projected or legacy claimed cards')
 
   writeFileSync(path.join(runDir, 'result.json'), JSON.stringify({ passed: true, live, checks: results }, null, 2))
   console.log('Import acceptance passed. Report: ' + path.join(runDir, 'result.json'))

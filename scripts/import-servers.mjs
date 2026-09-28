@@ -78,7 +78,7 @@ function query(sql) {
 
 const eligible = selectedGames ? records.filter(record => selectedGames.has(record.game)) : records
 const importable = eligible.filter(record => record.confidence === 'confirmed' || flag('--include-likely'))
-const existing = query('SELECT id, slug, game_id, import_key, is_demo, moderation, owner_id FROM servers')
+const existing = query('SELECT s.id, s.slug, s.game_id, s.import_key, s.is_demo, s.moderation, s.owner_id, COALESCE(p.claimed,0) AS projected_claimed FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id')
 const chronicles = query('SELECT id, game_id FROM chronicles')
 const games = new Set(query('SELECT id FROM games').map(row => row.id))
 for (const game of new Set(importable.map(record => record.game))) {
@@ -90,7 +90,7 @@ for (const game of new Set(importable.map(record => record.game))) {
 
 const wanted = new Set(importable.map(serverId))
 const missing = existing.filter(row => row.import_key && (!selectedGames || selectedGames.has(row.game_id))
-  && !wanted.has(row.id) && row.moderation === 'PUBLISHED')
+  && !wanted.has(row.id) && !row.owner_id && !row.projected_claimed && row.moderation === 'PUBLISHED')
 const { sql, plan } = importSql(importable, {
   existing,
   chronicles,

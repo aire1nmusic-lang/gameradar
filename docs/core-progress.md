@@ -196,6 +196,12 @@ The [unapplied gateway candidate](yandex-private-gateway.md) keeps the public ca
 
 **Verified:** two PGlite tests cover plan read-only behavior, missing backup/fingerprint rejection, changed-plan rollback, successful 001–014 application, idempotent re-run and history drift. The existing 23/23 private-core suite also passed after the migration refactor. The CLI has not connected to Yandex PostgreSQL because no cluster/credentials are available. New cost 0 ₽. Rollback: stop before `--apply`; after application, use the verified database backup or a reviewed forward migration, never delete private ledger/audit records to imitate a rollback.
 
+## Slice 7g: truthful owner entry in private-core mode (local)
+
+The local private-core home, footer and `/owners` now direct an owner to an existing catalog card and `/account` Claim/review flow. They describe only scoped Claim rights, reviewed factual edits and separate People's rating/Support. The old `/add-server` form is replaced in private-core mode by a clear unavailable state and links to catalog/account, so it cannot submit a new owner card into legacy D1. Legacy-mode marketing remains for the current uncut production site; the pages wait for auth-mode detection before showing either variant, avoiding a false flash of the legacy form. New-card submission and monitoring controls still need a private design before owner acceptance.
+
+**Verified:** TypeScript and Vite build passed. The in-app browser showed 3 GTA RP demo cards, an honest unknown-online server page, a Claim modal opened by keyboard and a link carrying the correct server ID to `/account?claim=…`; it also showed the new home/owners/footer copy and the guarded `/add-server` state. Mouse-driven React clicks in that browser session did not activate, whereas keyboard Return did, so authenticated browser actions are not marked verified. Terminal Playwright CLI was unavailable from local cache and package retrieval stalled; no external account or payment was used. No cloud state or cost changed (0 ₽). Rollback: revert this UI commit; no schema or data changes.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

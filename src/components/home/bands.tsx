@@ -3,9 +3,12 @@ import { Container } from '@/components/layout/Container'
 import { WorldArtSurface } from '@/components/media/WorldArt'
 import { worldArt } from '@/data/themeMedia'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/hooks/useAuth'
 
 /** The one owner block on the site: at the very end of the home page. */
 export function OwnerBand() {
+  const { privateCore, loading }=useAuth()
+  if(loading)return null
   return (
     <section className="py-10 sm:py-12">
       <Container>
@@ -15,26 +18,26 @@ export function OwnerBand() {
           <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
               <div className="mb-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">Владельцам серверов</div>
-              <h2 className="text-[24px] leading-tight sm:text-[28px]">Добавьте сервер бесплатно</h2>
+              <h2 className="text-[24px] leading-tight sm:text-[28px]">{privateCore?'Подтвердите права на свой сервер':'Добавьте сервер бесплатно'}</h2>
               <p className="mt-3 max-w-xl text-[14.5px] leading-relaxed text-ink-300">
-                Размещение, статистика карточки и проверка онлайна не стоят ничего. Платить нужно только за продвижение — и только если вы этого захотите.
+                {privateCore?'Найдите опубликованную карточку и подайте Claim. После проверки администратором можно предложить фактические правки для карточки.':'Размещение, статистика карточки и проверка онлайна не стоят ничего. Платить нужно только за продвижение — и только если вы этого захотите.'}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button to="/add-server" variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>
-                  Добавить сервер
+                <Button to={privateCore?'/catalog':'/add-server'} variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>
+                  {privateCore?'Найти сервер':'Добавить сервер'}
                 </Button>
-                <Button to="/owners" variant="outline" size="lg">
-                  Это уже ваш сервер?
+                <Button to={privateCore?'/account':'/owners'} variant="outline" size="lg">
+                  {privateCore?'Открыть аккаунт':'Это уже ваш сервер?'}
                 </Button>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <Perk icon={<ShieldCheck size={15} className="text-signal-400" />} title="Verified Online">
-                Подтвердите владение и подключите независимую проверку онлайна
+              <Perk icon={<ShieldCheck size={15} className="text-signal-400" />} title={privateCore?'Claim с проверкой':'Verified Online'}>
+                {privateCore?'Права выдаются только на конкретный сервер после решения администратора.':'Подтвердите владение и подключите независимую проверку онлайна'}
               </Perk>
-              <Perk icon={<BarChart3 size={15} className="text-ink-300" />} title="Статистика карточки">
-                Просмотры, переходы и позиция в каталоге по вашей игре
+              <Perk icon={<BarChart3 size={15} className="text-ink-300" />} title={privateCore?'Правки карточки':'Статистика карточки'}>
+                {privateCore?'Описание и характеристики публикуются после проверки; неполные показатели не выдумываются.':'Просмотры, переходы и позиция в каталоге по вашей игре'}
               </Perk>
             </div>
           </div>

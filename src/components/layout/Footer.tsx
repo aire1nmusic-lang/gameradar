@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Container } from './Container'
 import { Logo } from './Logo'
 import { GAMES } from '@/data/games'
+import { useAuth } from '@/hooks/useAuth'
 
 const COLUMNS = [
   {
@@ -26,6 +27,15 @@ const COLUMNS = [
 ]
 
 export function Footer() {
+  const { privateCore, loading }=useAuth()
+  const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
+    ...column,links:[
+      {label:'Найти свой сервер',to:'/catalog'},
+      {label:'Подтвердить права',to:'/account'},
+      {label:'Возможности',to:'/owners'},
+      {label:'Мои серверы',to:'/account'},
+    ],
+  }:column):COLUMNS
   return (
     <footer className="mt-10 border-t border-white/6 bg-ink-1000/60 pb-24 lg:pb-0">
       <Container className="py-12">
@@ -58,7 +68,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {COLUMNS.map((column) => (
+          {columns.map((column) => (
             <div key={column.title}>
               <h4 className="mb-3.5 text-[13px] font-medium tracking-[0.08em] text-ink-500 uppercase">
                 {column.title}

@@ -102,7 +102,7 @@ export default function AddServer() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [created, setCreated] = useState<GameServer | null>(null)
-  const { user } = useAuth()
+  const { user, privateCore, loading } = useAuth()
 
   /**
    * Sends the card to the API. The server assigns the id, the slug and
@@ -163,6 +163,14 @@ export default function AddServer() {
 
   const canContinue =
     step === 0 ? form.name.trim().length > 1 && form.modes.length > 0 : step === 2 ? form.agreeRules : true
+
+  if(loading) return <Container className="py-16">Проверяем доступность кабинета…</Container>
+  if(privateCore) return <Container className="max-w-2xl space-y-5 py-16">
+    <h1 className="text-3xl font-semibold">Добавление нового сервера</h1>
+    <Notice tone="info">Приём новых карточек через единый аккаунт ещё не подключён. Отправка через старую форму отключена, чтобы заявка не попала в прежнюю приватную базу D1.</Notice>
+    <p className="text-ink-300">Если сервер уже есть в каталоге, откройте его страницу и подайте Claim. После проверки вы сможете предложить фактические правки.</p>
+    <div className="flex flex-wrap gap-3"><Button to="/catalog">Открыть каталог</Button><Button to="/account" variant="outline">Мои серверы и Claim</Button></div>
+  </Container>
 
   return (
     <div className="pb-20">

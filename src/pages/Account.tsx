@@ -10,6 +10,7 @@ type Claim = { id:string; server_id:string; status:string; reason?:string; evide
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
+type Monitor = {configured?:false;enabled?:boolean;host?:string|null;port?:number|null;api_url?:string|null;updated_at?:string}
 const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',modes:'Режимы',region:'Регион',country:'Страна',openedAt:'Дата открытия',site:'Сайт',discord:'Discord',telegram:'Telegram'}
 type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
@@ -87,7 +88,7 @@ export default function Account() {
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/></div>)}
+        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
         <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>
         <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
           <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
@@ -157,5 +158,38 @@ function OwnerFacts({server}:{server:Owned}) {
       <Field label="Основание и источник"><Textarea required minLength={20} maxLength={1000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
       <Button type="submit" disabled={busy||edits.some(edit=>edit.field===field&&edit.status==='PENDING')}>Отправить на проверку</Button>
     </form>
+  </div>
+}
+
+function OwnerMonitoring({server}:{server:Owned}) {
+  const method=server.game_id==='minecraft'?'GAME_PROTOCOL':server.game_id==='lineage2'?'LOGIN_SERVER':'SERVER_API'
+  const path=`/owners/me/servers/${encodeURIComponent(server.server_id)}/monitoring`
+  const [current,setCurrent]=useState<Monitor>(),[host,setHost]=useState(''),[port,setPort]=useState(''),[apiUrl,setApiUrl]=useState('')
+  const [reason,setReason]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
+  useEffect(()=>{let active=true;apiRequest<Monitor>(path).then(row=>{if(!active)return
+    setCurrent(row);setHost(row.host??'');setPort(row.port?String(row.port):'');setApiUrl(row.api_url??'')})
+    .catch(e=>{if(active)setError(e instanceof Error?e.message:'Не удалось загрузить мониторинг')})
+    return()=>{active=false}},[path])
+  async function save(enabled:boolean) {
+    setBusy(true);setError('');setMessage('')
+    try {
+      await apiSend(path,{enabled,method,host,port:port?Number(port):null,apiUrl,reason})
+      setCurrent(await apiRequest<Monitor>(path));setMessage(enabled?'Адрес проверки сохранён. Онлайн появится после успешной пробы.':'Проверка отключена.')
+      setReason('')
+    } catch(e){setError(e instanceof Error?e.message:'Не удалось сохранить мониторинг')}
+    finally{setBusy(false)}
+  }
+  return <div className="surface space-y-3 rounded-xl p-4">
+    <h3 className="font-medium">Мониторинг · {server.name}</h3>
+    <p className="text-sm text-ink-400">{method==='GAME_PROTOCOL'?'Minecraft Server List Ping':method==='LOGIN_SERVER'?'Проверка login-сервера L2 (без числа игроков)':'FiveM info.json, dynamic.json и players.json'}.
+      Только публичный адрес без токенов. Статус и число появятся после фактической проверки; адрес можно отключить.</p>
+    <p className="text-sm">{current===undefined?'Загрузка…':current.configured===false?'Адрес владельца пока не задан; источники открытого каталога могут проверяться отдельно.':current.enabled?'Адрес владельца включён.':'Адрес владельца отключён.'}</p>
+    {method==='SERVER_API'?<Field label="Адрес FiveM http(s)://host:port/"><Input value={apiUrl} onChange={e=>setApiUrl(e.target.value)} maxLength={500} placeholder="https://rp.example.com/" /></Field>
+      :<div className="grid gap-3 sm:grid-cols-2"><Field label="Публичный host"><Input value={host} onChange={e=>setHost(e.target.value)} maxLength={253} placeholder="play.example.com" /></Field>
+        <Field label={method==='LOGIN_SERVER'?'Порт login-сервера':'Порт (необязательно)'}><Input type="number" min={1} max={65535} value={port} onChange={e=>setPort(e.target.value)} /></Field></div>}
+    <Field label="Причина изменения"><Textarea minLength={10} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} /></Field>
+    {error&&<p role="alert" className="text-danger-300">{error}</p>}{message&&<p role="status" className="text-signal-400">{message}</p>}
+    <div className="flex flex-wrap gap-2"><Button disabled={busy||reason.trim().length<10} onClick={()=>void save(true)}>Сохранить адрес</Button>
+      <Button variant="outline" disabled={busy||reason.trim().length<10} onClick={()=>void save(false)}>Отключить проверку</Button></div>
   </div>
 }

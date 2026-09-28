@@ -5,6 +5,7 @@ import { classifyLocalNickname } from './nickname.mjs'
 import { paymentReceipt, parseTestResult, testCheckoutForm, testPaymentConfig } from './robokassa.mjs'
 import { createPublicSnapshot } from './public-snapshot.mjs'
 import { enqueueTelegram } from './copyright.mjs'
+import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 
@@ -46,6 +47,23 @@ const ownerFact = (field,input) => {
     return modes.join(', ')
   }
   return value
+}
+const ownerMonitoring = (body,gameId) => {
+  if(body.enabled===false)return {enabled:false,method:null,host:null,port:null,apiUrl:null}
+  const method={minecraft:'GAME_PROTOCOL',lineage2:'LOGIN_SERVER',gtarp:'SERVER_API'}[gameId]
+  if(body.method!==method)fail(400,'invalid_method','Метод проверки не соответствует игре')
+  try {
+    if(method==='SERVER_API') {
+      if(typeof body.apiUrl!=='string'||body.apiUrl.length>500)throw new Error('invalid_url')
+      const url=assertPublicUrl(body.apiUrl)
+      if(url.pathname!=='/'||url.search||/(^|\.)(cfx\.re|fivem\.net|cfx-services\.net)$/i.test(url.hostname))throw new Error('invalid_url')
+      return {enabled:true,method,host:null,port:null,apiUrl:url.toString()}
+    }
+    const host=assertPublicHost(body.host)
+    const port=body.port===undefined||body.port===null||body.port===''?null:assertPort(Number(body.port))
+    if(method==='LOGIN_SERVER'&&!port)throw new Error('port_required')
+    return {enabled:true,method,host,port,apiUrl:null}
+  } catch {fail(400,'invalid_target','Укажите публичный адрес сервера без секретов и приватных сетей')}
 }
 const passwordOf = v => { if (!passwordValid(v)) fail(400,'password_weak','Пароль — от 12 до 128 символов'); return v }
 const cookieValue = (c,name) => (c.req.header('Cookie')??'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1) ?? ''
@@ -340,6 +358,41 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       return row
     })
     return c.json({id:edit.id,status:edit.status},201)
+  })
+  app.get('/api/v1/owners/me/servers/:id/monitoring',async c=>{
+    const user=await requireUser(c,true),serverId=c.req.param('id')
+    if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1 AND owner_id=$2',[serverId,user.id])).rows.length)
+      fail(403,'forbidden','Нет подтверждённых прав на сервер')
+    const row=(await db.query(`SELECT enabled,method,host,port,api_url,updated_at
+      FROM gs_owner_monitoring_overrides WHERE server_id=$1`,[serverId])).rows[0]
+    return c.json(row??{configured:false})
+  })
+  app.post('/api/v1/owners/me/servers/:id/monitoring',async c=>{
+    const user=await requireUser(c,true),body=await json(c),serverId=c.req.param('id')
+    const reason=textOf(body.reason,10,500)
+    await limit(c,'owner_monitoring',user.id,12)
+    const result=await db.transaction(async tx=>{
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server||server.owner_id!==user.id)fail(403,'forbidden','Нет подтверждённых прав на сервер')
+      const target=ownerMonitoring(body,server.game_id)
+      const previous=(await tx.query('SELECT * FROM gs_owner_monitoring_overrides WHERE server_id=$1',[serverId])).rows[0]
+      if(previous&&previous.enabled===target.enabled&&previous.method===target.method
+        &&previous.host===target.host&&previous.port===target.port&&previous.api_url===target.apiUrl)
+        return {changed:false,version:Number(server.version)}
+      await tx.query(`INSERT INTO gs_owner_monitoring_overrides(server_id,enabled,method,host,port,api_url,updated_by)
+        VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(server_id) DO UPDATE SET
+        enabled=excluded.enabled,method=excluded.method,host=excluded.host,port=excluded.port,
+        api_url=excluded.api_url,updated_by=excluded.updated_by,updated_at=now()`,
+        [serverId,target.enabled,target.method,target.host,target.port,target.apiUrl,user.id])
+      const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
+        [serverId])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,serverId,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+        [serverId,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,user.id,'server.monitoring_updated',serverId,{enabled:target.enabled,method:target.method,reason})
+      return {changed:true,version:Number(changed.version)}
+    })
+    return c.json(result)
   })
   app.get('/api/v1/owners/me/servers/:id/fact-edits',async c=>{
     const user=await requireUser(c,true),serverId=c.req.param('id')

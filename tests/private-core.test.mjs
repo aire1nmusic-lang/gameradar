@@ -909,6 +909,74 @@ test('reviewed owner links project or remove by version without bypassing copyri
   }
 })
 
+test('Claim-scoped monitoring publishes only safe endpoints and disabling hides stale online',async t=>{
+  const h=await harness(t),owner=await h.register('monitor-owner@example.com'),admin=await h.register('monitor-admin@example.com'),other=await h.register('monitor-other@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  const targets=[['owner-mc','minecraft',{method:'GAME_PROTOCOL',host:'play.example.org',port:25565}],
+    ['owner-l2','lineage2',{method:'LOGIN_SERVER',host:'login.example.org',port:2106}],
+    ['owner-gta','gtarp',{method:'SERVER_API',apiUrl:'https://rp.example.org:30120/'}]]
+  for(const [id,game,target] of targets) {
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[id,game,`Monitor ${game}`,id])
+    const claim=await h.request('/claims',{serverId:id,evidence:'Official ownership proof can be checked by the reviewer.'},owner.cookie)
+    assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,
+      {status:'VERIFIED',reason:'Official ownership proof checked'},admin.cookie)).status,200)
+    const path=`/owners/me/servers/${id}/monitoring`,body={...target,reason:'Public endpoint checked by owner'}
+    assert.equal((await h.request(path,body,other.cookie)).status,403)
+    const result=await h.request(path,body,owner.cookie)
+    assert.equal(result.status,200,JSON.stringify(result.body))
+    assert.equal(result.body.changed,true)
+    assert.equal((await h.request(path,body,owner.cookie)).body.changed,false)
+    const snapshot=(await h.db.query('SELECT payload FROM gs_public_outbox WHERE server_id=$1 ORDER BY version DESC LIMIT 1',[id])).rows[0].payload
+    assert.equal(snapshot.monitoring.enabled,true)
+    assert.equal(snapshot.monitoring.method,target.method)
+    assert.ok(!JSON.stringify(snapshot).includes(owner.user.id))
+    assert.deepEqual(parsePublicSnapshot(snapshot),snapshot)
+  }
+  assert.equal((await h.request('/owners/me/servers/owner-mc/monitoring',
+    {method:'GAME_PROTOCOL',host:'127.0.0.1',reason:'Reject private address'},owner.cookie)).status,400)
+  assert.equal((await h.request('/owners/me/servers/owner-mc/monitoring',
+    {method:'SERVER_API',apiUrl:'https://example.org/',reason:'Reject wrong method'},owner.cookie)).status,400)
+  assert.equal((await h.request('/owners/me/servers/owner-gta/monitoring',
+    {method:'SERVER_API',apiUrl:'https://user:secret@rp.example.org/',reason:'Reject credentials'},owner.cookie)).status,400)
+  assert.throws(()=>parsePublicSnapshot({serverId:'owner-mc',version:10,claimed:true,
+    monitoring:{enabled:true,method:'GAME_PROTOCOL',host:'localhost'}}),/invalid_projection/)
+
+  const snapshot=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='owner-mc' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY);
+    CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),version INTEGER,
+      claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,
+      support_participants INTEGER,received_at TEXT);
+    CREATE TABLE monitoring_targets(server_id TEXT PRIMARY KEY REFERENCES servers(id),method TEXT,host TEXT,
+      port INTEGER,api_url TEXT,expect_name TEXT,enabled INTEGER,agent_token TEXT);
+    CREATE TABLE server_online(server_id TEXT PRIMARY KEY REFERENCES servers(id),status TEXT,current INTEGER,
+      players_known INTEGER,max_known INTEGER,checked_at TEXT,observed_at TEXT,source TEXT,source_tier TEXT,
+      source_url TEXT,note TEXT);
+    INSERT INTO servers(id) VALUES('owner-mc');
+    INSERT INTO server_online(server_id,status,current,players_known,max_known,checked_at,source)
+      VALUES('owner-mc','LIVE',42,1,1,'2026-01-01T00:00:00Z','Old source')`)
+  const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
+    async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
+      catch(error){sqlite.exec('ROLLBACK');throw error}}}
+  const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
+  sqlite.exec("CREATE TRIGGER fail_monitor_target BEFORE INSERT ON monitoring_targets BEGIN SELECT RAISE(ABORT,'failed'); END")
+  await assert.rejects(project(snapshot),/failed/)
+  assert.equal(sqlite.prepare('SELECT count(*) n FROM public_server_projection').get().n,0)
+  sqlite.exec('DROP TRIGGER fail_monitor_target')
+  await project(snapshot)
+  assert.equal(sqlite.prepare("SELECT host FROM monitoring_targets WHERE server_id='owner-mc'").get().host,'play.example.org')
+  assert.deepEqual({...sqlite.prepare("SELECT status,current,players_known FROM server_online WHERE server_id='owner-mc'").get()},
+    {status:'UNKNOWN',current:0,players_known:0})
+  const disabled=await h.request('/owners/me/servers/owner-mc/monitoring',
+    {enabled:false,reason:'Owner disabled this source'},owner.cookie)
+  assert.equal(disabled.status,200)
+  const off=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='owner-mc' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.deepEqual(off.monitoring,{enabled:false})
+  await project(off);await project(snapshot)
+  assert.equal(sqlite.prepare("SELECT enabled FROM monitoring_targets WHERE server_id='owner-mc'").get().enabled,0)
+  assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='owner-mc'").get().version,off.version)
+})
+
 test('Support projects only public aggregates with ledger rollback and idempotency',async t=>{
   const h=await harness(t),one=await h.register('support-projection-1@example.com'),two=await h.register('support-projection-2@example.com')
   await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('support-gta','gtarp','Support GTA','support-gta')")

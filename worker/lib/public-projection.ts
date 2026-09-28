@@ -1,8 +1,11 @@
-export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; restrictedMaterials?: Array<'description'>; summary?: string; facts?: Partial<Record<'version'|'rates'|'region'|'openedAt'|'country',string>> & {modes?:string[]}; links?: Partial<Record<'site'|'discord'|'telegram',string>>; supportCoins?: number; supportParticipants?: number }
+import { assertPort, assertPublicHost, assertPublicUrl } from '../adapters/network.ts'
+
+export type PublicMonitoring = {enabled:false} | {enabled:true;method:'GAME_PROTOCOL'|'LOGIN_SERVER';host:string;port?:number} | {enabled:true;method:'SERVER_API';apiUrl:string;expectName:string}
+export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; restrictedMaterials?: Array<'description'>; summary?: string; facts?: Partial<Record<'version'|'rates'|'region'|'openedAt'|'country',string>> & {modes?:string[]}; links?: Partial<Record<'site'|'discord'|'telegram',string>>; monitoring?:PublicMonitoring; supportCoins?: number; supportParticipants?: number }
 export function parsePublicSnapshot(value: unknown): PublicSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid_projection')
   const row=value as Record<string,unknown>
-  if (Object.keys(row).some(key=>!['claimed','serverId','version','restrictedLinks','restrictedMaterials','summary','facts','links','supportCoins','supportParticipants'].includes(key))
+  if (Object.keys(row).some(key=>!['claimed','serverId','version','restrictedLinks','restrictedMaterials','summary','facts','links','monitoring','supportCoins','supportParticipants'].includes(key))
     || !['claimed','serverId','version'].every(key=>Object.hasOwn(row,key))
     || typeof row.serverId!=='string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(row.serverId)
     || !Number.isSafeInteger(row.version) || Number(row.version)<1 || typeof row.claimed!=='boolean') throw new Error('invalid_projection')
@@ -41,6 +44,32 @@ export function parsePublicSnapshot(value: unknown): PublicSnapshot {
         ||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))throw new Error('invalid_projection')
     }
   }
+  if(row.monitoring!==undefined) {
+    const target=row.monitoring as Record<string,unknown>
+    if(!target||typeof target!=='object'||Array.isArray(target)||typeof target.enabled!=='boolean')throw new Error('invalid_projection')
+    if(target.enabled===false) {
+      if(Object.keys(target).length!==1)throw new Error('invalid_projection')
+    } else {
+      try {
+        if(target.method==='SERVER_API') {
+          if(Object.keys(target).some(key=>!['enabled','method','apiUrl','expectName'].includes(key))
+            ||typeof target.apiUrl!=='string'||target.apiUrl.length>500
+            ||typeof target.expectName!=='string'||target.expectName.length<1||target.expectName.length>100)throw new Error('invalid_projection')
+          const url=assertPublicUrl(target.apiUrl)
+          if(url.pathname!=='/'||url.search||/(^|\.)(cfx\.re|fivem\.net|cfx-services\.net)$/i.test(url.hostname))throw new Error('invalid_projection')
+        } else if(target.method==='GAME_PROTOCOL'||target.method==='LOGIN_SERVER') {
+          if(Object.keys(target).some(key=>!['enabled','method','host','port'].includes(key))
+            ||typeof target.host!=='string')throw new Error('invalid_projection')
+          assertPublicHost(target.host)
+          if(target.port!==undefined) {
+            if(typeof target.port!=='number')throw new Error('invalid_projection')
+            assertPort(target.port)
+          }
+          if(target.method==='LOGIN_SERVER'&&target.port===undefined)throw new Error('invalid_projection')
+        } else throw new Error('invalid_projection')
+      } catch {throw new Error('invalid_projection')}
+    }
+  }
   for(const amount of [row.supportCoins,row.supportParticipants])
     if(amount!==undefined&&(!Number.isSafeInteger(amount)||Number(amount)<0))throw new Error('invalid_projection')
   if((row.supportCoins===undefined)!==(row.supportParticipants===undefined))throw new Error('invalid_projection')
@@ -73,6 +102,26 @@ export async function applyPublicSnapshot(db:D1Database,payload:PublicSnapshot) 
     if(value!==undefined)writes.push(db.prepare(`UPDATE servers SET ${column}=?,updated_at=? WHERE id=?
       AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
       .bind(value||null,receivedAt,payload.serverId,payload.serverId,payload.version))
+  }
+  if(payload.monitoring) {
+    if(payload.monitoring.enabled) {
+      const target=payload.monitoring
+      writes.push(db.prepare(`INSERT INTO monitoring_targets(server_id,method,host,port,api_url,expect_name,enabled,agent_token)
+        SELECT ?,?,?,?,?,?,1,NULL WHERE (SELECT version FROM public_server_projection WHERE server_id=?)=?
+        ON CONFLICT(server_id) DO UPDATE SET method=excluded.method,host=excluded.host,port=excluded.port,
+        api_url=excluded.api_url,expect_name=excluded.expect_name,enabled=1,agent_token=NULL`)
+        .bind(payload.serverId,target.method,'host' in target?target.host:null,
+          'port' in target?target.port??null:null,'apiUrl' in target?target.apiUrl:null,
+          'expectName' in target?target.expectName:null,payload.serverId,payload.version))
+    } else writes.push(db.prepare(`UPDATE monitoring_targets SET enabled=0 WHERE server_id=?
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
+      .bind(payload.serverId,payload.serverId,payload.version))
+    writes.push(db.prepare(`UPDATE server_online SET status='UNKNOWN',current=0,players_known=0,max_known=0,
+      checked_at=NULL,observed_at=NULL,source='Ожидает проверки',source_tier=NULL,source_url=NULL,
+      note='Источник мониторинга изменён; ждём новой проверки' WHERE server_id=?
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?
+      AND COALESCE(checked_at,'')<(SELECT received_at FROM public_server_projection WHERE server_id=?)`)
+      .bind(payload.serverId,payload.serverId,payload.version,payload.serverId))
   }
   await db.batch(writes)
 }

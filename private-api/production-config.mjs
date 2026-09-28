@@ -3,8 +3,12 @@ import { mailEnabled } from '../worker/lib/mailer.ts'
 
 /** Shared by the HTTP server and a private one-shot maintenance process. */
 export async function productionConfig(env=process.env) {
+  const runtime=env.PRIVATE_RUNTIME??'yandex-container'
+  if(!['yandex-container','vm'].includes(runtime))throw new Error('PRIVATE_RUNTIME_invalid')
   if(!env.DATABASE_URL || (!env.PG_CA_FILE && !env.PG_CA_PEM))
     throw new Error('DATABASE_URL_and_PostgreSQL_CA_required')
+  if(runtime==='vm' && (!env.PRIVATE_PROXY_SECRET||env.PRIVATE_PROXY_SECRET.length<32))
+    throw new Error('PRIVATE_PROXY_SECRET_required_for_vm')
   const ca=env.PG_CA_PEM??await readFile(env.PG_CA_FILE,'utf8')
   const mailEnv={ENVIRONMENT:'production',MAIL_DRIVER:env.MAIL_DRIVER,MAIL_FROM:env.MAIL_FROM,
     RESEND_API_KEY:env.RESEND_API_KEY,UNISENDER_API_KEY:env.UNISENDER_API_KEY}
@@ -30,5 +34,5 @@ export async function productionConfig(env=process.env) {
   const projectionAlertSeconds=Number(env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
   if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
     throw new Error('PUBLIC_PROJECTION_ALERT_SECONDS_must_be_60_to_3600')
-  return {connectionString:env.DATABASE_URL,ca,config,projectionAlertSeconds}
+  return {runtime,proxySecret:env.PRIVATE_PROXY_SECRET,connectionString:env.DATABASE_URL,ca,config,projectionAlertSeconds}
 }

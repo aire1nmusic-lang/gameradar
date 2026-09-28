@@ -4,12 +4,12 @@ import { randomBytes } from 'node:crypto'
 import { createApp } from './app.mjs'
 import { migrate, postgresStore } from './db.mjs'
 import { isMaintenanceEvent, runMaintenance } from './maintenance.mjs'
-import { localClientIp, yandexClientIp } from './ingress.mjs'
+import { localClientIp, vmProxyClientIp, yandexClientIp } from './ingress.mjs'
 import { productionConfig } from './production-config.mjs'
 
 const development=process.argv.includes('--local')
 const port=Number(process.env.PORT??8789)
-let db, config, inbox=[], projectionAlertSeconds=300
+let db, config, inbox=[], projectionAlertSeconds=300,runtime='development',proxySecret
 if (development) {
   const { PGlite }=await import('@electric-sql/pglite')
   await mkdir('output/private-core',{recursive:true})
@@ -33,6 +33,8 @@ if (development) {
   const loaded=await productionConfig()
   db=postgresStore(loaded.connectionString,loaded.ca)
   config=loaded.config
+  runtime=loaded.runtime
+  proxySecret=loaded.proxySecret
   projectionAlertSeconds=loaded.projectionAlertSeconds
   // No implicit production migration; mail stays disabled until verified provider secrets exist.
 }
@@ -49,7 +51,7 @@ if(development) {
     thresholdUsd:Number(process.env.OPENROUTER_LOW_BALANCE_USD??5)}
 }
 const app=createApp({db,config})
-if(!development && (!config.maintenanceTriggerId||!config.folderId||!config.maintenanceTokenHash))throw new Error('Yandex_maintenance_trigger_required')
+if(runtime==='yandex-container' && (!config.maintenanceTriggerId||!config.folderId||!config.maintenanceTokenHash))throw new Error('Yandex_maintenance_trigger_required')
 if(development) {
   projectionAlertSeconds=Number(process.env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
   if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
@@ -66,7 +68,10 @@ const server=createServer(async(req,res)=>{
       chunks.push(chunk)
     }
     const url=new URL(req.url,config.origin)
-    if (!development && url.pathname==='/__internal/maintenance') {
+    if (runtime==='vm' && url.pathname==='/__internal/maintenance') {
+      res.writeHead(404,{'Cache-Control':'no-store'});res.end();return
+    }
+    if (runtime==='yandex-container' && url.pathname==='/__internal/maintenance') {
       let event
       try { event=JSON.parse(Buffer.concat(chunks).toString('utf8')) } catch { event=null }
       if(req.method!=='POST'||!isMaintenanceEvent(event,config.maintenanceTriggerId,config.folderId,config.maintenanceTokenHash)) {
@@ -79,9 +84,13 @@ const server=createServer(async(req,res)=>{
     if (development && url.pathname==='/__dev/mail' && req.method==='GET') {
       res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'}); res.end(JSON.stringify(inbox)); return
     }
-    const response=await app.fetch(new Request(url,{method:req.method,headers:req.headers,
+    const appHeaders={...req.headers}
+    delete appHeaders['x-gs-proxy-secret']
+    delete appHeaders['x-gs-client-ip']
+    const response=await app.fetch(new Request(url,{method:req.method,headers:appHeaders,
       ...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})}),
-      {clientIp:development?localClientIp(req.socket.remoteAddress):yandexClientIp(req.headers,req.socket.remoteAddress)})
+      {clientIp:runtime==='development'?localClientIp(req.socket.remoteAddress):
+        runtime==='vm'?vmProxyClientIp(req.headers,proxySecret):yandexClientIp(req.headers,req.socket.remoteAddress)})
     const headers=Object.fromEntries([...response.headers].filter(([k])=>k!=='set-cookie'))
     const cookies=response.headers.getSetCookie(); if(cookies.length) headers['Set-Cookie']=cookies
     res.writeHead(response.status,headers)

@@ -14,7 +14,7 @@ import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
 import { maintenanceOnce } from '../private-api/maintenance-once.mjs'
 import { productionConfig } from '../private-api/production-config.mjs'
-import { localClientIp, yandexClientIp } from '../private-api/ingress.mjs'
+import { localClientIp, vmProxyClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 import { serverDto } from '../worker/lib/dto.ts'
 
@@ -120,6 +120,19 @@ test('private one-shot maintenance shares production config, requires verified C
   assert.equal(result.mail,0)
   await assert.rejects(maintenanceOnce({...env,PG_CA_PEM:undefined},()=>{throw new Error('must_not_connect')}),
     /PostgreSQL_CA_required/)
+})
+
+test('VM runtime requires a secret, uses only the authenticated proxy IP, and needs no Yandex trigger',async()=>{
+  const env={PRIVATE_RUNTIME:'vm',DATABASE_URL:'postgres://fixture.invalid/gamescout',PG_CA_PEM:'fixture-ca',
+    PRIVATE_PROXY_SECRET:'s'.repeat(64),PUBLIC_ORIGIN:'https://gamescout.online'}
+  const loaded=await productionConfig(env)
+  assert.equal(loaded.runtime,'vm')
+  assert.equal(loaded.config.maintenanceTriggerId,undefined)
+  assert.equal(vmProxyClientIp({'x-gs-client-ip':'198.51.100.2','x-gs-proxy-secret':env.PRIVATE_PROXY_SECRET},loaded.proxySecret),'198.51.100.2')
+  assert.equal(vmProxyClientIp({'x-gs-client-ip':'198.51.100.2','x-gs-proxy-secret':'spoofed'},loaded.proxySecret),'unknown')
+  assert.equal(vmProxyClientIp({'x-gs-client-ip':'not-an-ip','x-gs-proxy-secret':env.PRIVATE_PROXY_SECRET},loaded.proxySecret),'unknown')
+  await assert.rejects(productionConfig({...env,PRIVATE_PROXY_SECRET:'short'}),/PRIVATE_PROXY_SECRET_required_for_vm/)
+  await assert.rejects(productionConfig({...env,PRIVATE_RUNTIME:'another'}),/PRIVATE_RUNTIME_invalid/)
 })
 
 test('Yandex ingress uses the appended caller IP, not a spoofed first XFF entry',()=>{

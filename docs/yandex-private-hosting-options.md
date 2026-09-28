@@ -1,6 +1,6 @@
 # Private-core hosting options (28 September 2026)
 
-Status: **comparison only; no resource approved or created**. The user rejected the proposed 4,480.70 ₽/month Managed PostgreSQL staging host. The Yandex console draft was not submitted. The account dashboard's 4,000 ₽ available is not a recurring free allowance or an approved spending cap.
+Status: historical comparison; the selected staging direction is now the [single Yandex VM](yandex-single-vm-staging.md), pending a reviewed cost and creation step. No resource has been created. The user rejected the proposed 4,480.70 ₽/month Managed PostgreSQL staging host. The console showed a 4,000 ₽ introductory grant **expiring 03.11.2026**, not a recurring free allowance or spending cap.
 
 ## What the host is for
 

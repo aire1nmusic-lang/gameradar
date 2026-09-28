@@ -1,0 +1,8 @@
+{$PRIVATE_API_HOST} {
+    @internal path /__internal/*
+    respond @internal 404
+    reverse_proxy api:8080 {
+        header_up X-GS-Client-IP {remote_host}
+        header_up X-GS-Proxy-Secret {$PRIVATE_PROXY_SECRET}
+    }
+}

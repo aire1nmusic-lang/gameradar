@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?required}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    command: ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/run/pg-tls/server.crt", "-c", "ssl_key_file=/run/pg-tls/server.key"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./pg-tls:/run/pg-tls:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+
+  api:
+    build:
+      context: ../..
+      dockerfile: private-api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PRIVATE_RUNTIME: vm
+      PG_CA_FILE: /run/pg-tls/ca.crt
+      PORT: "8080"
+    volumes:
+      - ./pg-tls/ca.crt:/run/pg-tls/ca.crt:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [private]
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      PRIVATE_API_HOST: ${PRIVATE_API_HOST:?required}
+      PRIVATE_PROXY_SECRET: ${PRIVATE_PROXY_SECRET:?required}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+    networks: [private]
+
+networks:
+  private:
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

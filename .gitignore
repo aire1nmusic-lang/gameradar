@@ -8,6 +8,9 @@ dist
 .dev.vars
 .dev.vars.*
 .env.local
+deploy/vm/.env
+deploy/vm/pg-tls/
+deploy/vm/backups/
 output/
 .playwright-cli/
 *.tsbuildinfo

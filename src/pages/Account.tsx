@@ -25,10 +25,17 @@ export default function Account() {
   const [serverId,setServerId]=useState(()=>new URLSearchParams(location.search).get('claim')??'')
   const [evidence,setEvidence]=useState(''),[reasons,setReasons]=useState<Record<string,string>>({})
   useEffect(()=>{
-    const params=new URLSearchParams(location.hash.slice(1))
-    setLinkToken(params.get('token')??''); setPurpose(params.get('purpose')??'')
-    // Remove sensitive fragments before any further navigation; never send them to analytics.
-    if(params.has('token')) history.replaceState(null,'',location.pathname+location.search)
+    const consumeLink=()=>{
+      const params=new URLSearchParams(location.hash.slice(1))
+      const token=params.get('token')
+      if(!token)return
+      setLinkToken(token);setPurpose(params.get('purpose')??'')
+      // Remove sensitive fragments before any further navigation; never send them to analytics.
+      history.replaceState(null,'',location.pathname+location.search)
+    }
+    consumeLink()
+    window.addEventListener('hashchange',consumeLink)
+    return()=>window.removeEventListener('hashchange',consumeLink)
   },[])
   async function reload() {
     await auth.refresh()

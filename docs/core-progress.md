@@ -266,6 +266,8 @@ Private migration `019_monitoring_holds.sql` and [rollback rules](monitoring-adm
 
 ## Remaining slices
 
+The [concrete Yandex staging resource request](yandex-staging-resource-request.md) is **BLOCKED on user approval of paid resources and a monthly cap**. The console currently quotes 4,480.70 ₽/month including VAT for one test-only PostgreSQL host with 20 GB network SSD; container, registry, timer and network usage cost extra. The folder has no VPC network, cluster or container. No create form was submitted, no cloud spend added (0 ₽), and no production route/migration changed.
+
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.

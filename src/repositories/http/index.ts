@@ -79,7 +79,19 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
       byId: bySlug,
       similar: async (slug, limit = 3) => {
         const server = await bySlug(slug)
-        return server ? (await allServers({ gameId: server.gameId })).filter(item => item.id !== server.id).slice(0, limit) : []
+        if (!server) return []
+        const modes = new Set(server.modes.map(mode => mode.toLocaleLowerCase('ru')))
+        return (await allServers({ gameId: server.gameId }))
+          .filter(item => item.id !== server.id)
+          .sort((a, b) => {
+            if (a.demo !== b.demo) return a.demo ? 1 : -1
+            const overlap = (item: GameServer) => item.modes.filter(mode => modes.has(mode.toLocaleLowerCase('ru'))).length
+            return overlap(b) - overlap(a)
+              || Number(b.version === server.version) - Number(a.version === server.version)
+              || a.name.localeCompare(b.name, 'ru')
+              || a.id.localeCompare(b.id)
+          })
+          .slice(0, limit)
       },
       facets: async gameId => {
         const servers = await allServers({ gameId })

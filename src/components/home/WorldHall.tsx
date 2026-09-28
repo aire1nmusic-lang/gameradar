@@ -3,11 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
-import { QUICK_SEARCHES } from '@/services'
-import { useGames, usePlatformStats } from '@/hooks/data'
+import { useGames } from '@/hooks/data'
 import { themeForGame } from '@/data/themes'
 import type { Game } from '@/models'
-import { HeroSearch } from './Hero'
 
 /**
  * The first screen: an empty cathedral hall with three glass cards floating in
@@ -93,19 +91,19 @@ function useTilt() {
 }
 
 export function WorldHall() {
-  const { data: stats } = usePlatformStats()
   const { data: games = [] } = useGames()
   const byId = Object.fromEntries(games.map((game) => [game.id, game])) as Record<string, Game | undefined>
   const worlds = WORLDS.map((id) => byId[id]).filter((game): game is Game => !!game)
   const [hover, setHover] = useState<string | null>(null)
   const { flight, enter } = usePortal()
   const tilt = useTilt()
-  const players = stats?.playersOnline ?? 0
 
   return (
     <section className="relative isolate overflow-hidden">
+      {/* No visible title or search here: the hall speaks for itself, search lives in the header. */}
+      <h1 className="sr-only">GameScout — каталог серверов Lineage 2, GTA RP и Minecraft</h1>
       {/* ── wide screens ─────────────────────────────────────────────── */}
-      <div ref={tilt} className="relative hidden h-[max(640px,calc(100svh-60px))] lg:block">
+      <div ref={tilt} className="relative hidden h-[max(640px,100svh)] lg:block">
         {/* the hall: breathes, follows the pointer, sinks back when a card is chosen */}
         <div
           aria-hidden
@@ -120,7 +118,7 @@ export function WorldHall() {
         </div>
 
         {/* the three cards, turned towards the centre like panels in the hall */}
-        <div className="absolute inset-x-0 top-[9%] flex justify-center gap-[3.2vw]" style={{ perspective: '1600px' }}>
+        <div className="absolute inset-0 flex items-center justify-center gap-[3.2vw] pb-[3%]" style={{ perspective: '1600px' }}>
           {worlds.map((game, index) => {
             const side = index === 0 ? 1 : index === worlds.length - 1 ? -1 : 0
             return (
@@ -139,27 +137,21 @@ export function WorldHall() {
           })}
         </div>
 
-        <div className="absolute inset-x-0 bottom-[4.5%] flex justify-center px-6" style={{ opacity: flight ? 0 : 1, transition: 'opacity 300ms' }}>
-          <GlassConsole players={players} />
-        </div>
       </div>
 
       {/* ── phones and tablets ───────────────────────────────────────── */}
-      <div className="relative lg:hidden">
+      <div className="relative flex min-h-[100svh] flex-col justify-center lg:hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
-          <img src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift h-full max-h-[1000px] w-full object-cover object-top" fetchPriority="high" decoding="async" />
+          <img src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/30 via-ink-950/35 to-ink-950" />
         </div>
-        <div className="pt-8 pb-8">
+        <div className="pt-10 pb-10">
           <div className="gs-snap-row flex snap-x snap-mandatory gap-4 overflow-x-auto px-[19vw] pt-2 pb-6 sm:px-[30vw]" style={{ perspective: '1200px' }}>
             {worlds.map((game, index) => (
               <div key={game.id} className="w-[62vw] max-w-[300px] shrink-0 snap-center sm:w-[40vw]">
                 <WorldCard game={game} side={0} index={index} active={false} dimmed={false} hidden={flight?.game.id === game.id} onEnter={enter(game)} onHover={() => undefined} compact />
               </div>
             ))}
-          </div>
-          <div className="px-4 sm:px-7">
-            <GlassConsole players={players} />
           </div>
         </div>
       </div>
@@ -205,7 +197,7 @@ function WorldCard({
       onFocus={() => onHover(true)}
       onBlur={() => onHover(false)}
       aria-label={`Открыть мир ${game.name}`}
-      className={cn('group block outline-none', compact ? 'w-full' : 'w-[clamp(190px,15.5vw,300px)]')}
+      className={cn('group block outline-none', compact ? 'w-full' : 'w-[clamp(210px,17.5vw,340px)]')}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <div className="gs-float" style={{ animationDelay: `${index * -2.1}s`, transformStyle: 'preserve-3d' }}>
@@ -296,34 +288,6 @@ function CardBloom({ flight }: { flight: Flight }) {
       </div>
       {/* the world's colour at the very end, so the world page grows out of it */}
       <div className="gs-veil absolute inset-0" style={{ background: color }} />
-    </div>
-  )
-}
-
-/** The central glass console: one line, search, shortcuts. */
-function GlassConsole({ players }: { players: number }) {
-  return (
-    <div className="gs-glass relative z-20 mx-auto w-full max-w-[620px] rounded-3xl px-4 pt-4 pb-3.5 text-center sm:px-5">
-      {players > 0 && (
-        <div className="mb-2 inline-flex items-center gap-2 text-[12.5px] text-white/70">
-          <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
-          <span className="num">{formatNumber(players)} игроков на серверах прямо сейчас</span>
-        </div>
-      )}
-      {/* No visible title: the hall speaks for itself. Search engines and screen readers still get one. */}
-      <h1 className="sr-only">GameScout — каталог серверов Lineage 2, GTA RP и Minecraft</h1>
-      <HeroSearch className="mt-0" />
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
-        {QUICK_SEARCHES.map((item) => (
-          <Link
-            key={item.label}
-            to={item.to}
-            className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1 text-[12.5px] text-white/75 transition-colors hover:border-white/25 hover:text-white"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
     </div>
   )
 }

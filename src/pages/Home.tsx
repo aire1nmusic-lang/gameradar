@@ -1,6 +1,4 @@
 import { WorldHall } from '@/components/home/WorldHall'
-import { HighOnlineSection, OpeningsSection, RecentlyAddedSection } from '@/components/home/sections'
-import { OwnerBand } from '@/components/home/bands'
 import { useSeo } from '@/lib/seo'
 
 export default function Home() {
@@ -8,10 +6,6 @@ export default function Home() {
   return (
     <>
       <WorldHall />
-      <HighOnlineSection />
-      <OpeningsSection />
-      <RecentlyAddedSection />
-      <OwnerBand />
     </>
   )
 }

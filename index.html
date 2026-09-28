@@ -43,7 +43,10 @@
       @keyframes bs-shine { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
       @media (prefers-reduced-motion: reduce) { .bs-sk { animation: none; } }
     </style>
-  </head>
+      <!-- The hall of worlds is the first thing a visitor sees: fetch it before the app starts. -->
+    <link rel="preload" as="image" href="/media/hub/nave-1920.webp" imagesrcset="/media/hub/nave-1280.webp 1280w, /media/hub/nave-1920.webp 1920w, /media/hub/nave-2560.webp 2560w, /media/hub/nave-3840.webp 3840w" imagesizes="100vw" media="(min-width: 1024px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/media/hub/nave-m-720.webp" imagesrcset="/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w" imagesizes="100vw" media="(max-width: 1023px)" fetchpriority="high" />
+</head>
   <body>
     <div id="root"><div class="bs" aria-busy="true" aria-label="GameScout загружается">
       <header class="bs-head"><div class="bs-wrap bs-row">

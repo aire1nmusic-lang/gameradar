@@ -11,6 +11,7 @@ export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const location = useLocation()
+  const hall = location.pathname === '/'
 
   useEffect(() => {
     if (!location.hash) window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
@@ -32,12 +33,13 @@ export function Layout() {
   return (
     <div className="relative flex min-h-screen flex-col">
       <BackgroundField />
-      <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} />
+      <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
       <main className="relative flex-1">
         <Outlet />
       </main>
-      <Footer />
-      <MobileNav />
+      {/* The hall is only a doorway: no footer or tab bar, everything else lives inside the worlds. */}
+      {!hall && <Footer />}
+      {!hall && <MobileNav />}
       <DesignPanel />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />

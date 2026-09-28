@@ -184,6 +184,12 @@ The private API now has a Node 24 container definition, binds production HTTP to
 
 **Rollback:** restore the previous Node listener/interval code in local development. Migration 014 is additive and contains only a schedule timestamp; retain it if other migrations are already deployed. Production requires separate paid-resource and migration approval plus a tested gateway/backup rollback before any cutover.
 
+## Slice 0c: private/public Yandex gateway split candidate (local)
+
+The [unapplied gateway candidate](yandex-private-gateway.md) keeps the public catalog reads on the existing D1 relay and sends auth, Claims, votes, owner/admin operations, Coins, payments, Support writes and copyright to the IAM-protected Yandex container. Unknown `/api/*` paths return a fixed 404, so retired D1 private writes cannot accidentally fall through to the relay. The public Support ranking is an exact D1 route; the private local equivalent remains for development. The candidate retains the static prerender routes and does not expose `/__internal/maintenance`. At a later cutover the origin Worker must also use `PUBLIC_ONLY=true`, because gateway routing alone does not block direct or alternate access to old D1 writes. The legacy Dashboard/Add Server API is deliberately denied and needs product migration before acceptance.
+
+**Verified:** three route-shape tests pass: every private app route (except the intentional public aggregate) resolves to the container, the public catalog remains GET-only, and old votes/Claim/events/server writes resolve to 404. The generator `--check` matches the committed YAML. This is source-level evidence, **not** Yandex gateway validation or HTTP acceptance; `yc` CLI, a staging container/database and credentials are unavailable locally. No cloud state or cost changed (0 ₽). Rollback: discard the candidate; the current gateway and D1 relay are untouched. Once deployed, rollback requires the preserved prior gateway spec and a write freeze/reconciliation for already accepted private transactions.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

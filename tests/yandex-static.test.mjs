@@ -29,7 +29,8 @@ test('Yandex staging mirror marks every HTML object noindex', () => {
   assert.equal(run.status, 0, run.stderr || run.stdout)
   const root = join(mirror, 'public')
   const files = htmlFiles(root)
-  assert.ok(files.length > 100)
+  // Rust, CS2 and DayZ are hidden for now (src/data/liveGames.ts), so the mirror has fewer pages.
+  assert.ok(files.length > 60)
   for (const file of files) assert.match(readFileSync(file, 'utf8'), /<meta name="robots" content="noindex, nofollow"/)
   assert.ok(!existsSync(join(root, 'sitemap.xml')))
   assert.match(readFileSync(join(root, 'robots.txt'), 'utf8'), /Disallow: \/$/m)

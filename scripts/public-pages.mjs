@@ -3,17 +3,18 @@ import { importSql, loadDataset } from './import/dataset.mjs'
 import { readFileSync } from 'node:fs'
 
 export const ORIGIN = 'https://gamescout.online'
-export const GAME_SLUG = { lineage2: 'lineage-2', minecraft: 'minecraft', gtarp: 'gta-rp', rust: 'rust', cs2: 'cs2', dayz: 'dayz' }
-export const GAME_NAME = { lineage2: 'Lineage 2', minecraft: 'Minecraft', gtarp: 'GTA RP', rust: 'Rust', cs2: 'CS2', dayz: 'DayZ' }
+// Only the games open on the site (src/data/liveGames.ts). Rust, CS2 and DayZ are hidden for now.
+export const GAME_SLUG = { lineage2: 'lineage-2', minecraft: 'minecraft', gtarp: 'gta-rp' }
+export const GAME_NAME = { lineage2: 'Lineage 2', minecraft: 'Minecraft', gtarp: 'GTA RP' }
 export const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
 export function publicRecords() {
   if (process.env.GS_SEO_SNAPSHOT_FILE) {
     const snapshot = JSON.parse(readFileSync(process.env.GS_SEO_SNAPSHOT_FILE, 'utf8'))
-    if (!Array.isArray(snapshot.records) || !snapshot.records.length || snapshot.records.some(record => !record.slug || !GAME_SLUG[record.game])) throw new Error('Invalid public SEO snapshot')
-    return snapshot.records
+    if (!Array.isArray(snapshot.records) || !snapshot.records.length || snapshot.records.some(record => !record.slug)) throw new Error('Invalid public SEO snapshot')
+    return snapshot.records.filter(record => GAME_SLUG[record.game])
   }
-  const records = loadDataset().filter(record => record.confidence === 'confirmed')
+  const records = loadDataset().filter(record => record.confidence === 'confirmed' && GAME_SLUG[record.game])
   const { plan } = importSql(records)
   const byKey = new Map(records.map(record => [record.key, record]))
   return plan.map(item => ({ ...byKey.get(item.key), slug: item.slug }))

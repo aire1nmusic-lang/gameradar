@@ -1,0 +1,25 @@
+# Amvera staging candidate — conditional review (28 September 2026)
+
+Status: **candidate, not selected or deployed**. A cheaper Russian provider is acceptable for comparison after the owner's cost discussion, but changing the original Yandex private-data boundary requires a documented deployment decision. No account, resource, migration or payment has been made for Amvera.
+
+## Price and capability evidence
+
+| Finding | Status | Evidence / consequence |
+| --- | --- | --- |
+| Application and managed PostgreSQL can each start at 290 ₽/30 days; each `Начальный Плюс` is 490 ₽/30 days | VERIFIED list prices | [Amvera plans](https://docs.amvera.ru/general/price.html). 580/980 ₽ are sums of two plans, not an account quote or proven GameScout capacity. Excess disk is billed at 35 ₽/GB per 30 days; running/error states are charged. |
+| Managed PostgreSQL can be selected in Moscow; provider says backups and logs remain in Russia | VERIFIED provider claim | [Amvera PostgreSQL](https://amvera.ru/managedpostgresql). Contract, exact app/backup/log region and personal-data processing terms still require review. Provider marketing alone is not a legal determination. |
+| PostgreSQL service retains its latest three backups; marketing says seven days of recovery | VERIFIED discrepancy / BLOCKED retention contract | [Database procedure](https://docs.amvera.ru/databases/postgreSQL.html), [marketing page](https://amvera.ru/managedpostgresql). Restore must be rehearsed before real data. Independent export/retention is needed for a longer recovery window. |
+| Cron Jobs exist, but their standalone price, isolation and secret delivery are not stated on the checked page | VERIFIED feature / BLOCKED total price | [Cron Jobs](https://docs.amvera.ru/cron/cronjobs.html). The current minute maintenance loop cannot simply be assumed included in 980 ₽. |
+| Internal app-to-database network is unencrypted by the platform; external database access requires an SSL-capable client | VERIFIED documented behavior / BLOCKED TLS configuration | [Amvera networking](https://docs.amvera.ru/applications/configuration/network.html), [PostgreSQL connection](https://docs.amvera.ru/databases/postgreSQL.html). GameScout's production `postgresStore` currently requires a CA with `rejectUnauthorized:true`; never weaken this to `sslmode=prefer` or disable verification merely to fit a provider. Confirm a verified-TLS route and CA/hostname before staging. |
+| Client IP forwarded by Amvera ingress | BLOCKED | The checked [network guide](https://docs.amvera.ru/applications/configuration/network.html) does not establish which header is trustworthy or whether clients can set it. GameScout currently has a Yandex-specific `X-Forwarded-For` adapter; using it unmodified on Amvera could let users forge anti-fraud IP signals. Keep unknown/fail-closed until official ingress behavior or an isolated end-to-end test proves a safe parser. |
+| Production mail requires replacement of Resend | FALSE for current code | `private-api/serve.mjs` and `worker/lib/mailer.ts` already support `MAIL_DRIVER=unisender` and leave mail disabled without credentials. Live sender, region and delivery still need verification. |
+| Spending cannot exceed prepaid balance | UNVERIFIED | [Amvera pricing](https://docs.amvera.ru/general/price.html) says excess disk is charged and a negative balance can stop/freeze a project. Do not treat prepaid balance as a hard cost cap; check autopay and account terms. |
+
+## Repo adaptation before any paid staging
+
+1. Keep private PostgreSQL as the source of truth; D1 remains a public projection. Choose an explicit provider-neutral startup mode. The present `private-api/serve.mjs` requires Yandex timer IDs and a CA, and its Yandex client-IP adapter must not be reused blindly. Preserve certificate and hostname verification, server-side session/cookie policy, outbox idempotency and a non-public maintenance runner.
+2. Obtain an exact two-resource account quote **including** database/app plan, excess disk, Cron Jobs, backup/export, logging, network and taxes. Confirm app, database, backups and logs are all in an appropriate Russian region and review the provider agreement. Do not equate a provider's data-location claim with full 152-FZ compliance.
+3. Run the Docker image and 20 additive migrations on a disposable staging database after a reviewed plan. Measure startup/RAM, real player/owner/admin latency and concurrency. Test authenticated flows, genuine ingress IP, D1 projection lag, mail through Unisender, and the recovery of a backup into a separate database.
+4. Retain current production routing and data during staging. Rehearse stopping private writes, restoring the previous gateway and recovering PostgreSQL before any cutover. Production DNS, real payments and irreversible migrations remain separately gated.
+
+These checks decide whether the 980 ₽ configuration is technically viable. Until then it is a **low list-price candidate**, not a recommendation for real-user launch.

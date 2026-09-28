@@ -4,7 +4,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { createApp } from '../private-api/app.mjs'
-import { migrate } from '../private-api/db.mjs'
+import { migrate, postgresStore } from '../private-api/db.mjs'
 import { digest, unseal } from '../private-api/crypto.mjs'
 import { dispatch, outboxHealth } from '../private-api/outbox.mjs'
 import { dispatchNicknameReview, reviewNickname } from '../private-api/nickname-review.mjs'
@@ -12,6 +12,8 @@ import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../priv
 import { checkProjectionLag } from '../private-api/projection-alert.mjs'
 import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
+import { maintenanceOnce } from '../private-api/maintenance-once.mjs'
+import { productionConfig } from '../private-api/production-config.mjs'
 import { localClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 import { serverDto } from '../worker/lib/dto.ts'
@@ -93,6 +95,31 @@ test('bounded maintenance drains mail on invocation and rejects forged timer eve
   assert.equal((await runMaintenance(h.db,config,options)).mail,0)
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_mail_outbox WHERE delivered_at IS NOT NULL')).rows[0].n,1)
   assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_maintenance_schedule WHERE key='openrouter_balance'")).rows[0].n,1)
+})
+
+test('private one-shot maintenance shares production config, requires verified CA and closes DB',async t=>{
+  assert.throws(()=>postgresStore('postgres://fixture.invalid/db?sslmode=disable','fixture-ca'),
+    /TLS_parameters_not_allowed/)
+  assert.throws(()=>postgresStore('postgres://fixture.invalid/db',''),/PostgreSQL_CA_required/)
+  const h=await harness(t)
+  const env={DATABASE_URL:'postgres://fixture.invalid/gamescout',PG_CA_PEM:'fixture-ca',
+    PUBLIC_ORIGIN:'https://gamescout.online',MAIL_ENCRYPTION_KEY:'a'.repeat(64),RATE_HASH_KEY:'b'.repeat(64),
+    MAIL_DRIVER:'unisender',MAIL_FROM:'GameScout <no-reply@gamescout.online>',UNISENDER_API_KEY:'fixture-key'}
+  const loaded=await productionConfig(env)
+  assert.equal(loaded.config.mailEnabled,true)
+  assert.equal(loaded.config.mailEnv.MAIL_DRIVER,'unisender')
+  assert.equal(loaded.ca,'fixture-ca')
+  assert.equal(loaded.config.maintenanceTriggerId,undefined)
+  let closed=false,connected=false
+  const result=await maintenanceOnce({...env,MAIL_DRIVER:undefined},(url,ca)=>{
+    connected=url===env.DATABASE_URL&&ca===env.PG_CA_PEM
+    return {...h.db,close:async()=>{closed=true}}
+  })
+  assert.equal(connected,true)
+  assert.equal(closed,true)
+  assert.equal(result.mail,0)
+  await assert.rejects(maintenanceOnce({...env,PG_CA_PEM:undefined},()=>{throw new Error('must_not_connect')}),
+    /PostgreSQL_CA_required/)
 })
 
 test('Yandex ingress uses the appended caller IP, not a spoofed first XFF entry',()=>{

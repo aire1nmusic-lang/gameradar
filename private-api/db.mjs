@@ -23,8 +23,14 @@ export async function migrationPlan(db) {
 }
 
 export function postgresStore(connectionString, ca) {
+  if(typeof ca!=='string'||!ca.trim())throw new Error('PostgreSQL_CA_required')
+  const url=new URL(connectionString)
+  if(!['postgres:','postgresql:'].includes(url.protocol))throw new Error('PostgreSQL_URL_required')
+  // pg connection-string TLS parameters can override the verified CA supplied below.
+  if(['sslmode','sslrootcert','sslcert','sslkey'].some(key=>url.searchParams.has(key)))
+    throw new Error('PostgreSQL_URL_TLS_parameters_not_allowed')
   const pool = new pg.Pool({ connectionString, max: 5, connectionTimeoutMillis: 5000,
-    ssl: ca ? { ca, rejectUnauthorized: true } : undefined })
+    ssl: { ca, rejectUnauthorized: true } })
   return {
     query: (sql, params = []) => pool.query(sql, params),
     async transaction(fn) {

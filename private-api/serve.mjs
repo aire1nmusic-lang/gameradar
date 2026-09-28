@@ -5,11 +5,11 @@ import { createApp } from './app.mjs'
 import { migrate, postgresStore } from './db.mjs'
 import { isMaintenanceEvent, runMaintenance } from './maintenance.mjs'
 import { localClientIp, yandexClientIp } from './ingress.mjs'
-import { mailEnabled } from '../worker/lib/mailer.ts'
+import { productionConfig } from './production-config.mjs'
 
 const development=process.argv.includes('--local')
 const port=Number(process.env.PORT??8789)
-let db, config, inbox=[]
+let db, config, inbox=[], projectionAlertSeconds=300
 if (development) {
   const { PGlite }=await import('@electric-sql/pglite')
   await mkdir('output/private-core',{recursive:true})
@@ -30,36 +30,33 @@ if (development) {
       projectionSecret:localProjectionSecret}:{})}
   await migrate(db)
 } else {
-  if (!process.env.DATABASE_URL || (!process.env.PG_CA_FILE && !process.env.PG_CA_PEM)) throw new Error('DATABASE_URL_and_PostgreSQL_CA_required')
-  db=postgresStore(process.env.DATABASE_URL,process.env.PG_CA_PEM??await readFile(process.env.PG_CA_FILE,'utf8'))
-  const mailEnv={ENVIRONMENT:'production',MAIL_DRIVER:process.env.MAIL_DRIVER,MAIL_FROM:process.env.MAIL_FROM,
-    RESEND_API_KEY:process.env.RESEND_API_KEY,UNISENDER_API_KEY:process.env.UNISENDER_API_KEY}
-  config={origin:process.env.PUBLIC_ORIGIN,environment:'production',mailKey:process.env.MAIL_ENCRYPTION_KEY,
-    rateKey:process.env.RATE_HASH_KEY,mailEnabled:mailEnabled(mailEnv),mailEnv,publicApi:process.env.PUBLIC_CATALOG_ORIGIN,
-    publicProjection:process.env.PUBLIC_PROJECTION_URL,projectionSecret:process.env.PUBLIC_PROJECTION_SECRET,
-    turnstileSecret:process.env.TURNSTILE_SECRET,turnstileSiteKey:process.env.TURNSTILE_SITE_KEY,
-    oauth:Object.fromEntries(Object.entries(process.env).filter(([key])=>/^(GOOGLE|VK|YANDEX|DISCORD)_CLIENT_(ID|SECRET)$/.test(key))),
-    maintenanceTriggerId:process.env.YANDEX_MAINTENANCE_TRIGGER_ID,folderId:process.env.YANDEX_FOLDER_ID,
-    maintenanceTokenHash:process.env.YANDEX_MAINTENANCE_TOKEN_SHA256}
+  const loaded=await productionConfig()
+  db=postgresStore(loaded.connectionString,loaded.ca)
+  config=loaded.config
+  projectionAlertSeconds=loaded.projectionAlertSeconds
   // No implicit production migration; mail stays disabled until verified provider secrets exist.
 }
-config.enableTestPayments=process.env.ENABLE_TEST_PAYMENTS==='1'
-config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:process.env.ROBOKASSA_TEST_PASSWORD_1,
-  testPassword2:process.env.ROBOKASSA_TEST_PASSWORD_2,receiptSno:process.env.ROBOKASSA_RECEIPT_SNO,
-  receiptTax:process.env.ROBOKASSA_RECEIPT_TAX,receiptPaymentObject:process.env.ROBOKASSA_RECEIPT_PAYMENT_OBJECT,
-  receiptPaymentMethod:process.env.ROBOKASSA_RECEIPT_PAYMENT_METHOD,itemName:process.env.ROBOKASSA_RECEIPT_ITEM_NAME}
-config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_NICKNAME_MODEL}
-config.copyrightAI={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_COPYRIGHT_MODEL}
-config.telegram={botToken:process.env.TELEGRAM_BOT_TOKEN,chatId:process.env.TELEGRAM_ADMIN_CHAT_ID}
-config.openrouterBalance={key:process.env.OPENROUTER_MANAGEMENT_KEY,
-  thresholdUsd:Number(process.env.OPENROUTER_LOW_BALANCE_USD??5)}
+if(development) {
+  config.enableTestPayments=process.env.ENABLE_TEST_PAYMENTS==='1'
+  config.robokassa={merchantLogin:process.env.ROBOKASSA_TEST_LOGIN,testPassword1:process.env.ROBOKASSA_TEST_PASSWORD_1,
+    testPassword2:process.env.ROBOKASSA_TEST_PASSWORD_2,receiptSno:process.env.ROBOKASSA_RECEIPT_SNO,
+    receiptTax:process.env.ROBOKASSA_RECEIPT_TAX,receiptPaymentObject:process.env.ROBOKASSA_RECEIPT_PAYMENT_OBJECT,
+    receiptPaymentMethod:process.env.ROBOKASSA_RECEIPT_PAYMENT_METHOD,itemName:process.env.ROBOKASSA_RECEIPT_ITEM_NAME}
+  config.openrouter={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_NICKNAME_MODEL}
+  config.copyrightAI={key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_COPYRIGHT_MODEL}
+  config.telegram={botToken:process.env.TELEGRAM_BOT_TOKEN,chatId:process.env.TELEGRAM_ADMIN_CHAT_ID}
+  config.openrouterBalance={key:process.env.OPENROUTER_MANAGEMENT_KEY,
+    thresholdUsd:Number(process.env.OPENROUTER_LOW_BALANCE_USD??5)}
+}
 const app=createApp({db,config})
 if(!development && (!config.maintenanceTriggerId||!config.folderId||!config.maintenanceTokenHash))throw new Error('Yandex_maintenance_trigger_required')
-const projectionAlertSeconds=Number(process.env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
-if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
-  throw new Error('PUBLIC_PROJECTION_ALERT_SECONDS_must_be_60_to_3600')
-if(!Number.isFinite(config.openrouterBalance.thresholdUsd)||config.openrouterBalance.thresholdUsd<0.01
-  ||config.openrouterBalance.thresholdUsd>1000)throw new Error('OPENROUTER_LOW_BALANCE_USD_must_be_0.01_to_1000')
+if(development) {
+  projectionAlertSeconds=Number(process.env.PUBLIC_PROJECTION_ALERT_SECONDS??300)
+  if(!Number.isInteger(projectionAlertSeconds)||projectionAlertSeconds<60||projectionAlertSeconds>3600)
+    throw new Error('PUBLIC_PROJECTION_ALERT_SECONDS_must_be_60_to_3600')
+  if(!Number.isFinite(config.openrouterBalance.thresholdUsd)||config.openrouterBalance.thresholdUsd<0.01
+    ||config.openrouterBalance.thresholdUsd>1000)throw new Error('OPENROUTER_LOW_BALANCE_USD_must_be_0.01_to_1000')
+}
 const server=createServer(async(req,res)=>{
   try {
     const chunks=[]; let size=0

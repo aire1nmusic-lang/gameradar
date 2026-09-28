@@ -86,7 +86,7 @@ function CopyAddress({ address, serverId, size }: { address: string; serverId: s
 
 export default function ServerProfile() {
   const { slug } = useParams()
-  const { data: server, loading } = useServer(slug)
+  const { data: server, loading, error, reload } = useServer(slug)
 
   if (loading) {
     return (
@@ -109,8 +109,20 @@ export default function ServerProfile() {
     )
   }
 
+  if (error) return <ServerLoadError retry={reload} />
   if (!server) return <ServerNotFound />
   return <Profile server={server} />
+}
+
+function ServerLoadError({retry}:{retry:()=>void}) {
+  useSeo({title:'Не удалось загрузить сервер',noindex:true})
+  return <Container className="py-24">
+    <div className="surface mx-auto max-w-xl space-y-4 rounded-xl p-6 text-center">
+      <h1 className="text-xl font-semibold">Не удалось загрузить сервер</h1>
+      <p className="text-ink-400">Данные временно недоступны. Попробуйте загрузить страницу ещё раз.</p>
+      <Button onClick={retry}>Повторить загрузку</Button>
+    </div>
+  </Container>
 }
 
 /** An unknown slug is a soft 404 of the SPA: keep it out of the index. */

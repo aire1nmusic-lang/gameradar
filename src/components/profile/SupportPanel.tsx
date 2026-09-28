@@ -15,21 +15,26 @@ export function SupportPanel({server}:{server:GameServer}) {
   const [summary,setSummary]=useState<Summary>(),[wallet,setWallet]=useState<Wallet>()
   const [testPayment,setTestPayment]=useState(false)
   const [coins,setCoins]=useState(1),[anonymous,setAnonymous]=useState(true)
-  const [error,setError]=useState(''),[busy,setBusy]=useState(false)
+  const [error,setError]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true)
   const supportKey=useRef(crypto.randomUUID()),creditKey=useRef(crypto.randomUUID()),paymentKey=useRef(crypto.randomUUID())
   const local=['127.0.0.1','localhost'].includes(window.location.hostname)
   const refresh=useCallback(async()=>{
+    setLoading(true);setError('')
+    try {
     const [next,wallet]=await Promise.all([
       apiRequest<Summary>(`/support/servers/${encodeURIComponent(server.id)}`),
       auth.user?apiRequest<Wallet>('/coins/me'):Promise.resolve(undefined),
     ])
     setSummary(next);setWallet(wallet)
+    } catch(e) {setError(e instanceof Error?e.message:'Поддержка сейчас недоступна')}
+    finally {setLoading(false)}
   },[server.id,auth.user?.id])
-  useEffect(()=>{let live=true;Promise.all([
+  useEffect(()=>{let live=true;setSummary(undefined);setWallet(undefined);setError('');setLoading(true);Promise.all([
     apiRequest<Summary>(`/support/servers/${encodeURIComponent(server.id)}`),
     auth.user?apiRequest<Wallet>('/coins/me'):Promise.resolve(undefined),
   ]).then(([next,wallet])=>{if(live){setSummary(next);setWallet(wallet)}})
-    .catch(()=>{if(live)setError('Поддержка сейчас недоступна')});return()=>{live=false}
+    .catch(()=>{if(live)setError('Поддержка сейчас недоступна')})
+    .finally(()=>{if(live)setLoading(false)});return()=>{live=false}
   },[server.id,auth.user?.id])
   useEffect(()=>{apiRequest<TestPaymentConfig>('/payments/test/config').then(value=>setTestPayment(value.available&&value.testOnly&&!value.realSalesEnabled)).catch(()=>setTestPayment(false))},[])
   async function support() {
@@ -68,14 +73,15 @@ export function SupportPanel({server}:{server:GameServer}) {
   }
   return <section className="surface space-y-3 rounded-xl p-5 sm:p-6" id="support">
     <h2 className="text-[18px]">Поддержка</h2>
-    <p className="text-[15px]">Поддержка: <strong>{summary?.coins ?? '—'}</strong> · {summary?.participants ?? '—'} {summary ? plural(summary.participants, ['участник', 'участника', 'участников']) : 'участников'}</p>
+    {loading&&!summary&&<p role="status" className="text-[13px] text-ink-400">Загружаем данные Поддержки…</p>}
+    {summary&&<p className="text-[15px]">Поддержка: <strong>{summary.coins}</strong> · {summary.participants} {plural(summary.participants, ['участник', 'участника', 'участников'])}</p>}
     <p className="text-[13px] text-ink-400">Отдельная сортировка за GS Coins. Карточки одинаковые; поддержка не влияет на Народный рейтинг. Номинал: 1 Coin = 50 ₽.</p>
     {summary?.recent.length ? <div className="space-y-1 border-t border-white/7 pt-3">
       <h3 className="text-[13px] text-ink-300">Последние поддержавшие</h3>
       {summary.recent.map((item,index)=><div key={`${item.created_at}-${index}`} className="flex justify-between gap-3 text-[13px]">
         <span className="truncate">{item.anonymous?'Анонимно':item.public_nick}</span><span className="num shrink-0">{item.coins} Coins</span>
       </div>)}
-    </div> : <p className="text-[13px] text-ink-400">Поддержавших пока нет.</p>}
+    </div> : summary&&<p className="text-[13px] text-ink-400">Поддержавших пока нет.</p>}
     {!auth.user ? <Button to="/account">Войти для поддержки</Button> : !auth.user.emailVerified ?
       <Button to="/account">Подтвердить email</Button> : <div className="space-y-3 border-t border-white/7 pt-3">
       <p className="text-[13px]">Ваш баланс: <strong>{wallet?.balance ?? '…'} GS Coins</strong></p>
@@ -94,6 +100,7 @@ export function SupportPanel({server}:{server:GameServer}) {
         <Button variant="outline" className="mt-2" disabled={busy} onClick={()=>void localCredit()}>Начислить 10 тестовых Coins</Button>
       </div>}
     </div>}
-    {error&&<p role="alert" className="text-[13px] text-danger-300">{error}</p>}
+    {error&&<div className="space-y-2"><p role="alert" className="text-[13px] text-danger-300">{error}{summary?' Показаны последние загруженные данные.':''}</p>
+      <Button variant="outline" disabled={loading||busy} onClick={()=>void refresh()}>Повторить загрузку</Button></div>}
   </section>
 }

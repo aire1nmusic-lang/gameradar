@@ -274,6 +274,12 @@ Private migration `020_vote_review.sql` adds an audited `ACCEPTED` / `VOIDED` st
 
 The shared header now links to `/account` in private-core mode and shows the signed-in display name (or “Аккаунт” before login) instead of always saying “Войти”. The legacy login modal path remains in legacy mode. **Verified locally:** TypeScript/Worker typecheck passed. In the in-app browser at 390 px, the authenticated admin header exposed `Аккаунт: Browser E2E Admin`; keyboard activation opened `/account` with the same confirmed session and its Admin link. No horizontal overflow appeared. No cloud resource or migration; cost 0 ₽. Rollback: revert this header change. Production OAuth/email and broader mobile paths remain open.
 
+## Slice 2j/7l: explicit server and Support loading failures (local)
+
+The server profile now distinguishes an unavailable API from an unknown slug: an API failure shows a noindex retry state, while an actual 404 still shows “Сервер не найден”. The Support panel waits for a successful summary before showing zero participants or an empty recent list. On fetch failure it shows an alert and retry control; a failed refresh labels the previous summary as old data. This prevents a network failure being presented as a removed card or as zero Support.
+
+**Verified locally:** with the private API deliberately stopped, navigating from a loaded 2b2t profile to AresMine/HolyWorld showed “Не удалось загрузить сервер” with retry, not a false 404. Restarting the API and activating retry restored each profile. The Support-specific failed request state is code-reviewed but not isolated in a browser fault injection. TypeScript/Worker typecheck passed. No production or cloud state changed; cost 0 ₽. Rollback: revert the UI change; no migration or transaction is involved.
+
 ## Remaining slices
 
 The [concrete Yandex staging resource request](yandex-staging-resource-request.md) is **BLOCKED on user approval of paid resources and a monthly cap**. The console currently quotes 4,480.70 ₽/month including VAT for one test-only PostgreSQL host with 20 GB network SSD; container, registry, timer and network usage cost extra. The folder has no VPC network, cluster or container. No create form was submitted, no cloud spend added (0 ₽), and no production route/migration changed.

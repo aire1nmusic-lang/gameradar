@@ -1,0 +1,11 @@
+# Reviewed owner links (local slice)
+
+An email-confirmed owner with an approved Claim may propose `site`, `discord` or `telegram` links in `/account`. An empty address explicitly requests removal. The proposal requires an evidence note and stays private until an independent `servers.review` administrator approves it. Self-review, unclaimed cards and concurrent pending changes to the same field are rejected. Only public link values, never evidence or account identity, enter the versioned outbox and D1. All links require a public HTTPS hostname without credentials or a fragment.
+
+Private migration `017_owner_links.sql` extends the existing owner fact checks. The D1 projection uses existing `servers.website`, `servers.discord` and `servers.telegram` columns; no D1 migration is needed. The public snapshot contains the latest approved link value for every previously reviewed link field, including an empty removal. D1 applies link changes only for the newly accepted server version in the same batch as the projection marker. A failed outbox insert rolls back the private approval and website copy. Delivery retries can replay; an older version cannot overwrite a newer link.
+
+An active copyright restriction on a link key continues to hide that key after the owner changes its target. Only an audited administrator RESTORE decision removes the restriction. The owner edit does not resolve a copyright dispute.
+
+Local acceptance: apply migration 017 to disposable PGlite, submit and review a link proposal in each game, inspect the public Worker card after signed delivery, then submit a removal. Verify denied cross-server submission, rejected insecure URLs, pending duplicate, self-review, monotonic delivery and the link remaining hidden during an active restriction. The PGlite/SQLite invariant test covers these paths. Production migration, D1 delivery and browser role acceptance remain separate release checks.
+
+Rollback: stop new proposals and revert the API/UI. An incorrect approved link is corrected through another reviewed edit or removal, producing a higher projection version; keep previous audit and outbox history. If delivery fails, retry the queued version after fixing the cause. Do not delete a copyright restriction to expose a replacement link. Migration 017 is additive to valid records; do not drop it after later migrations depend on it.

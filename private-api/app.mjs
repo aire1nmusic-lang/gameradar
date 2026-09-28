@@ -22,6 +22,18 @@ const textOf = (v,min,max) => {
   return v.trim()
 }
 const ownerFact = (field,input) => {
+  if(['site','discord','telegram'].includes(field)) {
+    if(input==='')return '' // An explicit removal, reviewed like any other change.
+    if(typeof input!=='string'||input.length>500)fail(400,'invalid_link','Некорректная ссылка')
+    let url
+    try {url=new URL(input.trim())}catch{fail(400,'invalid_link','Некорректная ссылка')}
+    const host=url.hostname.toLowerCase().replace(/\.$/,'')
+    if(url.protocol!=='https:'||url.username||url.password||url.hash||!host.includes('.')
+      ||host==='localhost'||/\.(?:localhost|local|internal|lan|test)$/.test(host)
+      ||/^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))
+      fail(400,'invalid_link','Нужен публичный HTTPS-адрес без учётных данных и фрагмента')
+    return url.toString()
+  }
   if(!['version','rates','region','openedAt','modes','country'].includes(field)) fail(400,'invalid_field','Недопустимое поле карточки')
   const value=textOf(input,1,80)
   if(/[<>]|\b(?:https?:\/\/|www\.)/i.test(value)) fail(400,'invalid_fact','Используйте только значение характеристики без ссылок и разметки')
@@ -840,6 +852,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       await tx.query('UPDATE gs_owner_fact_edits SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4',
         [status,reviewer.id,reason,edit.id])
       if(status==='APPROVED') {
+        if(edit.field==='site')await tx.query('UPDATE gs_server_registry SET website=$1 WHERE server_id=$2',
+          [edit.value||null,edit.server_id])
         const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
           [edit.server_id])).rows[0]
         const snapshot=await createPublicSnapshot(tx,edit.server_id,changed.version)

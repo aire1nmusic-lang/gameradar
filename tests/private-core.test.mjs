@@ -821,6 +821,94 @@ test('D1 factual correction is atomic and ignores stale versions',async t=>{
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,2)
 })
 
+test('reviewed owner links project or remove by version without bypassing copyright',async t=>{
+  const h=await harness(t),owner=await h.register('links-owner@example.com'),admin=await h.register('links-admin@example.com'),other=await h.register('links-other@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  for(const [id,game] of [['links-l2','lineage2'],['links-mc','minecraft'],['links-gta','gtarp']]) {
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[id,game,id,id])
+    const claim=await h.request('/claims',{serverId:id,evidence:'Official ownership proof is available for review.'},owner.cookie)
+    assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,{status:'VERIFIED',reason:'Official ownership proof reviewed'},admin.cookie)).status,200)
+  }
+  const sitePath='/owners/me/servers/links-l2/fact-edits'
+  const input={field:'site',value:'https://l2.example.org/project',evidence:'Official domain ownership and project page checked.'}
+  assert.equal((await h.request(sitePath,input,other.cookie)).status,403)
+  for(const value of ['http://l2.example.org/','https://127.0.0.1/','https://user:pass@l2.example.org/','https://l2.example.org/#token'])
+    assert.equal((await h.request(sitePath,{...input,value},owner.cookie)).status,400)
+  assert.equal((await h.request(sitePath,{...input,field:'other'},owner.cookie)).status,400)
+  const site=await h.request(sitePath,input,owner.cookie)
+  assert.equal(site.status,201)
+  assert.equal((await h.request(sitePath,input,owner.cookie)).status,409)
+  assert.equal((await h.request(`/admin/server-fact-edits/${site.body.id}/resolve`,
+    {status:'APPROVED',reason:'Owner reviewed the official link'},admin.cookie)).status,200)
+  assert.equal((await h.db.query("SELECT website FROM gs_server_registry WHERE server_id='links-l2'")).rows[0].website,input.value)
+  const first=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='links-l2' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.equal(first.links.site,input.value)
+  assert.ok(!JSON.stringify(first).includes('domain ownership'))
+  assert.deepEqual(parsePublicSnapshot(first),first)
+
+  const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,website TEXT,discord TEXT,telegram TEXT,updated_at TEXT);
+    CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+    INSERT INTO servers(id,website) VALUES('links-l2','https://old.example.org/')`)
+  const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
+    async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
+      catch(error){sqlite.exec('ROLLBACK');throw error}}}
+  const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
+  await project(first)
+  assert.equal(sqlite.prepare("SELECT website FROM servers WHERE id='links-l2'").get().website,input.value)
+  assert.throws(()=>parsePublicSnapshot({...first,links:{site:'javascript:alert(1)'}}),/invalid_projection/)
+
+  await h.db.query(`INSERT INTO gs_copyright_claims(id,server_id,claimant_name,contact_email,rights_basis,
+    work_description,material_key,material_url,evidence,status) VALUES
+    ('link-claim','links-l2','Rights Holder','rights@example.org','Rights basis','Protected work','site',$1,'Evidence','REVIEW_RESTRICTED')`,[input.value])
+  await h.db.query(`INSERT INTO gs_material_restrictions(id,claim_id,server_id,material_key)
+    VALUES('link-restriction','link-claim','links-l2','site')`)
+  const changed=await h.request(sitePath,{...input,value:'https://l2.example.org/new'},owner.cookie)
+  assert.equal(changed.status,201)
+  await h.db.query(`CREATE FUNCTION fail_link_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated outbox failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_link_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_link_outbox()')
+  assert.equal((await h.request(`/admin/server-fact-edits/${changed.body.id}/resolve`,
+    {status:'APPROVED',reason:'Updated official site verified'},admin.cookie)).status,500)
+  assert.equal((await h.db.query('SELECT status FROM gs_owner_fact_edits WHERE id=$1',[changed.body.id])).rows[0].status,'PENDING')
+  assert.equal((await h.db.query("SELECT website FROM gs_server_registry WHERE server_id='links-l2'")).rows[0].website,input.value)
+  await h.db.query('DROP TRIGGER fail_link_outbox ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION fail_link_outbox()')
+  assert.equal((await h.request(`/admin/server-fact-edits/${changed.body.id}/resolve`,
+    {status:'APPROVED',reason:'Updated official site verified'},admin.cookie)).status,200)
+  const second=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='links-l2' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.deepEqual(second.restrictedLinks,['site'])
+  await project(second)
+  await project(first)
+  const current=sqlite.prepare("SELECT s.website,p.restricted_links,p.version FROM servers s JOIN public_server_projection p ON p.server_id=s.id").get()
+  assert.equal(current.website,'https://l2.example.org/new')
+  assert.equal(current.restricted_links,'["site"]')
+  assert.equal(serverDto({id:'links-l2',slug:'links-l2',game_id:'lineage2',website:current.website,
+    restricted_links:current.restricted_links,modes:'[]',tags:'[]',languages:'[]'}).links.site,'')
+
+  const removed=await h.request(sitePath,{field:'site',value:'',evidence:'The owner confirms the site must be removed.'},owner.cookie)
+  assert.equal(removed.status,201)
+  assert.equal((await h.request(`/admin/server-fact-edits/${removed.body.id}/resolve`,
+    {status:'APPROVED',reason:'Removal request verified with owner'},admin.cookie)).status,200)
+  const last=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='links-l2' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.equal(last.links.site,'')
+  await project(last)
+  assert.equal(sqlite.prepare("SELECT website FROM servers WHERE id='links-l2'").get().website,null)
+  assert.equal((await h.db.query("SELECT website FROM gs_server_registry WHERE server_id='links-l2'")).rows[0].website,null)
+  for(const [id,field,value] of [['links-mc','discord','https://discord.gg/example'],['links-gta','telegram','https://t.me/example']]) {
+    const edit=await h.request(`/owners/me/servers/${id}/fact-edits`,
+      {field,value,evidence:'Official community channel ownership was checked.'},owner.cookie)
+    assert.equal(edit.status,201)
+    assert.equal((await h.request(`/admin/server-fact-edits/${edit.body.id}/resolve`,
+      {status:'APPROVED',reason:'Official community channel verified'},admin.cookie)).status,200)
+    const snapshot=(await h.db.query('SELECT payload FROM gs_public_outbox WHERE server_id=$1 ORDER BY version DESC LIMIT 1',[id])).rows[0].payload
+    assert.equal(snapshot.links[field],value)
+    parsePublicSnapshot(snapshot)
+  }
+})
+
 test('Support projects only public aggregates with ledger rollback and idempotency',async t=>{
   const h=await harness(t),one=await h.register('support-projection-1@example.com'),two=await h.register('support-projection-2@example.com')
   await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('support-gta','gtarp','Support GTA','support-gta')")

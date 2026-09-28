@@ -91,7 +91,7 @@ export default function Admin() {
             <div className="flex gap-2">{(['APPROVED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/server-edits/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='APPROVED'?'Опубликовать':'Отклонить'}</Button>)}</div>
           </>}
-          {active.id==='server-facts'&&<><strong>{value(row,'name')} · {value(row,'game_id')}</strong><p>{value(row,'field')}: {value(row,'value')}</p><p className="whitespace-pre-wrap break-words text-ink-400">Основание: {value(row,'evidence')}</p>
+          {active.id==='server-facts'&&<><strong>{value(row,'name')} · {value(row,'game_id')}</strong><p>{value(row,'field')}: {row.value===''?'удалить ссылку':value(row,'value')}</p><p className="whitespace-pre-wrap break-words text-ink-400">Основание: {value(row,'evidence')}</p>
             <Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
             <div className="flex gap-2">{(['APPROVED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/server-fact-edits/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='APPROVED'?'Опубликовать':'Отклонить'}</Button>)}</div>

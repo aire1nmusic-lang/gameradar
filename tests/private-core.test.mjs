@@ -101,6 +101,32 @@ test('Yandex ingress uses the appended caller IP, not a spoofed first XFF entry'
   assert.equal(localClientIp('127.0.0.1'),'127.0.0.1')
 })
 
+test('ADMIN configures rolling vote window and risk thresholds with audit; reader cannot write',async t=>{
+  const h=await harness(t),admin=await h.register('rules-admin@example.com'),reader=await h.register('rules-reader@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'MODERATOR')",[admin.user.id,reader.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('rules-l2','lineage2','Rules L2','rules-l2')")
+  const initial=(await h.request('/admin/vote-rules',undefined,reader.cookie)).body
+  assert.equal(initial.windowHours,24)
+  assert.equal((await h.request('/admin/vote-rules',{...initial,reason:'Reader must not edit'},reader.cookie)).status,403)
+  assert.equal((await h.request('/admin/vote-rules',{...initial,windowHours:0,reason:'Invalid window'},admin.cookie)).status,400)
+  assert.equal((await h.request('/admin/vote-rules',{...initial,reason:'No actual changes'},admin.cookie)).body.changed,false)
+  const next={windowHours:48,maxPerWindow:2,ipDailyLimit:12,deviceDailyLimit:6,asnDailyLimit:250,
+    reason:'Reviewed risk policy for a longer rolling window'}
+  const updated=await h.request('/admin/vote-rules',next,admin.cookie)
+  assert.equal(updated.status,200)
+  assert.deepEqual(updated.body.rules,{windowHours:48,maxPerWindow:2,ipDailyLimit:12,deviceDailyLimit:6,asnDailyLimit:250})
+  assert.equal(updated.body.changed,true)
+  assert.equal((await h.request('/admin/vote-rules',next,admin.cookie)).body.changed,false)
+  const eligibility=(await h.request('/people-rating/eligibility?serverId=rules-l2',undefined,reader.cookie)).body
+  assert.equal(eligibility.windowHours,48)
+  assert.equal(eligibility.limit,2)
+  const events=(await h.db.query("SELECT actor_id,details FROM gs_audit WHERE action='vote.rules_changed'")).rows
+  assert.equal(events.length,1)
+  assert.equal(events[0].actor_id,admin.user.id)
+  assert.equal(events[0].details.previous.windowHours,24)
+  assert.equal(events[0].details.next.windowHours,48)
+})
+
 test('expired tokens, concurrent consumption, rate limits and transactional rollback',async t=>{
   const h=await harness(t)
   await h.request('/auth/register',{email:'expired@example.com',password,displayName:'Player'})

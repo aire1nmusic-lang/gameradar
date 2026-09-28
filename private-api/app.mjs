@@ -38,6 +38,8 @@ const ownerFact = (field,input) => {
 const passwordOf = v => { if (!passwordValid(v)) fail(400,'password_weak','Пароль — от 12 до 128 символов'); return v }
 const cookieValue = (c,name) => (c.req.header('Cookie')??'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1) ?? ''
 const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_audit(actor_id,action,target,details) VALUES($1,$2,$3,$4)',[actor,action,target,JSON.stringify(details)])
+const voteRulesDto = row => ({windowHours:row.window_hours,maxPerWindow:row.max_per_window,
+  ipDailyLimit:row.ip_daily_limit,deviceDailyLimit:row.device_daily_limit,asnDailyLimit:row.asn_daily_limit})
 
 export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify }) {
   if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
@@ -629,6 +631,29 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     await permission(c,'votes.read')
     return c.json((await db.query(`SELECT id,server_id,user_id,asn,created_at FROM gs_votes
       ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/vote-rules',async c=>{
+    await permission(c,'votes.read')
+    return c.json(voteRulesDto((await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]))
+  })
+  app.post('/api/v1/admin/vote-rules',async c=>{
+    const admin=await permission(c,'votes.configure'),body=await json(c)
+    const ranges={windowHours:[1,2160],maxPerWindow:[1,20],ipDailyLimit:[1,100],
+      deviceDailyLimit:[1,100],asnDailyLimit:[1,100000]}
+    for(const [name,[min,max]] of Object.entries(ranges))
+      if(!Number.isInteger(body[name])||body[name]<min||body[name]>max) fail(400,'invalid_vote_rule',`${name}: ${min}–${max}`)
+    const reason=textOf(body.reason,10,1000)
+    const next=Object.fromEntries(Object.keys(ranges).map(name=>[name,body[name]]))
+    const result=await db.transaction(async tx=>{
+      const row=(await tx.query('SELECT * FROM gs_vote_rules WHERE id=1 FOR UPDATE')).rows[0]
+      const previous=voteRulesDto(row)
+      if(Object.keys(ranges).every(name=>previous[name]===next[name])) return {rules:previous,changed:false}
+      await tx.query(`UPDATE gs_vote_rules SET window_hours=$1,max_per_window=$2,ip_daily_limit=$3,
+        device_daily_limit=$4,asn_daily_limit=$5 WHERE id=1`,Object.values(next))
+      await audit(tx,admin.id,'vote.rules_changed','gs_vote_rules:1',{previous,next,reason})
+      return {rules:next,changed:true}
+    })
+    return c.json(result)
   })
   app.get('/api/v1/admin/support',async c=>{
     await permission(c,'support.read')

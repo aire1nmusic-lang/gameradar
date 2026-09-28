@@ -202,6 +202,12 @@ The local private-core home, footer and `/owners` now direct an owner to an exis
 
 **Verified:** TypeScript and Vite build passed. The in-app browser showed 3 GTA RP demo cards, an honest unknown-online server page, a Claim modal opened by keyboard and a link carrying the correct server ID to `/account?claim=…`; it also showed the new home/owners/footer copy and the guarded `/add-server` state. Mouse-driven React clicks in that browser session did not activate, whereas keyboard Return did, so authenticated browser actions are not marked verified. Terminal Playwright CLI was unavailable from local cache and package retrieval stalled; no external account or payment was used. No cloud state or cost changed (0 ₽). Rollback: revert this UI commit; no schema or data changes.
 
+## Slice 3b: admin-controlled rolling vote policy (local)
+
+Private migration `015_vote_policy_admin.sql` grants `votes.configure` only to ADMIN. `/admin` now shows the current rolling-window length, per-account repeat count and IP/device/ASN daily risk thresholds. The update API validates the database ranges, requires a 10+ character reason, locks the policy row and writes one audit event with previous/new values in the same PostgreSQL transaction. A no-op creates no audit duplicate. Existing votes and their evidence stay intact; a changed window affects the live count immediately. Money and Support remain absent from the People's rating query. ASN still requires a trusted ingress signal; the current Yandex container adapter does not invent one.
+
+**Verified:** focused PGlite test covers ADMIN-only writes, moderator read-only access, invalid range rejection, no-op idempotency, audit and immediate eligibility change. The migration-plan tests include version 015 and pass; TypeScript passes. The local API restarted, applied migration 015, returned health 200 and denied unauthenticated policy access with 401. The authenticated admin browser form and deployment on Yandex remain unverified. No new resource or cost (0 ₽). Rollback: restore the previous audited policy values through the same endpoint; retain audit and accepted votes. Migration 015 is additive and has not run in production.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.

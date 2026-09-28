@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
-import { Textarea } from '@/components/ui/controls'
+import { Field, Input, Textarea } from '@/components/ui/controls'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -14,6 +14,7 @@ const tabs:Tab[]=[
   {id:'users',label:'Пользователи',permission:'users.read',path:'/admin/users'},
   {id:'claims',label:'Claims',permission:'claims.review',path:'/admin/claims'},
   {id:'votes',label:'Голоса',permission:'votes.read',path:'/admin/votes'},
+  {id:'vote-rules',label:'Правила голосования',permission:'votes.configure',path:'/admin/vote-rules'},
   {id:'support',label:'Поддержка',permission:'support.read',path:'/admin/support'},
   {id:'coins',label:'Coins',permission:'coins.read',path:'/admin/coins/ledger'},
   {id:'payments',label:'Платежи',permission:'payments.read',path:'/admin/payments'},
@@ -67,7 +68,9 @@ export default function Admin() {
         <h2 className="text-lg">Последние системные события</h2>{(Array.isArray(summary.events)?summary.events as Row[]:[]).map(row=><article key={value(row,'id')} className="surface rounded-xl p-4 text-sm">{value(row,'action')} · {value(row,'target')} · {date(row,'created_at')}</article>)}
       </section>}
       {active.id==='payments'&&<PaymentReconciliation />}
-      {!['overview','system'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
+      {active.id==='vote-rules'&&<VoteRulesEditor key={JSON.stringify(summary)} current={summary} busy={busy}
+        onSave={input=>act(()=>apiSend('/admin/vote-rules',input))}/>}
+      {!['overview','system','vote-rules'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
         {!rows.length&&<p className="text-ink-400">В этом разделе пока нет записей.</p>}
         {rows.map((row,index)=><article key={value(row,'id')==='—'?`${active.id}-${index}`:value(row,'id')} className="surface space-y-2 rounded-xl p-4 text-sm">
           {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {row.banned_at?'Заблокирован':'Активен'} · {date(row,'created_at')}</p>
@@ -129,6 +132,31 @@ export default function Admin() {
       </section>}
     </>}
   </main>
+}
+
+const ruleFields=[
+  {key:'windowHours',label:'Окно голосования, часы',min:1,max:2160},
+  {key:'maxPerWindow',label:'Голосов аккаунта за окно',min:1,max:20},
+  {key:'ipDailyLimit',label:'Порог IP за сутки',min:1,max:100},
+  {key:'deviceDailyLimit',label:'Порог device за сутки',min:1,max:100},
+  {key:'asnDailyLimit',label:'Порог ASN за сутки',min:1,max:100000},
+] as const
+
+function VoteRulesEditor({current,busy,onSave}:{current:Row;busy:boolean;onSave:(input:Row)=>Promise<void>}) {
+  const [values,setValues]=useState<Record<string,string>>(()=>Object.fromEntries(ruleFields.map(field=>[field.key,String(current[field.key]??'')])))
+  const [reason,setReason]=useState('')
+  return <section className="surface max-w-2xl space-y-4 rounded-xl p-5" aria-label="Правила голосования">
+    <h2 className="text-lg font-medium">Rolling-окно и антифрод</h2>
+    <p className="text-sm text-ink-400">Новые правила действуют сразу. Принятые голоса остаются в журнале; пересчитывается только текущее окно рейтинга. Пороги вызывают дополнительную проверку и не доказывают уникальность человека.</p>
+    <form className="space-y-3" onSubmit={event=>{event.preventDefault();void onSave({...Object.fromEntries(ruleFields.map(field=>[field.key,Number(values[field.key])])),reason})}}>
+      <div className="grid gap-3 sm:grid-cols-2">{ruleFields.map(field=><Field key={field.key} label={field.label}>
+        <Input type="number" required min={field.min} max={field.max} step={1} value={values[field.key]}
+          onChange={event=>setValues({...values,[field.key]:event.target.value})}/>
+      </Field>)}</div>
+      <Field label="Основание изменения"><Textarea required minLength={10} maxLength={1000} value={reason} onChange={event=>setReason(event.target.value)}/></Field>
+      <Button type="submit" disabled={busy||reason.trim().length<10}>Сохранить правила</Button>
+    </form>
+  </section>
 }
 
 function PaymentReconciliation() {

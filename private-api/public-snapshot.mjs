@@ -11,5 +11,5 @@ export async function createPublicSnapshot(tx,serverId,version) {
   return {serverId,version:Number(version),claimed:!!server.owner_id,restrictedLinks:restricted,
     supportCoins:Number(support.coins),supportParticipants:support.participants,
     ...(approved?{summary:approved.summary}:{}),
-    ...(facts.length?{facts:Object.fromEntries(facts.map(row=>[row.field,row.value]))}:{})}
+    ...(facts.length?{facts:Object.fromEntries(facts.map(row=>[row.field,row.field==='modes'?row.value.split(',').map(mode=>mode.trim()):row.value]))}:{})}
 }

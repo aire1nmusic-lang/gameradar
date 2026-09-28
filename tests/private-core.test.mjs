@@ -652,11 +652,24 @@ test('owner facts require scoped Claim and human review in all three games',asyn
     {field:'rates',value:'x100',evidence:'Official rates page confirms this number.'},owner.cookie)
   assert.equal((await h.request(`/admin/server-fact-edits/${rejected.body.id}/resolve`,{status:'REJECTED',reason:'Source does not support this rate'},admin.cookie)).status,200)
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_public_outbox')).rows[0].n,snapshots.length)
+  assert.equal((await h.request('/owners/me/servers/fact-mc/fact-edits',
+    {field:'modes',value:'PvP, PvP',evidence:'Official server rules describe its modes.'},owner.cookie)).status,400)
+  for(const [field,value] of [['modes','Survival, PvP'],['country','DE']]) {
+    const edit=await h.request('/owners/me/servers/fact-mc/fact-edits',
+      {field,value,evidence:'Official server information confirms this value.'},owner.cookie)
+    assert.equal(edit.status,201)
+    assert.equal((await h.request(`/admin/server-fact-edits/${edit.body.id}/resolve`,
+      {status:'APPROVED',reason:'Official page confirms this field'},admin.cookie)).status,200)
+  }
+  const latest=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='fact-mc' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.deepEqual(latest.facts.modes,['Survival','PvP'])
+  assert.equal(latest.facts.country,'DE')
+  assert.ok(!JSON.stringify(latest).includes('Official server information'))
 })
 
 test('D1 factual correction is atomic and ignores stale versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,region TEXT,opened_at TEXT,updated_at TEXT);
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,modes TEXT,region TEXT,country TEXT,opened_at TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
       version INTEGER,claimed INTEGER,restricted_links TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
     INSERT INTO servers(id,version,region) VALUES('mc','1.20','EU')`)
@@ -664,11 +677,12 @@ test('D1 factual correction is atomic and ignores stale versions',async t=>{
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
       catch(error){sqlite.exec('ROLLBACK');throw error}}}
   const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
-  await project({serverId:'mc',version:2,claimed:true,facts:{version:'1.21',rates:'x10',region:'DE',openedAt:'2026-09-27'}})
+  await project({serverId:'mc',version:2,claimed:true,facts:{version:'1.21',rates:'x10',modes:['Survival','PvP'],region:'EU',country:'DE',openedAt:'2026-09-27'}})
   await project({serverId:'mc',version:1,claimed:false,facts:{version:'1.19'}})
-  assert.deepEqual({...sqlite.prepare("SELECT version,rates,region,opened_at FROM servers WHERE id='mc'").get()},
-    {version:'1.21',rates:'x10',region:'DE',opened_at:'2026-09-27'})
+  assert.deepEqual({...sqlite.prepare("SELECT version,rates,modes,region,country,opened_at FROM servers WHERE id='mc'").get()},
+    {version:'1.21',rates:'x10',modes:'["Survival","PvP"]',region:'EU',country:'DE',opened_at:'2026-09-27'})
   assert.throws(()=>parsePublicSnapshot({serverId:'mc',version:3,claimed:true,facts:{openedAt:'2026-02-30'}}))
+  assert.throws(()=>parsePublicSnapshot({serverId:'mc',version:3,claimed:true,facts:{modes:['PvP','PvP']}}))
   sqlite.exec("CREATE TRIGGER reject_fact BEFORE UPDATE ON servers BEGIN SELECT RAISE(ABORT,'failed'); END")
   await assert.rejects(project({serverId:'mc',version:3,claimed:true,facts:{rates:'x20'}}),/failed/)
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,2)

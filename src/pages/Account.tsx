@@ -10,7 +10,7 @@ type Claim = { id:string; server_id:string; status:string; reason?:string; evide
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
-const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',region:'Регион',openedAt:'Дата открытия'}
+const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',modes:'Режимы',region:'Регион',country:'Страна',openedAt:'Дата открытия'}
 type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
 
@@ -146,7 +146,7 @@ function OwnerFacts({server}:{server:Owned}) {
     {error&&<p role="alert" className="text-danger-300">{error}</p>}{message&&<p role="status" className="text-signal-400">{message}</p>}
     <form onSubmit={submit} className="space-y-3">
       <Field label="Поле"><Select value={field} onChange={setField} options={Object.entries(factLabels).map(([value,label])=>({value,label}))}/></Field>
-      <Field label={field==='openedAt'?'Дата ГГГГ-ММ-ДД':'Новое значение'}><Input required maxLength={80} value={value} onChange={e=>setValue(e.target.value)} placeholder={field==='openedAt'?'2026-09-27':undefined}/></Field>
+      <Field label={field==='openedAt'?'Дата ГГГГ-ММ-ДД':'Новое значение'}><Input required maxLength={80} value={value} onChange={e=>setValue(e.target.value)} placeholder={field==='openedAt'?'2026-09-27':field==='modes'?'Survival, PvP':undefined}/></Field>
       <Field label="Основание и источник"><Textarea required minLength={20} maxLength={1000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
       <Button type="submit" disabled={busy||edits.some(edit=>edit.field===field&&edit.status==='PENDING')}>Отправить на проверку</Button>
     </form>

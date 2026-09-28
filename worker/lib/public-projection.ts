@@ -1,4 +1,4 @@
-export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; summary?: string; facts?: Partial<Record<'version'|'rates'|'region'|'openedAt',string>>; supportCoins?: number; supportParticipants?: number }
+export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; summary?: string; facts?: Partial<Record<'version'|'rates'|'region'|'openedAt'|'country',string>> & {modes?:string[]}; supportCoins?: number; supportParticipants?: number }
 export function parsePublicSnapshot(value: unknown): PublicSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid_projection')
   const row=value as Record<string,unknown>
@@ -14,7 +14,12 @@ export function parsePublicSnapshot(value: unknown): PublicSnapshot {
   if(row.facts!==undefined) {
     if(!row.facts||typeof row.facts!=='object'||Array.isArray(row.facts))throw new Error('invalid_projection')
     for(const [key,value] of Object.entries(row.facts)) {
-      if(!['version','rates','region','openedAt'].includes(key)||typeof value!=='string'||value.length<1||value.length>80
+      if(key==='modes') {
+        if(!Array.isArray(value)||value.length<1||value.length>5||value.some(mode=>typeof mode!=='string'||mode.length<1||mode.length>30
+          || /[<>\u0000-\u001f]|\b(?:https?:\/\/|www\.)/i.test(mode))||new Set(value.map(mode=>mode.toLowerCase())).size!==value.length)throw new Error('invalid_projection')
+        continue
+      }
+      if(!['version','rates','region','openedAt','country'].includes(key)||typeof value!=='string'||value.length<1||value.length>80
         || /[<>\u0000-\u001f]|\b(?:https?:\/\/|www\.)/i.test(value))throw new Error('invalid_projection')
       if(key==='openedAt' && (!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(`${value}T00:00:00Z`))
         ||new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)!==value))throw new Error('invalid_projection')
@@ -37,11 +42,14 @@ export async function applyPublicSnapshot(db:D1Database,payload:PublicSnapshot) 
   if(payload.summary!==undefined)writes.push(db.prepare(`UPDATE servers SET summary=?,updated_at=? WHERE id=?
     AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
     .bind(payload.summary,receivedAt,payload.serverId,payload.serverId,payload.version))
-  for(const [field,column] of Object.entries({version:'version',rates:'rates',region:'region',openedAt:'opened_at'})) {
+  for(const [field,column] of Object.entries({version:'version',rates:'rates',region:'region',openedAt:'opened_at',country:'country'})) {
     const value=payload.facts?.[field as keyof NonNullable<PublicSnapshot['facts']>]
     if(value!==undefined)writes.push(db.prepare(`UPDATE servers SET ${column}=?,updated_at=? WHERE id=?
       AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
       .bind(value,receivedAt,payload.serverId,payload.serverId,payload.version))
   }
+  if(payload.facts?.modes)writes.push(db.prepare(`UPDATE servers SET modes=?,updated_at=? WHERE id=?
+    AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
+    .bind(JSON.stringify(payload.facts.modes),receivedAt,payload.serverId,payload.serverId,payload.version))
   await db.batch(writes)
 }

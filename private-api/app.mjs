@@ -22,11 +22,17 @@ const textOf = (v,min,max) => {
   return v.trim()
 }
 const ownerFact = (field,input) => {
-  if(!['version','rates','region','openedAt'].includes(field)) fail(400,'invalid_field','Недопустимое поле карточки')
+  if(!['version','rates','region','openedAt','modes','country'].includes(field)) fail(400,'invalid_field','Недопустимое поле карточки')
   const value=textOf(input,1,80)
   if(/[<>]|\b(?:https?:\/\/|www\.)/i.test(value)) fail(400,'invalid_fact','Используйте только значение характеристики без ссылок и разметки')
   if(field==='openedAt' && (!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(`${value}T00:00:00Z`))
     ||new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)!==value)) fail(400,'invalid_date','Укажите дату в формате ГГГГ-ММ-ДД')
+  if(field==='modes') {
+    const modes=value.split(',').map(mode=>mode.trim())
+    if(modes.length>5 || modes.some(mode=>!mode || mode.length>30) || new Set(modes.map(mode=>mode.toLowerCase())).size!==modes.length)
+      fail(400,'invalid_modes','Укажите от одного до пяти разных режимов через запятую')
+    return modes.join(', ')
+  }
   return value
 }
 const passwordOf = v => { if (!passwordValid(v)) fail(400,'password_weak','Пароль — от 12 до 128 символов'); return v }

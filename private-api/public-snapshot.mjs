@@ -10,6 +10,7 @@ export async function createPublicSnapshot(tx,serverId,version) {
     count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
   const monitor=(await tx.query(`SELECT enabled,method,host,port,api_url FROM gs_owner_monitoring_overrides
     WHERE server_id=$1`,[serverId])).rows[0]
+  const monitoringHeld=(await tx.query(`SELECT active FROM gs_monitoring_holds WHERE server_id=$1`,[serverId])).rows[0]?.active===true
   const links=Object.fromEntries(facts.filter(row=>['site','discord','telegram'].includes(row.field)).map(row=>[row.field,row.value]))
   const publicFacts=facts.filter(row=>!['site','discord','telegram'].includes(row.field))
   return {serverId,version:Number(version),claimed:!!server.owner_id,
@@ -19,7 +20,7 @@ export async function createPublicSnapshot(tx,serverId,version) {
     ...(approved?{summary:approved.summary}:{}),
     ...(publicFacts.length?{facts:Object.fromEntries(publicFacts.map(row=>[row.field,row.field==='modes'?row.value.split(',').map(mode=>mode.trim()):row.value]))}:{}),
     ...(Object.keys(links).length?{links}:{}),
-    ...(monitor?{monitoring:monitor.enabled?{enabled:true,method:monitor.method,
+    ...(monitor?{monitoring:monitor.enabled&&!monitoringHeld?{enabled:true,method:monitor.method,
       ...(monitor.host?{host:monitor.host}:{}),...(monitor.port?{port:monitor.port}:{}),
       ...(monitor.api_url?{apiUrl:monitor.api_url}:{}),
       ...(monitor.method==='SERVER_API'?{expectName:server.name}:{})}:{enabled:false}}:{})}

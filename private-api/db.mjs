@@ -5,7 +5,7 @@ import pg from 'pg'
 export const migrations = [[1,'identity'],[2,'votes'],[3,'vote_risk'],[4,'coins'],[5,'test_payments'],[6,'admin_roles'],
   [7,'nickname_review'],[8,'copyright'],[9,'projection_alerts'],[10,'owner_summary'],[11,'owner_facts'],
   [12,'owner_modes_country'],[13,'user_moderation'],[14,'maintenance_schedule'],[15,'vote_policy_admin'],
-  [16,'copyright_description'],[17,'owner_links'],[18,'owner_monitoring']]
+  [16,'copyright_description'],[17,'owner_links'],[18,'owner_monitoring'],[19,'monitoring_holds']]
 
 export async function migrationPlan(db) {
   let applied=[]

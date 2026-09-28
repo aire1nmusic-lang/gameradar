@@ -977,6 +977,45 @@ test('Claim-scoped monitoring publishes only safe endpoints and disabling hides 
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='owner-mc'").get().version,off.version)
 })
 
+test('admin monitoring hold is scoped, reversible and cannot be bypassed by owner',async t=>{
+  const h=await harness(t),owner=await h.register('hold-owner@example.com'),admin=await h.register('hold-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('hold-mc','minecraft','Hold Minecraft','hold-mc')")
+  const claim=await h.request('/claims',{serverId:'hold-mc',evidence:'Official website proof for admin review.'},owner.cookie)
+  assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,
+    {status:'VERIFIED',reason:'Official website ownership checked'},admin.cookie)).status,200)
+  const target='/owners/me/servers/hold-mc/monitoring'
+  const ownerTarget={enabled:true,method:'GAME_PROTOCOL',host:'play.example.org',port:25565,reason:'Owner supplied public game endpoint'}
+  assert.equal((await h.request(target,ownerTarget,owner.cookie)).status,200)
+  const path='/admin/servers/hold-mc/monitoring-hold'
+  const suspend={action:'SUSPEND',reason:'Public endpoint requires moderator investigation'}
+  assert.equal((await h.request(path,suspend,owner.cookie)).status,403)
+  const first=await h.request(path,suspend,admin.cookie)
+  assert.equal(first.status,200,JSON.stringify(first.body));assert.equal(first.body.held,true)
+  assert.equal((await h.request(path,suspend,admin.cookie)).body.changed,false)
+  const held=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='hold-mc' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.deepEqual(held.monitoring,{enabled:false})
+  assert.equal((await h.request(target,undefined,owner.cookie)).body.held,true)
+  assert.equal((await h.request(target,ownerTarget,owner.cookie)).body.error.code,'monitoring_held')
+  const listed=(await h.request('/admin/servers',undefined,admin.cookie)).body.find(row=>row.server_id==='hold-mc')
+  assert.equal(listed.monitoring_held,true)
+  await h.db.query(`CREATE FUNCTION fail_monitor_hold_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated outbox failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_monitor_hold_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_monitor_hold_outbox()')
+  const restore={action:'RESTORE',reason:'Public endpoint reviewed and accepted again'}
+  assert.equal((await h.request(path,restore,admin.cookie)).status,500)
+  assert.equal((await h.db.query("SELECT active FROM gs_monitoring_holds WHERE server_id='hold-mc'")).rows[0].active,true)
+  await h.db.query('DROP TRIGGER fail_monitor_hold_outbox ON gs_public_outbox')
+  const restored=await h.request(path,restore,admin.cookie)
+  assert.equal(restored.status,200);assert.equal(restored.body.held,false)
+  assert.equal((await h.request(path,restore,admin.cookie)).body.changed,false)
+  const latest=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='hold-mc' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.equal(latest.monitoring.enabled,true)
+  assert.equal(latest.monitoring.host,'play.example.org')
+  assert.deepEqual((await h.db.query("SELECT action FROM gs_audit WHERE target='hold-mc' AND action LIKE 'server.monitoring_%' ORDER BY id")).rows.map(row=>row.action),
+    ['server.monitoring_updated','server.monitoring_suspend','server.monitoring_restore'])
+})
+
 test('Support projects only public aggregates with ledger rollback and idempotency',async t=>{
   const h=await harness(t),one=await h.register('support-projection-1@example.com'),two=await h.register('support-projection-2@example.com')
   await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('support-gta','gtarp','Support GTA','support-gta')")

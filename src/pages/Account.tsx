@@ -10,7 +10,7 @@ type Claim = { id:string; server_id:string; status:string; reason?:string; evide
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
-type Monitor = {configured?:false;enabled?:boolean;host?:string|null;port?:number|null;api_url?:string|null;updated_at?:string}
+type Monitor = {configured?:false;enabled?:boolean;held?:boolean;host?:string|null;port?:number|null;api_url?:string|null;updated_at?:string}
 const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',modes:'Режимы',region:'Регион',country:'Страна',openedAt:'Дата открытия',site:'Сайт',discord:'Discord',telegram:'Telegram'}
 type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
@@ -183,13 +183,13 @@ function OwnerMonitoring({server}:{server:Owned}) {
     <h3 className="font-medium">Мониторинг · {server.name}</h3>
     <p className="text-sm text-ink-400">{method==='GAME_PROTOCOL'?'Minecraft Server List Ping':method==='LOGIN_SERVER'?'Проверка login-сервера L2 (без числа игроков)':'FiveM info.json, dynamic.json и players.json'}.
       Только публичный адрес без токенов. Статус и число появятся после фактической проверки; адрес можно отключить.</p>
-    <p className="text-sm">{current===undefined?'Загрузка…':current.configured===false?'Адрес владельца пока не задан; источники открытого каталога могут проверяться отдельно.':current.enabled?'Адрес владельца включён.':'Адрес владельца отключён.'}</p>
+    <p className="text-sm">{current===undefined?'Загрузка…':current.configured===false?'Адрес владельца пока не задан; источники открытого каталога могут проверяться отдельно.':current.held?'Проверка адреса приостановлена администратором; повторное включение возможно после пересмотра.':current.enabled?'Адрес владельца включён.':'Адрес владельца отключён.'}</p>
     {method==='SERVER_API'?<Field label="Адрес FiveM http(s)://host:port/"><Input value={apiUrl} onChange={e=>setApiUrl(e.target.value)} maxLength={500} placeholder="https://rp.example.com/" /></Field>
       :<div className="grid gap-3 sm:grid-cols-2"><Field label="Публичный host"><Input value={host} onChange={e=>setHost(e.target.value)} maxLength={253} placeholder="play.example.com" /></Field>
         <Field label={method==='LOGIN_SERVER'?'Порт login-сервера':'Порт (необязательно)'}><Input type="number" min={1} max={65535} value={port} onChange={e=>setPort(e.target.value)} /></Field></div>}
     <Field label="Причина изменения"><Textarea minLength={10} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)} /></Field>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}{message&&<p role="status" className="text-signal-400">{message}</p>}
-    <div className="flex flex-wrap gap-2"><Button disabled={busy||reason.trim().length<10} onClick={()=>void save(true)}>Сохранить адрес</Button>
+    <div className="flex flex-wrap gap-2"><Button disabled={busy||!!current?.held||reason.trim().length<10} onClick={()=>void save(true)}>Сохранить адрес</Button>
       <Button variant="outline" disabled={busy||reason.trim().length<10} onClick={()=>void save(false)}>Отключить проверку</Button></div>
   </div>
 }

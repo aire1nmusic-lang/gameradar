@@ -85,7 +85,18 @@ export default function Admin() {
                 onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/moderation`,{action:row.banned_at?'UNBAN':'BAN',reason:reasons[value(row,'id')]}))}>{row.banned_at?'Разблокировать':'Заблокировать'}</Button>
             </div>}
           </>}
-          {active.id==='servers'&&<><strong>{value(row,'name')}</strong><p>{value(row,'game_id')} · {value(row,'server_id')} · владелец: {value(row,'owner_id')} · Claims: {value(row,'pending_claims')}</p></>}
+          {active.id==='servers'&&<><strong>{value(row,'name')}</strong><p>{value(row,'game_id')} · {value(row,'server_id')} · владелец: {value(row,'owner_id')} · Claims: {value(row,'pending_claims')}</p>
+            {row.monitoring_enabled&&<p>Адрес владельца: {value(row,'monitoring_method')} · {row.monitoring_held?'проверка приостановлена':'проверка разрешена'}</p>}
+            {permissions.includes('servers.review')&&(row.monitoring_enabled||row.monitoring_held)&&row.owner_id!==auth.user?.id&&<div className="space-y-2">
+              <Textarea aria-label={`Причина изменения мониторинга ${value(row,'name')}`} minLength={10} maxLength={1000}
+                value={reasons[value(row,'server_id')]??''} onChange={e=>setReasons({...reasons,[value(row,'server_id')]:e.target.value})}/>
+              <Button variant="outline" disabled={busy||(reasons[value(row,'server_id')]??'').trim().length<10}
+                onClick={()=>void act(()=>apiSend(`/admin/servers/${encodeURIComponent(value(row,'server_id'))}/monitoring-hold`,
+                  {action:row.monitoring_held?'RESTORE':'SUSPEND',reason:reasons[value(row,'server_id')]}))}>
+                {row.monitoring_held?'Возобновить проверку':'Приостановить проверку'}
+              </Button>
+            </div>}
+          </>}
           {active.id==='server-edits'&&<><strong>{value(row,'name')} · {value(row,'game_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'summary')}</p>
             <Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
             <div className="flex gap-2">{(['APPROVED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}

@@ -363,9 +363,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const user=await requireUser(c,true),serverId=c.req.param('id')
     if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1 AND owner_id=$2',[serverId,user.id])).rows.length)
       fail(403,'forbidden','Нет подтверждённых прав на сервер')
-    const row=(await db.query(`SELECT enabled,method,host,port,api_url,updated_at
-      FROM gs_owner_monitoring_overrides WHERE server_id=$1`,[serverId])).rows[0]
-    return c.json(row??{configured:false})
+    const row=(await db.query(`SELECT m.enabled,m.method,m.host,m.port,m.api_url,m.updated_at,
+      COALESCE(h.active,false) AS held FROM gs_owner_monitoring_overrides m
+      LEFT JOIN gs_monitoring_holds h ON h.server_id=m.server_id WHERE m.server_id=$1`,[serverId])).rows[0]
+    return c.json(row??{configured:false,held:false})
   })
   app.post('/api/v1/owners/me/servers/:id/monitoring',async c=>{
     const user=await requireUser(c,true),body=await json(c),serverId=c.req.param('id')
@@ -375,6 +376,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
       if(!server||server.owner_id!==user.id)fail(403,'forbidden','Нет подтверждённых прав на сервер')
       const target=ownerMonitoring(body,server.game_id)
+      if(target.enabled&&(await tx.query('SELECT 1 FROM gs_monitoring_holds WHERE server_id=$1 AND active=true',[serverId])).rows.length)
+        fail(409,'monitoring_held','Администратор временно приостановил проверку. Обратитесь за пересмотром.')
       const previous=(await tx.query('SELECT * FROM gs_owner_monitoring_overrides WHERE server_id=$1',[serverId])).rows[0]
       if(previous&&previous.enabled===target.enabled&&previous.method===target.method
         &&previous.host===target.host&&previous.port===target.port&&previous.api_url===target.apiUrl)
@@ -688,9 +691,41 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.get('/api/v1/admin/servers',async c=>{
     await permission(c,'servers.read')
     return c.json((await db.query(`SELECT r.server_id,r.game_id,r.name,r.slug,r.owner_id,r.version,
+      m.enabled AS monitoring_enabled,m.method AS monitoring_method,
+      COALESCE(h.active,false) AS monitoring_held,
       count(c.id) FILTER (WHERE c.status='PENDING')::integer AS pending_claims
       FROM gs_server_registry r LEFT JOIN gs_claims c ON c.server_id=r.server_id
-      GROUP BY r.server_id ORDER BY r.game_id,r.name LIMIT 100`)).rows)
+      LEFT JOIN gs_owner_monitoring_overrides m ON m.server_id=r.server_id
+      LEFT JOIN gs_monitoring_holds h ON h.server_id=r.server_id
+      GROUP BY r.server_id,m.enabled,m.method,h.active ORDER BY r.game_id,r.name LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/servers/:id/monitoring-hold',async c=>{
+    const admin=await permission(c,'servers.review'),body=await json(c)
+    const action=body.action,reason=textOf(body.reason,10,1000),serverId=c.req.param('id')
+    if(!['SUSPEND','RESTORE'].includes(action))fail(400,'invalid_action','Укажите действие')
+    const result=await db.transaction(async tx=>{
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server)fail(404,'not_found','Сервер не найден')
+      if(server.owner_id===admin.id)fail(403,'self_review','Нельзя проверять собственный сервер')
+      const monitor=(await tx.query('SELECT enabled FROM gs_owner_monitoring_overrides WHERE server_id=$1',[serverId])).rows[0]
+      const hold=(await tx.query('SELECT active FROM gs_monitoring_holds WHERE server_id=$1',[serverId])).rows[0]
+      if(action==='SUSPEND'&&!monitor?.enabled)fail(409,'no_owner_monitoring','Адрес владельца не включён')
+      if(action==='RESTORE'&&!hold)fail(404,'no_monitoring_hold','Ограничение не найдено')
+      const active=action==='SUSPEND'
+      if(hold?.active===active)return {changed:false,version:Number(server.version),held:active}
+      await tx.query(`INSERT INTO gs_monitoring_holds(server_id,active,reason,reviewed_by)
+        VALUES($1,$2,$3,$4) ON CONFLICT(server_id) DO UPDATE SET active=excluded.active,
+        reason=excluded.reason,reviewed_by=excluded.reviewed_by,updated_at=now()`,
+        [serverId,active,reason,admin.id])
+      const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
+        [serverId])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,serverId,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+        [serverId,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,admin.id,`server.monitoring_${action.toLowerCase()}`,serverId,{reason})
+      return {changed:true,version:Number(changed.version),held:active}
+    })
+    return c.json(result)
   })
   app.get('/api/v1/admin/votes',async c=>{
     await permission(c,'votes.read')

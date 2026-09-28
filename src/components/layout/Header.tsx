@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { Search, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
 import { Container } from './Container'
 import { GamesMenu } from './GamesMenu'
 import { Logo } from './Logo'
@@ -16,6 +17,10 @@ const NAV = [
 ]
 
 export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: () => void }) {
+  const auth=useAuth()
+  const accountLabel=auth.user?.displayName || 'Аккаунт'
+  const accountClass='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex'
+  const mobileAccountClass='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden'
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md">
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
@@ -59,21 +64,25 @@ export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: (
           <Search size={20} />
         </button>
 
-        <button
+        {auth.privateCore ? <Link to="/account" aria-label={`Аккаунт: ${accountLabel}`} className={accountClass}>
+          <UserRound size={15} className="shrink-0" /><span className="truncate">{accountLabel}</span>
+        </Link> : <button
           onClick={onLogin}
-          className="hidden h-10 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex"
+          className={accountClass}
         >
           <UserRound size={15} />
-          Войти
-        </button>
+          {auth.user?.displayName || 'Войти'}
+        </button>}
 
-        <button
+        {auth.privateCore ? <Link to="/account" aria-label={`Аккаунт: ${accountLabel}`} className={mobileAccountClass}>
+          <UserRound size={20} />
+        </Link> : <button
           onClick={onLogin}
-          aria-label="Войти"
-          className="grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden"
+          aria-label={auth.user?`Аккаунт: ${auth.user.displayName}`:'Войти'}
+          className={mobileAccountClass}
         >
           <UserRound size={20} />
-        </button>
+        </button>}
       </Container>
     </header>
   )

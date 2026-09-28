@@ -270,6 +270,10 @@ Private migration `020_vote_review.sql` adds an audited `ACCEPTED` / `VOIDED` st
 
 **Verified locally:** full private suite 29/29, migration-plan suite 2/2, TypeScript/Worker typecheck. The new PGlite HTTP test covers permission denial, no deletion, one audit event for repeated decisions, ranking changes and rollback if audit insert fails. The restarted local API applied migration 020; the in-app browser showed the vote review controls on `/admin` at 390 px. Long IDs initially made the page 406 px wide; `break-words` reduced scroll width to 385 px. The actual browser mutation and Yandex deployment remain open. New cloud spend 0 ₽. Rollback uses the audited RESTORE action; migration 020 is additive and not deployed.
 
+## Slice 1f/7k: truthful account header on mobile (local)
+
+The shared header now links to `/account` in private-core mode and shows the signed-in display name (or “Аккаунт” before login) instead of always saying “Войти”. The legacy login modal path remains in legacy mode. **Verified locally:** TypeScript/Worker typecheck passed. In the in-app browser at 390 px, the authenticated admin header exposed `Аккаунт: Browser E2E Admin`; keyboard activation opened `/account` with the same confirmed session and its Admin link. No horizontal overflow appeared. No cloud resource or migration; cost 0 ₽. Rollback: revert this header change. Production OAuth/email and broader mobile paths remain open.
+
 ## Remaining slices
 
 The [concrete Yandex staging resource request](yandex-staging-resource-request.md) is **BLOCKED on user approval of paid resources and a monthly cap**. The console currently quotes 4,480.70 ₽/month including VAT for one test-only PostgreSQL host with 20 GB network SSD; container, registry, timer and network usage cost extra. The folder has no VPC network, cluster or container. No create form was submitted, no cloud spend added (0 ₽), and no production route/migration changed.

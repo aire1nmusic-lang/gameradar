@@ -609,6 +609,71 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,3)
 })
 
+test('owner facts require scoped Claim and human review in all three games',async t=>{
+  const h=await harness(t),owner=await h.register('fact-owner@example.com'),admin=await h.register('fact-admin@example.com'),other=await h.register('fact-other@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  const ids=[]
+  for(const [id,game] of [['fact-l2','lineage2'],['fact-mc','minecraft'],['fact-gta','gtarp']]) {
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[id,game,id,id])
+    const claim=await h.request('/claims',{serverId:id,evidence:'Ownership proof is available at the official site.'},owner.cookie)
+    assert.equal((await h.request(`/admin/claims/${claim.body.id}/resolve`,{status:'VERIFIED',reason:'Official ownership evidence checked'},admin.cookie)).status,200)
+    const path=`/owners/me/servers/${id}/fact-edits`
+    const body={field:'version',value:'Interlude',evidence:'Official release page confirms this version.'}
+    assert.equal((await h.request(path,body,other.cookie)).status,403)
+    assert.equal((await h.request(path,{...body,field:'openedAt',value:'2026-02-30'},owner.cookie)).status,400)
+    const edit=await h.request(path,body,owner.cookie)
+    assert.equal(edit.status,201,JSON.stringify(edit.body));ids.push(edit.body.id)
+    assert.equal((await h.request(path,body,owner.cookie)).status,409)
+  }
+  assert.equal((await h.request('/admin/server-fact-edits',undefined,other.cookie)).status,403)
+  assert.equal((await h.request('/admin/server-fact-edits',undefined,admin.cookie)).body.length,3)
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'MODERATOR')",[owner.user.id])
+  assert.equal((await h.request(`/admin/server-fact-edits/${ids[0]}/resolve`,{status:'APPROVED',reason:'Official source checked'},owner.cookie)).status,403)
+  await h.db.query(`CREATE FUNCTION fail_fact_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated outbox failure'; END $$`)
+  await h.db.query('CREATE TRIGGER fail_fact_outbox BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION fail_fact_outbox()')
+  assert.equal((await h.request(`/admin/server-fact-edits/${ids[0]}/resolve`,{status:'APPROVED',reason:'Official source checked'},admin.cookie)).status,500)
+  assert.equal((await h.db.query('SELECT status FROM gs_owner_fact_edits WHERE id=$1',[ids[0]])).rows[0].status,'PENDING')
+  await h.db.query('DROP TRIGGER fail_fact_outbox ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION fail_fact_outbox()')
+  for(const id of ids) {
+    const path=`/admin/server-fact-edits/${id}/resolve`
+    assert.equal((await h.request(path,{status:'APPROVED',reason:'Official source checked'},admin.cookie)).status,200)
+    assert.equal((await h.request(path,{status:'APPROVED',reason:'Official source checked'},admin.cookie)).body.replay,true)
+  }
+  const snapshots=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id')).rows.map(row=>row.payload)
+  assert.equal(snapshots.filter(row=>row.facts?.version==='Interlude').length,3)
+  for(const row of snapshots) {
+    assert.ok(!JSON.stringify(row).includes('fact-owner@example.com'))
+    assert.ok(!JSON.stringify(row).includes('Official release page'))
+    parsePublicSnapshot(row)
+  }
+  const rejected=await h.request('/owners/me/servers/fact-gta/fact-edits',
+    {field:'rates',value:'x100',evidence:'Official rates page confirms this number.'},owner.cookie)
+  assert.equal((await h.request(`/admin/server-fact-edits/${rejected.body.id}/resolve`,{status:'REJECTED',reason:'Source does not support this rate'},admin.cookie)).status,200)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_public_outbox')).rows[0].n,snapshots.length)
+})
+
+test('D1 factual correction is atomic and ignores stale versions',async t=>{
+  const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
+  sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,region TEXT,opened_at TEXT,updated_at TEXT);
+    CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
+      version INTEGER,claimed INTEGER,restricted_links TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+    INSERT INTO servers(id,version,region) VALUES('mc','1.20','EU')`)
+  const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
+    async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
+      catch(error){sqlite.exec('ROLLBACK');throw error}}}
+  const project=payload=>applyPublicSnapshot(db,parsePublicSnapshot(payload))
+  await project({serverId:'mc',version:2,claimed:true,facts:{version:'1.21',rates:'x10',region:'DE',openedAt:'2026-09-27'}})
+  await project({serverId:'mc',version:1,claimed:false,facts:{version:'1.19'}})
+  assert.deepEqual({...sqlite.prepare("SELECT version,rates,region,opened_at FROM servers WHERE id='mc'").get()},
+    {version:'1.21',rates:'x10',region:'DE',opened_at:'2026-09-27'})
+  assert.throws(()=>parsePublicSnapshot({serverId:'mc',version:3,claimed:true,facts:{openedAt:'2026-02-30'}}))
+  sqlite.exec("CREATE TRIGGER reject_fact BEFORE UPDATE ON servers BEGIN SELECT RAISE(ABORT,'failed'); END")
+  await assert.rejects(project({serverId:'mc',version:3,claimed:true,facts:{rates:'x20'}}),/failed/)
+  assert.equal(sqlite.prepare("SELECT version FROM public_server_projection WHERE server_id='mc'").get().version,2)
+})
+
 test('Support projects only public aggregates with ledger rollback and idempotency',async t=>{
   const h=await harness(t),one=await h.register('support-projection-1@example.com'),two=await h.register('support-projection-2@example.com')
   await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('support-gta','gtarp','Support GTA','support-gta')")

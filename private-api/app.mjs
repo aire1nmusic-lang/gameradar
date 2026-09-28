@@ -21,6 +21,14 @@ const textOf = (v,min,max) => {
   if (typeof v !== 'string' || v.trim().length<min || v.length>max || /[\u0000-\u001f]/.test(v)) fail(400,'invalid_input',`Ожидается текст от ${min} до ${max} символов`)
   return v.trim()
 }
+const ownerFact = (field,input) => {
+  if(!['version','rates','region','openedAt'].includes(field)) fail(400,'invalid_field','Недопустимое поле карточки')
+  const value=textOf(input,1,80)
+  if(/[<>]|\b(?:https?:\/\/|www\.)/i.test(value)) fail(400,'invalid_fact','Используйте только значение характеристики без ссылок и разметки')
+  if(field==='openedAt' && (!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(`${value}T00:00:00Z`))
+    ||new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)!==value)) fail(400,'invalid_date','Укажите дату в формате ГГГГ-ММ-ДД')
+  return value
+}
 const passwordOf = v => { if (!passwordValid(v)) fail(400,'password_weak','Пароль — от 12 до 128 символов'); return v }
 const cookieValue = (c,name) => (c.req.header('Cookie')??'').split(';').map(x=>x.trim()).find(x=>x.startsWith(name+'='))?.slice(name.length+1) ?? ''
 const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_audit(actor_id,action,target,details) VALUES($1,$2,$3,$4)',[actor,action,target,JSON.stringify(details)])
@@ -309,6 +317,29 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const row=(await tx.query('INSERT INTO gs_owner_summary_edits(id,server_id,user_id,summary) VALUES($1,$2,$3,$4) RETURNING *',
         [token(),serverId,user.id,summary])).rows[0]
       await audit(tx,user.id,'server.summary_submitted',row.id,{serverId})
+      return row
+    })
+    return c.json({id:edit.id,status:edit.status},201)
+  })
+  app.get('/api/v1/owners/me/servers/:id/fact-edits',async c=>{
+    const user=await requireUser(c,true),serverId=c.req.param('id')
+    if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1 AND owner_id=$2',[serverId,user.id])).rows.length)
+      fail(403,'forbidden','Нет подтверждённых прав на сервер')
+    return c.json((await db.query(`SELECT id,field,value,evidence,status,reason,created_at,resolved_at
+      FROM gs_owner_fact_edits WHERE server_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 30`,[serverId,user.id])).rows)
+  })
+  app.post('/api/v1/owners/me/servers/:id/fact-edits',async c=>{
+    const user=await requireUser(c,true),body=await json(c),serverId=c.req.param('id')
+    const field=body.field,value=ownerFact(field,body.value),evidence=textOf(body.evidence,20,1000)
+    await limit(c,'owner_fact',user.id,12)
+    const edit=await db.transaction(async tx=>{
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server||server.owner_id!==user.id)fail(403,'forbidden','Нет подтверждённых прав на сервер')
+      if((await tx.query("SELECT 1 FROM gs_owner_fact_edits WHERE server_id=$1 AND field=$2 AND status='PENDING'",[serverId,field])).rows.length)
+        fail(409,'pending_edit','Правка этого поля уже ждёт проверки')
+      const row=(await tx.query(`INSERT INTO gs_owner_fact_edits(id,server_id,user_id,field,value,evidence)
+        VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,[token(),serverId,user.id,field,value,evidence])).rows[0]
+      await audit(tx,user.id,'server.fact_submitted',row.id,{serverId,field})
       return row
     })
     return c.json({id:edit.id,status:edit.status},201)
@@ -728,6 +759,40 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
           [edit.server_id,changed.version,JSON.stringify(snapshot)])
       }
       await audit(tx,reviewer.id,'server.summary_'+status.toLowerCase(),edit.id,{serverId:edit.server_id,reason})
+      return {id:edit.id,status,replay:false}
+    })
+    return c.json(result)
+  })
+  app.get('/api/v1/admin/server-fact-edits',async c=>{
+    await permission(c,'servers.review')
+    return c.json((await db.query(`SELECT e.id,e.server_id,e.user_id,e.field,e.value,e.evidence,e.status,e.created_at,
+      r.name,r.game_id FROM gs_owner_fact_edits e JOIN gs_server_registry r USING(server_id)
+      WHERE e.status='PENDING' ORDER BY e.created_at LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/server-fact-edits/:id/resolve',async c=>{
+    const reviewer=await permission(c,'servers.review'),body=await json(c)
+    const status=body.status,reason=textOf(body.reason,10,1000)
+    if(!['APPROVED','REJECTED'].includes(status))fail(400,'invalid_status','Укажите решение')
+    const result=await db.transaction(async tx=>{
+      const edit=(await tx.query('SELECT * FROM gs_owner_fact_edits WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
+      if(!edit)fail(404,'not_found','Правка не найдена')
+      if(edit.user_id===reviewer.id)fail(403,'self_review','Нельзя утверждать свою правку')
+      if(edit.status!=='PENDING') {
+        if(edit.status===status)return {id:edit.id,status,replay:true}
+        fail(409,'edit_closed','Правка уже рассмотрена')
+      }
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[edit.server_id])).rows[0]
+      if(!server||server.owner_id!==edit.user_id)fail(409,'owner_changed','Права владельца изменились')
+      await tx.query('UPDATE gs_owner_fact_edits SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4',
+        [status,reviewer.id,reason,edit.id])
+      if(status==='APPROVED') {
+        const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',
+          [edit.server_id])).rows[0]
+        const snapshot=await createPublicSnapshot(tx,edit.server_id,changed.version)
+        await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+          [edit.server_id,changed.version,JSON.stringify(snapshot)])
+      }
+      await audit(tx,reviewer.id,'server.fact_'+status.toLowerCase(),edit.id,{serverId:edit.server_id,field:edit.field,reason})
       return {id:edit.id,status,replay:false}
     })
     return c.json(result)

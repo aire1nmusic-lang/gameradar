@@ -3,12 +3,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Textarea } from '@/components/ui/controls'
+import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
 
 type Claim = { id:string; server_id:string; status:string; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
+type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
+const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',region:'Регион',openedAt:'Дата открытия'}
 type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
 
@@ -78,7 +80,7 @@ export default function Account() {
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><OwnerSummary key={s.server_id} server={s}/>)}
+        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/></div>)}
         <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>
         <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
           <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
@@ -121,5 +123,32 @@ function OwnerSummary({server}:{server:Owned}) {
       <Field label="Новое краткое описание"><Textarea required minLength={20} maxLength={280} value={summary} onChange={e=>setSummary(e.target.value)}/></Field>
       <Button type="submit" disabled={busy}>Отправить на проверку</Button>
     </form>}
+  </div>
+}
+
+function OwnerFacts({server}:{server:Owned}) {
+  const [edits,setEdits]=useState<FactEdit[]>([]),[field,setField]=useState('version'),[value,setValue]=useState(''),[evidence,setEvidence]=useState('')
+  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
+  const path=`/owners/me/servers/${encodeURIComponent(server.server_id)}/fact-edits`
+  useEffect(()=>{let active=true;apiRequest<FactEdit[]>(path).then(rows=>{if(active)setEdits(rows)})
+    .catch(e=>{if(active)setError(e instanceof Error?e.message:'Не удалось загрузить правки')})
+    return()=>{active=false}},[path])
+  async function submit(event:React.FormEvent) {
+    event.preventDefault();setBusy(true);setError('');setMessage('')
+    try {await apiSend(path,{field,value,evidence});setEdits(await apiRequest<FactEdit[]>(path));setValue('');setEvidence('');setMessage('Характеристика отправлена на проверку.')}
+    catch(e){setError(e instanceof Error?e.message:'Не удалось отправить правку')}
+    finally{setBusy(false)}
+  }
+  return <div className="surface space-y-3 rounded-xl p-4">
+    <h3 className="font-medium">Характеристики · {server.name}</h3>
+    <p className="text-sm text-ink-400">Укажите подтверждаемое значение и источник. Публичная карточка изменится только после проверки.</p>
+    {edits.slice(0,4).map(edit=><p key={edit.id} className="text-sm">{factLabels[edit.field]??edit.field}: {edit.value} · {edit.status==='PENDING'?'На проверке':edit.status==='APPROVED'?'Опубликовано':'Отклонено'}{edit.reason?` · ${edit.reason}`:''}</p>)}
+    {error&&<p role="alert" className="text-danger-300">{error}</p>}{message&&<p role="status" className="text-signal-400">{message}</p>}
+    <form onSubmit={submit} className="space-y-3">
+      <Field label="Поле"><Select value={field} onChange={setField} options={Object.entries(factLabels).map(([value,label])=>({value,label}))}/></Field>
+      <Field label={field==='openedAt'?'Дата ГГГГ-ММ-ДД':'Новое значение'}><Input required maxLength={80} value={value} onChange={e=>setValue(e.target.value)} placeholder={field==='openedAt'?'2026-09-27':undefined}/></Field>
+      <Field label="Основание и источник"><Textarea required minLength={20} maxLength={1000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
+      <Button type="submit" disabled={busy||edits.some(edit=>edit.field===field&&edit.status==='PENDING')}>Отправить на проверку</Button>
+    </form>
   </div>
 }

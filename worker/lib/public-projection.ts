@@ -1,8 +1,8 @@
-export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; summary?: string; supportCoins?: number; supportParticipants?: number }
+export type PublicSnapshot = { serverId: string; version: number; claimed: boolean; restrictedLinks?: Array<'site'|'discord'|'telegram'>; summary?: string; facts?: Partial<Record<'version'|'rates'|'region'|'openedAt',string>>; supportCoins?: number; supportParticipants?: number }
 export function parsePublicSnapshot(value: unknown): PublicSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid_projection')
   const row=value as Record<string,unknown>
-  if (Object.keys(row).some(key=>!['claimed','serverId','version','restrictedLinks','summary','supportCoins','supportParticipants'].includes(key))
+  if (Object.keys(row).some(key=>!['claimed','serverId','version','restrictedLinks','summary','facts','supportCoins','supportParticipants'].includes(key))
     || !['claimed','serverId','version'].every(key=>Object.hasOwn(row,key))
     || typeof row.serverId!=='string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(row.serverId)
     || !Number.isSafeInteger(row.version) || Number(row.version)<1 || typeof row.claimed!=='boolean') throw new Error('invalid_projection')
@@ -11,6 +11,15 @@ export function parsePublicSnapshot(value: unknown): PublicSnapshot {
     || row.restrictedLinks.some(key=>!['site','discord','telegram'].includes(key)))) throw new Error('invalid_projection')
   if(row.summary!==undefined && (typeof row.summary!=='string'||row.summary.length<20||row.summary.length>280
     || /[<>\u0000-\u001f]|\b(?:https?:\/\/|www\.)|\[[^\]]+\]\(/i.test(row.summary))) throw new Error('invalid_projection')
+  if(row.facts!==undefined) {
+    if(!row.facts||typeof row.facts!=='object'||Array.isArray(row.facts))throw new Error('invalid_projection')
+    for(const [key,value] of Object.entries(row.facts)) {
+      if(!['version','rates','region','openedAt'].includes(key)||typeof value!=='string'||value.length<1||value.length>80
+        || /[<>\u0000-\u001f]|\b(?:https?:\/\/|www\.)/i.test(value))throw new Error('invalid_projection')
+      if(key==='openedAt' && (!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(`${value}T00:00:00Z`))
+        ||new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)!==value))throw new Error('invalid_projection')
+    }
+  }
   for(const amount of [row.supportCoins,row.supportParticipants])
     if(amount!==undefined&&(!Number.isSafeInteger(amount)||Number(amount)<0))throw new Error('invalid_projection')
   if((row.supportCoins===undefined)!==(row.supportParticipants===undefined))throw new Error('invalid_projection')
@@ -28,5 +37,11 @@ export async function applyPublicSnapshot(db:D1Database,payload:PublicSnapshot) 
   if(payload.summary!==undefined)writes.push(db.prepare(`UPDATE servers SET summary=?,updated_at=? WHERE id=?
     AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
     .bind(payload.summary,receivedAt,payload.serverId,payload.serverId,payload.version))
+  for(const [field,column] of Object.entries({version:'version',rates:'rates',region:'region',openedAt:'opened_at'})) {
+    const value=payload.facts?.[field as keyof NonNullable<PublicSnapshot['facts']>]
+    if(value!==undefined)writes.push(db.prepare(`UPDATE servers SET ${column}=?,updated_at=? WHERE id=?
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
+      .bind(value,receivedAt,payload.serverId,payload.serverId,payload.version))
+  }
   await db.batch(writes)
 }

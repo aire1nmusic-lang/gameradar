@@ -148,12 +148,20 @@ A top-level `public/404.html` makes Cloudflare Pages return an actual HTTP 404 w
 
 **Rollback:** use the prior import-only build command or revert this optional build path; it writes only an ignored local snapshot and generated HTML. Rebuild and rerun reconciliation after any public moderation change. Direct URLs for cards absent from the build return 404 until rebuilt.
 
+## Slice 5d: reviewed owner card facts (local)
+
+Private migration `011_owner_facts.sql` adds per-field pending/approved/rejected edits for **version, rates, region and opening date**. A verified Claim owner submits a value with evidence on `/account`; one pending edit per server/field is allowed. The `servers.review` admin section shows the value and evidence, records a reason, prevents self-review, and rechecks ownership under a row lock. Approval, audit, monotonic server version and public outbox snapshot commit together in PostgreSQL. Rejection leaves the card alone. The snapshot carries only the latest approved public facts, never owner identity or evidence; D1 applies them in the same version-gated batch used for Claim/summary/Support. Existing public `servers` columns suffice, so there is no new D1 migration. The next catalog-backed HTML build can capture approved facts.
+
+**Verified:** all 20 private-core tests pass, including ownership isolation, duplicate pending edit, self-review denial, rejection, replay, outbox rollback, three-game approval, D1 stale-version/atomic update and PII exclusion. TypeScript and Vite build passed. The local private API restarted with migration 011. The authenticated owner/admin browser flow and real private→D1 delivery are still **BLOCKED** on a deployed private service and production credentials; build success is not product acceptance. No new cloud resource or cost (0 ₽).
+
+**Limitations and rollback:** chronicle/mode, country, media, external links and monitoring configuration remain outside this edit form. Stop new submissions and revert the application if needed; retain review/audit/outbox rows and correct an approved public value with a new reviewed edit and higher version. Production migration 011 needs a backup and rollout order before deployment; it has not been applied there.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
 3. Move large-scale catalog hydration server-side, verify lag alarms with the deployed projection and Telegram, and re-test Turnstile with real deployment signals. Keep money out of the formula.
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
-5. Complete other server/user admin actions and owner fields, copyright and AI settings. A reviewed summary is only the first owner operation and does not complete stage 5 acceptance.
+5. Complete other server/user admin actions and owner fields (chronicle/mode, country, links, media and monitoring), copyright and AI settings. Reviewed summary and four factual fields do not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
 7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP 404 and shared-state API checks pass, but production acceptance has not been verified.
 

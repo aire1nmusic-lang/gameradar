@@ -117,7 +117,8 @@ export default function Catalog() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов</h1>
           <span className="num text-[13px] text-ink-400">
-            {formatNumber(total)} {plural(total, ['сервер', 'сервера', 'серверов'])}
+            {loading&&!page?'Загружаем серверы…':error?(page?'Предыдущие результаты · обновление недоступно':'Данные недоступны'):
+              `${formatNumber(total)} ${plural(total, ['сервер', 'сервера', 'серверов'])}`}
           </span>
         </div>
 

@@ -280,6 +280,12 @@ The server profile now distinguishes an unavailable API from an unknown slug: an
 
 **Verified locally:** with the private API deliberately stopped, navigating from a loaded 2b2t profile to AresMine/HolyWorld showed “Не удалось загрузить сервер” with retry, not a false 404. Restarting the API and activating retry restored each profile. The Support-specific failed request state is code-reviewed but not isolated in a browser fault injection. TypeScript/Worker typecheck passed. No production or cloud state changed; cost 0 ₽. Rollback: revert the UI change; no migration or transaction is involved.
 
+## Slice 0h/2k/7m: fail closed when the private API is unavailable (local)
+
+The private-core auth mode now defaults to the guarded private flow until `/auth/me` positively identifies a legacy environment. A failed session request can no longer expose old D1 owner/add-server/boost routes in the header or footer. The catalog count also distinguishes loading or API failure from a genuine zero and marks retained results as previous data.
+
+**Verified locally in the in-app browser:** after deliberately stopping the private API and reloading GTA RP catalog, the page showed “Загружаем серверы…” followed by “Данные недоступны” with retry, while footer links remained Claim/account links instead of old add-server/boost links. Restarting the API and activating retry returned six GTA RP cards. TypeScript/Worker typecheck and catalog-backed build passed: 70 published non-demo cards, 88 sitemap URLs, 98 prerendered routes and zero reconciliation issues. The local Pages HTTP SEO check passed 88 routes. No cloud state changed; cost 0 ₽. Rollback: revert the UI changes, but doing so reopens the legacy fallback on a private API outage. Production routing remains unchanged.
+
 ## Remaining slices
 
 The [concrete Yandex staging resource request](yandex-staging-resource-request.md) is **BLOCKED on user approval of paid resources and a monthly cap**. The console currently quotes 4,480.70 ₽/month including VAT for one test-only PostgreSQL host with 20 GB network SSD; container, registry, timer and network usage cost extra. The folder has no VPC network, cluster or container. No create form was submitted, no cloud spend added (0 ₽), and no production route/migration changed.

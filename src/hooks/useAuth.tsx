@@ -20,7 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [devAuthEnabled, setEnabled] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
-  const [privateCore, setPrivateCore] = useState(false)
+  // Until the session endpoint answers, keep legacy write flows closed.
+  // A private API outage must not silently send users back to D1 ownership/payment paths.
+  const [privateCore, setPrivateCore] = useState(true)
   const [error, setError] = useState('')
   const refresh = async () => {
     try { const session = await repo.users.session(); setUser(session.user); setEnabled(session.devAuthEnabled); setProviders(session.providers ?? []); setPrivateCore(session.privateCore ?? false); setError('') }

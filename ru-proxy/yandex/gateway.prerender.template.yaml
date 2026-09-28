@@ -1,0 +1,126 @@
+# Review candidate only. Do not update the live gateway before catalog
+# reconciliation, object upload, HTTP smoke checks and a rollback window.
+# Existing historical resource names and the public D1 relay stay intact.
+# Placeholders: __BUCKET__, __FUNCTION_ID__, __SERVICE_ACCOUNT_ID__.
+openapi: 3.0.0
+info:
+  title: gamescout-ru-prerender-candidate
+  version: 1.0.0
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: index.html
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /api/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /__gs/health:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /assets/{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: 'assets/{file}'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /media/{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: 'media/{file}'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /robots.txt:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: robots.txt
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /sitemap.xml:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: sitemap.xml
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /favicon.svg:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: favicon.svg
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /favicon-32.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: favicon-32.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /apple-touch-icon.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: apple-touch-icon.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /icon-512.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: icon-512.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: '{file}/index.html'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__

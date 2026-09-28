@@ -170,6 +170,12 @@ Private migration `013_user_moderation.sql` gives only ADMIN the `users.manage` 
 
 **Rollback:** disable the UI/API route or revert code while retaining `banned_at` and audit history. A mistaken block is reversed by an audited UNBAN, followed by a new login; never restore a revoked session or erase the original event. Migration 013 is additive and has not run in production.
 
+## Slice 7f: Yandex static routing candidate (local)
+
+The actual apex serves via Yandex API Gateway/Object Storage, whose current wildcard still falls back to the SPA shell with HTTP 200. A separate, **unapplied** [candidate and runbook](yandex-static-prerender.md) map prerendered page paths to `{file}/index.html`, keep assets/API on their existing routes, and return `404.html` with status 404 when an object is missing. The staging mirror now writes `noindex` into every HTML object; its earlier Vercel header alone did not cover Yandex Object Storage. This reconciles the local Pages SEO work with the actual hosting topology without changing production routing.
+
+**Verified:** two local tests checked all generated public object keys against the candidate route shape and checked over 100 staging HTML files for `noindex`, with no sitemap. [Yandex Object Storage integration](https://yandex.cloud/ru/docs/api-gateway/concepts/extensions/object-storage) and [greedy path parameters](https://yandex.cloud/en/docs/api-gateway/concepts/extensions/greedy-parameters) were reviewed. Actual gateway spec validation and HTTP responses remain **BLOCKED** on a staged deployment; no cloud resource or cost was added (0 ₽). Rollback: retain the current gateway spec and existing bucket objects; this commit changes only local build/candidate files.
+
 ## Remaining slices
 
 2. Verify non-demo cards against measured public data and add the Support/statistics block with slice 4. Verify the public HTTP response and error states.
@@ -177,6 +183,6 @@ Private migration `013_user_moderation.sql` gives only ADMIN the `users.manage` 
 4. Verify Robokassa against its real test merchant and ResultURL when credentials and fiscal settings are available. Do not enable the unapproved discount grid or sales. Verify Support aggregate delivery and lag control on deployed D1.
 5. Complete other server/user admin actions and owner fields (chronicle, links, media and monitoring), copyright and AI settings. Reviewed summary, six factual fields and user moderation do not complete stage 5 acceptance.
 6. Complete non-link material scopes, live AI/Telegram/email delivery, and production verification of projection and OpenRouter balance alerts. The local link workflow is not full stage 6 acceptance.
-7. Reconcile prerender snapshots with live D1 or move to D1-backed HTML, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP 404 and shared-state API checks pass, but production acceptance has not been verified.
+7. Reconcile prerender snapshots with live D1, validate the Yandex static-routing candidate over staging HTTP, connect webmaster services when access exists, and complete authenticated browser/deployed end-to-end tests, mobile/error acceptance, rollback runbook and release review. The local Pages HTTP 404 and shared-state API checks pass, but production acceptance has not been verified.
 
 The roadmap's SHOULD HAVE and LATER remain deferred and unchanged. A production-ready claim requires real player, owner and admin paths in all three games, test payment/Support, copyright/restore, and SEO HTTP checks.

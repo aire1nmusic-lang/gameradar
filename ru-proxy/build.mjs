@@ -13,6 +13,13 @@ import { fileURLToPath } from 'node:url'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const outArg = process.argv.indexOf('--out')
 const out = path.resolve(outArg > 0 ? process.argv[outArg + 1] : path.join(here, '.deploy'))
+const projectRoot = path.resolve(here, '..')
+const relativeOut = path.relative(projectRoot, out)
+const allowedDeploy = path.dirname(out) === here && path.basename(out).startsWith('.deploy')
+const allowedTest = path.relative(path.join(projectRoot, 'output'), out).split(path.sep)[0]?.startsWith('mirror-')
+  && !path.relative(path.join(projectRoot, 'output'), out).startsWith('..')
+if (!relativeOut || relativeOut.startsWith('..') || path.isAbsolute(relativeOut) || !(allowedDeploy || allowedTest))
+  throw new Error('Mirror output must be ru-proxy/.deploy* or output/mirror-*')
 const noindex = process.argv.includes('--noindex')
 const dist = path.resolve(here, '..', 'dist')
 if (!existsSync(path.join(dist, 'index.html'))) throw new Error('Run npm run build first: dist/index.html is missing')
@@ -33,6 +40,21 @@ if (noindex) {
   vercel.headers[0].headers.push({ key: 'X-Robots-Tag', value: 'noindex, nofollow' })
   writeFileSync(path.join(out, 'public', 'robots.txt'), 'User-agent: *\nDisallow: /\n')
   rmSync(path.join(out, 'public', 'sitemap.xml'), { force: true })
+  // Yandex Object Storage does not apply Vercel headers. Every HTML object
+  // needs its own noindex directive on the staging gateway.
+  const hideHtml = dir => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name)
+      if (entry.isDirectory()) hideHtml(file)
+      else if (entry.name.endsWith('.html')) {
+        const html = readFileSync(file, 'utf8')
+        writeFileSync(file, /<meta name="robots" content="[^"]*"\s*\/>/.test(html)
+          ? html.replace(/<meta name="robots" content="[^"]*"\s*\/>/, '<meta name="robots" content="noindex, nofollow" />')
+          : html.replace('</head>', '<meta name="robots" content="noindex, nofollow" /></head>'))
+      }
+    }
+  }
+  hideHtml(path.join(out, 'public'))
 }
 writeFileSync(path.join(out, 'vercel.json'), JSON.stringify(vercel, null, 2) + '\n')
 console.log(`Mirror deploy folder: ${out}${noindex ? ' (noindex)' : ''}`)

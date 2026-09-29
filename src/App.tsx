@@ -16,6 +16,7 @@ import NotFound from '@/pages/NotFound'
 import GameWorld from '@/pages/GameWorld'
 import Account from '@/pages/Account'
 import Admin from '@/pages/Admin'
+import { Privacy, Terms } from '@/pages/Legal'
 import Copyright from '@/pages/Copyright'
 import Design from '@/pages/Design'
 
@@ -36,6 +37,8 @@ export default function App() {
         <Route path="account" element={<Account />} />
         <Route path="admin" element={<Admin />} />
         <Route path="copyright" element={<Copyright />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
         <Route path="boost" element={<Boost />} />
         <Route path="states" element={<UiStates />} />
         <Route path="design" element={<Design />} />

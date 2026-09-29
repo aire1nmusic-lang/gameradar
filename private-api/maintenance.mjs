@@ -18,6 +18,24 @@ export function isMaintenanceEvent(event,triggerId,folderId,tokenHash) {
     &&message?.event_metadata?.folder_id===folderId&&message?.details?.trigger_id===triggerId
 }
 
+/** One outgoing letter from the encrypted outbox. */
+const deliverMail=(config,development,onLocalMail)=>async mail=>{
+    if(development)onLocalMail(mail)
+    else if(mail.purpose==='COPYRIGHT_INFO')await sendMail(config.mailEnv,{to:mail.to,
+      subject:'GameScout: нужны уточнения по обращению',
+      text:`По обращению ${mail.claimId} нужны уточнения о правах, доказательствах или точной ссылке. Отправьте форму повторно с полными сведениями и укажите этот номер в поле доказательств.`,
+      html:`<p>По вашему обращению нужны уточнения. Отправьте форму повторно с полными сведениями и укажите номер ${mail.claimId} в поле доказательств.</p>`})
+    else await sendMail(config.mailEnv,linkMail(mail.to,mail.purpose,mail.link))
+}
+
+/** Fast lane for the VM API: letters go out within seconds instead of waiting for the once-a-minute cron. */
+export async function drainMailQueue(db,config,{maxPerQueue=3}={}) {
+  if(!config.mailEnabled)return 0
+  let sent=0
+  for(let i=0;i<maxPerQueue&&await dispatch(db,'mail',deliverMail(config,false,()=>{}),config.mailKey);i++)sent++
+  return sent
+}
+
 export async function runMaintenance(db,config,{development=false,onLocalMail=()=>{},projectionAlertSeconds=300,maxPerQueue=10,maxMillis=25000}={}) {
   const deadline=Date.now()+maxMillis
   const counts={mail:0,public:0,nickname:0,copyright:0,telegram:0}
@@ -27,14 +45,7 @@ export async function runMaintenance(db,config,{development=false,onLocalMail=()
       counts[kind]++
     }
   }
-  if(config.mailEnabled)await drain('mail',()=>dispatch(db,'mail',async mail=>{
-    if(development)onLocalMail(mail)
-    else if(mail.purpose==='COPYRIGHT_INFO')await sendMail(config.mailEnv,{to:mail.to,
-      subject:'GameScout: нужны уточнения по обращению',
-      text:`По обращению ${mail.claimId} нужны уточнения о правах, доказательствах или точной ссылке. Отправьте форму повторно с полными сведениями и укажите этот номер в поле доказательств.`,
-      html:`<p>По вашему обращению нужны уточнения. Отправьте форму повторно с полными сведениями и укажите номер ${mail.claimId} в поле доказательств.</p>`})
-    else await sendMail(config.mailEnv,linkMail(mail.to,mail.purpose,mail.link))
-  },config.mailKey))
+  if(config.mailEnabled)await drain('mail',()=>dispatch(db,'mail',deliverMail(config,development,onLocalMail),config.mailKey))
   if(config.publicProjection&&config.projectionSecret)await drain('public',()=>dispatch(db,'public',async payload=>{
     const response=await fetch(config.publicProjection,{method:'POST',headers:{Authorization:`Bearer ${config.projectionSecret}`,'Content-Type':'application/json'},
       body:JSON.stringify(payload),redirect:'error',signal:AbortSignal.timeout(10000)})

@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { randomBytes } from 'node:crypto'
 import { createApp } from './app.mjs'
 import { migrate, postgresStore } from './db.mjs'
-import { isMaintenanceEvent, runMaintenance } from './maintenance.mjs'
+import { drainMailQueue, isMaintenanceEvent, runMaintenance } from './maintenance.mjs'
 import { localClientIp, vmProxyClientIp, yandexClientIp } from './ingress.mjs'
 import { productionConfig } from './production-config.mjs'
 
@@ -107,5 +107,14 @@ const timer=development?setInterval(async()=>{
   catch { console.error('outbox_dispatch_failed') }
   finally { busy=false }
 },1000):null
-async function close() { if(timer)clearInterval(timer); server.close(); await db.close(); process.exit(0) }
+// VM: the once-a-minute cron stays as a safety net, but letters leave within seconds.
+let mailBusy=false
+const mailTimer=runtime==='vm'&&config.mailEnabled?setInterval(async()=>{
+  if (mailBusy) return
+  mailBusy=true
+  try { await drainMailQueue(db,config) }
+  catch { console.error('mail_dispatch_failed') }
+  finally { mailBusy=false }
+},3000):null
+async function close() { if(timer)clearInterval(timer); if(mailTimer)clearInterval(mailTimer); server.close(); await db.close(); process.exit(0) }
 process.on('SIGINT',close); process.on('SIGTERM',close)

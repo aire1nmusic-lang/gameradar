@@ -821,3 +821,83 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   background-clip: text;
   color: transparent;
 }
+
+/* ── Hall of worlds (home) ─────────────────────────────────────────────── */
+
+/* Premium glass: frosted, a hairline of light on top, deep soft shadow. */
+.gs-glass {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.04));
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 24px 70px -20px rgb(0 0 0 / 0.75);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+/* Live blur is expensive on weak phones: a denser tint reads the same. */
+@media (max-width: 1023px), (prefers-reduced-transparency: reduce) {
+  .gs-glass {
+    background: linear-gradient(180deg, rgb(20 22 30 / 0.78), rgb(12 13 19 / 0.7));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* The hall breathes: a very slow push-in, never while the visitor prefers less motion. */
+@keyframes gs-hall-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.045); }
+}
+.gs-hall-drift { animation: gs-hall-drift 26s ease-in-out infinite alternate; transform-origin: 50% 40%; }
+
+/* The world page settles in as the picture dissolves: a slow dolly out, no fade of its own. */
+@keyframes gs-world-enter {
+  from { transform: scale(1.045); }
+  to { transform: none; }
+}
+.gs-world-enter > * { animation: gs-world-enter 1500ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-hall-drift, .gs-world-enter > * { animation: none; }
+}
+
+/* ── Floating glass cards (home) ───────────────────────────────────────── */
+
+/* A thick pane of glass around the picture: bright rim, faint inner light, deep shadow. */
+.gs-glass-card {
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0.06) 38%, rgb(255 255 255 / 0.14) 70%, rgb(255 255 255 / 0.28));
+  border: 1px solid rgb(255 255 255 / 0.45);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -1px 0 rgb(255 255 255 / 0.15), 0 40px 80px -30px rgb(0 0 0 / 0.9);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  transition: box-shadow 500ms ease;
+}
+
+/* Each card drifts on its own slow rhythm (the delay is set per card). */
+@keyframes gs-float {
+  0%, 100% { transform: translateY(0) rotateZ(0deg); }
+  50% { transform: translateY(-14px) rotateZ(0.6deg); }
+}
+.gs-float { animation: gs-float 7s ease-in-out infinite; }
+
+/* A band of light slides across the glass every few seconds. */
+@keyframes gs-sheen {
+  0%, 62% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(160%) skewX(-18deg); }
+}
+.gs-sheen { overflow: hidden; pointer-events: none; }
+.gs-sheen::before {
+  content: '';
+  position: absolute;
+  inset: -10% auto -10% 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.22), transparent);
+  animation: gs-sheen 6.5s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+/* Phones: the swipe row keeps its scrollbar out of sight. */
+.gs-snap-row { scrollbar-width: none; }
+.gs-snap-row::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-float, .gs-sheen::before { animation: none; }
+}

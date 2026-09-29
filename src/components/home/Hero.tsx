@@ -62,7 +62,7 @@ export function Hero() {
   )
 }
 
-function HeroSearch() {
+export function HeroSearch({ className }: { className?: string } = {}) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [cursor, setCursor] = useState(0)
@@ -83,10 +83,10 @@ function HeroSearch() {
   }
 
   return (
-    <div ref={wrapRef} className="relative z-20 mx-auto mt-5 max-w-xl">
+    <div ref={wrapRef} className={cn('relative z-20 mx-auto max-w-xl', className ?? 'mt-5')}>
       <div
         className={cn(
-          'group flex items-center gap-2 rounded-xl border bg-ink-900 p-1.5 pl-4 transition-colors duration-200',
+          'group flex items-center gap-2 rounded-xl border bg-ink-950/70 p-1.5 pl-4 backdrop-blur-md transition-colors duration-200',
           open ? 'border-white/22' : 'border-white/12',
         )}
       >

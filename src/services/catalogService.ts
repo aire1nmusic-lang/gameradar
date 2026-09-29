@@ -169,6 +169,5 @@ export const QUICK_SEARCHES = [
   { label: 'Minecraft Survival', to: '/catalog?game=minecraft&mode=Survival' },
   { label: 'GTA RP', to: '/gta-rp' },
   { label: 'Lineage 2 High Five', to: '/lineage-2/high-five' },
-  { label: 'Rust x2', to: '/rust' },
-  { label: 'CS2 Retake', to: '/catalog?game=cs2&mode=Retake' },
+  { label: 'Lineage 2 Interlude', to: '/lineage-2/interlude' },
 ]

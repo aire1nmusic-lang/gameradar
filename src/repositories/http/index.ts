@@ -1,6 +1,7 @@
 import type { Game, GameServer, OnlineSample, OwnerProject, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
 import type { Repositories } from '../types'
 import { cacheGames, hydrateGames } from '@/data/games'
+import { isLiveGame } from '@/data/liveGames'
 
 export class HttpError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) { super(message) }
@@ -30,7 +31,11 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     return search.size ? '?' + search.toString() : ''
   }
   const bySlug = async (slug: string) => {
-    try { return await request<GameServer>('/servers/' + encodeURIComponent(slug)) }
+    try {
+      const server = await request<GameServer>('/servers/' + encodeURIComponent(slug))
+      // A card of a hidden game is not reachable, even by a direct link.
+      return isLiveGame(server.gameId) ? server : undefined
+    }
     catch (error) { if (error instanceof HttpError && error.status === 404) return undefined; throw error }
   }
   async function allServers(query: ServerQuery = {}): Promise<GameServer[]> {
@@ -38,7 +43,7 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     let offset = 0
     while (true) {
       const page = await request<Page<GameServer>>('/servers' + params({ ...query, limit: 100, offset }))
-      items.push(...page.items)
+      items.push(...page.items.filter(server => isLiveGame(server.gameId)))
       offset += page.items.length
       if (!page.items.length || offset >= page.total) return items
     }
@@ -49,14 +54,21 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
   const listGames = () => {
     if (!gamesRequest || Date.now() - gamesRequestedAt > 60_000) {
       gamesRequestedAt = Date.now()
-      const pending = request<Game[]>('/games').then((games) => { hydrateGames(games); cacheGames(games); return games })
+      const pending = request<Game[]>('/games').then((all) => {
+        const games = all.filter(game => isLiveGame(game.id))
+        hydrateGames(games); cacheGames(games); return games
+      })
       pending.catch(() => { if (gamesRequest === pending) gamesRequest = undefined })
       gamesRequest = pending
     }
     return gamesRequest
   }
   const current = async () => (await request<{ user: User | null }>('/auth/me')).user ?? undefined
-  const leaderboard = (gameId?: string, chronicleId?: string) => request<RankedServer[]>('/rating' + params({ gameId, chronicleId }))
+  const leaderboard = async (gameId?: string, chronicleId?: string) => {
+    if (gameId && !isLiveGame(gameId)) return []
+    const rows = await request<RankedServer[]>('/rating' + params({ gameId, chronicleId }))
+    return rows.filter(row => isLiveGame(row.server.gameId)).map((row, index) => ({ ...row, rank: index + 1, organicRank: index + 1 }))
+  }
   const unsupported = async (): Promise<never> => { throw new Error('Эта функция пока не подключена') }
 
   return {
@@ -68,6 +80,14 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     },
     servers: {
       query: async query => {
+        if (query.gameId && !isLiveGame(query.gameId)) return { items: [], total: 0, offset: query.offset ?? 0, limit: query.limit ?? 0 }
+        if (!query.gameId) {
+          // Mixed lists drop hidden games; paging is done here so pages stay full.
+          const items = await allServers(query)
+          const offset = query.offset ?? 0
+          const limit = query.limit ?? items.length
+          return { items: items.slice(offset, offset + limit), total: items.length, offset, limit }
+        }
         if ((query.limit ?? 0) > 100) {
           const items = await allServers(query)
           const offset = query.offset ?? 0

@@ -16,17 +16,21 @@ const NAV = [
   { to: '/openings', label: 'Открытия' },
 ]
 
-export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: () => void }) {
+/** `bare`: over the hall of worlds — transparent, only the logo and the account. */
+export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
   const accountLabel=auth.user?.displayName || 'Аккаунт'
-  const accountClass='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex'
-  const mobileAccountClass='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden'
+  const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex'
+  // Over the hall the account button is a pane of glass like the cards.
+  const accountClass=bare?accountClassBase+' gs-glass border-white/20 text-white':accountClassBase
+  const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden'
+  const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md">
+    <header className={bare ? 'absolute inset-x-0 top-0 z-50' : 'sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md'}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
         <Logo />
 
-        <nav className="ml-1 hidden items-center gap-0.5 md:flex">
+        {!bare && <nav className="ml-1 hidden items-center gap-0.5 md:flex">
           <GamesMenu />
           {NAV.map((item) => (
             <NavLink
@@ -42,9 +46,10 @@ export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: (
               {item.label}
             </NavLink>
           ))}
-        </nav>
+        </nav>}
+        {bare && <span className="ml-auto" />}
 
-        <button
+        {!bare && <button
           onClick={onSearch}
           className="group ml-auto hidden h-10 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[300px]"
         >
@@ -54,15 +59,15 @@ export function Header({ onSearch, onLogin }: { onSearch: () => void; onLogin: (
             <span className="hidden lg:inline">Сервер, игра, режим…</span>
           </span>
           <kbd className="hidden rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-ink-500 lg:block">⌘K</kbd>
-        </button>
+        </button>}
 
-        <button
+        {!bare && <button
           onClick={onSearch}
           aria-label="Поиск"
           className="ml-auto grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden"
         >
           <Search size={20} />
-        </button>
+        </button>}
 
         {auth.privateCore ? <Link to="/account" aria-label={`Аккаунт: ${accountLabel}`} className={accountClass}>
           <UserRound size={15} className="shrink-0" /><span className="truncate">{accountLabel}</span>

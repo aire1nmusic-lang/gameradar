@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
 import { ArrowRight, CalendarClock, Flame, Plus, Trophy } from 'lucide-react'
 import { resolveWorld } from '@/data/themes'
@@ -24,13 +24,15 @@ import { breadcrumbs, useSeo } from '@/lib/seo'
 export default function GameWorld() {
   const { gameSlug, chronicleSlug } = useParams()
   const world = resolveWorld(gameSlug, chronicleSlug)
+  // Arriving through a gate of the hall: the world opens out of its own colour.
+  const fromPortal = !!(useLocation().state as { portal?: boolean } | null)?.portal
 
   // unknown single-segment url — this route sits below every static route
   if (!world.game) return <NotFound />
   if (chronicleSlug && !world.chronicle) return <Navigate to={`/${world.game.slug}`} replace />
 
   return (
-    <ThemeScope theme={world.theme} as="div" className="relative">
+    <ThemeScope theme={world.theme} as="div" className={fromPortal ? 'gs-world-enter relative' : 'relative'}>
       <WorldBody gameSlug={world.game.slug} chronicleSlug={world.chronicle?.slug} key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`} />
     </ThemeScope>
   )

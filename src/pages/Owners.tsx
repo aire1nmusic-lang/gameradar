@@ -62,7 +62,7 @@ const VERIFY_METHODS = [
     icon: <Server size={16} />,
     title: 'Прямой игровой протокол',
     body: 'GameScout сам опрашивает сервер по адресу и порту. Ничего устанавливать не нужно.',
-    games: 'Minecraft, Rust, CS2, ARK, DayZ, Valheim',
+    games: 'Lineage 2, Minecraft, GTA RP',
   },
   {
     icon: <Globe2 size={16} />,

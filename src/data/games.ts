@@ -1,4 +1,5 @@
 import type { Chronicle, Game } from '@/models'
+import { isLiveGame } from './liveGames'
 
 /** API-hydrated catalogue metadata shared with synchronous theme resolution.
  * These collections contain no server fixtures or invented statistics. */
@@ -35,7 +36,8 @@ export function cachedGames(): Game[] | undefined {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return undefined
     const { at, games } = JSON.parse(raw) as { at: number; games: Game[] }
-    return Array.isArray(games) && games.length > 0 && Date.now() - at < CACHE_MAX_AGE ? games : undefined
+    const live = Array.isArray(games) ? games.filter((game) => isLiveGame(game.id)) : []
+    return live.length > 0 && Date.now() - at < CACHE_MAX_AGE ? live : undefined
   } catch {
     return undefined
   }

@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { useGames } from '@/hooks/data'
-import { themeForGame } from '@/data/themes'
 import type { Game } from '@/models'
-import { TeleportFX } from './TeleportFX'
+import { cardSrc, reducedMotion, usePortalFlight } from './portal'
 
 /**
  * The first screen: an empty cathedral hall with three glass cards floating in
@@ -20,39 +19,9 @@ import { TeleportFX } from './TeleportFX'
 
 const WORLDS = ['lineage2', 'gtarp', 'minecraft'] as const
 
-const cardSrc = (gameId: string, w: 480 | 960 | 1600) => `/media/hub/card-${gameId}-${w}.webp`
 const cardSrcSet = (gameId: string) => `${cardSrc(gameId, 480)} 480w, ${cardSrc(gameId, 960)} 960w`
 const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/nave-${w}.webp ${w}w`).join(', ')
 const NAVE_PHONE_SRCSET = '/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w'
-
-/** How long the card takes to fill the screen before the world page takes over. */
-const FLIGHT_MS = 1350
-/** The first part of the flight: the card charges up while sparks are pulled into it. */
-const CHARGE_MS = Math.round(FLIGHT_MS * 0.38)
-
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
-type Flight = { game: Game; rect: DOMRect; color: string }
-
-function usePortal() {
-  const navigate = useNavigate()
-  const [flight, setFlight] = useState<Flight | null>(null)
-  const timer = useRef<number | undefined>(undefined)
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  const enter = (game: Game) => (event: React.MouseEvent<HTMLElement>) => {
-    // new tab, middle click and friends keep the ordinary link behaviour
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
-    event.preventDefault()
-    if (flight) return
-    const to = `/${game.slug}`
-    if (reducedMotion()) return navigate(to, { state: { portal: true } })
-    const frame = event.currentTarget.querySelector('[data-card-image]') ?? event.currentTarget
-    setFlight({ game, rect: frame.getBoundingClientRect(), color: themeForGame(game.id).colors.bg })
-    timer.current = window.setTimeout(() => navigate(to, { state: { portal: true } }), FLIGHT_MS)
-  }
-  return { flight, enter }
-}
 
 /** Cards lean towards the pointer: each card reads the pointer relative to its own centre. */
 function useTilt() {
@@ -98,8 +67,16 @@ export function WorldHall() {
   const byId = Object.fromEntries(games.map((game) => [game.id, game])) as Record<string, Game | undefined>
   const worlds = WORLDS.map((id) => byId[id]).filter((game): game is Game => !!game)
   const [hover, setHover] = useState<string | null>(null)
-  const { flight, enter } = usePortal()
+  const { flightId, enter, preload } = usePortalFlight()
   const tilt = useTilt()
+
+  const go = (event: React.MouseEvent<HTMLElement>, game: Game) => {
+    // new tab, middle click and friends keep the ordinary link behaviour
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0 || reducedMotion()) return
+    event.preventDefault()
+    const frame = event.currentTarget.querySelector('[data-card-image]') ?? event.currentTarget
+    enter(game, frame.getBoundingClientRect())
+  }
 
   return (
     <section className="relative isolate overflow-hidden">
@@ -111,7 +88,7 @@ export function WorldHall() {
         <div
           aria-hidden
           className="absolute inset-0"
-          style={{ transform: flight ? 'scale(1.12)' : 'none', filter: flight ? 'brightness(0.45) blur(3px)' : undefined, transition: `transform ${FLIGHT_MS}ms cubic-bezier(0.5,0,0.2,1), filter ${FLIGHT_MS}ms ease` }}
+          style={{ transform: flightId ? 'scale(1.07)' : 'none', transition: 'transform 1300ms cubic-bezier(0.5, 0, 0.2, 1)' }}
         >
           <div className="absolute -inset-5 transition-transform duration-700 ease-out" style={{ transform: 'translate3d(var(--gs-px, 0px), var(--gs-py, 0px), 0)' }}>
             <img src="/media/hub/nave-1920.webp" srcSet={NAVE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
@@ -131,10 +108,10 @@ export function WorldHall() {
                 side={side}
                 index={index}
                 active={hover === game.id}
-                dimmed={(hover !== null && hover !== game.id) || (flight !== null && flight.game.id !== game.id)}
-                hidden={flight?.game.id === game.id}
-                onEnter={enter(game)}
-                onHover={(on) => setHover((current) => (on ? game.id : current === game.id ? null : current))}
+                dimmed={(hover !== null && hover !== game.id) || (flightId !== null && flightId !== game.id)}
+                hidden={flightId === game.id}
+                onEnter={(event) => go(event, game)}
+                onHover={(on) => { if (on) preload(game.id); setHover((current) => (on ? game.id : current === game.id ? null : current)) }}
               />
             )
           })}
@@ -152,14 +129,13 @@ export function WorldHall() {
           <div className="gs-snap-row flex snap-x snap-mandatory gap-4 overflow-x-auto px-[19vw] pt-2 pb-6 sm:px-[30vw]" style={{ perspective: '1200px' }}>
             {worlds.map((game, index) => (
               <div key={game.id} className="w-[62vw] max-w-[300px] shrink-0 snap-center sm:w-[40vw]">
-                <WorldCard game={game} side={0} index={index} active={false} dimmed={false} hidden={flight?.game.id === game.id} onEnter={enter(game)} onHover={() => undefined} compact />
+                <WorldCard game={game} side={0} index={index} active={false} dimmed={false} hidden={flightId === game.id} onEnter={(event) => go(event, game)} onHover={(on) => on && preload(game.id)} compact />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {flight && <CardBloom flight={flight} />}
     </section>
   )
 }
@@ -197,6 +173,7 @@ function WorldCard({
       onClick={onEnter}
       onMouseEnter={() => onHover(true)}
       onMouseLeave={() => onHover(false)}
+      onTouchStart={() => onHover(true)}
       onFocus={() => onHover(true)}
       onBlur={() => onHover(false)}
       aria-label={`Открыть мир ${game.name}`}
@@ -256,41 +233,5 @@ function WorldCard({
         </div>
       </div>
     </Link>
-  )
-}
-
-/** The chosen card lifts off and grows over the whole screen, then its world takes over. */
-function CardBloom({ flight }: { flight: Flight }) {
-  const [open, setOpen] = useState(false)
-  useEffect(() => {
-    const timer = window.setTimeout(() => setOpen(true), CHARGE_MS)
-    return () => window.clearTimeout(timer)
-  }, [])
-  const { rect, game, color } = flight
-  return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-[70]">
-      <TeleportFX x={rect.left + rect.width / 2} y={rect.top + rect.height / 2} color={game.accent} duration={FLIGHT_MS} />
-      <div
-        className={cn('absolute overflow-hidden', !open && 'gs-charge')}
-        style={{
-          top: open ? 0 : rect.top,
-          left: open ? 0 : rect.left,
-          width: open ? '100vw' : rect.width,
-          height: open ? '100dvh' : rect.height,
-          borderRadius: open ? 0 : 14,
-          boxShadow: `0 0 ${open ? 160 : 60}px ${open ? 30 : 10}px color-mix(in oklab, ${game.accent} 60%, transparent)`,
-          transition: `all ${FLIGHT_MS - CHARGE_MS - 120}ms cubic-bezier(0.7, 0, 0.2, 1)`,
-        }}
-      >
-        <img
-          src={cardSrc(game.id, 1600)}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ transform: open ? 'scale(1.35)' : 'scale(1)', filter: open ? 'brightness(1.3) saturate(1.2)' : 'brightness(1.15)', transition: `transform ${FLIGHT_MS}ms cubic-bezier(0.5,0,0.2,1), filter ${FLIGHT_MS}ms ease` }}
-        />
-      </div>
-      {/* the world's colour at the very end, so the world page grows out of it */}
-      <div className="gs-veil absolute inset-0" style={{ background: color, animationDuration: `${FLIGHT_MS}ms` }} />
-    </div>
   )
 }

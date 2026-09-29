@@ -848,73 +848,15 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 }
 .gs-hall-drift { animation: gs-hall-drift 26s ease-in-out infinite alternate; transform-origin: 50% 40%; }
 
-/* A portal's vortex: two counter-rotating conic swirls in the world's accent, soft-edged. */
-.gs-vortex {
-  border-radius: 9999px;
-  mix-blend-mode: screen;
-  -webkit-mask: radial-gradient(circle, #000 0 18%, rgb(0 0 0 / 0.85) 34%, transparent 70%);
-  mask: radial-gradient(circle, #000 0 18%, rgb(0 0 0 / 0.85) 34%, transparent 70%);
-}
-.gs-vortex::before,
-.gs-vortex::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  animation: gs-spin 9s linear infinite;
-}
-.gs-vortex::before {
-  background: conic-gradient(from 0deg,
-    transparent 0deg, color-mix(in oklab, var(--gs-vortex) 70%, transparent) 40deg, transparent 95deg,
-    rgb(255 255 255 / 0.28) 150deg, transparent 205deg,
-    color-mix(in oklab, var(--gs-vortex) 60%, transparent) 260deg, transparent 320deg);
-}
-.gs-vortex::after {
-  inset: 14%;
-  background: conic-gradient(from 90deg,
-    transparent 0deg, rgb(255 255 255 / 0.35) 30deg, transparent 80deg,
-    color-mix(in oklab, var(--gs-vortex) 80%, transparent) 170deg, transparent 230deg);
-  animation-direction: reverse;
-  animation-duration: 6s;
-  filter: blur(2px);
-}
-.gs-vortex-fast::before { animation-duration: 0.9s; }
-.gs-vortex-fast::after { animation-duration: 0.6s; }
-@keyframes gs-spin { to { transform: rotate(360deg); } }
-
-/* Zoom blur while flying: ghosts of the hall rush towards the viewer. */
-@keyframes gs-ghost { from { transform: scale(1); } to { transform: scale(var(--gs-ghost-scale, 1.15)); } }
-.gs-ghost { animation: gs-ghost 900ms cubic-bezier(0.64, 0, 0.78, 0) both; mix-blend-mode: screen; }
-
-/* Speed lines around the gate, spinning and fading in. */
-.gs-streaks {
-  border-radius: 9999px;
-  background: repeating-conic-gradient(from 0deg, transparent 0deg 5deg, rgb(255 255 255 / 0.22) 5deg 5.6deg, transparent 5.6deg 11deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 12%, #000 38%, transparent 62%);
-  mask: radial-gradient(circle, transparent 0 12%, #000 38%, transparent 62%);
-  animation: gs-streaks 900ms cubic-bezier(0.64, 0, 0.78, 0) both;
-}
-@keyframes gs-streaks {
-  from { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scale(0.6); }
-  to { opacity: 1; transform: translate(-50%, -50%) rotate(40deg) scale(1.15); }
-}
-
-/* The colour of the chosen world fills the screen at the end of the flight. */
-@keyframes gs-veil {
-  0%, 55% { opacity: 0; }
-  100% { opacity: 1; }
-}
-.gs-veil { animation: gs-veil-late 900ms ease-in both; }
-
-/* The world page opens out of that colour, settling from a slight zoom. */
+/* The world page settles in as the picture dissolves: a slow dolly out, no fade of its own. */
 @keyframes gs-world-enter {
-  from { opacity: 0; transform: scale(1.12); filter: blur(10px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { transform: scale(1.045); }
+  to { transform: none; }
 }
-.gs-world-enter > * { animation: gs-world-enter 850ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.gs-world-enter > * { animation: gs-world-enter 1500ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .gs-hall-drift, .gs-world-enter > *, .gs-vortex::before, .gs-vortex::after, .gs-ghost, .gs-streaks, .gs-veil { animation: none; }
+  .gs-hall-drift, .gs-world-enter > * { animation: none; }
 }
 
 /* ── Floating glass cards (home) ───────────────────────────────────────── */
@@ -958,18 +900,4 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 
 @media (prefers-reduced-motion: reduce) {
   .gs-float, .gs-sheen::before { animation: none; }
-}
-
-/* The chosen card charging before the teleport: a tremor and a pulse of light. */
-@keyframes gs-charge {
-  0%, 100% { transform: translate(0, 0); filter: brightness(1.1); }
-  20% { transform: translate(-1.5px, 1px); }
-  40% { transform: translate(1.5px, -1px); filter: brightness(1.5); }
-  60% { transform: translate(-1px, -1.5px); }
-  80% { transform: translate(1px, 1.5px); filter: brightness(1.8); }
-}
-.gs-charge { animation: gs-charge 120ms linear infinite; }
-@keyframes gs-veil-late {
-  0%, 82% { opacity: 0; }
-  100% { opacity: 1; }
 }

@@ -9,9 +9,9 @@ export function captureRecords(rows) {
   const seen = new Set()
   const records = []
   for (const row of rows) {
-    if (row.demo) continue
+    if (row.demo || !GAME_SLUG[row.gameId]) continue
     const safeSlug = slug => typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
-    if (row.moderation !== 'PUBLISHED' || !GAME_SLUG[row.gameId] || !safeSlug(row.slug) || (row.chronicleId && !safeSlug(row.chronicleId)) || !String(row.name ?? '').trim() || !Array.isArray(row.modes) || seen.has(row.slug)) throw new Error(`Invalid published catalog card: ${String(row.slug ?? '(no slug)').slice(0, 80)}`)
+    if (row.moderation !== 'PUBLISHED' || !safeSlug(row.slug) || (row.chronicleId && !safeSlug(row.chronicleId)) || !String(row.name ?? '').trim() || !Array.isArray(row.modes) || seen.has(row.slug)) throw new Error(`Invalid published catalog card: ${String(row.slug ?? '(no slug)').slice(0, 80)}`)
     seen.add(row.slug)
     // Deliberate allowlist: no owner, links, votes, Coins, online, or private fields.
     records.push({ slug: row.slug, game: row.gameId, name: row.name, chronicle: row.chronicleId || null, version: row.version || null, modes: row.modes, rates: row.rates || null, openedAt: row.openedAt || null, region: row.region || null, country: row.country || null, checkedAt: row.updatedAt || null })

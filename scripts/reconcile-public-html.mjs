@@ -1,7 +1,7 @@
 /** Read-only release gate: compare the crawlable build against the published public catalog. */
 import { pathToFileURL } from 'node:url'
 import { readFileSync } from 'node:fs'
-import { publicPages, publicRecords, ORIGIN } from './public-pages.mjs'
+import { publicPages, publicRecords, ORIGIN, GAME_SLUG } from './public-pages.mjs'
 
 const value = input => String(input ?? '').trim()
 const date = input => value(input).slice(0, 10)
@@ -17,7 +17,7 @@ export function comparePublicCatalog(snapshot, published) {
   }
   for (const row of published) {
     if (!row || !value(row.slug)) { issues.push('published card without slug'); continue }
-    if (row.demo) continue
+    if (row.demo || !GAME_SLUG[row.gameId]) continue
     if (actual.has(row.slug)) issues.push(`duplicate published slug: ${row.slug}`)
     actual.set(row.slug, row)
   }

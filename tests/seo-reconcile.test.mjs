@@ -11,7 +11,7 @@ const record = { slug: 'test-l2', name: 'Test L2', game: 'lineage2', chronicle: 
 const row = { slug: 'test-l2', name: 'Test L2', gameId: 'lineage2', chronicleId: 'interlude', version: null, rates: 'x10', modes: ['PvP'], openedAt: '2026-09-27T00:00:00Z', region: 'EU', country: 'DE', demo: false }
 
 test('matching published card passes; demo cards are excluded', () => {
-  assert.deepEqual(comparePublicCatalog([record], [row, { slug: 'demo', demo: true }]).issues, [])
+  assert.deepEqual(comparePublicCatalog([record], [row, { slug: 'demo', demo: true }, { slug: 'cs2-card', gameId: 'cs2', demo: false }]).issues, [])
 })
 
 test('removed, added and modified public cards fail the release gate', () => {
@@ -34,7 +34,7 @@ test('catalog fetch paginates and rejects a changing total', async () => {
 })
 
 test('public build capture keeps only factual allowlisted fields', () => {
-  const captured = captureRecords([{ ...row, moderation: 'PUBLISHED', updatedAt: '2026-09-27T12:00:00Z', ownerId: 'private-user', links: { site: 'https://example.org' }, support: { coins: 100 } }, { slug: 'demo', demo: true }])
+  const captured = captureRecords([{ ...row, moderation: 'PUBLISHED', updatedAt: '2026-09-27T12:00:00Z', ownerId: 'private-user', links: { site: 'https://example.org' }, support: { coins: 100 } }, { slug: 'demo', demo: true }, { slug: 'cs2-card', gameId: 'cs2', demo: false }])
   assert.equal(captured.length, 1)
   assert.equal(captured[0].checkedAt, '2026-09-27T12:00:00Z')
   assert.ok(!JSON.stringify(captured).includes('private-user'))

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { apiRoutes, renderPrivateGateway } from '../scripts/yandex-private-gateway.mjs'
+import { apiRoutes, renderApiSplit, renderPrivateGateway } from '../scripts/yandex-private-gateway.mjs'
 
 // Windows checkouts turn LF into CRLF; the comparison is about content, not line endings.
 const lf=text=>text.split('\r\n').join('\n')
@@ -75,4 +75,14 @@ test('VM candidate sends every private route over HTTPS with the gateway secret 
   assert.ok(!vm.includes('  /__internal/'))
   assert.match(vm,/url: __PRIVATE_ORIGIN__\/api\/v1\/auth\/\{path\}/)
   assert.match(vm,/type: dummy\n        http_code: 404/)
+})
+
+test('minimal cutover keeps the live gateway and swaps only the /api block',()=>{
+  const live=lf(readFileSync('ru-proxy/yandex/gateway.template.yaml','utf8'))
+  const minimal=lf(readFileSync('ru-proxy/yandex/gateway.vm-min.template.yaml','utf8'))
+  assert.equal(minimal,renderApiSplit(live))
+  assert.ok(minimal.startsWith(live.slice(0,live.indexOf('  /api/{path+}:'))))
+  assert.ok(minimal.endsWith(live.slice(live.indexOf('  /__gs/health:'))))
+  assert.ok(!minimal.includes('serverless_containers'))
+  assert.equal((minimal.match(/type: http\n/g)??[]).length,apiRoutes.filter(route=>route.target==='private').length)
 })

@@ -44,6 +44,13 @@ function routeYaml(route,vm=false) {
   return lines.join('\n')
 }
 
+/** Minimal cutover: the live gateway template stays as it is; only its /api/{path+} block becomes the public/private split. */
+export function renderApiSplit(liveTemplate,{vm=true}={}) {
+  const start=liveTemplate.indexOf('  /api/{path+}:'), end=liveTemplate.indexOf('  /__gs/health:')
+  if (start<0 || end<start) throw new Error('unexpected_live_gateway_spec')
+  return `${liveTemplate.slice(0,start)}${apiRoutes.map(route=>routeYaml(route,vm)).join('\n')}\n${liveTemplate.slice(end)}`
+}
+
 export function renderPrivateGateway(staticCandidate,{vm=false}={}) {
   const marker='  /assets/{file+}:'
   const staticStart=staticCandidate.indexOf(marker)
@@ -57,6 +64,14 @@ export function renderPrivateGateway(staticCandidate,{vm=false}={}) {
 
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   const source=await readFile(new URL('../ru-proxy/yandex/gateway.prerender.template.yaml',import.meta.url),'utf8')
+  if (process.argv.includes('--minimal')) {
+    const lf=text=>text.split(String.fromCharCode(13,10)).join(String.fromCharCode(10))
+    const live=lf(await readFile(new URL('../ru-proxy/yandex/gateway.template.yaml',import.meta.url),'utf8'))
+    const target=new URL('../ru-proxy/yandex/gateway.vm-min.template.yaml',import.meta.url), minimal=renderApiSplit(live)
+    if (process.argv.includes('--write')) await writeFile(target,minimal)
+    else if (lf(await readFile(target,'utf8'))!==minimal) throw new Error('gateway_vm_min_out_of_date')
+    process.exit(0)
+  }
   const vm=process.argv.includes('--vm')
   const output=new URL(vm?'../ru-proxy/yandex/gateway.vm.template.yaml':'../ru-proxy/yandex/gateway.private.template.yaml',import.meta.url)
   const rendered=renderPrivateGateway(source,{vm})

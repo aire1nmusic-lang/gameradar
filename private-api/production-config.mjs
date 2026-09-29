@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { mailEnabled } from '../worker/lib/mailer.ts'
+import { sendSmtp } from './smtp.mjs'
 
 /** Shared by the HTTP server and a private one-shot maintenance process. */
 export async function productionConfig(env=process.env) {
@@ -11,7 +12,8 @@ export async function productionConfig(env=process.env) {
     throw new Error('PRIVATE_PROXY_SECRET_required_for_vm')
   const ca=env.PG_CA_PEM??await readFile(env.PG_CA_FILE,'utf8')
   const mailEnv={ENVIRONMENT:'production',MAIL_DRIVER:env.MAIL_DRIVER,MAIL_FROM:env.MAIL_FROM,
-    RESEND_API_KEY:env.RESEND_API_KEY,UNISENDER_API_KEY:env.UNISENDER_API_KEY}
+    RESEND_API_KEY:env.RESEND_API_KEY,UNISENDER_API_KEY:env.UNISENDER_API_KEY,
+    SMTP_HOST:env.SMTP_HOST,SMTP_PORT:env.SMTP_PORT,SMTP_USER:env.SMTP_USER,SMTP_PASSWORD:env.SMTP_PASSWORD,SMTP_TLS:env.SMTP_TLS,SMTP_SEND:sendSmtp}
   const config={origin:env.PUBLIC_ORIGIN,environment:'production',mailKey:env.MAIL_ENCRYPTION_KEY,
     rateKey:env.RATE_HASH_KEY,mailEnabled:mailEnabled(mailEnv),mailEnv,publicApi:env.PUBLIC_CATALOG_ORIGIN,
     publicProjection:env.PUBLIC_PROJECTION_URL,projectionSecret:env.PUBLIC_PROJECTION_SECRET,

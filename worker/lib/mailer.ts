@@ -5,6 +5,8 @@
  * ("GameScout <no-reply@gamescout.online>", a domain verified at the service):
  *   resend     — RESEND_API_KEY      (https://resend.com)
  *   unisender  — UNISENDER_API_KEY   (Unisender Go, https://go.unisender.ru)
+ *   smtp       — SMTP_HOST, SMTP_USER, SMTP_PASSWORD (an app password) and MAIL_FROM;
+ *                the private Node API only (a Worker cannot open SMTP sockets)
  *   log        — development only: the message goes to the Worker log and to
  *                an in-memory outbox tests can read; never sends anything.
  * Without a configured driver, email sign-in is off (`emailLogin: false`).
@@ -20,6 +22,7 @@ export function mailEnabled(env: Env): boolean {
   switch (env.MAIL_DRIVER) {
     case 'resend': return !!env.RESEND_API_KEY && !!env.MAIL_FROM
     case 'unisender': return !!env.UNISENDER_API_KEY && !!env.MAIL_FROM
+    case 'smtp': return !!env.SMTP_SEND && !!env.SMTP_HOST && !!env.SMTP_USER && !!env.SMTP_PASSWORD && !!env.MAIL_FROM
     case 'log': return env.ENVIRONMENT === 'development'
     default: return false
   }
@@ -36,6 +39,16 @@ export async function sendMail(env: Env, mail: Mail): Promise<void> {
     devOutbox.unshift({ ...mail, at: new Date().toISOString() })
     devOutbox.length = Math.min(devOutbox.length, 50)
     console.log('dev_mail', mail.to, mail.subject, mail.text)
+    return
+  }
+  if (env.MAIL_DRIVER === 'smtp') {
+    try {
+      await env.SMTP_SEND!(env, mail)
+    } catch (error) {
+      // only the SMTP step and reply code are logged, never credentials
+      console.error('mail_send_failed', 'smtp', String((error as Error)?.message ?? error).slice(0, 80))
+      throw new Error('mail_send_failed')
+    }
     return
   }
   let response: Response

@@ -50,6 +50,14 @@ export interface Env {
   UNISENDER_API_KEY?: string
   /** Confirmed emails that get the ADMIN role on sign-in, comma-separated */
   ADMIN_EMAILS?: string
+  /** smtp driver (private API on Node only): a mailbox with an app password */
+  SMTP_HOST?: string
+  SMTP_PORT?: string
+  SMTP_USER?: string
+  SMTP_PASSWORD?: string
+  SMTP_TLS?: string
+  /** injected by the private API: the Node SMTP sender (private-api/smtp.mjs) */
+  SMTP_SEND?: (env: Env, mail: { to: string; subject: string; text: string; html: string }) => Promise<void>
 }
 export const now = () => new Date().toISOString()
 export const daysAgo = (days: number) => new Date(Date.now() - days * 86400000).toISOString()

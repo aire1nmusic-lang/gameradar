@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { apiRoutes, renderPrivateGateway } from '../scripts/yandex-private-gateway.mjs'
 
-const candidate=readFileSync('ru-proxy/yandex/gateway.private.template.yaml','utf8')
+// Windows checkouts turn LF into CRLF; the comparison is about content, not line endings.
+const lf=text=>text.split('\r\n').join('\n')
+const candidate=lf(readFileSync('ru-proxy/yandex/gateway.private.template.yaml','utf8'))
 
 function matches(pattern,path) {
   const parts=pattern.split('/').filter(Boolean), actual=path.split('/').filter(Boolean)
@@ -28,7 +30,7 @@ function chosen(path,method) {
 }
 
 test('candidate generated from current static routes',()=>{
-  const staticSpec=readFileSync('ru-proxy/yandex/gateway.prerender.template.yaml','utf8')
+  const staticSpec=lf(readFileSync('ru-proxy/yandex/gateway.prerender.template.yaml','utf8'))
   assert.equal(candidate,renderPrivateGateway(staticSpec))
   assert.equal((candidate.match(/  \/api\//g)??[]).length,apiRoutes.length)
   assert.ok(!candidate.includes('  /__internal/'))

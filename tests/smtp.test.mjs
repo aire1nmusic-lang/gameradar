@@ -104,3 +104,13 @@ test('message headers cannot be injected through the recipient or the subject', 
   const { data } = buildMessage({ from: 'GameScout <gs@yandex.ru>', to: 'a@example.com', subject: 'Тема\r\nBcc: x@example.com', text: '.hidden', html: 'h' })
   assert.ok(!/^Bcc:/m.test(data))
 })
+
+test('a link letter carries the link in the button and in the text, in HTML-safe form', async () => {
+  const { linkMail } = await import('../worker/lib/mailer.ts')
+  const mail = linkMail('player@example.com', 'EMAIL', 'https://gamescout.online/account#token=abc_DEF-123&purpose=email')
+  assert.match(mail.subject, /Подтвердите почту/)
+  assert.ok(mail.html.includes('href="https://gamescout.online/account#token=abc_DEF-123&amp;purpose=email"'))
+  assert.ok(mail.text.includes('https://gamescout.online/account#token=abc_DEF-123&purpose=email'))
+  assert.ok(!mail.html.includes('текстовой версии'))
+  assert.ok(linkMail('a@example.com', 'X', 'https://x/"><script>').html.includes('&quot;&gt;&lt;script&gt;'))
+})

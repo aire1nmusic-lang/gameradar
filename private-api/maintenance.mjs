@@ -3,7 +3,7 @@ import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from './copyright.mjs'
 import { checkProjectionLag } from './projection-alert.mjs'
 import { checkOpenRouterBalance } from './openrouter-balance.mjs'
-import { sendMail } from '../worker/lib/mailer.ts'
+import { linkMail, sendMail } from '../worker/lib/mailer.ts'
 import { createHash, timingSafeEqual } from 'node:crypto'
 
 /** The gateway must not expose this path. A private Yandex timer invokes it with IAM. */
@@ -33,9 +33,7 @@ export async function runMaintenance(db,config,{development=false,onLocalMail=()
       subject:'GameScout: нужны уточнения по обращению',
       text:`По обращению ${mail.claimId} нужны уточнения о правах, доказательствах или точной ссылке. Отправьте форму повторно с полными сведениями и укажите этот номер в поле доказательств.`,
       html:`<p>По вашему обращению нужны уточнения. Отправьте форму повторно с полными сведениями и укажите номер ${mail.claimId} в поле доказательств.</p>`})
-    else await sendMail(config.mailEnv,{to:mail.to,subject:`GameScout: ${mail.purpose}`,
-      text:`Откройте ссылку в течение 20 минут: ${mail.link}`,
-      html:`<p>Подтвердите действие по ссылке из текстовой версии письма.</p>`})
+    else await sendMail(config.mailEnv,linkMail(mail.to,mail.purpose,mail.link))
   },config.mailKey))
   if(config.publicProjection&&config.projectionSecret)await drain('public',()=>dispatch(db,'public',async payload=>{
     const response=await fetch(config.publicProjection,{method:'POST',headers:{Authorization:`Bearer ${config.projectionSecret}`,'Content-Type':'application/json'},

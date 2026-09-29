@@ -85,6 +85,31 @@ export async function sendMail(env: Env, mail: Mail): Promise<void> {
   }
 }
 
+const LINK_TEXT: Record<string, { subject: string; lead: string; button: string }> = {
+  REGISTER: { subject: 'Подтвердите регистрацию', lead: 'Чтобы закончить регистрацию на GameScout, откройте ссылку:', button: 'Подтвердить регистрацию' },
+  EMAIL: { subject: 'Подтвердите почту', lead: 'Чтобы привязать эту почту к аккаунту GameScout, откройте ссылку:', button: 'Подтвердить почту' },
+  RESET: { subject: 'Сброс пароля', lead: 'Чтобы задать новый пароль на GameScout, откройте ссылку:', button: 'Задать новый пароль' },
+}
+
+const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+/** A letter with a one-time link (private API): the link is in the button and in the plain text. */
+export function linkMail(to: string, purpose: string, link: string, minutes = 20): Mail {
+  const t = LINK_TEXT[purpose] ?? { subject: 'Подтвердите действие', lead: 'Откройте ссылку:', button: 'Открыть ссылку' }
+  const safe = escapeHtml(link)
+  const text = `${t.lead}\n\n${link}\n\nСсылка действует ${minutes} минут. Если вы ничего не запрашивали, просто удалите это письмо.\n\nGameScout`
+  const html = `<!doctype html><html lang="ru"><body style="margin:0;background:#0d1520;font-family:Arial,Helvetica,sans-serif;color:#e8eaf0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d1520;padding:32px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;background:#141a24;border-radius:14px;padding:28px">
+<tr><td style="font-size:20px;font-weight:bold;color:#ffffff">Game<span style="color:#34e6f5">Scout</span></td></tr>
+<tr><td style="padding-top:18px;font-size:15px;line-height:22px;color:#c9ced8">${t.lead}</td></tr>
+<tr><td style="padding:18px 0"><a href="${safe}" style="display:inline-block;background:#34e6f5;color:#0d1520;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:10px">${t.button}</a></td></tr>
+<tr><td style="font-size:12px;line-height:18px;color:#8a93a3;word-break:break-all">Если кнопка не открывается, скопируйте ссылку в браузер:<br>${safe}</td></tr>
+<tr><td style="padding-top:14px;font-size:13px;line-height:20px;color:#8a93a3">Ссылка действует ${minutes} минут. Если вы ничего не запрашивали, просто удалите это письмо.</td></tr>
+</table></td></tr></table></body></html>`
+  return { to, subject: `GameScout: ${t.subject}`, text, html }
+}
+
 const PURPOSE_TEXT: Record<string, { subject: string; lead: string }> = {
   REGISTER: { subject: 'Код подтверждения регистрации', lead: 'Чтобы закончить регистрацию на GameScout, введите этот код:' },
   LOGIN: { subject: 'Код для входа', lead: 'Код для входа в GameScout:' },

@@ -1,6 +1,6 @@
-# Single Yandex VM for the private core — staging candidate (28 September 2026)
+# Single Yandex VM for the private core — staging (29 September 2026)
 
-Status: code and deployment template prepared locally; **no VM, bucket, key, DNS, production migration or payment switch created**. Keep the Cloudflare/D1 public catalog and aggregate projection; PostgreSQL on this VM is the private source of truth. Existing historical `gameradar` resource names do not need renaming.
+Status: the staging VM and dedicated SSH security group are created and Docker/Compose are installed; **the application, PostgreSQL, backup bucket, DNS, production migration and payment switch are not deployed**. Keep the Cloudflare/D1 public catalog and aggregate projection; PostgreSQL on this VM will be the private source of truth. Existing historical `gameradar` resource names do not need renaming.
 
 ## Verified account facts and price
 

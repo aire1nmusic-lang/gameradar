@@ -162,7 +162,18 @@ function logoResponse(row: Row, publicCache: boolean) {
 
 const MODERATION: Record<string, string> = { PENDING: 'PENDING_MODERATION', PUBLISHED: 'PUBLISHED', REJECTED: 'REJECTED' }
 
+/** Everything this file adds, except /auth/me and /auth/logout (which are harmless without accounts). */
+const ACCOUNT_PATHS = /^\/api\/v1\/(?:auth\/(?:register|login|code|password|google|yandex|vk|discord)(?:\/|$)|me(?:\/|$)|servers\/[^/]+\/logo$|logos\/|admin\/(?:overview|logos|users|claims)(?:\/|$)|admin\/servers(?:\/[^/]+\/reject)?$|dev\/)/
+
 export function accountRoutes(app: Hono<AppEnv>) {
+  // Off unless ACCOUNTS_IN_D1=true: personal data of Russian users lives in the private API in Russia, not in D1.
+  app.use('*', async (c, next) => {
+    if (c.env.ACCOUNTS_IN_D1 !== 'true' && ACCOUNT_PATHS.test(c.req.path)) {
+      throw new ApiError(503, 'Аккаунты подключаются. Попробуйте позже.', 'accounts_unavailable')
+    }
+    await next()
+  })
+
   /* ── session ───────────────────────────────────────────────────────── */
 
   app.get('/api/v1/auth/me', async c => {
@@ -170,8 +181,8 @@ export function accountRoutes(app: Hono<AppEnv>) {
     c.header('Cache-Control', 'no-store')
     return c.json({
       user: user ? (await userBody(c, user)).user : null,
-      providers: enabledProviders(c.env),
-      emailLogin: mailEnabled(c.env),
+      providers: c.env.ACCOUNTS_IN_D1 === 'true' ? enabledProviders(c.env) : [],
+      emailLogin: c.env.ACCOUNTS_IN_D1 === 'true' && mailEnabled(c.env),
       devAuthEnabled: devEnabled(c.env, c.req.raw),
     })
   })

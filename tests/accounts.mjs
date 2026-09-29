@@ -92,7 +92,7 @@ const log = createWriteStream(path.join(runDir, 'worker.log'), { flags: 'a' })
 const worker = spawn(
   process.execPath,
   [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', String(PORT), '--local-upstream', `127.0.0.1:${PORT}`, '--inspector-port', '9251', '--persist-to', state, '--log-level', 'error',
-    '--var', 'MAIL_DRIVER:log', '--var', 'PASSWORD_PEPPER:test-pepper-0123456789', '--var', 'ADMIN_EMAILS:boss@example.com',
+    '--var', 'ACCOUNTS_IN_D1:true', '--var', 'MAIL_DRIVER:log', '--var', 'PASSWORD_PEPPER:test-pepper-0123456789', '--var', 'ADMIN_EMAILS:boss@example.com',
     '--var', `OAUTH_TEST_BASE:http://127.0.0.1:${OAUTH_PORT}`,
     '--var', 'GOOGLE_CLIENT_ID:google-client', '--var', 'GOOGLE_CLIENT_SECRET:google-secret',
     '--var', 'YANDEX_CLIENT_ID:yandex-client', '--var', 'YANDEX_CLIENT_SECRET:yandex-secret',

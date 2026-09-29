@@ -112,7 +112,7 @@ const log = createWriteStream(path.join(runDir, 'worker.log'), { flags: 'a' })
 const worker = spawn(
   process.execPath,
   [wrangler, 'dev', '--local', '--ip', '127.0.0.1', '--port', String(PORT), '--local-upstream', `127.0.0.1:${PORT}`, '--inspector-port', '9243', '--persist-to', state, '--log-level', 'error',
-    '--var', 'DISCORD_CLIENT_ID:test-client', '--var', 'DISCORD_CLIENT_SECRET:test-secret', '--var', `DISCORD_API_BASE:http://127.0.0.1:${DISCORD_PORT}`],
+    '--var', 'ACCOUNTS_IN_D1:true', '--var', 'DISCORD_CLIENT_ID:test-client', '--var', 'DISCORD_CLIENT_SECRET:test-secret', '--var', `DISCORD_API_BASE:http://127.0.0.1:${DISCORD_PORT}`],
   { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env },
 )
 worker.stdout.pipe(log)

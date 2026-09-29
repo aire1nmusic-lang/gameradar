@@ -2,6 +2,8 @@
 export interface Env {
   /** Enabled only after the private Yandex routes are ready; denies legacy private D1 routes. */
   PUBLIC_ONLY?: string
+  /** "true" turns on the D1-backed accounts (worker/routes/accounts.ts). Off by default: the private PostgreSQL API in Russia owns accounts. */
+  ACCOUNTS_IN_D1?: string
   PUBLIC_PROJECTION_SECRET?: string
   DB: D1Database
   ENVIRONMENT?: string

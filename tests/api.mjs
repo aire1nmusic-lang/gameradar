@@ -70,6 +70,11 @@ function findDb(dir){
 }
 try{
  await start();pass('Worker /health uses real D1');
+ // Accounts in D1 are off by default: personal data lives in the private API in Russia.
+ assert.equal((await api('/auth/register',{method:'POST',body:{email:'a@example.com',password:'long enough 1',displayName:'Al'},status:503})).json.error.code,'accounts_unavailable');
+ assert.equal((await api('/me',{method:'PATCH',body:{displayName:'Alice'},status:503})).json.error.code,'accounts_unavailable');
+ const closed=(await api('/auth/me')).json;assert.deepEqual(closed.providers,[]);assert.equal(closed.emailLogin,false);
+ pass('D1 accounts are closed unless ACCOUNTS_IN_D1=true; /auth/me reports no providers');
  const games=(await api('/games')).json;assert.equal(games.length,6);
  assert.equal(games.find(g=>g.id==='lineage2').chronicles.length,5);
  assert.equal(games.find(g=>g.id==='minecraft').chronicles.length,6);

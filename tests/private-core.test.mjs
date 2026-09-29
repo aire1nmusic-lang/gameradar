@@ -254,8 +254,8 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
 test('public delivery: missing ACK, retries, stale versions, PII allowlist, mail encryption',async t=>{
   const h=await harness(t)
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',restricted_materials TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT)")
-  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),JSON.stringify(p.restrictedMaterials??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString())}
+  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',restricted_materials TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '')")
+  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),JSON.stringify(p.restrictedMaterials??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString(),crypto.randomUUID())}
   assert.throws(()=>receive({serverId:'mc',version:1,claimed:true,email:'private@example.com'}))
   receive({serverId:'mc',version:2,claimed:false});receive({serverId:'mc',version:1,claimed:true})
   assert.equal(sqlite.prepare('SELECT claimed FROM public_server_projection').get().claimed,0)
@@ -650,7 +650,7 @@ test('copyright description: exact page scope, private restriction and reversibl
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
       version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
-      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,summary) VALUES('rights-gta','Original factual description of the GTA RP server.')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -791,7 +791,7 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,summary) VALUES('mc','Original summary')`)
   const db={
     prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
@@ -875,7 +875,7 @@ test('D1 factual correction is atomic and ignores stale versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,modes TEXT,region TEXT,country TEXT,opened_at TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,version,region) VALUES('mc','1.20','EU')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -921,7 +921,7 @@ test('reviewed owner links project or remove by version without bypassing copyri
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,website TEXT,discord TEXT,telegram TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
       version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
-      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,website) VALUES('links-l2','https://old.example.org/')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -1017,7 +1017,7 @@ test('Claim-scoped monitoring publishes only safe endpoints and disabling hides 
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),version INTEGER,
       claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,
-      support_participants INTEGER,received_at TEXT);
+      support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     CREATE TABLE monitoring_targets(server_id TEXT PRIMARY KEY REFERENCES servers(id),method TEXT,host TEXT,
       port INTEGER,api_url TEXT,expect_name TEXT,enabled INTEGER,agent_token TEXT);
     CREATE TABLE server_online(server_id TEXT PRIMARY KEY REFERENCES servers(id),status TEXT,current INTEGER,

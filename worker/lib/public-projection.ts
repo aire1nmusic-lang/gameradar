@@ -75,53 +75,55 @@ export function parsePublicSnapshot(value: unknown): PublicSnapshot {
   if((row.supportCoins===undefined)!==(row.supportParticipants===undefined))throw new Error('invalid_projection')
   return row as PublicSnapshot
 }
-export const projectionSql = `INSERT INTO public_server_projection(server_id,version,claimed,restricted_links,restricted_materials,support_coins,support_participants,received_at) VALUES(?,?,?,?,?,?,?,?)
+export const projectionSql = `INSERT INTO public_server_projection(server_id,version,claimed,restricted_links,restricted_materials,support_coins,support_participants,received_at,apply_token) VALUES(?,?,?,?,?,?,?,?,?)
   ON CONFLICT(server_id) DO UPDATE SET version=excluded.version,claimed=excluded.claimed,
     restricted_links=excluded.restricted_links,restricted_materials=excluded.restricted_materials,support_coins=excluded.support_coins,
-    support_participants=excluded.support_participants,received_at=excluded.received_at
+    support_participants=excluded.support_participants,received_at=excluded.received_at,apply_token=excluded.apply_token
   WHERE excluded.version>public_server_projection.version`
 export async function applyPublicSnapshot(db:D1Database,payload:PublicSnapshot) {
   const receivedAt=new Date().toISOString()
+  const applyToken=crypto.randomUUID()
+  const currentAttempt=`AND (SELECT apply_token FROM public_server_projection WHERE server_id=?)=?`
   const writes=[db.prepare(projectionSql).bind(payload.serverId,payload.version,payload.claimed?1:0,
     JSON.stringify(payload.restrictedLinks??[]),JSON.stringify(payload.restrictedMaterials??[]),
-    payload.supportCoins??0,payload.supportParticipants??0,receivedAt)]
+    payload.supportCoins??0,payload.supportParticipants??0,receivedAt,applyToken)]
   if(payload.summary!==undefined)writes.push(db.prepare(`UPDATE servers SET summary=?,updated_at=? WHERE id=?
-    AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
-    .bind(payload.summary,receivedAt,payload.serverId,payload.serverId,payload.version))
+    AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}`)
+    .bind(payload.summary,receivedAt,payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken))
   for(const [field,column] of Object.entries({version:'version',rates:'rates',region:'region',openedAt:'opened_at',country:'country'})) {
     const value=payload.facts?.[field as keyof NonNullable<PublicSnapshot['facts']>]
     if(value!==undefined)writes.push(db.prepare(`UPDATE servers SET ${column}=?,updated_at=? WHERE id=?
-      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
-      .bind(value,receivedAt,payload.serverId,payload.serverId,payload.version))
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}`)
+      .bind(value,receivedAt,payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken))
   }
   if(payload.facts?.modes)writes.push(db.prepare(`UPDATE servers SET modes=?,updated_at=? WHERE id=?
-    AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
-    .bind(JSON.stringify(payload.facts.modes),receivedAt,payload.serverId,payload.serverId,payload.version))
+    AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}`)
+    .bind(JSON.stringify(payload.facts.modes),receivedAt,payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken))
   for(const [field,column] of Object.entries({site:'website',discord:'discord',telegram:'telegram'})) {
     const value=payload.links?.[field as keyof NonNullable<PublicSnapshot['links']>]
     if(value!==undefined)writes.push(db.prepare(`UPDATE servers SET ${column}=?,updated_at=? WHERE id=?
-      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
-      .bind(value||null,receivedAt,payload.serverId,payload.serverId,payload.version))
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}`)
+      .bind(value||null,receivedAt,payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken))
   }
   if(payload.monitoring) {
     if(payload.monitoring.enabled) {
       const target=payload.monitoring
       writes.push(db.prepare(`INSERT INTO monitoring_targets(server_id,method,host,port,api_url,expect_name,enabled,agent_token)
-        SELECT ?,?,?,?,?,?,1,NULL WHERE (SELECT version FROM public_server_projection WHERE server_id=?)=?
+        SELECT ?,?,?,?,?,?,1,NULL WHERE (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}
         ON CONFLICT(server_id) DO UPDATE SET method=excluded.method,host=excluded.host,port=excluded.port,
         api_url=excluded.api_url,expect_name=excluded.expect_name,enabled=1,agent_token=NULL`)
         .bind(payload.serverId,target.method,'host' in target?target.host:null,
           'port' in target?target.port??null:null,'apiUrl' in target?target.apiUrl:null,
-          'expectName' in target?target.expectName:null,payload.serverId,payload.version))
+          'expectName' in target?target.expectName:null,payload.serverId,payload.version,payload.serverId,applyToken))
     } else writes.push(db.prepare(`UPDATE monitoring_targets SET enabled=0 WHERE server_id=?
-      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?`)
-      .bind(payload.serverId,payload.serverId,payload.version))
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}`)
+      .bind(payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken))
     writes.push(db.prepare(`UPDATE server_online SET status='UNKNOWN',current=0,players_known=0,max_known=0,
       checked_at=NULL,observed_at=NULL,source='Ожидает проверки',source_tier=NULL,source_url=NULL,
       note='Источник мониторинга изменён; ждём новой проверки' WHERE server_id=?
-      AND (SELECT version FROM public_server_projection WHERE server_id=?)=?
+      AND (SELECT version FROM public_server_projection WHERE server_id=?)=? ${currentAttempt}
       AND COALESCE(checked_at,'')<(SELECT received_at FROM public_server_projection WHERE server_id=?)`)
-      .bind(payload.serverId,payload.serverId,payload.version,payload.serverId))
+      .bind(payload.serverId,payload.serverId,payload.version,payload.serverId,applyToken,payload.serverId))
   }
   await db.batch(writes)
 }

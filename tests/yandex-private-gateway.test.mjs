@@ -63,3 +63,16 @@ test('only catalog reads reach legacy D1 relay; retired writes fail closed',()=>
   assert.equal(chosen('/api/v1/servers/card/manage-access','get'),'private')
   assert.equal(chosen('/api/v1/support/servers/card','get'),'private')
 })
+
+test('VM candidate sends every private route over HTTPS with the gateway secret and no container',()=>{
+  const staticSpec=lf(readFileSync('ru-proxy/yandex/gateway.prerender.template.yaml','utf8'))
+  const vm=lf(readFileSync('ru-proxy/yandex/gateway.vm.template.yaml','utf8'))
+  assert.equal(vm,renderPrivateGateway(staticSpec,{vm:true}))
+  const privateRoutes=apiRoutes.filter(route=>route.target==='private').length
+  assert.equal((vm.match(/type: http\n/g)??[]).length,privateRoutes)
+  assert.equal((vm.match(/X-GS-Gateway: __PRIVATE_GATEWAY_SECRET__/g)??[]).length,privateRoutes)
+  assert.ok(!vm.includes('serverless_containers'))
+  assert.ok(!vm.includes('  /__internal/'))
+  assert.match(vm,/url: __PRIVATE_ORIGIN__\/api\/v1\/auth\/\{path\}/)
+  assert.match(vm,/type: dummy\n        http_code: 404/)
+})

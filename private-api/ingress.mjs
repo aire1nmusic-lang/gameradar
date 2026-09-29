@@ -18,7 +18,9 @@ export function localClientIp(remoteAddress) {
 /** Only the VM's TLS proxy may set these headers; never accept a browser-supplied IP. */
 export function vmProxyClientIp(headers,secret) {
   const supplied=headers['x-gs-proxy-secret']
-  const ip=headers['x-gs-client-ip']
+  const list=headers['x-gs-client-ip']
+  // Behind the API Gateway the proxy passes X-Forwarded-For through; the last entry is the one the gateway appended.
+  const ip=typeof list==='string'?list.split(',').at(-1).trim():list
   if(typeof supplied!=='string'||typeof ip!=='string'||!isIP(ip)||typeof secret!=='string')return 'unknown'
   const received=Buffer.from(supplied),expected=Buffer.from(secret)
   return received.length===expected.length&&timingSafeEqual(received,expected)?ip:'unknown'

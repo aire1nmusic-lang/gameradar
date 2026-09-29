@@ -46,6 +46,7 @@ services:
     environment:
       PRIVATE_API_HOST: ${PRIVATE_API_HOST:?required}
       PRIVATE_PROXY_SECRET: ${PRIVATE_PROXY_SECRET:?required}
+      PRIVATE_GATEWAY_SECRET: ${PRIVATE_GATEWAY_SECRET:?required}
     ports:
       - "80:80"
       - "443:443"

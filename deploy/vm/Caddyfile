@@ -1,8 +1,22 @@
 {$PRIVATE_API_HOST} {
     @internal path /__internal/*
     respond @internal 404
-    reverse_proxy api:8080 {
-        header_up X-GS-Client-IP {remote_host}
-        header_up X-GS-Proxy-Secret {$PRIVATE_PROXY_SECRET}
+
+    # Requests that come through the Yandex API Gateway carry its shared secret; the real
+    # visitor is then the last X-Forwarded-For entry (the one the gateway appended).
+    @gateway header X-GS-Gateway {$PRIVATE_GATEWAY_SECRET}
+    handle @gateway {
+        reverse_proxy api:8080 {
+            header_up X-GS-Client-IP {http.request.header.X-Forwarded-For}
+            header_up X-GS-Proxy-Secret {$PRIVATE_PROXY_SECRET}
+            header_up -X-GS-Gateway
+        }
+    }
+
+    handle {
+        reverse_proxy api:8080 {
+            header_up X-GS-Client-IP {remote_host}
+            header_up X-GS-Proxy-Secret {$PRIVATE_PROXY_SECRET}
+        }
     }
 }

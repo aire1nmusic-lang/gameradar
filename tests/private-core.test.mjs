@@ -130,6 +130,7 @@ test('VM runtime requires a secret, uses only the authenticated proxy IP, and ne
   assert.equal(loaded.config.maintenanceTriggerId,undefined)
   assert.equal(vmProxyClientIp({'x-gs-client-ip':'198.51.100.2','x-gs-proxy-secret':env.PRIVATE_PROXY_SECRET},loaded.proxySecret),'198.51.100.2')
   assert.equal(vmProxyClientIp({'x-gs-client-ip':'198.51.100.2','x-gs-proxy-secret':'spoofed'},loaded.proxySecret),'unknown')
+  assert.equal(vmProxyClientIp({'x-gs-client-ip':'203.0.113.9, 198.51.100.2','x-gs-proxy-secret':env.PRIVATE_PROXY_SECRET},loaded.proxySecret),'198.51.100.2','only the last (gateway-appended) entry counts')
   assert.equal(vmProxyClientIp({'x-gs-client-ip':'not-an-ip','x-gs-proxy-secret':env.PRIVATE_PROXY_SECRET},loaded.proxySecret),'unknown')
   await assert.rejects(productionConfig({...env,PRIVATE_PROXY_SECRET:'short'}),/PRIVATE_PROXY_SECRET_required_for_vm/)
   await assert.rejects(productionConfig({...env,PRIVATE_RUNTIME:'another'}),/PRIVATE_RUNTIME_invalid/)

@@ -9,6 +9,7 @@ interface AuthState {
   /** production sign-in methods, e.g. ['discord'] */
   providers: string[]
   privateCore: boolean
+  registrationOpen: boolean
   error: string
   refresh: () => Promise<void>
   login: (displayName: string, secret: string) => Promise<void>
@@ -23,15 +24,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Until the session endpoint answers, keep legacy write flows closed.
   // A private API outage must not silently send users back to D1 ownership/payment paths.
   const [privateCore, setPrivateCore] = useState(true)
+  const [registrationOpen, setRegistrationOpen] = useState(true)
   const [error, setError] = useState('')
   const refresh = async () => {
-    try { const session = await repo.users.session(); setUser(session.user); setEnabled(session.devAuthEnabled); setProviders(session.providers ?? []); setPrivateCore(session.privateCore ?? false); setError('') }
+    try { const session = await repo.users.session(); setUser(session.user); setEnabled(session.devAuthEnabled); setProviders(session.providers ?? []); setPrivateCore(session.privateCore ?? false); setRegistrationOpen(session.registrationOpen !== false); setError('') }
     catch (e) { setUser(null); setError(e instanceof Error ? e.message : 'Ошибка авторизации') }
     finally { setLoading(false) }
   }
   useEffect(() => { void refresh() }, [])
   const login = async (displayName: string, secret: string) => { await repo.users.login({ displayName, secret }); await refresh() }
   const logout = async () => { await repo.users.logout(); await refresh() }
-  return <Context.Provider value={{ user, loading, devAuthEnabled, providers, privateCore, error, refresh, login, logout }}>{children}</Context.Provider>
+  return <Context.Provider value={{ user, loading, devAuthEnabled, providers, privateCore, registrationOpen, error, refresh, login, logout }}>{children}</Context.Provider>
 }
 export function useAuth() { const context = useContext(Context); if (!context) throw new Error('AuthProvider is missing'); return context }

@@ -125,7 +125,7 @@ export interface OwnerRepository {
 }
 
 export interface UserRepository {
-  session(): Promise<{ user: User | null; devAuthEnabled: boolean; providers?: string[]; privateCore?: boolean }>
+  session(): Promise<{ user: User | null; devAuthEnabled: boolean; providers?: string[]; privateCore?: boolean; registrationOpen?: boolean }>
   login(input: { displayName: string; secret: string }): Promise<unknown>
   logout(): Promise<unknown>
 

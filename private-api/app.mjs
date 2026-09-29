@@ -166,11 +166,15 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return c.json({error:{code:'internal_error',message:'Внутренняя ошибка'}},500)
   })
   app.get('/api/v1/health',async c=>{ await db.query('SELECT 1'); return c.json({status:'ok',storage:'private-postgresql'}) })
+  // Production keeps sign-ups closed until REGISTRATION_OPEN=true; existing accounts still sign in.
+  const registrationOpen=()=>config.registrationOpen!==false
+  const closedRegistration=()=>fail(403,'registration_closed','Регистрация пока закрыта. Вход доступен только существующим аккаунтам.')
   app.get('/api/v1/auth/me',async c=>{
     const user=await queryUser(c)
-    return c.json({user:user?await dto(user):null,providers:enabledProviders(oauthEnv),emailLogin:!!config.mailEnabled,privateCore:true,devAuthEnabled:false})
+    return c.json({user:user?await dto(user):null,providers:enabledProviders(oauthEnv),emailLogin:!!config.mailEnabled,registrationOpen:registrationOpen(),privateCore:true,devAuthEnabled:false})
   })
   app.post('/api/v1/auth/register',async c=>{
+    if (!registrationOpen()) closedRegistration()
     if (!config.mailEnabled) fail(503,'mail_disabled','Почта ещё не подключена')
     const body=await json(c), email=emailOf(body.email), password=passwordOf(body.password), name=textOf(body.displayName,2,40)
     await limit(c,'mail',email,5)
@@ -183,6 +187,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return c.json({sent:true,message:'Если адрес доступен для регистрации, письмо отправлено.'},202)
   })
   app.post('/api/v1/auth/register/confirm',async c=>{
+    if (!registrationOpen()) closedRegistration()
     const body=await json(c)
     const result=await db.transaction(async tx=>{
       const row=await consume(tx,body.token,'REGISTER'), userId=token()
@@ -291,6 +296,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
         userId=me.id
       }
       if (!userId) {
+        if (!registrationOpen()) closedRegistration()
         userId=token()
         // No provider email enters the account email column. Separate mailbox proof is required.
         await tx.query('INSERT INTO gs_users(id,display_name) VALUES($1,$2)',[userId,textOf(profile.displayName,1,40)])

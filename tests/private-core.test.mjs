@@ -1171,3 +1171,23 @@ test('local player → owner → admin journey spans L2, Minecraft and GTA RP wi
   assert.ok(!JSON.stringify(outbox).includes('rights@example.com'))
   assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='SUPPORT'")).rows[0].n,3)
 })
+
+test('closed registration blocks new sign-ups and new OAuth accounts but shows the state',async t=>{
+  const h=await harness(t,{config:{registrationOpen:false}})
+  const me=await h.request('/auth/me')
+  assert.equal(me.body.registrationOpen,false)
+  const register=await h.request('/auth/register',{email:'new@example.com',password,displayName:'New'})
+  assert.equal(register.status,403); assert.equal(register.body.error.code,'registration_closed')
+  assert.equal((await h.request('/auth/register/confirm',{token:'x'.repeat(40)})).status,403)
+  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM gs_users')).rows[0].n,0)
+  // A brand-new OAuth identity must not create an account either.
+  const start=await h.app.request(origin+'/api/v1/auth/google',{headers:{Origin:origin}})
+  assert.equal(start.status,302)
+  const state=new URL(start.headers.get('location')).searchParams.get('state')
+  const browser=start.headers.getSetCookie().find(x=>x.startsWith('gs_private_oauth=')).split(';')[0]
+  const callback=await h.app.request(`${origin}/api/v1/auth/google/callback?state=${state}&code=brand-new`,{headers:{Origin:origin,Cookie:browser}})
+  assert.equal(callback.status,403)
+  assert.equal((await h.db.query('SELECT count(*)::int AS n FROM gs_users')).rows[0].n,0)
+  const open=await harness(t)
+  assert.equal((await open.request('/auth/me')).body.registrationOpen,true)
+})

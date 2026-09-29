@@ -20,7 +20,9 @@ export async function productionConfig(env=process.env) {
     turnstileSecret:env.TURNSTILE_SECRET,turnstileSiteKey:env.TURNSTILE_SITE_KEY,
     oauth:Object.fromEntries(Object.entries(env).filter(([key])=>/^(GOOGLE|VK|YANDEX|DISCORD)_CLIENT_(ID|SECRET)$/.test(key))),
     maintenanceTriggerId:env.YANDEX_MAINTENANCE_TRIGGER_ID,folderId:env.YANDEX_FOLDER_ID,
-    maintenanceTokenHash:env.YANDEX_MAINTENANCE_TOKEN_SHA256}
+    maintenanceTokenHash:env.YANDEX_MAINTENANCE_TOKEN_SHA256,
+    // Sign-ups stay closed in production until the owner sets REGISTRATION_OPEN=true.
+    registrationOpen:env.REGISTRATION_OPEN==='true'}
   config.enableTestPayments=env.ENABLE_TEST_PAYMENTS==='1'
   config.robokassa={merchantLogin:env.ROBOKASSA_TEST_LOGIN,testPassword1:env.ROBOKASSA_TEST_PASSWORD_1,
     testPassword2:env.ROBOKASSA_TEST_PASSWORD_2,receiptSno:env.ROBOKASSA_RECEIPT_SNO,

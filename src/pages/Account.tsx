@@ -71,7 +71,8 @@ export default function Account() {
       },purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}
     {!auth.user?<>
-      <div className="flex flex-wrap gap-2">{(['login','register','reset'] as const).map(x=><Button key={x} onClick={()=>setMode(x)}>{x==='login'?'Вход':x==='register'?'Регистрация':'Восстановление'}</Button>)}</div>
+      {!auth.registrationOpen&&<p className="surface rounded-xl p-4 text-ink-300">Регистрация пока закрыта. Войти могут только существующие аккаунты; каталог серверов доступен без входа.</p>}
+      <div className="flex flex-wrap gap-2">{(['login','register','reset'] as const).filter(x=>x!=='register'||auth.registrationOpen).map(x=><Button key={x} onClick={()=>setMode(x)}>{x==='login'?'Вход':x==='register'?'Регистрация':'Восстановление'}</Button>)}</div>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Email"><Input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field>
         {mode==='register'&&<Field label="Имя"><Input required minLength={2} maxLength={40} autoComplete="nickname" value={name} onChange={e=>setName(e.target.value)}/></Field>}

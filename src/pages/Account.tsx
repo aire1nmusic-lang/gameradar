@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
 
-type Claim = { id:string; server_id:string; status:string; reason?:string; evidence?:string; name?:string }
+type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
 type Monitor = {configured?:false;enabled?:boolean;held?:boolean;host?:string|null;port?:number|null;api_url?:string|null;updated_at?:string}
 const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',modes:'Режимы',region:'Регион',country:'Страна',openedAt:'Дата открытия',site:'Сайт',discord:'Discord',telegram:'Telegram'}
-type Profile = {email?:string;emailVerified?:boolean;permissions?:string[]}
+type Profile = {email?:string;emailVerified?:boolean;permissions?:string[];roles?:string[]}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
 
 export default function Account() {
@@ -42,7 +42,7 @@ export default function Account() {
     await auth.refresh()
     const [c,s]=await Promise.all([apiRequest<Claim[]>('/owners/me/claims'),apiRequest<Owned[]>('/owners/me/servers')])
     setClaims(c);setOwned(s)
-    if(profile?.permissions?.includes('claims.review')) setQueue(await apiRequest<Claim[]>('/admin/claims'))
+    if(profile?.roles?.includes('ADMIN')) setQueue(await apiRequest<Claim[]>('/admin/claims'))
   }
   useEffect(()=>{ if(auth.privateCore&&auth.user) void reload().catch(e=>setError(e.message)) },[auth.privateCore,auth.user?.id])
   async function run(action:()=>Promise<unknown>,success:string) {
@@ -82,6 +82,7 @@ export default function Account() {
       <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?next=/account`)}>Войти через {providerLabels[p]??p}</Button>)}</div>
     </>:<>
       <section className="surface space-y-3 p-5"><h2 className="text-lg">{auth.user.displayName}</h2>
+        <p>Статус ЛК: <strong>{profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'}</strong>{owned.length?` · подтверждено серверов: ${owned.length}`:''}</p>
         <p>{profile?.email??'Email не привязан'} · {profile?.emailVerified?'Подтверждён':'Нужно подтверждение для голосования и Claim'}</p>
         {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="space-y-3"><Field label="Email"><Input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field><Button type="submit" disabled={busy}>Подтвердить email</Button></form>}
         <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)}>Привязать {providerLabels[p]??p}</Button>)}</div>
@@ -89,16 +90,16 @@ export default function Account() {
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
+        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет. После решения администратора здесь появятся функции владельца выбранного сервера.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
         <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>
         <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
           <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
           <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
           <Button type="submit" disabled={busy||!profile?.emailVerified}>Подать Claim</Button>
         </form>
-        {claims.map(c=><p key={c.id}>{c.server_id}: {c.status}{c.reason?` · ${c.reason}`:''}</p>)}
+        {claims.map(c=><p key={c.id}>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>)}
       </section>
-      {profile?.permissions?.includes('claims.review')&&<section className="space-y-4"><h2 className="text-lg font-semibold">Администратор: заявки Claim</h2>
+      {profile?.roles?.includes('ADMIN')&&<section className="space-y-4"><h2 className="text-lg font-semibold">Администратор: заявки Claim</h2>
         <Button onClick={()=>run(reload,'Очередь обновлена.')} disabled={busy}>Обновить</Button>
         {!queue.length&&<p>Нет заявок на проверку.</p>}
         {queue.map(c=><div key={c.id} className="surface space-y-3 p-4"><p>{c.name??c.server_id}</p><p className="whitespace-pre-wrap break-words">{c.evidence}</p>

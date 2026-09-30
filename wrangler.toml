@@ -1,5 +1,6 @@
 # Existing Cloudflare Pages project remains "gameradar".
 name = "gamescout-api"
+keep_vars = true
 main = "worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -14,6 +15,7 @@ migrations_dir = "migrations"
 [vars]
 ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
+PUBLIC_ONLY = "true"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # Probes per cron tick; each costs a few subrequests (DNS + connect).
 MONITOR_BATCH = "8"

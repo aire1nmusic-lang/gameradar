@@ -219,7 +219,7 @@ test('Google/VK/Yandex callbacks use subject; same email never merges; link is s
 
 test('L2, Minecraft, GTA: player → Claim → admin review → private grant → public outbox; no cross-server grant',async t=>{
   const h=await harness(t), owner=await h.register(), admin=await h.register('admin@example.com'), other=await h.register('other@example.com')
-  await h.db.query("INSERT INTO gs_permissions(user_id,permission) VALUES($1,'claims.review'),($1,'system.read')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
   assert.equal((await h.request('/admin/claims',undefined,owner.cookie)).status,403)
   for(const game of ['lineage2','minecraft','gtarp']) {
     await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$1,$1,$1)',[game])
@@ -251,11 +251,67 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
   assert.equal((await h.db.query('SELECT status FROM gs_claims WHERE id=$1',[broken.body.id])).rows[0].status,'PENDING')
 })
 
+test('only ADMIN changes server-scoped account status; revoke is audited, projected and reversible by a new Claim',async t=>{
+  const h=await harness(t),owner=await h.register('owner-status@example.com'),admin=await h.register('status-admin@example.com'),
+    moderator=await h.register('status-moderator@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'MODERATOR')",[admin.user.id,moderator.user.id])
+  for(const [id,game] of [['owned-l2','lineage2'],['owned-mc','minecraft']])
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$1,$1)',[id,game])
+  const claims=[]
+  for(const id of ['owned-l2','owned-mc']) {
+    const claim=await h.request('/claims',{serverId:id,evidence:'Official website proof is available for manual admin review.'},owner.cookie)
+    assert.equal(claim.status,201)
+    claims.push(claim.body)
+  }
+  const decision={status:'VERIFIED',reason:'Проверены документы и публичный адрес владельца'}
+  assert.equal((await h.request(`/admin/claims/${claims[0].id}/resolve`,decision,moderator.cookie)).status,403)
+  assert.equal((await h.request(`/admin/claims/${claims[0].id}/resolve`,decision,admin.cookie)).status,200)
+  assert.equal((await h.request(`/admin/claims/${claims[1].id}/resolve`,decision,admin.cookie)).status,200)
+  assert.equal((await h.request('/auth/me',undefined,owner.cookie)).body.user.roles.includes('OWNER'),true)
+  assert.equal((await h.request('/admin/users',undefined,admin.cookie)).body.find(x=>x.id===owner.user.id).owned_server_count,2)
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,undefined,moderator.cookie)).status,403)
+  const access=(await h.request(`/admin/users/${owner.user.id}/ownership`,undefined,admin.cookie)).body
+  assert.equal(access.status,'OWNER');assert.equal(access.owned.length,2)
+  await h.db.query(`INSERT INTO gs_owner_monitoring_overrides(server_id,enabled,method,host,port,updated_by)
+    VALUES('owned-l2',true,'LOGIN_SERVER','login.example.org',2106,$1)`,[owner.user.id])
+  const revoke={action:'REVOKE',serverId:'owned-l2',reason:'Подтверждение утратило силу после ручной проверки'}
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,revoke,moderator.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,revoke,owner.cookie)).status,403)
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,revoke,admin.cookie)).status,200)
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,revoke,admin.cookie)).body.replay,true)
+  assert.equal((await h.request('/servers/owned-l2/manage-access',undefined,owner.cookie)).status,403)
+  assert.equal((await h.request('/servers/owned-mc/manage-access',undefined,owner.cookie)).status,200)
+  assert.equal((await h.db.query("SELECT enabled FROM gs_owner_monitoring_overrides WHERE server_id='owned-l2'")).rows[0].enabled,false)
+  const previous=(await h.request('/owners/me/claims',undefined,owner.cookie)).body.find(x=>x.id===claims[0].id)
+  assert.equal(previous.status,'VERIFIED');assert.equal(previous.access_active,false)
+  const snapshot=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='owned-l2' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.equal(snapshot.claimed,false);assert.deepEqual(snapshot.monitoring,{enabled:false})
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='ownership.revoked'")).rows[0].n,1)
+  await h.db.query(`CREATE FUNCTION reject_owner_projection() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'test outbox failure'; END $$`)
+  await h.db.query('CREATE TRIGGER reject_owner_projection BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION reject_owner_projection()')
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,
+    {...revoke,serverId:'owned-mc'},admin.cookie)).status,500)
+  assert.equal((await h.request('/servers/owned-mc/manage-access',undefined,owner.cookie)).status,200)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='ownership.revoked'")).rows[0].n,1)
+  await h.db.query('DROP TRIGGER reject_owner_projection ON gs_public_outbox')
+  await h.db.query('DROP FUNCTION reject_owner_projection()')
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,
+    {...revoke,serverId:'owned-mc'},admin.cookie)).status,200)
+  assert.equal((await h.request('/auth/me',undefined,owner.cookie)).body.user.roles.includes('OWNER'),false)
+  assert.equal((await h.request(`/admin/users/${owner.user.id}/ownership`,undefined,admin.cookie)).body.status,'PLAYER')
+  const renewed=await h.request('/claims',{serverId:'owned-l2',evidence:'Updated official proof available for renewed admin review.'},owner.cookie)
+  assert.equal(renewed.status,201)
+  assert.equal((await h.request('/servers/owned-l2/manage-access',undefined,owner.cookie)).status,403)
+  assert.equal((await h.request(`/admin/claims/${renewed.body.id}/resolve`,decision,admin.cookie)).status,200)
+  assert.equal((await h.request('/servers/owned-l2/manage-access',undefined,owner.cookie)).status,200)
+})
+
 test('public delivery: missing ACK, retries, stale versions, PII allowlist, mail encryption',async t=>{
   const h=await harness(t)
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
-  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',restricted_materials TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT)")
-  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),JSON.stringify(p.restrictedMaterials??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString())}
+  sqlite.exec("CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY,version INTEGER,claimed INTEGER,restricted_links TEXT NOT NULL DEFAULT '[]',restricted_materials TEXT NOT NULL DEFAULT '[]',support_coins INTEGER NOT NULL DEFAULT 0,support_participants INTEGER NOT NULL DEFAULT 0,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '')")
+  const receive=payload=>{const p=parsePublicSnapshot(payload);sqlite.prepare(projectionSql).run(p.serverId,p.version,+p.claimed,JSON.stringify(p.restrictedLinks??[]),JSON.stringify(p.restrictedMaterials??[]),p.supportCoins??0,p.supportParticipants??0,new Date().toISOString(),crypto.randomUUID())}
   assert.throws(()=>receive({serverId:'mc',version:1,claimed:true,email:'private@example.com'}))
   receive({serverId:'mc',version:2,claimed:false});receive({serverId:'mc',version:1,claimed:true})
   assert.equal(sqlite.prepare('SELECT claimed FROM public_server_projection').get().claimed,0)
@@ -650,7 +706,7 @@ test('copyright description: exact page scope, private restriction and reversibl
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
       version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
-      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,summary) VALUES('rights-gta','Original factual description of the GTA RP server.')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -791,7 +847,7 @@ test('D1 summary projection is atomic and ignores older versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,summary TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,summary) VALUES('mc','Original summary')`)
   const db={
     prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
@@ -875,7 +931,7 @@ test('D1 factual correction is atomic and ignores stale versions',async t=>{
   const sqlite=new DatabaseSync(':memory:');t.after(()=>sqlite.close())
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,version TEXT,rates TEXT,modes TEXT,region TEXT,country TEXT,opened_at TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
-      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,version,region) VALUES('mc','1.20','EU')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -921,7 +977,7 @@ test('reviewed owner links project or remove by version without bypassing copyri
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY,website TEXT,discord TEXT,telegram TEXT,updated_at TEXT);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),
       version INTEGER,claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,
-      support_coins INTEGER,support_participants INTEGER,received_at TEXT);
+      support_coins INTEGER,support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     INSERT INTO servers(id,website) VALUES('links-l2','https://old.example.org/')`)
   const db={prepare(sql){return {bind(...args){return {run(){return sqlite.prepare(sql).run(...args)}}}}},
     async batch(steps){sqlite.exec('BEGIN');try{for(const step of steps)step.run();sqlite.exec('COMMIT')}
@@ -1017,7 +1073,7 @@ test('Claim-scoped monitoring publishes only safe endpoints and disabling hides 
   sqlite.exec(`CREATE TABLE servers(id TEXT PRIMARY KEY);
     CREATE TABLE public_server_projection(server_id TEXT PRIMARY KEY REFERENCES servers(id),version INTEGER,
       claimed INTEGER,restricted_links TEXT,restricted_materials TEXT,support_coins INTEGER,
-      support_participants INTEGER,received_at TEXT);
+      support_participants INTEGER,received_at TEXT,apply_token TEXT NOT NULL DEFAULT '');
     CREATE TABLE monitoring_targets(server_id TEXT PRIMARY KEY REFERENCES servers(id),method TEXT,host TEXT,
       port INTEGER,api_url TEXT,expect_name TEXT,enabled INTEGER,agent_token TEXT);
     CREATE TABLE server_online(server_id TEXT PRIMARY KEY REFERENCES servers(id),status TEXT,current INTEGER,

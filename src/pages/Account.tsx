@@ -5,6 +5,7 @@ import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
+import { AccountCoins } from '@/components/account/AccountCoins'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -83,12 +84,13 @@ export default function Account() {
     </>:<>
       <section className="surface space-y-3 p-5"><h2 className="text-lg">{auth.user.displayName}</h2>
         <p>Статус ЛК: <strong>{profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'}</strong>{owned.length?` · подтверждено серверов: ${owned.length}`:''}</p>
-        <p>{profile?.email??'Email не привязан'} · {profile?.emailVerified?'Подтверждён':'Нужно подтверждение для голосования и Claim'}</p>
+        <p className="break-all">{profile?.email??'Email не привязан'} · {profile?.emailVerified?'Подтверждён':'Нужно подтверждение для голосования и Claim'}</p>
         {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="space-y-3"><Field label="Email"><Input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field><Button type="submit" disabled={busy}>Подтвердить email</Button></form>}
         <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)}>Привязать {providerLabels[p]??p}</Button>)}</div>
         <Button disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')}>Выйти</Button>
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
+      <AccountCoins key={auth.user.id}/>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
         {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет. После решения администратора здесь появятся функции владельца выбранного сервера.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
         <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>

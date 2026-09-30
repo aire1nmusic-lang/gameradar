@@ -12,7 +12,7 @@ import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from '../priv
 import { checkProjectionLag } from '../private-api/projection-alert.mjs'
 import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
-import { maintenanceOnce } from '../private-api/maintenance-once.mjs'
+import { maintenanceOnce, projectionConfiguration } from '../private-api/maintenance-once.mjs'
 import { productionConfig } from '../private-api/production-config.mjs'
 import { localClientIp, vmProxyClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
@@ -110,6 +110,13 @@ test('private one-shot maintenance shares production config, requires verified C
   assert.equal(loaded.config.mailEnv.MAIL_DRIVER,'unisender')
   assert.equal(loaded.ca,'fixture-ca')
   assert.equal(loaded.config.maintenanceTriggerId,undefined)
+  assert.deepEqual(projectionConfiguration({publicProjection:'https://staging-projection.invalid/api/internal/public-projection',
+    projectionSecret:'x'.repeat(64)}),{endpointValid:false,secretPresent:true})
+  assert.deepEqual(projectionConfiguration({publicProjection:'https://gamescout-origin.example.org/api/internal/public-projection',
+    projectionSecret:'x'.repeat(64)}),{endpointValid:true,secretPresent:true})
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('maintenance-mc','minecraft','MC','maintenance-mc')")
+  await h.db.query(`INSERT INTO gs_public_outbox(server_id,version,payload) VALUES('maintenance-mc',1,$1)`,
+    [JSON.stringify({serverId:'maintenance-mc',version:1,claimed:false})])
   let closed=false,connected=false
   const result=await maintenanceOnce({...env,MAIL_DRIVER:undefined},(url,ca)=>{
     connected=url===env.DATABASE_URL&&ca===env.PG_CA_PEM
@@ -118,6 +125,10 @@ test('private one-shot maintenance shares production config, requires verified C
   assert.equal(connected,true)
   assert.equal(closed,true)
   assert.equal(result.mail,0)
+  assert.equal(result.public,0,'no sender configured; attempted count stays zero')
+  assert.equal(result.projection.pending,1,'pending events must be visible separately from attempts')
+  assert.equal(result.projection.endpointValid,false)
+  assert.equal(result.projection.secretPresent,false)
   await assert.rejects(maintenanceOnce({...env,PG_CA_PEM:undefined},()=>{throw new Error('must_not_connect')}),
     /PostgreSQL_CA_required/)
 })

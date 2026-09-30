@@ -704,11 +704,8 @@ test('ambiguous nickname review never reverses Support or ledger; AI and manual 
     {decision:'ANONYMOUS',reason:'Публичный ник требует ручного ограничения'},admin.cookie)).status,200)
   assert.equal((await h.request('/support/servers/nick-mc')).body.recent[0].public_nick,'Анонимно')
   assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,0)
-  const ai=await reviewNickname({key:'test-key',model:'test-model'},'Ambiguous',async(url,init)=>{
-    assert.equal(url,'https://openrouter.ai/api/v1/chat/completions')
-    assert.equal(init.headers.Authorization,'Bearer test-key')
-    assert.ok(!init.body.includes('nickname@example.com'))
-    return new Response(JSON.stringify({choices:[{message:{content:'REVIEW'}}]}),{status:200})
+  const ai=await reviewNickname({key:'test-key',model:'test-model'},'Ambiguous',async()=>{
+    assert.fail('Private nickname must not leave the RU contour')
   })
   assert.equal(ai,'REVIEW')
 })
@@ -777,14 +774,37 @@ test('copyright: exact link scope, AI triage, reversible restriction, public all
   const messages=(await h.db.query('SELECT message FROM gs_telegram_outbox')).rows.map(x=>x.message).join('\n')
   assert.ok(messages.includes('copyright.suspected_fake'))
   assert.ok(!messages.includes('rights@example.com'));assert.ok(!messages.includes('Original publication'))
+  await h.db.query("UPDATE gs_telegram_outbox SET message='synthetic@example.test Authorization: synthetic 127.0.0.1'")
   await dispatchTelegram(h.db,{botToken:'fake',chatId:'123'},async(url,init)=>{
     assert.ok(url.endsWith('/sendMessage'));assert.ok(!init.body.includes('rights@example.com'))
+    assert.ok(!init.body.includes('synthetic'));assert.ok(!init.body.includes('127.0.0.1'))
     return new Response(JSON.stringify({ok:true}),{status:200})
   })
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_telegram_outbox WHERE delivered_at IS NOT NULL')).rows[0].n,1)
   const ai=await analyzeCopyright({key:'fake',model:'test'},(await h.db.query('SELECT * FROM gs_copyright_claims WHERE id=$1',[claim.body.id])).rows[0],
-    async(_url,init)=>{assert.ok(!init.body.includes('rights@example.com'));return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({classification:'VALID',reason:'Specific link requires review'})}}]}),{status:200})})
-  assert.equal(ai.classification,'VALID')
+    async()=>assert.fail('Raw copyright evidence must not leave the RU contour'))
+  assert.equal(ai.classification,'DOUBTFUL')
+})
+
+test('copyright retries stop after three failures and leave the private case for admin review',async t=>{
+  const h=await harness(t)
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('retry-mc','minecraft','Retry MC','retry-mc')")
+  await h.db.query(`INSERT INTO gs_copyright_claims(id,server_id,claimant_name,contact_email,rights_basis,
+    work_description,material_key,material_url,evidence) VALUES('retry-case','retry-mc','Synthetic',
+    'synthetic@example.test','Synthetic rights','Synthetic work','site','https://example.test','Synthetic evidence')`)
+  await h.db.query("INSERT INTO gs_copyright_ai_jobs(claim_id) VALUES('retry-case')")
+  let calls=0
+  const fail=async()=>{calls++;throw new Error('synthetic provider failure')}
+  for(let i=0;i<3;i++) {
+    await h.db.query("UPDATE gs_copyright_ai_jobs SET available_at=now()-interval '1 second'")
+    assert.equal(await dispatchCopyrightAI(h.db,fail,'synthetic'),true)
+  }
+  await h.db.query("UPDATE gs_copyright_ai_jobs SET available_at=now()-interval '1 second'")
+  assert.equal(await dispatchCopyrightAI(h.db,fail,'synthetic'),false)
+  assert.equal(calls,3)
+  assert.equal((await h.db.query('SELECT last_error FROM gs_copyright_ai_jobs')).rows[0].last_error,'analysis_exhausted')
+  assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims')).rows[0].status,'PENDING_AI')
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_material_restrictions')).rows[0].n,0)
 })
 
 test('copyright description: exact page scope, private restriction and reversible D1 redaction',async t=>{

@@ -57,10 +57,10 @@ export async function runMaintenance(db,config,{development=false,onLocalMail=()
       WHERE key='openrouter_balance' AND next_at<=now() RETURNING key`)).rows.length>0
     if(due)await checkOpenRouterBalance(db,config.openrouterBalance)
   }
-  if(config.openrouter?.key&&config.openrouter?.model)await drain('nickname',()=>dispatchNicknameReview(db,
-    nickname=>reviewNickname(config.openrouter,nickname),config.openrouter.model))
-  if(config.copyrightAI?.key&&config.copyrightAI?.model)await drain('copyright',()=>dispatchCopyrightAI(db,
-    claim=>analyzeCopyright(config.copyrightAI,claim),config.copyrightAI.model,config.mailKey))
+  await drain('nickname',()=>dispatchNicknameReview(db,
+    nickname=>reviewNickname(null,nickname),'local-policy-v1'))
+  await drain('copyright',()=>dispatchCopyrightAI(db,
+    claim=>analyzeCopyright(null,claim),'local-policy-v1',config.mailKey))
   if(config.telegram?.botToken&&config.telegram?.chatId)await drain('telegram',()=>dispatchTelegram(db,config.telegram))
   return counts
 }

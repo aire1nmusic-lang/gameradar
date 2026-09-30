@@ -13,6 +13,8 @@
 
 ## Состояние сейчас
 
+**Egress v1, 30.09.2026 — VERIFIED локально:** raw nickname/copyright inference отключен даже с ключом; сомнительные ники идут человеку и остаются «Анонимно», copyright проверяет полноту локально и сохраняет scoped human review. Telegram delivery использует только fixed event template + random outbox ID, игнорирует сохраненный message. Review/Telegram попытки ограничены тремя. [Политика и границы покрытия](egress-policy.md). Проверки: private suite 42/42 до добавления новой retry-регрессии; отдельные обновленные copyright/privacy/retry 2/2 + egress 4/4. Без миграций, inference и cloud resources; пока **не развернуто**. Следующий срез — free operational snapshot/maintenance heartbeat и наблюдаемость dead jobs.
+
 **Reality Check AI Operator, 30.09.2026 — завершен аудит, не внедрение:** [полный отчет: 19 ответов, варианты, стоимость, приоритеты](ai-operator-reality-check-2026-09-30.md). **VERIFIED по коду:** OpenRouter copyright connector отправляет свободные `rightsBasis/work/evidence` и URL; nickname connector отправляет ник; центрального outbound allowlist и периодического retention purge не обнаружено. Публичный relay в `private-api/app.mjs` пересоздает headers только с Accept, но переносит query string — нужна валидация параметров. Рекомендация: существующая VM/PG + deterministic checks + independent safe uptime probe; optional Sonnet read-only позже, без MCP/новых платных ресурсов. Новых ресурсов и production изменений нет. Следующий безопасный срез — egress library/tests, finite AI retry и read-only operational snapshot; прежние live блокеры ниже остаются актуальны.
 
 | Область | Статус | Подтвержденный факт и предел проверки |

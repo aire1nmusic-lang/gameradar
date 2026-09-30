@@ -1109,7 +1109,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       (SELECT COALESCE(EXTRACT(EPOCH FROM now()-min(created_at)),0)::integer
         FROM gs_telegram_outbox WHERE delivered_at IS NULL) AS telegram_oldest_seconds`)).rows[0]
     return c.json({projection:await outboxHealth(db),operations:await operationalSnapshot(db),
-      alerts:(await db.query("SELECT key,active,opened_at,resolved_at,last_snapshot FROM gs_system_alerts WHERE key<>'maintenance_heartbeat' ORDER BY key")).rows,queues,
+      alerts:(await db.query("SELECT key,active,opened_at,resolved_at,last_snapshot FROM gs_system_alerts WHERE key NOT IN ('maintenance_heartbeat','backup_heartbeat') ORDER BY key")).rows,queues,
       events:(await db.query('SELECT id,action,target,created_at FROM gs_audit ORDER BY id DESC LIMIT 50')).rows})
   })
   // Explicit public allowlist. Private cookies and identifying headers never reach D1.

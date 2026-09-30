@@ -14,7 +14,7 @@ import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
 import { maintenanceOnce, projectionConfiguration } from '../private-api/maintenance-once.mjs'
 import { productionConfig } from '../private-api/production-config.mjs'
-import { operationalSnapshot, recordMaintenanceHeartbeat, checkStoppedJobs } from '../private-api/operations.mjs'
+import { operationalSnapshot, recordMaintenanceHeartbeat, recordBackupUpload, checkStoppedJobs } from '../private-api/operations.mjs'
 import { localClientIp, vmProxyClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 import { serverDto } from '../worker/lib/dto.ts'
@@ -836,6 +836,17 @@ test('operational status is private, distinguishes unknown heartbeat and dedupli
   const publicHealth=await h.request('/health')
   assert.equal(publicHealth.status,200)
   assert.equal(publicHealth.body.operations,undefined)
+  await assert.rejects(recordBackupUpload(h.db,0),/invalid_backup_size/)
+  await recordBackupUpload(h.db,1234)
+  assert.equal((await operationalSnapshot(h.db)).backup.status,'upload_verified')
+  assert.equal((await operationalSnapshot(h.db)).backup.restoreStatus,'not_observed_by_heartbeat')
+  await h.db.query(`UPDATE gs_system_alerts SET last_snapshot=jsonb_build_object('uploadedAt',now()-interval '26 hours')
+    WHERE key='backup_heartbeat'`)
+  await checkStoppedJobs(h.db);await checkStoppedJobs(h.db)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='backup.upload_stale'")).rows[0].n,1)
+  await recordBackupUpload(h.db,1234)
+  await checkStoppedJobs(h.db)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='backup.upload_recovered'")).rows[0].n,1)
 })
 
 test('copyright description: exact page scope, private restriction and reversible D1 redaction',async t=>{

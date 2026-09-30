@@ -47,4 +47,5 @@ remote_sha256="$(awk 'tolower($1)=="x-amz-meta-sha256:" {gsub("\r","",$2); print
 [[ "$remote_size" == "$size" && "$remote_sha256" == "$sha256" ]] || {
   echo 'Object Storage backup verification failed' >&2; exit 1;
 }
+docker compose exec -T api node private-api/record-backup.mjs "$size" </dev/null
 printf 'backup_uploaded key=%s bytes=%s\n' "$key" "$size"

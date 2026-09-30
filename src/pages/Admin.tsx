@@ -4,6 +4,7 @@ import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Textarea } from '@/components/ui/controls'
+import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -25,6 +26,7 @@ const tabs:Tab[]=[
 type Row=Record<string,unknown>
 const value=(row:Row,key:string)=>String(row[key]??'—')
 const date=(row:Row,key:string)=>row[key]?new Date(String(row[key])).toLocaleString('ru-RU'):'—'
+const serverNoun=(count:number)=>count%10===1&&count%100!==11?'сервер':count%10>=2&&count%10<=4&&(count%100<12||count%100>14)?'сервера':'серверов'
 
 export default function Admin() {
   useSeo({title:'Админский кабинет',path:'/admin',noindex:true})
@@ -75,6 +77,8 @@ export default function Admin() {
         {rows.map((row,index)=><article key={value(row,'id')==='—'?`${active.id}-${index}`:value(row,'id')} className="surface space-y-2 rounded-xl p-4 text-sm">
           {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {row.banned_at?'Заблокирован':'Активен'} · {date(row,'created_at')}</p>
             <p className="break-all text-xs text-ink-400">ID {value(row,'id')} · роли: {Array.isArray(row.roles)&&row.roles.length?row.roles.join(', '):'PLAYER'}</p>
+            <p>Статус ЛК: {Number(row.owned_server_count)>0?`Игрок и владелец · ${row.owned_server_count} ${serverNoun(Number(row.owned_server_count))}`:'Игрок'} · заявки: {value(row,'pending_claim_count')}</p>
+            {auth.user?.roles.includes('ADMIN')&&<OwnershipAccess userId={value(row,'id')} self={row.id===auth.user.id} onChanged={()=>void load(active)}/>}
             {permissions.includes('roles.manage')&&row.id!==auth.user?.id&&<div className="flex flex-wrap gap-2">{(['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'] as const).map(role=>{
               const has=Array.isArray(row.roles)&&row.roles.includes(role)
               return <Button key={role} variant="outline" disabled={busy} onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/roles`,{role,action:has?'REVOKE':'GRANT'}))}>{has?'Снять':'Дать'} {role}</Button>
@@ -108,9 +112,10 @@ export default function Admin() {
               onClick={()=>void act(()=>apiSend(`/admin/server-fact-edits/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='APPROVED'?'Опубликовать':'Отклонить'}</Button>)}</div>
           </>}
           {active.id==='claims'&&<><strong>{value(row,'name')} · {value(row,'server_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'evidence')}</p>
-            <Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+            {auth.user?.roles.includes('ADMIN')&&<><Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
             <div className="flex gap-2">{(['VERIFIED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+            </>}
           </>}
           {active.id==='votes'&&<><strong>{value(row,'server_id')} · {row.review_status==='VOIDED'?'Исключён из рейтинга':'Учитывается'}</strong>
             <p className="break-words">Голос {value(row,'id')} · пользователь {value(row,'user_id')} · ASN {value(row,'asn')} · {date(row,'created_at')}</p>

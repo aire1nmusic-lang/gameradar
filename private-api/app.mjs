@@ -97,6 +97,12 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       WHERE ur.user_id=$1 AND rp.permission=$2 LIMIT 1`,[user.id,name])).rows.length) fail(403,'forbidden','Недостаточно прав')
     return user
   }
+  const ownershipAdmin = async c => {
+    const user=await permission(c,'claims.review')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[user.id])).rows.length)
+      fail(403,'admin_required','Подтверждать владение может только администратор')
+    return user
+  }
   async function dto(user) {
     const identities=(await db.query('SELECT provider,created_at FROM gs_identities WHERE user_id=$1',[user.id])).rows
     const permissions=(await db.query(`SELECT permission FROM gs_permissions WHERE user_id=$1
@@ -317,6 +323,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const claim=await db.transaction(async tx=>{
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
       if (!server) fail(404,'not_found','Сервер ещё не импортирован в приватный реестр')
+      if (server.owner_id===user.id) fail(409,'already_owned','Этот сервер уже доступен в вашем кабинете')
       if (server.owner_id && server.owner_id!==user.id) fail(409,'already_claimed','Владелец уже подтверждён')
       const existing=(await tx.query("SELECT * FROM gs_claims WHERE server_id=$1 AND user_id=$2 AND status='PENDING'",[serverId,user.id])).rows[0]
       if (existing) return existing
@@ -328,7 +335,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/owners/me/claims',async c=>{
     const user=await requireUser(c)
-    return c.json((await db.query('SELECT id,server_id,status,evidence,reason,created_at FROM gs_claims WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id])).rows)
+    return c.json((await db.query(`SELECT c.id,c.server_id,c.status,c.evidence,c.reason,c.created_at,
+      (c.status='VERIFIED' AND COALESCE(r.owner_id=c.user_id,false)) AS access_active
+      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id
+      WHERE c.user_id=$1 ORDER BY c.created_at DESC LIMIT 100`,[user.id])).rows)
   })
   app.get('/api/v1/owners/me/servers',async c=>{
     const user=await requireUser(c)
@@ -657,9 +667,44 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.get('/api/v1/admin/users',async c=>{
     await permission(c,'users.read')
     return c.json((await db.query(`SELECT u.id,u.email,u.display_name,u.email_verified_at,u.banned_at,u.created_at,
-      COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL),'{}') AS roles
+      COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL),'{}') AS roles,
+      (SELECT count(*)::integer FROM gs_server_registry r WHERE r.owner_id=u.id) AS owned_server_count,
+      (SELECT count(*)::integer FROM gs_claims cl WHERE cl.user_id=u.id AND cl.status='PENDING') AS pending_claim_count
       FROM gs_users u LEFT JOIN gs_user_roles ur ON ur.user_id=u.id
       GROUP BY u.id ORDER BY u.created_at DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/users/:id/ownership',async c=>{
+    await ownershipAdmin(c)
+    const userId=c.req.param('id')
+    const user=(await db.query('SELECT id,display_name,email_verified_at,banned_at FROM gs_users WHERE id=$1',[userId])).rows[0]
+    if(!user)fail(404,'not_found','Пользователь не найден')
+    const owned=(await db.query('SELECT server_id,game_id,name,slug FROM gs_server_registry WHERE owner_id=$1 ORDER BY game_id,name',[userId])).rows
+    const pending=(await db.query(`SELECT c.id,c.server_id,c.evidence,c.created_at,r.name,r.game_id
+      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id
+      WHERE c.user_id=$1 AND c.status='PENDING' ORDER BY c.created_at`,[userId])).rows
+    return c.json({userId,status:owned.length?'OWNER':'PLAYER',owned,pending,emailVerified:!!user.email_verified_at,banned:!!user.banned_at})
+  })
+  app.post('/api/v1/admin/users/:id/ownership',async c=>{
+    const admin=await ownershipAdmin(c),body=await json(c)
+    if(body.action!=='REVOKE')fail(400,'invalid_action','Подтверждение владельца выполняется только через Claim')
+    const serverId=textOf(body.serverId,1,100),reason=textOf(body.reason,10,1000),userId=c.req.param('id')
+    if(admin.id===userId)fail(403,'self_review','Нельзя менять собственное владение')
+    const result=await db.transaction(async tx=>{
+      const user=(await tx.query('SELECT id FROM gs_users WHERE id=$1',[userId])).rows[0]
+      if(!user)fail(404,'not_found','Пользователь не найден')
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server)fail(404,'not_found','Сервер не найден')
+      if(!server.owner_id)return {ok:true,replay:true,status:'PLAYER'}
+      if(server.owner_id!==userId)fail(409,'owner_changed','Владелец сервера уже изменился')
+      await tx.query(`UPDATE gs_owner_monitoring_overrides SET enabled=false,method=NULL,host=NULL,port=NULL,
+        api_url=NULL,updated_by=$1,updated_at=now() WHERE server_id=$2`,[admin.id,serverId])
+      const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=NULL,version=version+1 WHERE server_id=$1 RETURNING version',[serverId])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,serverId,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[serverId,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,admin.id,'ownership.revoked',userId,{serverId,reason})
+      return {ok:true,replay:false,status:'PLAYER'}
+    })
+    return c.json(result)
   })
   app.post('/api/v1/admin/users/:id/moderation',async c=>{
     const admin=await permission(c,'users.manage'),body=await json(c)
@@ -982,7 +1027,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return c.json((await db.query("SELECT c.*,s.name,s.game_id FROM gs_claims c JOIN gs_server_registry s USING(server_id) WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100")).rows)
   })
   app.post('/api/v1/admin/claims/:id/resolve',async c=>{
-    const admin=await permission(c,'claims.review'), body=await json(c), reason=textOf(body.reason,10,1000)
+    const admin=await ownershipAdmin(c), body=await json(c), reason=textOf(body.reason,10,1000)
     if (!['VERIFIED','REJECTED'].includes(body.status)) fail(400,'invalid_status','Укажите решение')
     const result=await db.transaction(async tx=>{
       const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
@@ -994,6 +1039,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       }
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[claim.server_id])).rows[0]
       if (body.status==='VERIFIED') {
+        const applicant=(await tx.query('SELECT email_verified_at,banned_at FROM gs_users WHERE id=$1',[claim.user_id])).rows[0]
+        if(!applicant?.email_verified_at||applicant.banned_at)fail(403,'applicant_ineligible','Заявитель должен иметь активный аккаунт с подтверждённым email')
         if (server.owner_id && server.owner_id!==claim.user_id) fail(409,'already_claimed','Владелец уже подтверждён')
         const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=$1,version=version+1 WHERE server_id=$2 RETURNING version',[claim.user_id,server.server_id])).rows[0]
         const snapshot=await createPublicSnapshot(tx,server.server_id,changed.version)

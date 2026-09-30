@@ -3,6 +3,7 @@ import { dispatchNicknameReview, reviewNickname } from './nickname-review.mjs'
 import { analyzeCopyright, dispatchCopyrightAI, dispatchTelegram } from './copyright.mjs'
 import { checkProjectionLag } from './projection-alert.mjs'
 import { checkOpenRouterBalance } from './openrouter-balance.mjs'
+import { checkStoppedJobs, recordMaintenanceHeartbeat } from './operations.mjs'
 import { linkMail, sendMail } from '../worker/lib/mailer.ts'
 import { createHash, timingSafeEqual } from 'node:crypto'
 
@@ -62,5 +63,7 @@ export async function runMaintenance(db,config,{development=false,onLocalMail=()
   await drain('copyright',()=>dispatchCopyrightAI(db,
     claim=>analyzeCopyright(null,claim),'local-policy-v1',config.mailKey))
   if(config.telegram?.botToken&&config.telegram?.chatId)await drain('telegram',()=>dispatchTelegram(db,config.telegram))
+  await checkStoppedJobs(db)
+  await recordMaintenanceHeartbeat(db)
   return counts
 }

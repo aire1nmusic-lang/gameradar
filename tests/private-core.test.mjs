@@ -14,6 +14,7 @@ import { checkOpenRouterBalance } from '../private-api/openrouter-balance.mjs'
 import { isMaintenanceEvent, runMaintenance } from '../private-api/maintenance.mjs'
 import { maintenanceOnce, projectionConfiguration } from '../private-api/maintenance-once.mjs'
 import { productionConfig } from '../private-api/production-config.mjs'
+import { operationalSnapshot, recordMaintenanceHeartbeat, checkStoppedJobs } from '../private-api/operations.mjs'
 import { localClientIp, vmProxyClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 import { serverDto } from '../worker/lib/dto.ts'
@@ -805,6 +806,36 @@ test('copyright retries stop after three failures and leave the private case for
   assert.equal((await h.db.query('SELECT last_error FROM gs_copyright_ai_jobs')).rows[0].last_error,'analysis_exhausted')
   assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims')).rows[0].status,'PENDING_AI')
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_material_restrictions')).rows[0].n,0)
+})
+
+test('operational status is private, distinguishes unknown heartbeat and deduplicates stopped-job alerts',async t=>{
+  const h=await harness(t),player=await h.register('ops-player@example.test'),admin=await h.register('ops-admin@example.test')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  assert.equal((await h.request('/admin/system')).status,401)
+  assert.equal((await h.request('/admin/system',undefined,player.cookie)).status,403)
+  const unknown=await operationalSnapshot(h.db)
+  assert.equal(unknown.maintenance.status,'unknown')
+  assert.equal(unknown.backup.status,'unknown')
+  await recordMaintenanceHeartbeat(h.db)
+  assert.equal((await operationalSnapshot(h.db)).maintenance.status,'ok')
+  await h.db.query(`UPDATE gs_system_alerts SET last_snapshot=jsonb_build_object('succeededAt',now()-interval '10 minutes')
+    WHERE key='maintenance_heartbeat'`)
+  assert.equal((await operationalSnapshot(h.db)).maintenance.status,'stale')
+  await h.db.query(`INSERT INTO gs_telegram_outbox(id,event,message,attempts)
+    VALUES($1,'copyright.submitted','synthetic@example.test private payload',3)`,['x'.repeat(32)])
+  await checkStoppedJobs(h.db);await checkStoppedJobs(h.db)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='operations.jobs_stalled'")).rows[0].n,1)
+  const response=await h.request('/admin/system',undefined,admin.cookie)
+  assert.equal(response.status,200)
+  assert.equal(response.body.operations.queues.telegram_stopped,1)
+  assert.equal(JSON.stringify(response.body).includes('synthetic@example.test'),false)
+  assert.equal(response.body.alerts.some(row=>row.key==='maintenance_heartbeat'),false)
+  await h.db.query('UPDATE gs_telegram_outbox SET delivered_at=now() WHERE id=$1',['x'.repeat(32)])
+  await checkStoppedJobs(h.db);await checkStoppedJobs(h.db)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='operations.jobs_recovered'")).rows[0].n,1)
+  const publicHealth=await h.request('/health')
+  assert.equal(publicHealth.status,200)
+  assert.equal(publicHealth.body.operations,undefined)
 })
 
 test('copyright description: exact page scope, private restriction and reversible D1 redaction',async t=>{

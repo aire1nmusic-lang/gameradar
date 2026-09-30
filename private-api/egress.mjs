@@ -18,6 +18,8 @@ const notices = Object.freeze({
   'openrouter.balance_check_recovered':'Проверка баланса AI восстановлена',
   'openrouter.low_balance':'Низкий баланс AI',
   'openrouter.balance_recovered':'Баланс AI выше порога',
+  'operations.jobs_stalled':'Задания остановлены; нужна ручная проверка',
+  'operations.jobs_recovered':'Остановленных заданий больше нет',
 })
 
 function exact(value,keys) {

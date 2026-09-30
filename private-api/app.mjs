@@ -864,7 +864,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const ledgerId=token()
       await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,related_id,idempotency_key,details)
         VALUES($1,$2,'REFUND',$3,$4,$5,$6)`,[ledgerId,support.user_id,support.coins,supportId,
-        `support-refund:${supportId}`,JSON.stringify({source:'support-correction',serverId:support.server_id,originalLedgerId:support.ledger_id})])
+        `support-refund:${ledgerId}`,JSON.stringify({source:'support-correction',serverId:support.server_id,originalLedgerId:support.ledger_id})])
       await tx.query(`INSERT INTO gs_support_refunds(support_id,ledger_id,actor_id,reason,idempotency_key)
         VALUES($1,$2,$3,$4,$5)`,[supportId,ledgerId,admin.id,reason,idem])
       const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',[support.server_id])).rows[0]

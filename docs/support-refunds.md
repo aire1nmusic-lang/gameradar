@@ -18,6 +18,8 @@
 
 ## Проверки
 
+Развернуто 30.09.2026 на существующей Yandex VM после backup и explicit fingerprint 021. На `gamescout.online` новая сборка и ADMIN-раздел Поддержки проверены; операция с ненулевым балансом еще не выполнялась. Условия live-приемки и отката фиксируются в [журнале](core-progress.md).
+
 `npm run test:private`: ADMIN и прямое разрешение без роли; запрет self-review/foreign Origin; возврат только исходному аккаунту; все три игры; уникальные участники и пустые агрегаты; повторы/конфликты; одновременные решения двух ADMIN; сохранение исходного ledger; неизменяемые возвраты; отказ outbox и полный rollback; приватность snapshot; Народный рейтинг неизменен; сверка ledger/баланса.
 
 `node --test tests/private-migration-plan.test.mjs tests/yandex-private-gateway.test.mjs`: upgrade 20→21 с существующей Поддержкой и outbox, fingerprint, отсутствие неявной миграции, маршрутизация нового ADMIN endpoint. PGlite моделирует SQL/транзакции; это не доказательство конкурентности нескольких production PostgreSQL-соединений или живой приемки.

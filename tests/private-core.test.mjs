@@ -494,7 +494,8 @@ test('Support refund: ADMIN only, same-account credit, immutable history and pub
     assert.equal(support.status,201)
     supports.push({id:support.body.id,game})
   }
-  const extra=await post('/support',{serverId:'lineage2',coins:2},player.cookie,'another-l2-support')
+  // A user can choose any external key; it must not block a later ADMIN refund.
+  const extra=await post('/support',{serverId:'lineage2',coins:2},player.cookie,'support-refund:'+supports[0].id)
   await h.request('/people-rating/votes',{serverId:'lineage2',deviceSignal:'refund_device_signal_123',pageAgeMs:5000},player.cookie,{'Idempotency-Key':'refund-vote-original'})
   const votesBefore=(await h.request('/people-rating/ranking')).body
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_votes')).rows[0].n,1)

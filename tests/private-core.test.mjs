@@ -480,6 +480,103 @@ test('Coins ledger and Support: atomic balance, replay, anonymity and all core g
   assert.equal((await h.request('/coins/transfer',{to:other.user.id,coins:1},player.cookie)).status,501)
 })
 
+test('Support refund: ADMIN only, same-account credit, immutable history and public aggregates in all games',async t=>{
+  const h=await harness(t),player=await h.register('refund-player@example.com'),admin=await h.register('refund-admin@example.com'),reader=await h.register('refund-reader@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'FINANCE')",[admin.user.id,reader.user.id])
+  const post=(path,body,cookie,key)=>h.request(path,body,cookie,{'Idempotency-Key':key})
+  const reason='Отмена ошибочно выбранного сервера'
+  const refund=(id,cookie=admin.cookie,key='refund-'+id,input={reason})=>post(`/admin/support/${id}/refund`,input,cookie,key)
+  await post('/__dev/coins',{coins:30},player.cookie,'refund-credit-player')
+  const supports=[]
+  for(const game of ['lineage2','minecraft','gtarp']) {
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$1,$1,$1)',[game])
+    const support=await post('/support',{serverId:game,coins:5,anonymous:game==='minecraft'},player.cookie,'original-support-'+game)
+    assert.equal(support.status,201)
+    supports.push({id:support.body.id,game})
+  }
+  const extra=await post('/support',{serverId:'lineage2',coins:2},player.cookie,'another-l2-support')
+  await h.request('/people-rating/votes',{serverId:'lineage2',deviceSignal:'refund_device_signal_123',pageAgeMs:5000},player.cookie,{'Idempotency-Key':'refund-vote-original'})
+  const votesBefore=(await h.request('/people-rating/ranking')).body
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_votes')).rows[0].n,1)
+  assert.equal((await refund(supports[0].id,'')).status,401)
+  assert.equal((await refund(supports[0].id,reader.cookie)).status,403)
+  await h.db.query("INSERT INTO gs_permissions(user_id,permission) VALUES($1,'support.refund')",[reader.user.id])
+  assert.equal((await refund(supports[0].id,reader.cookie)).body.error.code,'admin_required')
+  assert.equal((await refund(supports[0].id,admin.cookie,'bad-refund-reason',{reason:'short'})).status,400)
+  assert.equal((await refund(supports[0].id,admin.cookie,'short')).status,400)
+  assert.equal((await refund('missing-support-record')).status,404)
+  assert.equal((await post(`/admin/support/${supports[0].id}/refund`,{reason},admin.cookie,'foreign-origin-test',)).status,201)
+  // Replay cannot resurrect cancelled Support or take more Coins.
+  const replay=await post('/support',{serverId:'lineage2',coins:5,anonymous:false},player.cookie,'original-support-lineage2')
+  assert.equal(replay.status,200);assert.equal(replay.body.refunded,true)
+  assert.equal((await refund(supports[0].id,admin.cookie,'foreign-origin-test')).status,200)
+  assert.equal((await refund(supports[0].id,admin.cookie,'foreign-origin-test',{reason:'Другая причина отмены операции'})).status,409)
+  assert.equal((await refund(supports[1].id,admin.cookie,'foreign-origin-test')).status,409)
+  assert.equal((await refund(supports[0].id)).body.error.code,'already_refunded')
+  for(const {id,game} of supports.slice(1)) {
+    assert.equal((await refund(id)).status,201)
+    assert.equal((await refund(id)).status,200)
+    const summary=(await h.request('/support/servers/'+game)).body
+    assert.deepEqual(summary,{coins:0,participants:0,recent:[]})
+  }
+  const l2=(await h.request('/support/servers/lineage2')).body
+  assert.equal(l2.coins,2);assert.equal(l2.participants,1);assert.equal(l2.recent.length,1)
+  assert.equal((await refund(extra.body.id)).status,201)
+  const ranking=(await h.request('/support/ranking')).body
+  assert.ok(ranking.every(row=>row.coins===0&&row.participants===0))
+  const balance=(await h.request('/coins/me',undefined,player.cookie)).body
+  assert.equal(balance.balance,30)
+  assert.equal(balance.ledger.filter(row=>row.kind==='REFUND').length,4)
+  assert.equal(balance.ledger.filter(row=>row.kind==='SUPPORT').length,4)
+  assert.equal(balance.ledger.reduce((sum,row)=>sum+row.delta,0),balance.balance)
+  assert.equal((await h.request('/coins/me',undefined,admin.cookie)).body.balance,0)
+  assert.deepEqual((await h.request('/people-rating/ranking')).body,votesBefore,'money never changes People rating')
+  const history=(await h.request('/admin/support',undefined,admin.cookie)).body
+  assert.equal(history.length,4);assert.ok(history.every(row=>row.refunded_at&&row.refund_reason===reason))
+  const events=(await h.db.query('SELECT payload FROM gs_public_outbox ORDER BY id DESC LIMIT 3')).rows
+  assert.ok(events.every(row=>row.payload.supportCoins===0&&row.payload.supportParticipants===0))
+  assert.ok(events.every(row=>!JSON.stringify(row.payload).includes(player.user.id)&&!JSON.stringify(row.payload).includes(reason)))
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='support.refunded'")).rows[0].n,4)
+  assert.deepEqual((await h.request('/admin/payments/reconciliation',undefined,admin.cookie)).body,{orderMismatch:[],balanceMismatch:[]})
+  await assert.rejects(h.db.query('UPDATE gs_support_refunds SET reason=$1',[reason]),/append only/)
+  await assert.rejects(h.db.query('DELETE FROM gs_support_refunds'),/append only/)
+  await assert.rejects(h.db.query("UPDATE gs_coin_ledger SET delta=1 WHERE kind='REFUND'"),/append only/)
+  await post('/__dev/coins',{coins:1},admin.cookie,'refund-admin-credit')
+  const own=await post('/support',{serverId:'lineage2',coins:1},admin.cookie,'refund-admin-support')
+  assert.equal((await refund(own.body.id)).body.error.code,'self_review')
+})
+
+test('Support refund: outbox failure rolls back everything and concurrent reviewers credit once',async t=>{
+  const h=await harness(t),player=await h.register('refund-race-player@example.com'),admin=await h.register('refund-race-admin@example.com'),other=await h.register('refund-race-other@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'ADMIN')",[admin.user.id,other.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('refund-mc','minecraft','Refund MC','refund-mc')")
+  const post=(path,body,cookie,key)=>h.request(path,body,cookie,{'Idempotency-Key':key})
+  await post('/__dev/coins',{coins:10},player.cookie,'refund-race-credit')
+  const support=await post('/support',{serverId:'refund-mc',coins:10},player.cookie,'refund-race-support')
+  const path=`/admin/support/${support.body.id}/refund`,reason='Проверенная ошибочная Поддержка'
+  assert.equal((await h.request(path,{reason},admin.cookie,{'Idempotency-Key':'refund-cross-origin',Origin:'https://evil.invalid'})).status,403)
+  const before=(await h.db.query('SELECT version FROM gs_server_registry')).rows[0].version
+  await h.db.query(`CREATE FUNCTION gs_fail_refund_projection() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'simulated projection failure'; END $$`)
+  await h.db.query('CREATE TRIGGER gs_fail_refund_projection BEFORE INSERT ON gs_public_outbox FOR EACH ROW EXECUTE FUNCTION gs_fail_refund_projection()')
+  assert.equal((await post(path,{reason},admin.cookie,'refund-race-attempt')).status,500)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,0)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_support_refunds')).rows[0].n,0)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='REFUND'")).rows[0].n,0)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='support.refunded'")).rows[0].n,0)
+  assert.equal((await h.db.query('SELECT version FROM gs_server_registry')).rows[0].version,before)
+  assert.equal((await h.request('/support/servers/refund-mc')).body.coins,10)
+  await h.db.query('DROP TRIGGER gs_fail_refund_projection ON gs_public_outbox')
+  const raced=await Promise.all([
+    post(path,{reason},admin.cookie,'refund-race-attempt'),
+    post(path,{reason},other.cookie,'refund-race-other-key'),
+  ])
+  assert.deepEqual(raced.map(r=>r.status).sort(),[201,409])
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,10)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_coin_ledger WHERE kind='REFUND'")).rows[0].n,1)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_public_outbox')).rows[0].n,2)
+})
+
 test('Robokassa test order: signed ResultURL credits once, mismatches roll back, reconciliation is private',async t=>{
   const robokassa={merchantLogin:'unit-test-shop',testPassword1:'test-one',testPassword2:'test-two',
     receiptSno:'osn',receiptTax:'none',receiptPaymentObject:'service',receiptPaymentMethod:'full_payment',itemName:'GS Coins test'}

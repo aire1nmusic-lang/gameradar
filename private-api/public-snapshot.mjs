@@ -7,7 +7,7 @@ export async function createPublicSnapshot(tx,serverId,version) {
   const facts=(await tx.query(`SELECT DISTINCT ON (field) field,value FROM gs_owner_fact_edits
     WHERE server_id=$1 AND status='APPROVED' ORDER BY field,resolved_at DESC,id DESC`,[serverId])).rows
   const support=(await tx.query(`SELECT COALESCE(sum(coins),0)::bigint AS coins,
-    count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
+    count(DISTINCT user_id)::integer AS participants FROM gs_active_support WHERE server_id=$1`,[serverId])).rows[0]
   const monitor=(await tx.query(`SELECT enabled,method,host,port,api_url FROM gs_owner_monitoring_overrides
     WHERE server_id=$1`,[serverId])).rows[0]
   const monitoringHeld=(await tx.query(`SELECT active FROM gs_monitoring_holds WHERE server_id=$1`,[serverId])).rows[0]?.active===true

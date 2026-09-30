@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
@@ -35,6 +35,7 @@ export default function Admin() {
   const [selected,setSelected]=useState('overview'),[data,setData]=useState<unknown>()
   const [loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('')
   const [reasons,setReasons]=useState<Record<string,string>>({})
+  const refundKeys=useRef<Record<string,{reason:string;key:string}>>({})
   const active=allowed.find(tab=>tab.id===selected)??allowed[0]
   async function load(tab:Tab) {
     setLoading(true);setError('')
@@ -49,6 +50,15 @@ export default function Admin() {
     try {await task();await auth.refresh();await load(active)}
     catch(e) {setError(e instanceof Error?e.message:'Не удалось сохранить решение')}
     finally {setBusy(false)}
+  }
+  async function refundSupport(id:string) {
+    const reason=(reasons[id]??'').trim()
+    const prior=refundKeys.current[id]
+    const key=prior?.reason===reason?prior.key:crypto.randomUUID()
+    refundKeys.current[id]={reason,key}
+    return apiRequest(`/admin/support/${encodeURIComponent(id)}/refund`,{
+      method:'POST',headers:{'Idempotency-Key':key},body:JSON.stringify({reason}),
+    })
   }
   if(auth.loading)return <main className="mx-auto max-w-6xl p-6">Проверяем права…</main>
   if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Админский кабинет</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
@@ -129,7 +139,16 @@ export default function Admin() {
                 {row.review_status==='VOIDED'?'Восстановить голос':'Исключить голос'}</Button>
             </div>}
           </>}
-          {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p></>}
+          {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p>
+            {row.refunded_at?<p>Отменена {date(row,'refunded_at')} · {value(row,'refund_reason')}</p>:
+              auth.user?.roles.includes('ADMIN')&&permissions.includes('support.refund')&&row.user_id!==auth.user?.id&&<div className="space-y-2">
+                <p className="text-ink-400">Coins вернутся тому же игроку. Это отмена Поддержки, а не возврат рублей. Исходная операция останется в журнале.</p>
+                <Textarea aria-label={`Причина отмены Поддержки ${value(row,'id')}`} minLength={10} maxLength={1000}
+                  value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+                <Button variant="outline" disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
+                  onClick={()=>void act(()=>refundSupport(value(row,'id')))}>Отменить Поддержку и вернуть Coins</Button>
+              </div>}
+          </>}
           {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p></>}
           {active.id==='payments'&&<><strong>Тестовый заказ {value(row,'id')} · {value(row,'status')}</strong><p>{value(row,'coins')} Coins · {Number(row.amount_kopecks)/100} ₽ · пользователь {value(row,'user_id')} · {date(row,'created_at')}</p></>}
           {active.id==='moderation'&&<><strong>{value(row,'nickname')} · {value(row,'status')}</strong><p>Сервер {value(row,'server_id')} · попыток AI: {value(row,'attempts')} · {date(row,'created_at')}</p>

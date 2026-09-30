@@ -591,7 +591,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       fail(400,'invalid_page','Некорректная страница Поддержки')
     const rows=(await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,
       COALESCE(sum(s.coins),0)::integer AS coins,count(DISTINCT s.user_id)::integer AS participants
-      FROM gs_server_registry r LEFT JOIN gs_support s ON s.server_id=r.server_id
+      FROM gs_server_registry r LEFT JOIN gs_active_support s ON s.server_id=r.server_id
       GROUP BY r.server_id ORDER BY coins DESC,participants DESC,r.server_id LIMIT $1 OFFSET $2`,[pageLimit,offset])).rows
     return c.json(rows)
   })
@@ -600,8 +600,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
       fail(404,'not_found','Сервер не найден')
     const summary=(await db.query(`SELECT COALESCE(sum(coins),0)::integer AS coins,
-      count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
-    const recent=(await db.query(`SELECT public_nick,anonymous,coins,created_at FROM gs_support
+      count(DISTINCT user_id)::integer AS participants FROM gs_active_support WHERE server_id=$1`,[serverId])).rows[0]
+    const recent=(await db.query(`SELECT public_nick,anonymous,coins,created_at FROM gs_active_support
       WHERE server_id=$1 ORDER BY created_at DESC,id DESC LIMIT 10`,[serverId])).rows
     return c.json({...summary,recent})
   })
@@ -617,7 +617,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       if(prior) {
         if(prior.server_id!==serverId||prior.coins!==coins||prior.anonymous!==anonymous)
           fail(409,'idempotency_conflict','Ключ уже использован для другой поддержки')
-        return {id:prior.id,replay:true}
+        const refunded=(await tx.query('SELECT 1 FROM gs_support_refunds WHERE support_id=$1',[prior.id])).rows.length>0
+        return {id:prior.id,replay:true,refunded}
       }
       if(!(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
         fail(404,'not_found','Сервер не найден')
@@ -826,8 +827,54 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/support',async c=>{
     await permission(c,'support.read')
-    return c.json((await db.query(`SELECT id,server_id,user_id,coins,anonymous,public_nick,nickname_decision,created_at
-      FROM gs_support ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+    return c.json((await db.query(`SELECT s.id,s.server_id,s.user_id,s.coins,s.anonymous,s.public_nick,s.nickname_decision,s.created_at,
+      r.created_at AS refunded_at,r.reason AS refund_reason,r.ledger_id AS refund_ledger_id
+      FROM gs_support s LEFT JOIN gs_support_refunds r ON r.support_id=s.id
+      ORDER BY s.created_at DESC,s.id DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/support/:id/refund',async c=>{
+    const admin=await permission(c,'support.refund')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[admin.id])).rows.length)
+      fail(403,'admin_required','Только администратор может отменить Поддержку')
+    const supportId=c.req.param('id'),body=await json(c),reason=textOf(body.reason,10,1000)
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    await limit(c,'support-refund',admin.id,20)
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`support-refund:${admin.id}:${idem}`])
+      const prior=(await tx.query('SELECT * FROM gs_support_refunds WHERE actor_id=$1 AND idempotency_key=$2',[admin.id,idem])).rows[0]
+      if(prior) {
+        if(prior.support_id!==supportId||prior.reason!==reason)
+          fail(409,'idempotency_conflict','Ключ уже использован для другой отмены')
+        return {id:supportId,ledgerId:prior.ledger_id,replay:true}
+      }
+      const target=(await tx.query('SELECT user_id FROM gs_support WHERE id=$1',[supportId])).rows[0]
+      if(!target) fail(404,'not_found','Поддержка не найдена')
+      if(target.user_id===admin.id) fail(403,'self_review','Нельзя отменять свою Поддержку')
+      // Same lock as spending: refund and spend cannot lose a balance update.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[target.user_id])
+      const support=(await tx.query('SELECT * FROM gs_support WHERE id=$1 FOR UPDATE',[supportId])).rows[0]
+      if((await tx.query('SELECT 1 FROM gs_support_refunds WHERE support_id=$1',[supportId])).rows.length)
+        fail(409,'already_refunded','Поддержка уже отменена')
+      const debit=(await tx.query('SELECT * FROM gs_coin_ledger WHERE id=$1',[support.ledger_id])).rows[0]
+      if(!debit||debit.kind!=='SUPPORT'||debit.user_id!==support.user_id||debit.delta!==-support.coins||debit.related_id!==supportId)
+        fail(409,'ledger_mismatch','Запись ledger требует сверки')
+      const updated=(await tx.query(`UPDATE gs_coin_accounts SET balance=balance+$1
+        WHERE user_id=$2 AND balance<=2147483647-$1 RETURNING balance`,[support.coins,support.user_id])).rows[0]
+      if(!updated) fail(409,'balance_mismatch','Баланс требует сверки')
+      const ledgerId=token()
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,related_id,idempotency_key,details)
+        VALUES($1,$2,'REFUND',$3,$4,$5,$6)`,[ledgerId,support.user_id,support.coins,supportId,
+        `support-refund:${supportId}`,JSON.stringify({source:'support-correction',serverId:support.server_id,originalLedgerId:support.ledger_id})])
+      await tx.query(`INSERT INTO gs_support_refunds(support_id,ledger_id,actor_id,reason,idempotency_key)
+        VALUES($1,$2,$3,$4,$5)`,[supportId,ledgerId,admin.id,reason,idem])
+      const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',[support.server_id])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,support.server_id,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+        [support.server_id,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,admin.id,'support.refunded',supportId,{serverId:support.server_id,coins:support.coins,ledgerId,reason})
+      return {id:supportId,ledgerId,replay:false}
+    })
+    return c.json(result,result.replay?200:201)
   })
   app.get('/api/v1/admin/coins/ledger',async c=>{
     await permission(c,'coins.read')

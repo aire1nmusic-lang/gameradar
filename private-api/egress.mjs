@@ -4,6 +4,7 @@
  */
 const notices = Object.freeze({
   'copyright.submitted':'Получена претензия',
+  'copyright.review_required':'Полная претензия ожидает ручной проверки до ограничения',
   'copyright.restricted':'Материал временно ограничен; нужна ручная проверка',
   'copyright.suspected_fake':'Претензия требует проверки на фейк',
   'copyright.needs_info':'По претензии нужны уточнения',

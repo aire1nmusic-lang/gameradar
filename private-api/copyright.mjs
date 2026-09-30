@@ -7,7 +7,7 @@ export async function analyzeCopyright(config,claim,request=fetch) {
   // Completeness is not proof of copyright. The intake already verifies target.
   // Raw evidence stays in RU; all complete cases require human review.
   return Object.values(flags).every(Boolean)
-    ?{classification:'DOUBTFUL',reason:'Local completeness check passed; human rights review required'}
+    ?{classification:'DOUBTFUL',requiresHumanReview:true,reason:'Local completeness check passed; human rights review required before restriction'}
     :{classification:'INCOMPLETE',reason:'Local completeness check requires missing information'}
 }
 
@@ -41,8 +41,11 @@ export async function dispatchCopyrightAI(db,analyze,model,mailKey) {
         JOIN gs_copyright_claims c ON c.id=j.claim_id WHERE j.claim_id=$1 AND j.lease_token=$2 FOR UPDATE`,
         [row.claim_id,lease])).rows[0]
       if(!current||current.status!=='PENDING_AI')return
-      const restrict=['VALID','DOUBTFUL'].includes(decision.classification)
-      const status=restrict?'REVIEW_RESTRICTED':decision.classification==='FAKE'?'REJECTED_FAKE':'NEEDS_INFO'
+      const humanOnly=decision.requiresHumanReview===true
+      const restrict=!humanOnly&&['VALID','DOUBTFUL'].includes(decision.classification)
+      // Existing PENDING_AI enum is retained for compatibility: job completed,
+      // case pending HUMAN review. Completeness alone never causes a hold.
+      const status=humanOnly?'PENDING_AI':restrict?'REVIEW_RESTRICTED':decision.classification==='FAKE'?'REJECTED_FAKE':'NEEDS_INFO'
       await tx.query(`UPDATE gs_copyright_claims SET status=$1,ai_classification=$2,ai_reason=$3 WHERE id=$4`,
         [status,decision.classification,decision.reason,row.claim_id])
       if(restrict) {
@@ -56,11 +59,12 @@ export async function dispatchCopyrightAI(db,analyze,model,mailKey) {
       }
       await tx.query(`UPDATE gs_copyright_ai_jobs SET completed_at=now(),lease_until=NULL,lease_token=NULL,last_error=NULL
         WHERE claim_id=$1`,[row.claim_id])
-      await tx.query(`INSERT INTO gs_audit(action,target,details) VALUES('copyright.ai_triage',$1,$2)`,
-        [row.claim_id,JSON.stringify({classification:decision.classification,status,scope:current.material_key,model})])
+      await tx.query(`INSERT INTO gs_audit(action,target,details) VALUES($1,$2,$3)`,
+        [model==='local-policy-v1'?'copyright.local_triage':'copyright.ai_triage',row.claim_id,
+          JSON.stringify({classification:decision.classification,status,humanOnly,scope:current.material_key,model})])
       if(status==='NEEDS_INFO'&&mailKey) await tx.query('INSERT INTO gs_mail_outbox(id,ciphertext) VALUES($1,$2)',
         [token(),seal(mailKey,{to:claim.contact_email,purpose:'COPYRIGHT_INFO',claimId:row.claim_id})])
-      await enqueueTelegram(tx,restrict?'copyright.restricted':status==='REJECTED_FAKE'?'copyright.suspected_fake':'copyright.needs_info',
+      await enqueueTelegram(tx,humanOnly?'copyright.review_required':restrict?'copyright.restricted':status==='REJECTED_FAKE'?'copyright.suspected_fake':'copyright.needs_info',
         row.claim_id,current.server_id,current.material_key,decision.classification)
     })
   } catch {

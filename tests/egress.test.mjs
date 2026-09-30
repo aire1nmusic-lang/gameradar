@@ -22,7 +22,9 @@ test('copyright checks presence locally even with a configured external key',asy
     rights_basis:'synthetic@example.test',work_description:'127.0.0.1',evidence:'Authorization: synthetic',
     claimant_name:'Synthetic Name',contact_email:'synthetic@example.test'}
   assert.equal(JSON.stringify(copyrightPresence(claim)).includes('synthetic'),false)
-  assert.equal((await analyzeCopyright({key:'synthetic'},claim,forbiddenNetwork)).classification,'DOUBTFUL')
+  const decision=await analyzeCopyright({key:'synthetic'},claim,forbiddenNetwork)
+  assert.equal(decision.classification,'DOUBTFUL')
+  assert.equal(decision.requiresHumanReview,true)
   assert.equal((await analyzeCopyright(null,{...claim,evidence:''},forbiddenNetwork)).classification,'INCOMPLETE')
 })
 test('unsafe nickname is anonymous; ambiguous nickname waits for human without inference',async()=>{

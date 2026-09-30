@@ -806,6 +806,12 @@ test('copyright retries stop after three failures and leave the private case for
   assert.equal((await h.db.query('SELECT last_error FROM gs_copyright_ai_jobs')).rows[0].last_error,'analysis_exhausted')
   assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims')).rows[0].status,'PENDING_AI')
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_material_restrictions')).rows[0].n,0)
+  await h.db.query("UPDATE gs_copyright_ai_jobs SET attempts=0,available_at=now()-interval '1 second'")
+  await dispatchCopyrightAI(h.db,claim=>analyzeCopyright(null,claim),'local-policy-v1')
+  assert.ok((await h.db.query('SELECT completed_at FROM gs_copyright_ai_jobs')).rows[0].completed_at)
+  assert.equal((await h.db.query('SELECT status FROM gs_copyright_claims')).rows[0].status,'PENDING_AI')
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_material_restrictions')).rows[0].n,0)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_audit WHERE action='copyright.local_triage'")).rows[0].n,1)
 })
 
 test('operational status is private, distinguishes unknown heartbeat and deduplicates stopped-job alerts',async t=>{

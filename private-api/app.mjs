@@ -879,8 +879,42 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/coins/ledger',async c=>{
     await permission(c,'coins.read')
-    return c.json((await db.query(`SELECT id,user_id,kind,delta,related_id,created_at
+    return c.json((await db.query(`SELECT id,user_id,kind,delta,related_id,details,created_at
       FROM gs_coin_ledger ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/users/:id/coins/grant',async c=>{
+    const admin=await permission(c,'coins.read')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[admin.id])).rows.length)
+      fail(403,'admin_required','Начислять бонусы может только ADMIN')
+    const body=await json(c),userId=c.req.param('id'),coins=body.coins
+    const reason=textOf(body.reason,10,500),category=body.category
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128),key=`promo:${admin.id}:${idem}`
+    if(!['GIFT','BARTER','PROMO'].includes(category))fail(400,'invalid_category','Укажите основание начисления')
+    if(!Number.isSafeInteger(coins)||coins<1||coins>1000)fail(400,'invalid_coins','Начисление: 1–1000 Coins')
+    await limit(c,'coins-grant',admin.id,20)
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[key])
+      const prior=(await tx.query('SELECT * FROM gs_coin_ledger WHERE idempotency_key=$1',[key])).rows[0]
+      if(prior){
+        if(prior.user_id!==userId||prior.delta!==coins||prior.kind!=='ADJUSTMENT'
+          ||prior.details?.source!=='admin-promo'||prior.details?.category!==category||prior.details?.reason!==reason)
+          fail(409,'idempotency_conflict','Ключ уже использован для другого начисления')
+        return {id:prior.id,replay:true}
+      }
+      const target=(await tx.query('SELECT email_verified_at,banned_at FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
+      if(!target)fail(404,'not_found','Пользователь не найден')
+      if(!target.email_verified_at||target.banned_at)fail(409,'recipient_unavailable','Нужен активный аккаунт с подтвержденной почтой')
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[userId])
+      await tx.query('INSERT INTO gs_coin_accounts(user_id,balance) VALUES($1,0) ON CONFLICT DO NOTHING',[userId])
+      const updated=(await tx.query('UPDATE gs_coin_accounts SET balance=balance+$1 WHERE user_id=$2 AND balance<=2147483647-$1 RETURNING balance',[coins,userId])).rows[0]
+      if(!updated)fail(409,'balance_limit','Достигнут предел баланса')
+      const id=token()
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,idempotency_key,details)
+        VALUES($1,$2,'ADJUSTMENT',$3,$4,$5)`,[id,userId,coins,key,JSON.stringify({source:'admin-promo',category,reason,actorId:admin.id})])
+      await audit(tx,admin.id,'coins.granted',userId,{ledgerId:id,coins,category,reason})
+      return {id,replay:false}
+    })
+    return c.json(result,result.replay?200:201)
   })
   app.get('/api/v1/admin/payments',async c=>{
     await permission(c,'payments.read')

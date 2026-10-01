@@ -92,7 +92,7 @@ export function Footer() {
             со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
             подтвердить сервер и управлять карточкой.
           </p>
-          <div className="flex shrink-0 gap-5">
+          <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 sm:shrink-0">
             <Link to="/terms" className="transition-colors hover:text-ink-300">Условия</Link>
             <Link to="/privacy" className="transition-colors hover:text-ink-300">Приватность</Link>
             <Link to="/copyright" className="transition-colors hover:text-ink-300">Правообладателям</Link>

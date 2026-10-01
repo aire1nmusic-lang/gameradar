@@ -5,6 +5,7 @@ import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Textarea } from '@/components/ui/controls'
 import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
+import { CoinGrant } from '@/components/admin/CoinGrant'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -90,6 +91,7 @@ export default function Admin() {
             <p className="break-all text-xs text-ink-400">ID {value(row,'id')} · роли: {Array.isArray(row.roles)&&row.roles.length?row.roles.join(', '):'PLAYER'}</p>
             <p>Статус ЛК: {Number(row.owned_server_count)>0?`Игрок и владелец · ${row.owned_server_count} ${serverNoun(Number(row.owned_server_count))}`:'Игрок'} · заявки: {value(row,'pending_claim_count')}</p>
             {auth.user?.roles.includes('ADMIN')&&<OwnershipAccess userId={value(row,'id')} self={row.id===auth.user.id} onChanged={()=>void load(active)}/>}
+            {auth.user?.roles.includes('ADMIN')&&permissions.includes('coins.read')&&!!row.email_verified_at&&!row.banned_at&&<CoinGrant userId={value(row,'id')} onChanged={()=>void load(active)}/>}
             {permissions.includes('roles.manage')&&row.id!==auth.user?.id&&<div className="flex flex-wrap gap-2">{(['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'] as const).map(role=>{
               const has=Array.isArray(row.roles)&&row.roles.includes(role)
               return <Button key={role} variant="outline" disabled={busy} onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/roles`,{role,action:has?'REVOKE':'GRANT'}))}>{has?'Снять':'Дать'} {role}</Button>
@@ -150,7 +152,9 @@ export default function Admin() {
                   onClick={()=>void act(()=>refundSupport(value(row,'id')))}>Отменить Поддержку и вернуть Coins</Button>
               </div>}
           </>}
-          {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p></>}
+          {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p>
+            {row.details&&typeof row.details==='object'&&<pre className="overflow-auto whitespace-pre-wrap break-words text-xs">{JSON.stringify(row.details,null,2)}</pre>}
+          </>}
           {active.id==='payments'&&<><strong>Тестовый заказ {value(row,'id')} · {value(row,'status')}</strong><p>{value(row,'coins')} Coins · {Number(row.amount_kopecks)/100} ₽ · пользователь {value(row,'user_id')} · {date(row,'created_at')}</p></>}
           {active.id==='moderation'&&<><strong>{value(row,'nickname')} · {value(row,'status')}</strong><p>Сервер {value(row,'server_id')} · попыток AI: {value(row,'attempts')} · {date(row,'created_at')}</p>
             <Textarea aria-label="Основание модерации" minLength={10} maxLength={1000} value={reasons[value(row,'support_id')]??''}

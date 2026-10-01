@@ -481,6 +481,45 @@ test('Coins ledger and Support: atomic balance, replay, anonymity and all core g
   assert.equal((await h.request('/coins/transfer',{to:other.user.id,coins:1},player.cookie)).status,501)
 })
 
+test('ADMIN bonus grant: atomic ledger/audit, global replay key, ordinary Coins and private reason',async t=>{
+  const h=await harness(t),admin=await h.register('grant-admin@example.test'),player=await h.register('grant-player@example.test'),finance=await h.register('grant-finance@example.test')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'FINANCE')",[admin.user.id,finance.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('grant-l2','lineage2','Grant L2','grant-l2')")
+  const reason='Private barter agreement reference',body={coins:10,category:'BARTER',reason}
+  const grant=(p=player,cookie=admin.cookie,key='bonus-grant-stable-key',input=body)=>h.request(`/admin/users/${p.user.id}/coins/grant`,input,cookie,{'Idempotency-Key':key})
+  assert.equal((await grant(player,'')).status,401)
+  assert.equal((await grant(player,player.cookie)).status,403)
+  assert.equal((await grant(player,finance.cookie)).status,403)
+  assert.equal((await grant(player,admin.cookie,'invalid-grant-key',{...body,coins:1.5})).status,400)
+  const results=await Promise.all([grant(),grant()])
+  assert.deepEqual(results.map(r=>r.status).sort(),[200,201])
+  assert.equal(results[0].body.id,results[1].body.id)
+  assert.equal((await grant(finance)).status,409,'same request key cannot change recipient')
+  assert.equal((await grant(player,admin.cookie,'bonus-grant-stable-key',{...body,coins:11})).status,409)
+  assert.equal((await h.db.query("SELECT count(*)::int n FROM gs_audit WHERE action='coins.granted'")).rows[0].n,1)
+  const wallet=(await h.request('/coins/me',undefined,player.cookie)).body
+  assert.equal(wallet.balance,10)
+  assert.ok(!JSON.stringify(wallet).includes(reason)&&!JSON.stringify(wallet).includes('BARTER'))
+  const adminLedger=(await h.request('/admin/coins/ledger',undefined,admin.cookie)).body
+  assert.equal(adminLedger[0].details.category,'BARTER')
+  const before=(await h.request('/people-rating')).body
+  assert.equal((await h.request('/support',{serverId:'grant-l2',coins:3,anonymous:true},player.cookie,{'Idempotency-Key':'granted-support-key'})).status,201)
+  const publicSummary=(await h.request('/support/servers/grant-l2')).body
+  assert.equal(publicSummary.coins,3);assert.equal(publicSummary.participants,1)
+  assert.ok(!JSON.stringify(publicSummary).includes(reason)&&!JSON.stringify(publicSummary).includes('BARTER'))
+  assert.deepEqual((await h.request('/people-rating')).body,before)
+  await h.db.query("CREATE FUNCTION fail_bonus_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='coins.granted' THEN RAISE EXCEPTION 'fixture audit failure'; END IF; RETURN NEW; END $$")
+  await h.db.query('CREATE TRIGGER fail_bonus_audit BEFORE INSERT ON gs_audit FOR EACH ROW EXECUTE FUNCTION fail_bonus_audit()')
+  assert.equal((await grant(player,admin.cookie,'bonus-audit-rollback-key')).status,500)
+  assert.equal((await h.request('/coins/me',undefined,player.cookie)).body.balance,7)
+  assert.equal((await h.db.query("SELECT count(*)::int n FROM gs_coin_ledger WHERE details->>'source'='admin-promo'")).rows[0].n,1)
+  await h.db.query('DROP TRIGGER fail_bonus_audit ON gs_audit')
+  await h.db.query('UPDATE gs_users SET banned_at=now() WHERE id=$1',[finance.user.id])
+  assert.equal((await grant(finance,admin.cookie,'bonus-banned-user-key')).status,409)
+  const balanced=(await h.db.query('SELECT a.user_id FROM gs_coin_accounts a JOIN gs_coin_ledger l ON l.user_id=a.user_id GROUP BY a.user_id,a.balance HAVING a.balance<>sum(l.delta)')).rows
+  assert.equal(balanced.length,0)
+})
+
 test('isolated Support race: three rounds, six servers, three players, retries and overspend',async t=>{
   const h=await harness(t),players=[]
   for(let i=0;i<3;i++)players.push(await h.register(`race-${i}@example.test`))

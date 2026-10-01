@@ -174,7 +174,7 @@ export default function Catalog() {
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
             options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: privateCore && option.key === 'votes' ? 'Народный рейтинг' : option.label }))}
-            className="w-[150px] shrink-0 [&_select]:h-9 [&_select]:text-[13px]"
+            className="w-[130px] shrink-0 sm:w-[150px] [&_select]:h-9 [&_select]:text-[13px]"
           />
 
           <div className="hidden shrink-0 items-center rounded-md border border-white/10 bg-white/[0.03] p-0.5 sm:flex">

@@ -91,8 +91,12 @@ export async function dispatchTelegram(db,config,request=fetch) {
   if(!row)return false
   try {
     const message=telegramNotice({event:row.event,eventRef:row.id})
-    const response=await request(`https://api.telegram.org/bot${config.botToken}/sendMessage`,{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:config.chatId,text:message,
+    const relay=!!config.relayUrl
+    if(relay&&(config.relayUrl!=='https://gamescout-origin.aire1n-music.workers.dev/api/internal/telegram-relay'
+      ||typeof config.relaySecret!=='string'||config.relaySecret.length<32))throw new Error('invalid_telegram_relay')
+    const response=await request(relay?config.relayUrl:`https://api.telegram.org/bot${config.botToken}/sendMessage`,{
+      method:'POST',headers:{'Content-Type':'application/json',...(relay?{Authorization:`Bearer ${config.relaySecret}`}:{})},
+      body:JSON.stringify(relay?{event:row.event,eventRef:row.id}:{chat_id:config.chatId,text:message,
         protect_content:true,disable_notification:false}),redirect:'error',signal:AbortSignal.timeout(10000),
     })
     if(!response.ok || !(await response.json()).ok) throw new Error('telegram_delivery_failed')

@@ -34,6 +34,20 @@ test('emergency mode pauses user writes without locking out reads or trusting an
   assert.equal((await h.request('/auth/login',{email:'missing@example.com',password})).status,401)
   assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_claims')).rows[0].n,0)
 })
+test('Telegram relay receives only central-filtered technical DTO and acknowledges the leased private job',async t=>{
+  const h=await harness(t), id='b'.repeat(32), relayUrl='https://gamescout-origin.aire1n-music.workers.dev/api/internal/telegram-relay'
+  await h.db.query('INSERT INTO gs_telegram_outbox(id,event,message) VALUES($1,$2,$3)',[id,'projection.recovered','synthetic@example.test raw evidence must never leave'])
+  const cfg={botToken:'synthetic-token',chatId:'private-chat',relayUrl,relaySecret:'s'.repeat(32)},sent=[]
+  assert.equal(await dispatchTelegram(h.db,cfg,async(url,init)=>{
+    sent.push({url,init});return new Response(JSON.stringify({ok:true}))
+  }),true)
+  assert.equal(sent.length,1)
+  assert.equal(sent[0].url,relayUrl)
+  assert.deepEqual(JSON.parse(sent[0].init.body),{event:'projection.recovered',eventRef:id})
+  assert.equal(sent[0].init.headers.Authorization,'Bearer '+cfg.relaySecret)
+  assert.ok((await h.db.query('SELECT delivered_at FROM gs_telegram_outbox WHERE id=$1',[id])).rows[0].delivered_at)
+  assert.equal(await dispatchTelegram(h.db,cfg,async()=>assert.fail('delivered job must not resend')),false)
+})
 async function harness(t,options={}) {
   const pg=new PGlite()
   const db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}

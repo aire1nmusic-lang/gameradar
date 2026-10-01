@@ -9,7 +9,7 @@
     "db:private-apply": "node private-api/migrate-cli.mjs --apply",
     "private:maintenance-once": "node private-api/maintenance-once.mjs",
     "dev:core-ui": "node scripts/dev-core-ui.mjs",
-    "test:private": "node --test tests/private-core.test.mjs tests/projection-backfill.test.mjs tests/egress.test.mjs",
+    "test:private": "node --test tests/private-core.test.mjs tests/projection-backfill.test.mjs tests/egress.test.mjs tests/emergency.test.mjs tests/telegram-relay.test.mjs tests/telegram-relay-runtime.test.mjs",
     "test:seo": "node tests/seo-http.mjs",
     "seo:reconcile": "node scripts/reconcile-public-html.mjs",
     "dev": "vite",

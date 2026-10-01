@@ -13,6 +13,12 @@
 
 ## Состояние сейчас
 
+**01.10 — VERIFIED production:** мелкое повторное GameScout над слоганом убрано; header logo сохранён. WorldHall.tsx. Build/typecheck70/0 mismatch; existing bucket3PUT, live IAB показывает слоган/описание/3 карточки без малой надписи. JS index-GI8vKEJV.js SHA6c0a7080d21f357c31a3b781f68d4aced198f51044275e3cb16f6ed30904b913; CSS index-CS0VOJNg.css SHA88d98683d91af03f02977e8fea596ee141ae51192ddffdc04a789b801f32c5c7. Screenshot ignored output/hall-clean-headline-live.jpg; rollback output/rollback-site-index-before-hero-label-removal.html, old assets retained. Новых ресурсов0; backend/DNS/данные без изменений. Следом остаются core blockers из сводки.
+
+
+**01.10 — VERIFIED source / publish pending:** по просьбе владельца удалена мелкая повторная надпись GameScout над слоганом (WorldHall.tsx), логотип в header сохранён. Следом build→existing bucket upload→live browser/HTTP. Новых ресурсов0; откат previous index с сохранёнными assets; backend/данные не затрагиваются.
+
+
 **Последний срез 01.10 — VERIFIED production (commit `b6b051a`, push main): светлый прозрачный вход и текст над мирами.** AccountEntry: сцена видна через glass gradient, светлая грань, контрастные подписи, настоящие Google/Discord SVG в игровых контролах. WorldHall: GameScout + «Найди мир, в котором останешься» + короткое описание, responsive над карточками. Local IAB desktop/320/390, reset/back/reveal и отсутствие overflow прошли. Production IAB видит слоган и3 мира; screenshot ignored output/hall-hero-live.jpg. HTTP JS/CSS200, SHA совпали с dist (см. upload ниже), health200, admin без session401, realSalesfalse. Изменены только AccountEntry.tsx, WorldHall.tsx, index.css и журнал. Auth/backend/DB/DNS не менялись; live OAuth/mail E2E не повторялся, registration закрыта. Откат output/rollback-site-index-before-glass-hero.html + retained assets. New resources/inference0; обычные3PUT. Следом core blockers из сводки (SEO gateway/projection/Telegram/E2E), текущая косметическая коррекция завершена.
 
 
@@ -639,3 +645,13 @@ VERIFIED: code0dfb9c9 pushed main и опубликован; temporary local rea
 ### 01.10.2026 — handoff коррекции UI
 
 VERIFIED: code b6b051a отправлен в main; tree clean после source commit. Собственный read-only preview5190 остановлен (CtrlC), временный viewport сброшен. Скриншоты в ignored output/account-glass-final.jpg и output/hall-hero-live.jpg. Production/current hashes и rollback выше; новых расходов0. Следующий исполнитель начинает с актуальной сводки, косметический срез не повторяет без новой обратной связи.
+
+### 01.10 — убрать мелкое название над слоганом
+
+**01.10 — VERIFIED source / publish pending:** по просьбе владельца удалена мелкая повторная надпись GameScout над слоганом (WorldHall.tsx), логотип в header сохранён. Следом build→existing bucket upload→live browser/HTTP. Новых ресурсов0; откат previous index с сохранёнными assets; backend/данные не затрагиваются.
+
+
+### 01.10 — live результат удаления повторного названия
+
+**01.10 — VERIFIED production:** мелкое повторное GameScout над слоганом убрано; header logo сохранён. WorldHall.tsx. Build/typecheck70/0 mismatch; existing bucket3PUT, live IAB показывает слоган/описание/3 карточки без малой надписи. JS index-GI8vKEJV.js SHA6c0a7080d21f357c31a3b781f68d4aced198f51044275e3cb16f6ed30904b913; CSS index-CS0VOJNg.css SHA88d98683d91af03f02977e8fea596ee141ae51192ddffdc04a789b801f32c5c7. Screenshot ignored output/hall-clean-headline-live.jpg; rollback output/rollback-site-index-before-hero-label-removal.html, old assets retained. Новых ресурсов0; backend/DNS/данные без изменений. Следом остаются core blockers из сводки.
+

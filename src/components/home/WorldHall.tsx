@@ -145,7 +145,6 @@ export function WorldHall() {
 
 function HallIntro() {
   return <div className="relative z-10 mx-auto max-w-3xl px-6 text-center [text-shadow:0_2px_22px_rgba(0,0,0,0.65)]">
-    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">Game<span className="text-signal-300">Scout</span></p>
     <h1 className="text-[clamp(28px,3.4vw,52px)] font-semibold leading-[1.12] tracking-tight text-white">Найди мир,<br className="sm:hidden"/> в котором останешься</h1>
     <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base">Игровые серверы, новые открытия и сообщества — выбирай, где играть.</p>
   </div>

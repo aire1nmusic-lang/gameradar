@@ -907,21 +907,37 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   .gs-mobile-worlds { --world-width: min(62vw, 300px, 34svh); padding-top: 16px; padding-bottom: 12px; }
 }
 @media (max-width: 639px) {
-  .gs-account-entry { min-height: auto; padding: 20px 12px 28px; align-items: start; }
-  .gs-account-entry .gs-account-body { padding: 20px 16px; }
-  .gs-account-entry .gs-account-back { margin-bottom: 16px; }
-  .gs-account-entry .gs-account-intro { margin-top: 8px; line-height: 1.45; }
-  .gs-account-entry .gs-account-actions { margin-top: 18px; }
+  .gs-account-entry { min-height: auto; padding: 12px 12px 20px; align-items: start; }
+  .gs-account-entry .gs-account-body { padding: 16px; }
+  .gs-account-entry .gs-account-back { margin-bottom: 10px; min-height: 24px; }
+  .gs-account-entry .gs-account-eyebrow { display: none; }
+  .gs-account-entry h1 { font-size: 22px; }
+  .gs-account-entry .gs-account-intro { display: none; }
+  .gs-account-entry .gs-account-actions { margin-top: 14px; }
+  .gs-account-entry .gs-account-actions > *, .gs-account-entry .gs-account-form > * { margin-block: 0; }
+  .gs-account-entry .gs-account-actions > :not([hidden]) ~ :not([hidden]),
+  .gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+  .gs-account-entry .gs-account-submit { height: 44px; }
   .gs-account-entry .gs-provider-button { height: 44px; padding-inline: 10px; font-size: 13px; gap: 6px; }
   .gs-account-entry .gs-provider-button > span { width: 26px; height: 26px; }
-  .gs-account-entry input { font-size: 16px; }
-  .gs-row { display: grid; grid-template-columns: 40px minmax(0,1fr) 44px; gap: 6px 10px; }
+  .gs-account-entry input { height: 44px; font-size: 16px; }
+  .gs-row { display: grid; grid-template-columns: 36px minmax(0,1fr) 44px; gap: 4px 8px; min-height: 0; padding: 10px; border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
+  .gs-row > div:first-of-type { width: 36px; height: 36px; }
+  .gs-row .gs-row-support { margin-top: 1px; font-size: 10px; }
+  .gs-row .gs-row-identity > div { line-height: 14px; }
+  .gs-row .gs-row-identity > div:first-child { line-height: 18px; }
+  .gs-row .gs-row-identity > div:first-child span { font-size: 14px; }
+  .gs-row .gs-row-support { line-height: 12px; }
   .gs-row .gs-row-rank { display: none; }
   .gs-row .gs-row-identity { grid-column: 2; }
-  .gs-row .gs-row-online { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .gs-row .gs-row-online { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; }
   .gs-row .gs-row-online .gs-row-source { display: none; }
   .gs-row .gs-row-favorite { grid-column: 3; grid-row: 1; width: 44px; height: 44px; }
   .gs-row .gs-row-desktop-facts { display: none; }
+  .gs-podium-card .gs-podium-cover { height: 76px; }
+  .gs-podium-card .gs-podium-body { padding: 28px 14px 12px; }
+  .gs-podium-card .gs-podium-body > .mt-3 { margin-top: 8px; }
+  .gs-podium-card .gs-podium-body > .mt-4 { margin-top: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

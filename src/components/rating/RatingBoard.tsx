@@ -42,11 +42,12 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
           <ThemedCard
             key={server.slug}
             interactive
-            className={cn('group relative flex flex-col overflow-hidden', podiumOrder[entry.rank], isFirst && 'sm:-mt-6')}
+            className={cn('gs-podium-card group relative flex flex-col overflow-hidden', podiumOrder[entry.rank], isFirst && 'sm:-mt-6')}
           >
             <Link to={`/server/${server.slug}`} className="absolute inset-0 z-[1]" aria-label={server.name} />
 
-            <div className={cn('relative overflow-hidden', isFirst ? 'h-[132px]' : 'h-[104px]')}>
+            <div className={cn('gs-podium-cover relative', isFirst ? 'h-[132px]' : 'h-[104px]')}>
+              <div className="absolute inset-0 overflow-hidden">
               <WorldArtSurface
                 art={serverArt(server)}
                 fallback={<ProceduralShot seed={hashSeed(server.slug)} kind={isFirst ? 'combat' : 'landscape'} />}
@@ -55,6 +56,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 width={800}
                 sizes="(min-width: 640px) 33vw, 100vw"
               />
+              </div>
 
               <div className="absolute top-2.5 left-2.5 z-[2] flex items-center gap-2">
                 <TierBadge rank={entry.rank} />
@@ -65,7 +67,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
                 <StatusBadge status={server.online.status} size="sm" launching={!!server.launch} />
               </div>
 
-              <div className="absolute -bottom-5 left-4 z-[2]">
+              <div className="gs-podium-logo absolute -bottom-5 left-4 z-[2]">
                 <ServerLogo
                   name={server.name}
                   gameId={server.gameId}
@@ -77,7 +79,7 @@ export function RatingPodium({ entries }: { entries: RankedServer[] }) {
               </div>
             </div>
 
-            <div className="relative flex flex-1 flex-col px-4 pt-8 pb-4">
+            <div className="gs-podium-body relative flex flex-1 flex-col px-4 pt-8 pb-4">
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className={cn('gt-display truncate', isFirst ? 'text-[20px]' : 'text-[17px]')}>{server.name}</h3>
                 <span className="num font-mono text-[12px]" style={{ color: theme.colors.textFaint }}>

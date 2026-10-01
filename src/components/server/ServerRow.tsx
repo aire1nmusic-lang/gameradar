@@ -88,11 +88,11 @@ export function ServerRow({
         </div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
-          <span className="truncate">{identity.join(' · ')}</span>
+          <span className="truncate">{identity.join(' · ')}<span className="sm:hidden"> · {server.rates || server.modes.join(', ') || 'Режим не указан'}</span></span>
         </div>
-        <div className="mt-0.5 text-[11px] leading-4 text-ink-400 sm:hidden">{mode} · {opening?formatDate(opening):'Открытие не указано'}</div>
+        <div className="mt-0.5 text-[11px] leading-4 text-ink-400 sm:hidden">{opening?`Открытие: ${formatDate(opening)}`:'Открытие не указано'}</div>
         <div className="gs-row-desktop-facts mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
-        {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
+        {server.support&&<div className="gs-row-support mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
       </div>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (

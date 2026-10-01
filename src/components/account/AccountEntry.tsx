@@ -1,6 +1,6 @@
 import { useState, type ReactNode, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/controls'
 
@@ -18,14 +18,9 @@ export function AccountEntry(p:Props) {
   const title=p.confirmation?'Подтверждение аккаунта':p.mode==='reset'?'Вернём доступ':p.mode==='register'?'Твоя история начинается здесь':'С возвращением'
   return <div className="gs-account-entry relative isolate flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-4 py-10 sm:py-16">
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"><img src="/media/hub/nave-1920.webp" alt="" className="h-full w-full object-cover opacity-90"/><div className="absolute inset-0 bg-gradient-to-b from-ink-950/15 via-ink-950/20 to-ink-950/50"/></div>
-    <section className="grid w-full max-w-[920px] overflow-hidden rounded-[28px] gs-account-glass lg:grid-cols-[0.9fr_1.1fr]">
-      <aside className="relative hidden flex-col justify-between border-r border-white/8 bg-gradient-to-br from-signal-500/10 via-transparent to-white/[0.02] p-10 lg:flex">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white"><ArrowLeft size={16}/>В зал миров</Link>
-        <div className="py-14"><p className="mb-5 text-sm font-semibold tracking-[0.18em] text-signal-300">GAMESCOUT</p><h2 className="text-4xl leading-[1.15] tracking-tight">Твой аккаунт.<br/>Твои миры.</h2><p className="mt-5 max-w-64 text-sm leading-6 text-white/80">Выбирай серверы, голосуй и поддерживай проекты, в которых хочешь играть.</p></div>
-        <p className="flex items-center gap-2 text-xs text-white/85"><ShieldCheck size={16}/>Один аккаунт для игрока и владельца</p>
-      </aside>
+    <section className="grid w-full max-w-[440px] overflow-hidden rounded-[24px] gs-account-glass">
       <div className="gs-account-body min-w-0 p-6 sm:p-10">
-        <Link to="/" className="gs-account-back mb-7 inline-flex items-center gap-2 text-xs text-white/85 hover:text-white lg:hidden"><ArrowLeft size={14}/>В зал миров</Link>
+        <Link to="/" className="gs-account-back mb-7 inline-flex items-center gap-2 text-xs text-white/85 hover:text-white"><ArrowLeft size={14}/>В зал миров</Link>
         <p className="gs-account-eyebrow mb-2 text-xs tracking-[0.16em] text-white/85 uppercase">Аккаунт GameScout</p>
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">{title}</h1>
         <p className="gs-account-intro mt-3 text-sm leading-6 text-white/85">{p.confirmation?'Заверши действие по ссылке из письма.':p.mode==='reset'?'Отправим ссылку для нового пароля на твою почту.':p.mode==='register'?'Создай аккаунт и подтверди почту, чтобы голосовать и поддерживать серверы.':'Войди удобным способом, чтобы продолжить.'}</p>

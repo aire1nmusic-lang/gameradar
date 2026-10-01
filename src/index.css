@@ -900,6 +900,28 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 .gs-mobile-worlds { --world-width: min(62vw, 300px, 40svh); padding-inline: calc((100% - var(--world-width)) / 2); }
 .gs-mobile-world-card { width: var(--world-width); }
 .gs-mobile-card .gs-float { animation: none; }
+/* Shared density: every device gets the same compact form and readable rows. */
+.gs-account-entry { min-height: auto; padding-block: 24px; }
+.gs-account-entry .gs-account-body { padding: 24px; }
+.gs-account-entry .gs-account-back { margin-bottom: 10px; min-height: 24px; }
+.gs-account-entry .gs-account-eyebrow, .gs-account-entry .gs-account-intro { display: none; }
+.gs-account-entry h1 { font-size: 26px; }
+.gs-account-entry .gs-account-actions { margin-top: 14px; }
+.gs-account-entry .gs-account-actions > *, .gs-account-entry .gs-account-form > * { margin-block: 0; }
+.gs-account-entry .gs-account-actions > :not([hidden]) ~ :not([hidden]),
+.gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+.gs-account-entry .gs-provider-button, .gs-account-entry .gs-account-submit { height: 44px; }
+.gs-account-entry .gs-provider-button { font-size: 14px; gap: 8px; }
+.gs-account-entry .gs-provider-button > span { width: 26px; height: 26px; }
+.gs-account-entry input { height: 44px; font-size: 16px; }
+.gs-row { min-height: 80px; padding-block: 8px; border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
+.gs-row .gs-row-identity > div { line-height: 15px; }
+.gs-row .gs-row-identity > div:first-child { line-height: 18px; }
+.gs-row .gs-row-support { margin-top: 2px; font-size: 10px; line-height: 12px; }
+.gs-podium-card .gs-podium-cover { height: 92px; }
+.gs-podium-card .gs-podium-body { padding: 28px 14px 12px; }
+.gs-podium-card .gs-podium-body > .mt-3 { margin-top: 8px; }
+.gs-podium-card .gs-podium-body > .mt-4 { margin-top: 10px; }
 @media (max-height: 500px) and (max-width: 1023px) {
   .gs-hall-phone-content { padding-top: 72px; padding-bottom: 8px; }
   .gs-hall-intro h1 { font-size: 22px; }

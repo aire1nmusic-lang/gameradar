@@ -481,6 +481,49 @@ test('Coins ledger and Support: atomic balance, replay, anonymity and all core g
   assert.equal((await h.request('/coins/transfer',{to:other.user.id,coins:1},player.cookie)).status,501)
 })
 
+test('isolated Support race: three rounds, six servers, three players, retries and overspend',async t=>{
+  const h=await harness(t),players=[]
+  for(let i=0;i<3;i++)players.push(await h.register(`race-${i}@example.test`))
+  const games=['lineage2','minecraft','gtarp'],expected=new Map()
+  for(const game of games)for(let n=0;n<2;n++){
+    const id=`race-${game}-${n}`
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$1,$1)',[id,game])
+    expected.set(id,{coins:0,users:new Set()})
+  }
+  const post=(path,body,p,key)=>h.request(path,body,p.cookie,{'Idempotency-Key':key})
+  for(let i=0;i<players.length;i++)assert.equal((await post('/__dev/coins',{coins:1000},players[i],`race-credit-${i}-unique`)).status,201)
+  const peopleBefore=(await h.request('/people-rating')).body
+  for(let round=0;round<3;round++){
+    const jobs=[]
+    for(let i=0;i<players.length;i++)for(let g=0;g<games.length;g++){
+      const serverId=`race-${games[g]}-${(round+i)%2}`,coins=1+round+i+g,key=`race-${round}-${i}-${g}-unique`
+      const body={serverId,coins,anonymous:i===0},p=players[i]
+      expected.get(serverId).coins+=coins;expected.get(serverId).users.add(p.user.id)
+      jobs.push(post('/support',body,p,key).then(async result=>{
+        assert.equal(result.status,201,JSON.stringify(result.body))
+        if(g===0)assert.equal((await post('/support',body,p,key)).status,200)
+      }))
+    }
+    await Promise.all(jobs)
+    const ranking=(await h.request('/support/ranking')).body
+    for(const row of ranking){const e=expected.get(row.server_id);assert.equal(row.coins,e.coins);assert.equal(row.participants,e.users.size)}
+    assert.deepEqual((await h.request('/people-rating')).body,peopleBefore,'Coins cannot change People rating')
+  }
+  assert.equal((await h.db.query('SELECT count(*)::int n FROM gs_support')).rows[0].n,27)
+  for(const p of players){const wallet=(await h.request('/coins/me',undefined,p.cookie)).body;assert.equal(wallet.balance,wallet.ledger.reduce((sum,l)=>sum+l.delta,0))}
+  const p=players[0],raced=await Promise.all([
+    post('/support',{serverId:'race-lineage2-0',coins:600,anonymous:true},p,'race-overspend-one'),
+    post('/support',{serverId:'race-minecraft-0',coins:600,anonymous:true},p,'race-overspend-two'),
+  ])
+  assert.deepEqual(raced.map(r=>r.status).sort(),[201,409])
+  const summary=(await h.request('/support/servers/race-lineage2-0')).body
+  assert.ok(summary.recent.some(row=>row.public_nick==='Анонимно'))
+  assert.ok(!JSON.stringify(summary).includes(p.user.id))
+  const mismatch=(await h.db.query('SELECT a.user_id FROM gs_coin_accounts a JOIN gs_coin_ledger l ON l.user_id=a.user_id GROUP BY a.user_id,a.balance HAVING a.balance<>sum(l.delta)')).rows
+  assert.equal(mismatch.length,0)
+  assert.deepEqual((await h.request('/people-rating')).body,peopleBefore)
+})
+
 test('Support refund: ADMIN only, same-account credit, immutable history and public aggregates in all games',async t=>{
   const h=await harness(t),player=await h.register('refund-player@example.com'),admin=await h.register('refund-admin@example.com'),reader=await h.register('refund-reader@example.com')
   await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN'),($2,'FINANCE')",[admin.user.id,reader.user.id])

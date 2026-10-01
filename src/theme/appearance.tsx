@@ -27,7 +27,7 @@ export const APPEARANCE_DEFAULTS: Appearance = {
   surface: 'night',
   hero: 'compact',
   motion: 'calm',
-  icons: 'monogram',
+  icons: 'glyph',
   logo: 'live',
 }
 

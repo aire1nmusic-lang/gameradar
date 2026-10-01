@@ -13,6 +13,18 @@
 
 ## Состояние сейчас
 
+**Последний срез 01.10 — VERIFIED production: светлый прозрачный вход и текст над мирами.** AccountEntry: сцена видна через glass gradient, светлая грань, контрастные подписи, настоящие Google/Discord SVG в игровых контролах. WorldHall: GameScout + «Найди мир, в котором останешься» + короткое описание, responsive над карточками. Local IAB desktop/320/390, reset/back/reveal и отсутствие overflow прошли. Production IAB видит слоган и3 мира; screenshot ignored output/hall-hero-live.jpg. HTTP JS/CSS200, SHA совпали с dist (см. upload ниже), health200, admin без session401, realSalesfalse. Изменены только AccountEntry.tsx, WorldHall.tsx, index.css и журнал. Auth/backend/DB/DNS не менялись; live OAuth/mail E2E не повторялся, registration закрыта. Откат output/rollback-site-index-before-glass-hero.html + retained assets. New resources/inference0; обычные3PUT. Следом core blockers из сводки (SEO gateway/projection/Telegram/E2E), текущая косметическая коррекция завершена.
+
+
+**Стекло/слоган — production upload выполнен:** 3PUT existing gamescout-ru-site: JS index-B6UlnTYS.js SHA05c0bafc7df29f2d4944e57bbea5d9d6607c60dcb674d75af75349862a475a26; CSS index-BWepfUoM.css SHA52c506f614cabfde9c8db22632dd8af247eca8a3f044021de09e34f58d8662e5; index SHAe9924dfb5611afc279e98b7baf3ef3129783e5e90d3481f587002b3192c983c0. Rollback ignored output/rollback-site-index-before-glass-hero.html, прежние assets сохранены. Live verification next; DB/DNS/auth config unchanged; новых фиксированных расходов0, обычная стоимость3PUT.
+
+
+**Стекло/слоган — VERIFIED local IAB:** реальная прозрачность просмотрена desktop и390px; узнаваемые Google/Discord SVG=2.320px account client=scroll310; hall client=scroll320, текст над карточками, перекрытия визуально нет. Reset→back и password reveal type=text прошли; никаких POST/mail/account mutations. Typecheck/build70/0 mismatch/100 prerender passed; final JS index-B6UlnTYS.js, CSS index-BWepfUoM.css. Screenshot ignored output/account-glass-final.jpg. Next: publish3PUT existing gamescout-ru-site, backup index before mutation, HTTP SHA verification. New resources0; core E2E/SEO gateway blockers сохраняются.
+
+
+**Коррекция визуала 01.10 — VERIFIED код / browser pending:** после обратной связи убраны двойное затемнение и opaque80% у гостевого входа; добавлена отдельная светлая glass CSS с прозрачным градиентом, contrast labels и recognizable Google/Discord SVG (brand silhouettes, игровой стиль окружения). WorldHall получил видимые GameScout, слоган и описание над карточками на desktop/mobile. Файлы AccountEntry.tsx, WorldHall.tsx, index.css. Auth handlers/registration policy/DB неизменны. Production пока прежний; next build/browser320/390/desktop→source commit→existing bucket publish с backup index. New resources/paid inference0; rollback revert UI source, старые assets сохранить.
+
+
 **Последний срез 01.10 — VERIFIED production: современный вход и изоляция игровых миров.** Новый AccountEntry (glass panel, реальные enabled OAuth providers, email/password reveal/reset, exclusive email/reset confirmation) опубликован, registration закрыта как раньше; готовый register UI проверен только synthetic local preview. Header/footer/mobile/catalog/rating/openings/favorites/search привязаны к игре из route/query/public server. Остальные игры появляются в явном switch menu, logo/breadcrumb→hall. Live L2 search без Minecraft/GTA, live switch→Minecraft и catalog?game=minecraft без других игр; local320/390 без overflow, reset/reveal/registration/hash removal verified. Typecheck/build70/0 mismatch, HTTP assets SHA matched; health200/salesfalse. Backend/DB/DNS/auth configuration без изменений; полного нового mail/OAuth E2E здесь не выполняли. Frontend JS index-zildivT8.js SHA f46a6aef74a3b5c6ca7600b8e47b071411efb9bdf69f1974fbfefad8f59389bf; CSS index-Z_RN-3_N.css SHA734f5093163436f7c64f51f1e08a5351ea733a2fd63401a075070095d83439af. Откат: ignored output/rollback-site-index-before-account-worlds.html, прежние assets сохранены. New resources/inference0. Известные core blockers ниже сохраняются.
 
 **Дополнительно 01.10 — VERIFIED production:** ненужная browser card analytics полностью выключена (src/services/events.ts: no fetch/referrer/UTM). Live JS index-D4fK_aqw.js SHA bbace560b08b87b1adbfb6a33f96ea2efc9888d6e9a186a1117280b35ff582ef; HTTP совпадает с dist. Build/typecheck70/0 mismatch; health200, realSalesfalse. Cookie banner не добавлялся; служебная авторизация сохранена, юридическое автоматическое согласие не заявляется. Expired auth rows пока не очищаются maintenance — следующий retention gap, без production deletion. Coins code commit39fe0d7 push main; monitoring работает, AI key запрошен только путём к локальному файлу.
@@ -603,3 +615,23 @@ Existing bucket3PUT, baseline previous index-D4fK_aqw matched before publish; ne
 
 ## 01.10.2026 — передача UI среза
 VERIFIED: code0dfb9c9 pushed main и опубликован; temporary local read-only preview5190/5191 остановлены, скрин сохранен output/auth-ui-desktop.jpg. Working tree чист до этого journal-only дополнения. Изменены AccountEntry/Account и WorldNavigationProvider + header/footer/menu/mobile/search/catalog/rating/openings/favorites/GameHero/GameWorld. Новых credentials/ресурсов не потребовалось. Откат прежним index, backend untouched. Следующий шаг: отзыв владельца о визуале; по ядру закрывать ранее перечисленные blockers без повторения запрещенных операций.
+
+### 01.10.2026 — корректировка стекла и текста зала
+
+**Коррекция визуала 01.10 — VERIFIED код / browser pending:** после обратной связи убраны двойное затемнение и opaque80% у гостевого входа; добавлена отдельная светлая glass CSS с прозрачным градиентом, contrast labels и recognizable Google/Discord SVG (brand silhouettes, игровой стиль окружения). WorldHall получил видимые GameScout, слоган и описание над карточками на desktop/mobile. Файлы AccountEntry.tsx, WorldHall.tsx, index.css. Auth handlers/registration policy/DB неизменны. Production пока прежний; next build/browser320/390/desktop→source commit→existing bucket publish с backup index. New resources/paid inference0; rollback revert UI source, старые assets сохранить.
+
+
+### 01.10.2026 — визуальная проверка коррекции
+
+**Стекло/слоган — VERIFIED local IAB:** реальная прозрачность просмотрена desktop и390px; узнаваемые Google/Discord SVG=2.320px account client=scroll310; hall client=scroll320, текст над карточками, перекрытия визуально нет. Reset→back и password reveal type=text прошли; никаких POST/mail/account mutations. Typecheck/build70/0 mismatch/100 prerender passed; final JS index-B6UlnTYS.js, CSS index-BWepfUoM.css. Screenshot ignored output/account-glass-final.jpg. Next: publish3PUT existing gamescout-ru-site, backup index before mutation, HTTP SHA verification. New resources0; core E2E/SEO gateway blockers сохраняются.
+
+
+### 01.10.2026 — публикация коррекции
+
+**Стекло/слоган — production upload выполнен:** 3PUT existing gamescout-ru-site: JS index-B6UlnTYS.js SHA05c0bafc7df29f2d4944e57bbea5d9d6607c60dcb674d75af75349862a475a26; CSS index-BWepfUoM.css SHA52c506f614cabfde9c8db22632dd8af247eca8a3f044021de09e34f58d8662e5; index SHAe9924dfb5611afc279e98b7baf3ef3129783e5e90d3481f587002b3192c983c0. Rollback ignored output/rollback-site-index-before-glass-hero.html, прежние assets сохранены. Live verification next; DB/DNS/auth config unchanged; новых фиксированных расходов0, обычная стоимость3PUT.
+
+
+### 01.10.2026 — live приемка стекла и слогана
+
+**Последний срез 01.10 — VERIFIED production: светлый прозрачный вход и текст над мирами.** AccountEntry: сцена видна через glass gradient, светлая грань, контрастные подписи, настоящие Google/Discord SVG в игровых контролах. WorldHall: GameScout + «Найди мир, в котором останешься» + короткое описание, responsive над карточками. Local IAB desktop/320/390, reset/back/reveal и отсутствие overflow прошли. Production IAB видит слоган и3 мира; screenshot ignored output/hall-hero-live.jpg. HTTP JS/CSS200, SHA совпали с dist (см. upload ниже), health200, admin без session401, realSalesfalse. Изменены только AccountEntry.tsx, WorldHall.tsx, index.css и журнал. Auth/backend/DB/DNS не менялись; live OAuth/mail E2E не повторялся, registration закрыта. Откат output/rollback-site-index-before-glass-hero.html + retained assets. New resources/inference0; обычные3PUT. Следом core blockers из сводки (SEO gateway/projection/Telegram/E2E), текущая косметическая коррекция завершена.
+

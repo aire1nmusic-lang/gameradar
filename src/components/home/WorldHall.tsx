@@ -80,8 +80,7 @@ export function WorldHall() {
 
   return (
     <section className="relative isolate overflow-hidden">
-      {/* No visible title or search here: the hall speaks for itself, search lives in the header. */}
-      <h1 className="sr-only">GameScout — каталог серверов Lineage 2, GTA RP и Minecraft</h1>
+
       {/* ── wide screens ─────────────────────────────────────────────── */}
       <div ref={tilt} className="relative hidden h-[max(640px,100svh)] lg:block">
         {/* the hall: breathes, follows the pointer, sinks back when a card is chosen */}
@@ -98,7 +97,9 @@ export function WorldHall() {
         </div>
 
         {/* the three cards, turned towards the centre like panels in the hall */}
-        <div className="absolute inset-0 flex items-center justify-center gap-[3.2vw] pb-[3%]" style={{ perspective: '1600px' }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 px-6 pt-20 pb-10">
+          <HallIntro/>
+          <div className="flex items-center justify-center gap-[3.2vw]" style={{perspective:'1600px'}}>
           {worlds.map((game, index) => {
             const side = index === 0 ? 1 : index === worlds.length - 1 ? -1 : 0
             return (
@@ -115,6 +116,7 @@ export function WorldHall() {
               />
             )
           })}
+          </div>
         </div>
 
       </div>
@@ -125,8 +127,9 @@ export function WorldHall() {
           <img src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/30 via-ink-950/35 to-ink-950" />
         </div>
-        <div className="pt-10 pb-10">
-          <div className="gs-snap-row flex snap-x snap-mandatory gap-4 overflow-x-auto px-[19vw] pt-2 pb-6 sm:px-[30vw]" style={{ perspective: '1200px' }}>
+        <div className="pt-24 pb-10">
+          <HallIntro/>
+          <div className="gs-snap-row flex snap-x snap-mandatory gap-4 overflow-x-auto px-[19vw] pt-10 pb-6 sm:px-[30vw]" style={{ perspective: '1200px' }}>
             {worlds.map((game, index) => (
               <div key={game.id} className="w-[62vw] max-w-[300px] shrink-0 snap-center sm:w-[40vw]">
                 <WorldCard game={game} side={0} index={index} active={false} dimmed={false} hidden={flightId === game.id} onEnter={(event) => go(event, game)} onHover={(on) => on && preload(game.id)} compact />
@@ -138,6 +141,14 @@ export function WorldHall() {
 
     </section>
   )
+}
+
+function HallIntro() {
+  return <div className="relative z-10 mx-auto max-w-3xl px-6 text-center [text-shadow:0_2px_22px_rgba(0,0,0,0.65)]">
+    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">Game<span className="text-signal-300">Scout</span></p>
+    <h1 className="text-[clamp(28px,3.4vw,52px)] font-semibold leading-[1.12] tracking-tight text-white">Найди мир,<br className="sm:hidden"/> в котором останешься</h1>
+    <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base">Игровые серверы, новые открытия и сообщества — выбирай, где играть.</p>
+  </div>
 }
 
 /**

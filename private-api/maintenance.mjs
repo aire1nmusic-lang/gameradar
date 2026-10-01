@@ -5,6 +5,7 @@ import { checkProjectionLag } from './projection-alert.mjs'
 import { checkOpenRouterBalance } from './openrouter-balance.mjs'
 import { checkStoppedJobs, recordMaintenanceHeartbeat } from './operations.mjs'
 import { checkCoins } from './coin-monitor.mjs'
+import { cleanupTransientData } from './retention.mjs'
 import { linkMail, sendMail } from '../worker/lib/mailer.ts'
 import { createHash, timingSafeEqual } from 'node:crypto'
 
@@ -63,6 +64,7 @@ export async function runMaintenance(db,config,{development=false,onLocalMail=()
     nickname=>reviewNickname(null,nickname),'local-policy-v1'))
   await drain('copyright',()=>dispatchCopyrightAI(db,
     claim=>analyzeCopyright(null,claim),'local-policy-v1',config.mailKey))
+  await cleanupTransientData(db)
   await checkCoins(db)
   if(config.telegram?.botToken&&config.telegram?.chatId)await drain('telegram',()=>dispatchTelegram(db,config.telegram))
   await checkStoppedJobs(db)

@@ -18,6 +18,7 @@ import { operationalSnapshot, recordMaintenanceHeartbeat, recordBackupUpload, ch
 import { localClientIp, vmProxyClientIp, yandexClientIp } from '../private-api/ingress.mjs'
 import { applyPublicSnapshot, parsePublicSnapshot, projectionSql } from '../worker/lib/public-projection.ts'
 import { serverDto } from '../worker/lib/dto.ts'
+import { cleanupTransientData } from '../private-api/retention.mjs'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
@@ -935,6 +936,29 @@ test('operational status is private, distinguishes unknown heartbeat and dedupli
   await recordBackupUpload(h.db,1234)
   await checkStoppedJobs(h.db)
   assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_telegram_outbox WHERE event='backup.upload_recovered'")).rows[0].n,1)
+})
+
+test('retention removes only expired transient authentication and rate-limit rows',async t=>{
+  const h=await harness(t),player=await h.register('retention-player@example.test')
+  const currentWindow=Math.floor(Date.now()/900000)
+  await h.db.query(`INSERT INTO gs_sessions(token_hash,user_id,expires_at) VALUES
+    ('expired-session',$1,now()-interval '1 second'),('live-session',$1,now()+interval '1 hour')`,[player.user.id])
+  await h.db.query(`INSERT INTO gs_tokens(token_hash,email,purpose,payload,expires_at) VALUES
+    ('expired-token','expired@example.test','RESET','{}',now()-interval '1 second'),
+    ('live-token','live@example.test','RESET','{}',now()+interval '1 hour')`)
+  await h.db.query(`INSERT INTO gs_oauth_states(state_hash,browser_hash,provider,verifier,next_path,expires_at) VALUES
+    ('expired-oauth','browser','google','verifier','/',now()-interval '1 second'),
+    ('live-oauth','browser','google','verifier','/',now()+interval '1 hour')`)
+  await h.db.query(`INSERT INTO gs_rate_limits(key,bucket_window,count) VALUES
+    ('old-limit',$1,1),('live-limit',$2,1)`,[currentWindow-200,currentWindow])
+  const first=await cleanupTransientData(h.db)
+  assert.deepEqual(first,{ran:true,sessions:1,tokens:1,oauth_states:1,rate_limits:1})
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_sessions WHERE token_hash='live-session'")).rows[0].n,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_tokens WHERE token_hash='live-token'")).rows[0].n,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_oauth_states WHERE state_hash='live-oauth'")).rows[0].n,1)
+  assert.equal((await h.db.query("SELECT count(*)::integer n FROM gs_rate_limits WHERE key='live-limit'")).rows[0].n,1)
+  assert.deepEqual(await cleanupTransientData(h.db),{ran:false,sessions:0,tokens:0,oauth_states:0,rate_limits:0})
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_users WHERE id=$1',[player.user.id])).rows[0].n,1)
 })
 
 test('copyright description: exact page scope, private restriction and reversible D1 redaction',async t=>{

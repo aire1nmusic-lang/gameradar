@@ -53,11 +53,21 @@ async function harness(t,options={}) {
   const db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}
   await migrate(db);await migrate(db)
   t.after(()=>pg.close())
-  const app=createApp({db,config:{...config,...options.config},captchaVerify:options.captchaVerify,publicFetch:options.publicFetch,
+  const app=createApp({db,config:{...config,...options.config},captchaVerify:options.captchaVerify,publicFetch:options.publicFetch,proofCheck:options.proofCheck,
     oauthExchange:async(_env,provider,code)=>({id:code,displayName:`Player ${provider}`,email:'player@example.com',emailVerified:true})})
+  const fixtureProofCodes=new Map()
   const request=async(path,body,cookie='',extra={},env={})=>{
+    // Existing owner fixtures model an ADMIN who independently observed the issued manual code.
+    // Dedicated proof invariant tests disable this convenience and exercise every API step.
+    if(!options.rawClaims&&/\/admin\/claims\/[^/]+\/resolve$/.test(path)&&body?.status==='VERIFIED')
+      body={...body,observedToken:fixtureProofCodes.get(path.split('/')[3])}
     const r=await app.request(origin+'/api/v1'+path,{method:body===undefined?'GET':'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})},{clientIp:'127.0.0.1',...env})
-    return {r,status:r.status,body:await r.clone().json().catch(()=>null),cookie:r.headers.getSetCookie().filter(x=>x.startsWith('gs_private_session=')).map(x=>x.split(';')[0]).join('; ')}
+    const result={r,status:r.status,body:await r.clone().json().catch(()=>null),cookie:r.headers.getSetCookie().filter(x=>x.startsWith('gs_private_session=')).map(x=>x.split(';')[0]).join('; ')}
+    if(!options.rawClaims&&path==='/claims'&&result.status===201&&!fixtureProofCodes.has(result.body.id)) {
+      const proof=await request(`/claims/${result.body.id}/proof`,{method:'MANUAL'},cookie)
+      assert.equal(proof.status,201,JSON.stringify(proof.body));fixtureProofCodes.set(result.body.id,proof.body.code)
+    }
+    return result
   }
   async function link(email,purpose) {
     const mails=(await db.query('SELECT ciphertext FROM gs_mail_outbox ORDER BY created_at DESC')).rows
@@ -287,6 +297,44 @@ test('L2, Minecraft, GTA: player → Claim → admin review → private grant �
   assert.equal((await h.request(`/admin/claims/${broken.body.id}/resolve`,{status:'VERIFIED',reason:'Test rollback failure'},admin.cookie)).status,500)
   assert.equal((await h.db.query("SELECT owner_id FROM gs_server_registry WHERE server_id='broken'")).rows[0].owner_id,null)
   assert.equal((await h.db.query('SELECT status FROM gs_claims WHERE id=$1',[broken.body.id])).rows[0].status,'PENDING')
+})
+
+test('one-time owner proof is private, expires, rotates, cannot cross servers or grant without ADMIN',async t=>{
+  const h=await harness(t,{rawClaims:true,proofCheck:async()=>true}),owner=await h.register('proof-owner@example.com'),
+    admin=await h.register('proof-admin@example.com'),stranger=await h.register('proof-stranger@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  for(const [id,game] of [['proof-l2','lineage2'],['proof-mc','minecraft'],['proof-gta','gtarp']])
+    await h.db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug,website) VALUES($1,$2,$1,$1,$3)',[id,game,'https://game-server.com'])
+  const decision={status:'VERIFIED',reason:'Code independently checked on the official project resource'}
+  const make=async id=>(await h.request('/claims',{serverId:id,evidence:'Official resource proof will be placed for independent admin review.'},owner.cookie)).body.id
+  const id=await make('proof-l2'),path=`/claims/${id}/proof`,approve=`/admin/claims/${id}/resolve`
+  assert.equal((await h.request(approve,decision,admin.cookie)).status,409)
+  assert.equal((await h.request(path,{method:'MANUAL'},stranger.cookie)).status,404)
+  const first=(await h.request(path,{method:'MANUAL'},owner.cookie)).body
+  const next=(await h.request(path,{method:'MANUAL'},owner.cookie)).body
+  assert.notEqual(first.code,next.code)
+  assert.equal((await h.request(approve,{...decision,observedToken:first.code},admin.cookie)).status,409)
+  assert.equal((await h.request(approve,{...decision,observedToken:next.code},owner.cookie)).status,403)
+  const second=await make('proof-mc'),secondPath=`/claims/${second}/proof`
+  await h.request(secondPath,{method:'MANUAL'},owner.cookie)
+  assert.equal((await h.request(`/admin/claims/${second}/resolve`,{...decision,observedToken:next.code},admin.cookie)).status,409)
+  await h.db.query("UPDATE gs_claim_proofs SET expires_at=now()-interval '1 minute' WHERE claim_id=$1",[id])
+  assert.equal((await h.request(approve,{...decision,observedToken:next.code},admin.cookie)).status,409)
+  const final=(await h.request(path,{method:'MANUAL'},owner.cookie)).body
+  const stored=(await h.db.query('SELECT * FROM gs_claim_proofs WHERE claim_id=$1',[id])).rows[0]
+  assert.equal(stored.token_hash,digest(final.code));assert.ok(!JSON.stringify(stored).includes(final.code))
+  assert.equal((await h.request(approve,{...decision,observedToken:final.code},admin.cookie)).status,200)
+  assert.equal((await h.request(approve,{...decision,observedToken:final.code},admin.cookie)).status,200)
+  assert.equal((await h.request(path,{method:'MANUAL'},owner.cookie)).status,409)
+  assert.ok((await h.db.query('SELECT consumed_at FROM gs_claim_proofs WHERE claim_id=$1',[id])).rows[0].consumed_at)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_public_outbox')).rows[0].n,1)
+  const third=await make('proof-gta'),thirdPath=`/claims/${third}/proof`
+  await h.request(thirdPath,{method:'SITE'},owner.cookie)
+  assert.equal((await h.request(`/admin/claims/${third}/resolve`,decision,admin.cookie)).status,409)
+  assert.equal((await h.request(thirdPath+'/check',{},owner.cookie)).status,200)
+  assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body.length,1)
+  assert.equal((await h.request(`/admin/claims/${third}/resolve`,decision,admin.cookie)).status,200)
+  assert.ok(!(await h.db.query('SELECT details FROM gs_audit')).rows.some(r=>JSON.stringify(r.details).includes(final.code)))
 })
 
 test('only ADMIN changes server-scoped account status; revoke is audited, projected and reversible by a new Claim',async t=>{

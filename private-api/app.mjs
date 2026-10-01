@@ -8,6 +8,7 @@ import { enqueueTelegram } from './copyright.mjs'
 import { operationalSnapshot } from './operations.mjs'
 import { coinIntegrity } from './coin-monitor.mjs'
 import { emergencyBlocks, emergencyLimit } from './security.mjs'
+import { proofTarget, checkClaimProof } from './claim-proof.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
@@ -74,7 +75,7 @@ const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_au
 const voteRulesDto = row => ({windowHours:row.window_hours,maxPerWindow:row.max_per_window,
   ipDailyLimit:row.ip_daily_limit,deviceDailyLimit:row.device_daily_limit,asnDailyLimit:row.asn_daily_limit})
 
-export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify }) {
+export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify, proofCheck=checkClaimProof }) {
   if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
   if (!!config.turnstileSecret !== !!config.turnstileSiteKey) throw new Error('turnstile_key_pair_required')
   const origin = new URL(config.origin).origin
@@ -341,11 +342,51 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     })
     return c.json(claim,201)
   })
+  app.post('/api/v1/claims/:id/proof',async c=>{
+    const user=await requireUser(c,true),body=await json(c)
+    await limit(c,'claim_proof',user.id,10)
+    if(!['SITE','DNS','MANUAL'].includes(body.method))fail(400,'invalid_method','Выберите способ проверки')
+    const result=await db.transaction(async tx=>{
+      const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 AND user_id=$2 FOR UPDATE',[c.req.param('id'),user.id])).rows[0]
+      if(!claim)fail(404,'not_found','Заявка не найдена')
+      if(claim.status!=='PENDING')fail(409,'claim_closed','Заявка уже рассмотрена')
+      const server=(await tx.query('SELECT website FROM gs_server_registry WHERE server_id=$1',[claim.server_id])).rows[0]
+      let target
+      try{target=proofTarget(server?.website,body.method)}catch{fail(400,'official_site_required','Для этого способа нужен официальный HTTPS-сайт в карточке; выберите ручную проверку')}
+      const code=token(),expiresAt=new Date(Date.now()+30*60*1000).toISOString()
+      await tx.query(`INSERT INTO gs_claim_proofs(claim_id,token_hash,method,target,expires_at) VALUES($1,$2,$3,$4,$5)
+        ON CONFLICT(claim_id) DO UPDATE SET token_hash=EXCLUDED.token_hash,method=EXCLUDED.method,target=EXCLUDED.target,
+        expires_at=EXCLUDED.expires_at,checked_at=NULL,consumed_at=NULL,created_at=now()`,[claim.id,digest(code),body.method,target,expiresAt])
+      await audit(tx,user.id,'claim.proof_issued',claim.id,{method:body.method})
+      return {claimId:claim.id,code,method:body.method,target,expiresAt}
+    })
+    return c.json(result,201)
+  })
+  app.post('/api/v1/claims/:id/proof/check',async c=>{
+    const user=await requireUser(c,true)
+    await limit(c,'claim_proof_check',user.id,10)
+    const proof=(await db.query(`SELECT p.* FROM gs_claim_proofs p JOIN gs_claims c ON c.id=p.claim_id
+      WHERE c.id=$1 AND c.user_id=$2 AND c.status='PENDING' AND p.expires_at>now() AND p.consumed_at IS NULL`,[c.req.param('id'),user.id])).rows[0]
+    if(!proof)fail(409,'proof_expired','Получите новый проверочный код')
+    if(proof.method==='MANUAL')fail(409,'admin_review_required','Код на публичном ресурсе проверяет администратор')
+    let matched=false
+    try{matched=await proofCheck(proof)}catch{fail(422,'proof_unreachable','Ресурс недоступен; проверьте размещение кода или выберите ручную проверку')}
+    if(!matched)fail(422,'proof_mismatch','Код на официальном ресурсе не найден')
+    const result=await db.transaction(async tx=>{
+      const row=(await tx.query(`UPDATE gs_claim_proofs SET checked_at=now() WHERE claim_id=$1 AND token_hash=$2
+        AND expires_at>now() AND consumed_at IS NULL RETURNING claim_id`,[proof.claim_id,proof.token_hash])).rows[0]
+      if(!row)fail(409,'proof_changed','Код изменён или истёк; повторите проверку')
+      await audit(tx,user.id,'claim.proof_checked',proof.claim_id,{method:proof.method})
+      return {checked:true,status:'ADMIN_REVIEW'}
+    })
+    return c.json(result)
+  })
   app.get('/api/v1/owners/me/claims',async c=>{
     const user=await requireUser(c)
     return c.json((await db.query(`SELECT c.id,c.server_id,c.status,c.evidence,c.reason,c.created_at,
+      p.method AS proof_method,p.checked_at AS proof_checked_at,p.expires_at AS proof_expires_at,
       (c.status='VERIFIED' AND COALESCE(r.owner_id=c.user_id,false)) AS access_active
-      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id
+      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
       WHERE c.user_id=$1 ORDER BY c.created_at DESC LIMIT 100`,[user.id])).rows)
   })
   app.get('/api/v1/owners/me/servers',async c=>{
@@ -1129,7 +1170,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')
-    return c.json((await db.query("SELECT c.*,s.name,s.game_id FROM gs_claims c JOIN gs_server_registry s USING(server_id) WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100")).rows)
+    return c.json((await db.query(`SELECT c.*,s.name,s.game_id,s.website,p.method AS proof_method,
+      p.target AS proof_target,p.expires_at AS proof_expires_at,p.checked_at AS proof_checked_at
+      FROM gs_claims c JOIN gs_server_registry s USING(server_id) LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
+      WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100`)).rows)
   })
   app.post('/api/v1/admin/claims/:id/resolve',async c=>{
     const admin=await ownershipAdmin(c), body=await json(c), reason=textOf(body.reason,10,1000)
@@ -1144,12 +1188,20 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       }
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[claim.server_id])).rows[0]
       if (body.status==='VERIFIED') {
+        const proof=(await tx.query('SELECT * FROM gs_claim_proofs WHERE claim_id=$1 FOR UPDATE',[claim.id])).rows[0]
+        if(!proof||proof.consumed_at||Date.parse(proof.expires_at)<=Date.now())fail(409,'proof_required','Нужен действующий проверочный код владельца')
+        if(proof.method!=='MANUAL'&&proof.target!==proofTarget(server.website,proof.method))fail(409,'proof_changed','Официальный сайт изменён; получите новый код')
+        if(proof.method==='MANUAL') {
+          if(typeof body.observedToken!=='string'||digest(body.observedToken.trim())!==proof.token_hash)
+            fail(409,'proof_required','Введите код, который вы лично увидели на официальном публичном ресурсе проекта')
+        } else if(!proof.checked_at)fail(409,'proof_required','Владелец должен сначала проверить код на сайте или в DNS')
         const applicant=(await tx.query('SELECT email_verified_at,banned_at FROM gs_users WHERE id=$1',[claim.user_id])).rows[0]
         if(!applicant?.email_verified_at||applicant.banned_at)fail(403,'applicant_ineligible','Заявитель должен иметь активный аккаунт с подтверждённым email')
         if (server.owner_id && server.owner_id!==claim.user_id) fail(409,'already_claimed','Владелец уже подтверждён')
         const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=$1,version=version+1 WHERE server_id=$2 RETURNING version',[claim.user_id,server.server_id])).rows[0]
         const snapshot=await createPublicSnapshot(tx,server.server_id,changed.version)
         await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[server.server_id,changed.version,JSON.stringify(snapshot)])
+        await tx.query('UPDATE gs_claim_proofs SET consumed_at=now() WHERE claim_id=$1',[claim.id])
       }
       const updated=(await tx.query('UPDATE gs_claims SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4 RETURNING *',[body.status,admin.id,reason,claim.id])).rows[0]
       await audit(tx,admin.id,'claim.'+body.status.toLowerCase(),claim.id,{serverId:server.server_id})

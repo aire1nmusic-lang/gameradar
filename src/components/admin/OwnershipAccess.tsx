@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { Button } from '@/components/ui/Button'
-import { Textarea } from '@/components/ui/controls'
+import { Input, Textarea } from '@/components/ui/controls'
 
 type Server = { server_id:string; game_id:string; name:string }
 type Claim = Server & { id:string; evidence:string }
@@ -11,6 +11,7 @@ export function OwnershipAccess({userId,self,onChanged}:{userId:string;self:bool
   const [open,setOpen]=useState(false),[access,setAccess]=useState<Access>()
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
   const [reasons,setReasons]=useState<Record<string,string>>({})
+  const [observedCodes,setObservedCodes]=useState<Record<string,string>>({})
   const path=`/admin/users/${encodeURIComponent(userId)}/ownership`
   async function refresh() {setAccess(await apiRequest<Access>(path))}
   async function toggle() {
@@ -46,9 +47,11 @@ export function OwnershipAccess({userId,self,onChanged}:{userId:string;self:bool
           <p><strong>Заявка: {claim.name}</strong> · {claim.game_id} · {claim.server_id}</p>
           <p className="whitespace-pre-wrap break-words">{claim.evidence}</p>
           {reasonField(claim.id,`Основание решения по ${claim.name}`)}
+          <Input aria-label="Код, лично проверенный на официальном публичном ресурсе" placeholder="Проверенный код для ручного способа"
+            value={observedCodes[claim.id]??''} onChange={e=>setObservedCodes(previous=>({...previous,[claim.id]:e.target.value}))}/>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" disabled={busy||self||access.banned||!access.emailVerified||reason(claim.id).trim().length<10}
-              onClick={()=>void decide(claim.id,()=>apiSend(`/admin/claims/${encodeURIComponent(claim.id)}/resolve`,{status:'VERIFIED',reason:reason(claim.id)}))}>
+              onClick={()=>void decide(claim.id,()=>apiSend(`/admin/claims/${encodeURIComponent(claim.id)}/resolve`,{status:'VERIFIED',reason:reason(claim.id),observedToken:observedCodes[claim.id]}))}>
               Подтвердить · статус владельца</Button>
             <Button size="sm" variant="outline" disabled={busy||self||reason(claim.id).trim().length<10}
               onClick={()=>void decide(claim.id,()=>apiSend(`/admin/claims/${encodeURIComponent(claim.id)}/resolve`,{status:'REJECTED',reason:reason(claim.id)}))}>

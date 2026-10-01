@@ -13,6 +13,16 @@
 
 ## Состояние сейчас
 
+**01.10 — owner proof UI production VERIFIED deployed:** existing bucket получил101 HTML + JS/CSS, exact prior HTML rollback в ignored output/rollback-owner-proof-ui; команда node output/publish-owner-proof-ui.mjs rollback восстанавливает прежние HTML, старые assets сохранены. API source rollback before-owner-proof.tar/image vm-api:before-owner-proof. Live raw SEO HTTP passed после выпуска; IAB /account загрузил существующую сессию, Coins empty, owned empty и admin claim queue empty, без новых Claim/user/денежных операций. Приватные сведения со страницы не заносились в журнал. Настоящая проверка SITE/DNS и owner grant в production ещё BLOCKED на контролируемой своей карточке. Новые расходы:0 фиксированных, небольшой existing storage PUT/GET. Следующий независимый срез: mobile UX; Robokassa TEST credentials отсутствуют, Metrica owner отложил.
+
+**01.10 — owner proof API production VERIFIED:** migration22 applied exact pendingHash после fresh backup; API-only recreate. health200, anonymous proof/admin resolve401, proofs0/owned0/projectionPending0 — реальные users/foreign claims не создавались. Build from live public catalog passed70/70 reconciliation0,100 prerender HTML, new UI assets index-B-HTcHDw.js/index-CMS57MTL.css. UI публикация следующая, exact public HTML rollback снимается перед PUT; API/DNS/gateway unchanged. Site/DNS live ownership E2E остаётся непроверенным без контролируемой карточки.
+
+**01.10 — owner proof stage VERIFIED:** full local private suite56/56, typecheck passed. Existing VM baseline app/db SHA совпал; source rollback /home/spl23071994/before-owner-proof.tar600 и image vm-api:before-owner-proof сохранены. Fresh encrypted off-VM backup private-postgres/2026/10/01/gamescout-20261001T113617Z.dump.gpg21337 bytes verified/upload heartbeat записан. New image собран, running API пока прежний. Migration plan только22, pendingHash18cb0ebc0d493d6487335b5651c055169dc8e2de058f796a6746795b44522993, additive table. Следом apply exact plan+API-only restart+HTTP permissions smoke; owner live E2E не заявляется. Новых ресурсов0.
+
+**01.10 — owner proof implementation (production НЕ изменён):** additive migration022/private-only challenge table, SITE/DNS/MANUAL API, код30 минут только hash в БД, ADMIN approval требует checked proof либо лично наблюдавшийся manual code; атомарное consumption с grant/outbox. UI в едином аккаунте и admin user access подготовлен. Проверки идут; не считать production. Cold backup commit43c84fe отправлен main. Новых ресурсов0; migration rollback сохраняет additive table/audit, application image/source предыдущие. Minecraft MOTD/FiveM автоматический transport пока НЕ реализован: нельзя доверять адресу, предложенному заявителем без связи с registry. Manual fallback применим всем трем играм. Следом invariant tests, затем staging/production deployment по защищенному migration plan.
+
+**01.10 — owner proof local verification:** typecheck passed после исправления Select interface; существующие8 Claim/owner/journey regression тестов прошли с явно наблюдавшимся manual-code fixture. Новый отдельный API invariant test проверяет отсутствие proof, expiry/rotation/cross-server/wrong user/ADMIN-only, atomic consumption и повтор approval; full suite идет. docs/owner-proof.md фиксирует официальные источники, реализованные SITE/DNS/MANUAL и незакрытые игровые transport. Production пока прежний. Стоимость0.
+
 ### Последнее задание владельца — краткая карта на 01.10
 
 Завершенный Telegram срез: commit **026a338**, отправлен в main; Worker/API уже проверены production. Cold backup — следующий отдельный commit, копия на ПК уже проверена.
@@ -21,14 +31,14 @@
 | --- | --- | --- |
 | Public projection | **VERIFIED production:** существующие 70/70 доставлены, pending=0, повторная доставка не меняет версии, публичные поля проверены | Проверить изменение своей контролируемой карточки; сейчас owner grants отсутствуют |
 | SEO routing | **VERIFIED production:** HTML трех игр/каталогов/профилей, canonical, robots/sitemap; private noindex, неизвестный URL HTTP404 | Автоматизировать обновление статического HTML после изменений каталога |
-| Owner verification | **VERIFIED:** ручной Claim с ADMIN approval; одноразовые доказательства владения **не готовы** | P0: короткоживущий код, сайт/DNS и игровые способы, затем ADMIN approval |
+| Owner verification | **VERIFIED local / deployed production:** одноразовый30-minute код SITE/DNS/MANUAL, только ADMIN выдаёт scoped grant. API22 и UI опубликованы; production permission smoke пройден | Настоящий Claim на своей контролируемой карточке; автоматические Minecraft MOTD/FiveM ещё не готовы |
 | Security | **VERIFIED:** Emergency Mode развернут выключенным, off-команда прошла live; on проверен локально | Уточнить Turnstile/защиту реального входного маршрута; Cloudflare не защищает Yandex gateway автоматически |
 | Robokassa/refund | **BLOCKED live TEST:** владелец сообщил «ниче не делал»; реальные продажи выключены | Подготовить учет происхождения Coins и неиспользованной части для возвратов; затем нужны тестовые настройки магазина |
 | Metrica | **BLOCKED / отложено владельцем:** Counter ID «позже», аналитика не включена | Consent «Принять / Только необходимые» до включения аналитики |
 | Telegram | **VERIFIED production:** существующий Worker relay доставил техническое уведомление; private queue delivered=1/pending=0 | Наблюдать реальные технические события; старые stopped jobs не сбрасывать |
 | Mobile UX | **Не завершено:** референсы получены, полного before/after matrix нет | Компактный каталог/вход и стабильный hall snap на 320/360/390/412 |
 | Cold backup | **VERIFIED:** encrypted daily copy вне VM и последняя копия на ПК, SHA256/size совпали | Ключ восстановления хранить отдельно; download не заменяет restore rehearsal |
-| Automated QA | **VERIFIED local:** полный private suite **54/54**, typecheck и real workerd relay test; production HTTP проверки пройдены | Сквозная приемка трех ролей/игр и TEST payment/refund еще не пройдена |
+| Automated QA | **VERIFIED local:** полный private suite **56/56**, typecheck и real workerd relay test; production HTTP проверки пройдены | Сквозная приемка трех ролей/игр и TEST payment/refund еще не пройдена |
 
 Новые платные ресурсы в этих срезах: **0**. Ядро к открытию регистрации/продаж не объявляется готовым. Все rollback сохранены в соответствующих runbook. Telegram подтвержден по API доставки, прочтение человеком не наблюдалось.
 

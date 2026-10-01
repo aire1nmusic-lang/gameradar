@@ -7,6 +7,7 @@ import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
 import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
+import { ClaimProof } from '@/components/account/ClaimProof'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -27,6 +28,7 @@ export default function Account() {
   const [claims,setClaims]=useState<Claim[]>([]),[owned,setOwned]=useState<Owned[]>([]),[queue,setQueue]=useState<Claim[]>([])
   const [serverId,setServerId]=useState(()=>new URLSearchParams(location.search).get('claim')??'')
   const [evidence,setEvidence]=useState(''),[reasons,setReasons]=useState<Record<string,string>>({})
+  const [observedCodes,setObservedCodes]=useState<Record<string,string>>({})
   useEffect(()=>{
     const consumeLink=()=>{
       const params=new URLSearchParams(location.hash.slice(1))
@@ -97,14 +99,15 @@ export default function Account() {
           <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
           <Button type="submit" disabled={busy||!profile?.emailVerified}>Подать Claim</Button>
         </form>
-        {claims.map(c=><p key={c.id}>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>)}
+        {claims.map(c=><div key={c.id} className="space-y-2"><p>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={reload}/>}</div>)}
       </section>
       {profile?.roles?.includes('ADMIN')&&<section className="space-y-4"><h2 className="text-lg font-semibold">Администратор: заявки Claim</h2>
         <Button onClick={()=>run(reload,'Очередь обновлена.')} disabled={busy}>Обновить</Button>
         {!queue.length&&<p>Нет заявок на проверку.</p>}
         {queue.map(c=><div key={c.id} className="surface space-y-3 p-4"><p>{c.name??c.server_id}</p><p className="whitespace-pre-wrap break-words">{c.evidence}</p>
           <Field label="Результат проверки и основание решения"><Textarea minLength={10} maxLength={1000} value={reasons[c.id]??''} onChange={e=>setReasons({...reasons,[c.id]:e.target.value})}/></Field>
-          <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+          <Field label="Код, лично проверенный на официальном ресурсе (для ручного способа)"><Input value={observedCodes[c.id]??''} onChange={e=>setObservedCodes({...observedCodes,[c.id]:e.target.value})}/></Field>
+          <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id],observedToken:observedCodes[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
         </div>)}
       </section>}
     </>

@@ -66,8 +66,8 @@ export function GameHero({
 
       <Container className="relative flex min-h-[inherit] flex-col justify-end pt-4 pb-6 sm:pb-8 lg:pb-9">
         <nav className="mb-3 flex items-center gap-1.5 text-[12px]" style={{ color: theme.colors.textFaint }} aria-label="Хлебные крошки">
-          <Link to="/games" className="transition-colors hover:text-[var(--gt-text)]">
-            Игры
+          <Link to="/" className="transition-colors hover:text-[var(--gt-text)]">
+            Зал миров
           </Link>
           {chronicle && (
             <>

@@ -137,7 +137,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 </>
               }
               title="Стартуют в ближайшие дни"
-              action={{ label: 'Все открытия', to: '/openings' }}
+              action={{ label: 'Все открытия', to: `/openings?game=${game.id}` }}
             />
             <div className="space-y-1.5">
               {openings.map((server) => (
@@ -156,7 +156,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 </>
               }
               title={chronicle ? `ТОП серверов ${chronicle.label}` : `ТОП серверов ${game.shortName}`}
-              action={{ label: 'Полный рейтинг', to: '/rating' }}
+              action={{ label: 'Полный рейтинг', to: `/rating?game=${game.id}` }}
             />
             <RatingPodium entries={organic} />
           </section>

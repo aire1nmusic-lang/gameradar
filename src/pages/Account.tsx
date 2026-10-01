@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
 import { AccountCoins } from '@/components/account/AccountCoins'
+import { AccountEntry } from '@/components/account/AccountEntry'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -59,6 +60,12 @@ export default function Account() {
   }
   if(auth.loading) return <main className="mx-auto max-w-2xl p-6">Проверяем сессию…</main>
   if(!auth.privateCore) return <main className="mx-auto max-w-2xl p-6"><Notice tone="info">Новый аккаунт ещё не подключён в этом окружении.</Notice></main>
+  if(!auth.user)return <AccountEntry mode={mode} setMode={m=>{setMode(m);setError('');setMessage('')}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} name={name} setName={setName}
+    busy={busy} error={error} apiError={auth.error} message={message} registrationOpen={auth.registrationOpen} providers={auth.providers} submit={submit}
+    confirmation={linkToken&&<section className="space-y-3 rounded-xl border border-signal-400/20 p-4"><h2>{purpose==='reset'?'Новый пароль':'Подтвердите email'}</h2>
+      {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
+      <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
+    </section>}/>
   return <main className="mx-auto max-w-2xl space-y-6 px-4 py-10">
     <h1 className="text-2xl font-semibold">Аккаунт GameScout</h1>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
@@ -71,17 +78,8 @@ export default function Account() {
         await apiSend(path,{token:linkToken,password});setLinkToken('')
       },purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}
-    {!auth.user?<>
-      {!auth.registrationOpen&&<p className="surface rounded-xl p-4 text-ink-300">Регистрация пока закрыта. Войти могут только существующие аккаунты; каталог серверов доступен без входа.</p>}
-      <div className="flex flex-wrap gap-2">{(['login','register','reset'] as const).filter(x=>x!=='register'||auth.registrationOpen).map(x=><Button key={x} onClick={()=>setMode(x)}>{x==='login'?'Вход':x==='register'?'Регистрация':'Восстановление'}</Button>)}</div>
-      <form onSubmit={submit} className="space-y-4">
-        <Field label="Email"><Input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field>
-        {mode==='register'&&<Field label="Имя"><Input required minLength={2} maxLength={40} autoComplete="nickname" value={name} onChange={e=>setName(e.target.value)}/></Field>}
-        {mode!=='reset'&&<Field label="Пароль — от 12 до 128 символов"><Input type="password" autoComplete={mode==='login'?'current-password':'new-password'} required minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
-        <Button type="submit" disabled={busy}>{busy?'Подождите…':mode==='login'?'Войти':'Отправить письмо'}</Button>
-      </form>
-      <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?next=/account`)}>Войти через {providerLabels[p]??p}</Button>)}</div>
-    </>:<>
+    <>
+
       <section className="surface space-y-3 p-5"><h2 className="text-lg">{auth.user.displayName}</h2>
         <p>Статус ЛК: <strong>{profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'}</strong>{owned.length?` · подтверждено серверов: ${owned.length}`:''}</p>
         <p className="break-all">{profile?.email??'Email не привязан'} · {profile?.emailVerified?'Подтверждён':'Нужно подтверждение для голосования и Claim'}</p>
@@ -109,7 +107,7 @@ export default function Account() {
           <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
         </div>)}
       </section>}
-    </>}
+    </>
   </main>
 }
 

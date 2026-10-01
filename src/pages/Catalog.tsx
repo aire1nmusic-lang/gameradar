@@ -20,12 +20,14 @@ import { themeForGame } from '@/data/themes'
 import { InlinePromo } from '@/components/ads/AdSlots'
 import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 const PAGE_SIZE = 24
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 
 export default function Catalog() {
+  const {game:world}=useWorldNavigation()
   const { privateCore, loading: authLoading } = useAuth()
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
   const [params, setParams] = useSearchParams()
@@ -108,14 +110,14 @@ export default function Catalog() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
 
-  const reset = () => setFilters({ ...EMPTY_FILTERS, query: filters.query })
-  const chips = buildChips(filters, setFilters)
+  const reset = () => setFilters({ ...EMPTY_FILTERS, games:world?[world.id]:[],query: filters.query })
+  const chips = buildChips(filters, next=>setFilters(world?{...next,games:[world.id]}:next))
 
   return (
     <div className="pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов</h1>
+          <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов{world?` ${world.shortName}`:''}</h1>
           <span className="num text-[13px] text-ink-400">
             {loading&&!page?'Загружаем серверы…':error?(page?'Предыдущие результаты · обновление недоступно':'Данные недоступны'):
               `${formatNumber(total)} ${plural(total, ['сервер', 'сервера', 'серверов'])}`}

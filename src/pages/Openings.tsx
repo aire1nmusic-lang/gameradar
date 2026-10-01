@@ -7,6 +7,7 @@ import { LaunchRow } from '@/components/server/LaunchRow'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { useSeo } from '@/lib/seo'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 type Window = 'today' | 'week' | 'all'
 
@@ -14,9 +15,10 @@ const DAY = 86_400_000
 
 /** Announced openings as a calendar: one row per server, grouped by day. */
 export default function Openings() {
+  const {game}=useWorldNavigation()
   useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
-  const { data: all = [] } = useOpenings(undefined, 40)
+  const { data: all = [] } = useOpenings(game?.id, 40)
 
   const filtered = useMemo(() => {
     const now = Date.now()
@@ -47,7 +49,7 @@ export default function Openings() {
               <CalendarClock size={13} />
               Открытия
             </div>
-            <h1 className="text-[26px] leading-tight sm:text-[30px]">Что открывается в ближайшие дни</h1>
+            <h1 className="text-[26px] leading-tight sm:text-[30px]">{game?`Открытия ${game.shortName}`:'Что открывается в ближайшие дни'}</h1>
           </div>
           <Segmented
             value={window}

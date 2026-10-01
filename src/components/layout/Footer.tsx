@@ -3,6 +3,7 @@ import { Container } from './Container'
 import { Logo } from './Logo'
 import { GAMES } from '@/data/games'
 import { useAuth } from '@/hooks/useAuth'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 const COLUMNS = [
   {
@@ -28,6 +29,7 @@ const COLUMNS = [
 
 export function Footer() {
   const { privateCore, loading }=useAuth()
+  const {game:world,loading:worldPending,scoped}=useWorldNavigation()
   const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
     ...column,links:[
       {label:'Найти свой сервер',to:'/catalog'},
@@ -53,12 +55,12 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-3.5 text-[13px] font-medium tracking-[0.08em] text-ink-500 uppercase">Игры</h4>
+            <h4 className="mb-3.5 text-[13px] font-medium tracking-[0.08em] text-ink-500 uppercase">{world?'Ваш мир':'Миры'}</h4>
             <ul className="space-y-2.5">
-              {GAMES.slice(0, 6).map((game) => (
+              {(worldPending?[]:world?[world]:GAMES.slice(0, 3)).map((game) => (
                 <li key={game.id}>
                   <Link
-                    to={`/catalog?game=${game.id}`}
+                    to={`/${game.slug}`}
                     className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50"
                   >
                     {game.shortName}
@@ -76,7 +78,7 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
+                    <Link to={['/catalog','/rating','/openings','/favorites'].includes(link.to)?scoped(link.to):link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
                       {link.label}
                     </Link>
                   </li>

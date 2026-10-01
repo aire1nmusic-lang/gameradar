@@ -7,6 +7,7 @@ import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
+import { WorldNavigationProvider } from '@/hooks/useWorldNavigation'
 
 export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
@@ -33,6 +34,7 @@ export function Layout() {
 
   return (
     <PortalProvider>
+    <WorldNavigationProvider>
     <div className="relative flex min-h-screen flex-col">
       <BackgroundField />
       <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
@@ -46,6 +48,7 @@ export function Layout() {
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
+    </WorldNavigationProvider>
     </PortalProvider>
   )
 }

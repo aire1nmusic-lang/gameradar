@@ -7,11 +7,13 @@ import { ServerList } from '@/components/server/ServerRow'
 import { EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/Button'
 import { useSeo } from '@/lib/seo'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 export default function Favorites() {
+  const {game,scoped}=useWorldNavigation()
   useSeo({ title: 'Избранное', noindex: true })
   const { favorites, clear } = useFavorites()
-  const { data: all = [] } = useServers({ limit: 500 })
+  const { data: all = [] } = useServers({ gameId:game?.id,limit: 500 })
   const servers = favorites.map((slug) => all.find((server) => server.slug === slug)).filter(Boolean) as typeof all
   const totalOnline = servers.reduce((sum, server) => sum + server.online.current, 0)
 
@@ -24,14 +26,14 @@ export default function Favorites() {
               <Heart size={13} />
               Избранное
             </div>
-            <h1 className="text-[26px] leading-tight sm:text-[30px]">Ваши серверы</h1>
+            <h1 className="text-[26px] leading-tight sm:text-[30px]">Ваши серверы{game?` ${game.shortName}`:''}</h1>
             {servers.length > 0 && (
               <p className="num mt-2 text-[13.5px] text-ink-300">
                 {servers.length} {plural(servers.length, ['сервер', 'сервера', 'серверов'])} · {formatNumber(totalOnline)} игроков онлайн суммарно
               </p>
             )}
           </div>
-          {servers.length > 0 && (
+          {servers.length > 0 && !game && (
             <Button variant="ghost" size="sm" onClick={clear}>
               Очистить список
             </Button>
@@ -45,9 +47,9 @@ export default function Favorites() {
               title="Пока ничего не сохранено"
               description="Нажимайте на сердце у сервера — здесь соберётся ваш личный список с актуальным онлайном."
               action="Открыть каталог"
-              actionTo="/catalog"
+              actionTo={scoped('/catalog')}
               secondary={
-                <Button variant="outline" to="/openings">
+                <Button variant="outline" to={scoped('/openings')}>
                   Смотреть открытия
                 </Button>
               }

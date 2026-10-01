@@ -3,6 +3,8 @@
  * NOT business payload and are injected only by their dedicated connectors.
  */
 const notices = Object.freeze({
+  'coins.integrity_failed':'Сверка Coins обнаружила расхождение; нужна проверка',
+  'coins.integrity_recovered':'Сверка Coins восстановлена',
   'copyright.submitted':'Получена претензия',
   'copyright.review_required':'Полная претензия ожидает ручной проверки до ограничения',
   'copyright.restricted':'Материал временно ограничен; нужна ручная проверка',
@@ -28,6 +30,17 @@ const notices = Object.freeze({
 function exact(value,keys) {
   if(!value||typeof value!=='object'||Array.isArray(value)
     ||Object.keys(value).some(key=>!keys.includes(key)))throw new Error('egress_payload_rejected')
+}
+
+/** Future AI incident DTO. No identities, ledger rows or free-text notes. */
+export function coinIncidentContext(value) {
+  exact(value,['eventRef','status','total','counts'])
+  const categories=['balance','support','orphan_support','refund','orphan_refund','payment','orphan_purchase','grant_audit']
+  exact(value.counts,categories)
+  if(!/^[A-Za-z0-9_-]{16,64}$/.test(value.eventRef??'')||!['OK','REVIEW'].includes(value.status)
+    ||![value.total,...Object.values(value.counts)].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=100000000))
+    throw new Error('egress_payload_rejected')
+  return {eventRef:value.eventRef,status:value.status,total:value.total,counts:{...value.counts}}
 }
 
 /** Only opaque internally generated event ID; no stored message/free text. */

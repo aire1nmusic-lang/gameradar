@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input, Textarea } from '@/components/ui/controls'
 import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
 import { CoinGrant } from '@/components/admin/CoinGrant'
+import { CoinsJournal } from '@/components/admin/CoinsJournal'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -82,9 +83,10 @@ export default function Admin() {
         <h2 className="text-lg">Последние системные события</h2>{(Array.isArray(summary.events)?summary.events as Row[]:[]).map(row=><article key={value(row,'id')} className="surface rounded-xl p-4 text-sm">{value(row,'action')} · {value(row,'target')} · {date(row,'created_at')}</article>)}
       </section>}
       {active.id==='payments'&&<PaymentReconciliation />}
+      {active.id==='coins'&&<CoinsJournal />}
       {active.id==='vote-rules'&&<VoteRulesEditor key={JSON.stringify(summary)} current={summary} busy={busy}
         onSave={input=>act(()=>apiSend('/admin/vote-rules',input))}/>}
-      {!['overview','system','vote-rules'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
+      {!['overview','system','vote-rules','coins'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
         {!rows.length&&<p className="text-ink-400">В этом разделе пока нет записей.</p>}
         {rows.map((row,index)=><article key={value(row,'id')==='—'?`${active.id}-${index}`:value(row,'id')} className="surface space-y-2 rounded-xl p-4 text-sm">
           {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {row.banned_at?'Заблокирован':'Активен'} · {date(row,'created_at')}</p>

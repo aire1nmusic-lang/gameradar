@@ -6,6 +6,7 @@ import { paymentReceipt, parseTestResult, testCheckoutForm, testPaymentConfig } 
 import { createPublicSnapshot } from './public-snapshot.mjs'
 import { enqueueTelegram } from './copyright.mjs'
 import { operationalSnapshot } from './operations.mjs'
+import { coinIntegrity } from './coin-monitor.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
@@ -876,6 +877,22 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       return {id:supportId,ledgerId,replay:false}
     })
     return c.json(result,result.replay?200:201)
+  })
+  app.get('/api/v1/admin/coins/integrity',async c=>{
+    await permission(c,'coins.read')
+    return c.json(await coinIntegrity(db))
+  })
+  app.get('/api/v1/admin/coins/journal',async c=>{
+    await permission(c,'coins.read')
+    const kind=c.req.query('kind')||'',userId=c.req.query('userId')||'',relatedId=c.req.query('relatedId')||''
+    const page=Number(c.req.query('page')||1)
+    if(!Number.isInteger(page)||page<1||page>100000||userId.length>128||relatedId.length>128
+      ||(kind&&!['PURCHASE','SUPPORT','AVATAR','LINK_SLOT','REFUND','ADJUSTMENT'].includes(kind)))fail(400,'invalid_filter','Некорректный фильтр')
+    const args=[kind,userId,relatedId],where=`($1='' OR kind=$1) AND ($2='' OR user_id=$2) AND ($3='' OR related_id=$3)`
+    const result=(await db.query(`SELECT (SELECT count(*)::int FROM gs_coin_ledger WHERE ${where}) total,
+      COALESCE((SELECT jsonb_agg(x) FROM (SELECT id,user_id,kind,delta,related_id,details,created_at FROM gs_coin_ledger
+        WHERE ${where} ORDER BY created_at DESC,id DESC LIMIT 50 OFFSET $4) x),'[]'::jsonb) items`,[...args,(page-1)*50])).rows[0]
+    return c.json({...result,page,pageSize:50})
   })
   app.get('/api/v1/admin/coins/ledger',async c=>{
     await permission(c,'coins.read')

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Container } from './Container'
 import { Logo } from './Logo'
 import { GAMES } from '@/data/games'
@@ -28,6 +28,8 @@ const COLUMNS = [
 ]
 
 export function Footer() {
+  const {pathname}=useLocation()
+  const compactPrivate=pathname==='/account'||pathname.startsWith('/admin')
   const { privateCore, loading }=useAuth()
   const {game:world,loading:worldPending,scoped}=useWorldNavigation()
   const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
@@ -40,8 +42,8 @@ export function Footer() {
   }:column):COLUMNS
   return (
     <footer className="mt-10 border-t border-white/6 bg-ink-1000/60 pb-24 lg:pb-0">
-      <Container className="py-12">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <Container className={compactPrivate?'py-5 lg:py-12':'py-8 lg:py-12'}>
+        <div className={`${compactPrivate?'hidden lg:grid':'grid'} gap-6 lg:gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]`}>
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-ink-400">
@@ -88,8 +90,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-2xl">
+        <div className={`${compactPrivate?'lg:mt-12':'mt-8 lg:mt-12'} flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between`}>
+          <p className={compactPrivate?'hidden lg:block max-w-2xl':'max-w-2xl'}>
             Карточки серверов собраны из открытых источников — у каждой указаны источник и дата сверки. Онлайн
             со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
             подтвердить сервер и управлять карточкой.

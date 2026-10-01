@@ -95,12 +95,12 @@ export default function ServerProfile() {
         <Container className="relative -mt-12">
           <div className="flex items-end gap-4">
             <Skeleton className="h-[88px] w-[88px] rounded-xl" />
-            <div className="space-y-3 pb-2">
-              <Skeleton className="h-7 w-52 rounded" />
-              <Skeleton className="h-4 w-72 rounded" />
+            <div className="min-w-0 flex-1 space-y-3 pb-2">
+              <Skeleton className="h-7 w-full max-w-52 rounded" />
+              <Skeleton className="h-4 w-full max-w-72 rounded" />
             </div>
           </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
             <Skeleton className="h-72 rounded-xl" />
             <Skeleton className="h-72 rounded-xl" />
           </div>
@@ -347,7 +347,7 @@ function Profile({ server: source }: { server: GameServer }) {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="min-w-0 space-y-6">
             <OnlineSection server={server} />
             <VotePanel server={server} />
@@ -359,7 +359,7 @@ function Profile({ server: source }: { server: GameServer }) {
             <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />
           </div>
 
-          <aside className="space-y-4">
+          <aside className="min-w-0 space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <TrustPanel online={server.online} />
               <LinksCard server={server} restricted={restrictions?.restrictedLinks??[]} />
@@ -678,9 +678,9 @@ function HistorySection({ server }: { server: GameServer }) {
               />
               {index < events.length - 1 && <span className="w-px flex-1 bg-white/8" />}
             </div>
-            <div className="flex flex-1 items-baseline justify-between gap-4 pb-5">
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-between gap-1 pb-5 sm:flex-row sm:items-baseline sm:gap-4">
               <span className="text-[13.5px] text-ink-100">{event.label}</span>
-              <span className="shrink-0 text-right font-mono text-[12px] text-ink-400">
+              <span className="text-left font-mono text-[12px] text-ink-400 sm:shrink-0 sm:text-right">
                 {formatDate(event.date)}
                 {formatRelativeDays(event.date) !== formatDate(event.date) && (
                   <span className="ml-2 text-ink-600">{formatRelativeDays(event.date)}</span>

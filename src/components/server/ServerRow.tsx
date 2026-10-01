@@ -72,7 +72,7 @@ export function ServerRow({
       {rank !== undefined && (
         <span
           className={cn(
-            'num w-6 shrink-0 text-center font-display text-[14px] font-semibold tabular-nums',
+            'gs-row-rank num w-6 shrink-0 text-center font-display text-[14px] font-semibold tabular-nums',
             'text-ink-500',
           )}
         >
@@ -82,7 +82,7 @@ export function ServerRow({
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" />
 
-      <div className="min-w-0 flex-1">
+      <div className="gs-row-identity min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[15px] font-semibold text-ink-50">{server.name}</span>
         </div>
@@ -90,7 +90,8 @@ export function ServerRow({
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
-        <div className="mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
+        <div className="mt-0.5 text-[11px] leading-4 text-ink-400 sm:hidden">{mode} · {opening?formatDate(opening):'Открытие не указано'}</div>
+        <div className="gs-row-desktop-facts mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
         {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
       </div>
 
@@ -101,7 +102,7 @@ export function ServerRow({
         </span>
       )}
 
-      <div className="w-full shrink-0 border-t border-white/5 pt-2 text-left sm:w-[150px] sm:border-0 sm:pt-0 sm:text-right" title={tooltip}>
+      <div className="gs-row-online w-full shrink-0 border-t border-white/5 pt-2 text-left sm:w-[150px] sm:border-0 sm:pt-0 sm:text-right" title={tooltip}>
         {launching ? (
           <>
             <div className="num text-[13px] font-semibold text-promo-200">{formatCountdown(server.launch!.at)}</div>
@@ -115,10 +116,11 @@ export function ServerRow({
                 status === OnlineStatus.Offline ? 'text-ink-500' : known ? 'text-ink-50' : 'text-ink-500',
               )}
             >
-              {measured ? formatPlayers(server.online) : 'Онлайн не указан'}
+              <span className="hidden sm:inline">{measured ? formatPlayers(server.online) : 'Онлайн не указан'}</span>
+              <span className="sm:hidden text-[13px]">{measured&&status===OnlineStatus.Verified?formatPlayers(server.online):'Онлайн не указан'}{measured&&status===OnlineStatus.Verified&&<small className="mt-1 block text-[10px] font-normal text-ink-400">{sourceTime}</small>}</span>
               <span className="ml-2 shrink-0 font-sans text-[11px] font-normal text-ink-400 sm:hidden">Подробнее →</span>
             </div>
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10.5px] sm:justify-end">
+            <div className="gs-row-source mt-1 flex min-w-0 items-center gap-1.5 text-[10.5px] sm:justify-end">
               <LiveDot status={status} stale={stale} className="shrink-0" />
               <span className={cn('truncate', stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
                 {stale ? 'устарело' : sourceTime}
@@ -153,7 +155,7 @@ function RowFavorite({ slug }: { slug: string }) {
         toggle(slug)
       }}
       className={cn(
-        'relative z-[2] hidden h-8 w-8 shrink-0 place-items-center rounded-md transition-colors sm:grid',
+        'gs-row-favorite relative z-[2] grid h-8 w-8 shrink-0 place-items-center rounded-md transition-colors',
         active ? 'text-danger-400' : 'text-ink-600 hover:bg-white/6 hover:text-ink-200',
       )}
     >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -69,6 +69,28 @@ export function WorldHall() {
   const [hover, setHover] = useState<string | null>(null)
   const { flightId, enter, preload } = usePortalFlight()
   const tilt = useTilt()
+  const mobileRow=useRef<HTMLDivElement>(null),mobileIndex=useRef(1)
+  const mobileWorlds=['minecraft','lineage2','gtarp'].map(id=>byId[id]).filter((game):game is Game=>!!game)
+  const [selectedWorld,setSelectedWorld]=useState('lineage2')
+  useLayoutEffect(()=>{
+    const row=mobileRow.current
+    if(!row||mobileWorlds.length!==3)return
+    const center=()=>{
+      if(!row.clientWidth)return
+      const card=row.children[mobileIndex.current] as HTMLElement|undefined
+      if(card)row.scrollLeft=card.offsetLeft-row.offsetLeft-(row.clientWidth-card.clientWidth)/2
+    }
+    center()
+    const observer=new ResizeObserver(center);observer.observe(row)
+    return()=>observer.disconnect()
+  },[mobileWorlds.length])
+  const scrollWorlds=()=>{
+    const row=mobileRow.current;if(!row?.clientWidth)return
+    const center=row.scrollLeft+row.clientWidth/2
+    const cards=[...row.children] as HTMLElement[]
+    const nearest=cards.reduce((best,card,index)=>Math.abs(card.offsetLeft-row.offsetLeft+card.clientWidth/2-center)<Math.abs(cards[best].offsetLeft-row.offsetLeft+cards[best].clientWidth/2-center)?index:best,0)
+    mobileIndex.current=nearest;setSelectedWorld(mobileWorlds[nearest]?.id??'lineage2')
+  }
 
   const go = (event: React.MouseEvent<HTMLElement>, game: Game) => {
     // new tab, middle click and friends keep the ordinary link behaviour
@@ -122,20 +144,22 @@ export function WorldHall() {
       </div>
 
       {/* ── phones and tablets ───────────────────────────────────────── */}
-      <div className="relative flex min-h-[100svh] flex-col justify-center lg:hidden">
+      <div className="relative flex min-h-[100svh] flex-col justify-start lg:hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
           <img src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/30 via-ink-950/35 to-ink-950" />
         </div>
-        <div className="pt-24 pb-10">
+        <div className="gs-hall-phone-content pt-24 pb-6">
           <HallIntro/>
-          <div className="gs-snap-row flex snap-x snap-mandatory gap-4 overflow-x-auto px-[19vw] pt-10 pb-6 sm:px-[30vw]" style={{ perspective: '1200px' }}>
-            {worlds.map((game, index) => (
-              <div key={game.id} className="w-[62vw] max-w-[300px] shrink-0 snap-center sm:w-[40vw]">
+          <div ref={mobileRow} onScroll={scrollWorlds} className="gs-snap-row gs-mobile-worlds flex snap-x snap-mandatory gap-4 overflow-x-auto pt-6 pb-6" style={{ perspective: '1200px' }}>
+            {mobileWorlds.map((game, index) => (
+              <div key={game.id} className="gs-mobile-world-card shrink-0 snap-center">
                 <WorldCard game={game} side={0} index={index} active={false} dimmed={false} hidden={flightId === game.id} onEnter={(event) => go(event, game)} onHover={(on) => on && preload(game.id)} compact />
               </div>
             ))}
           </div>
+          <div className="flex justify-center gap-1" aria-label="Выбор мира">{mobileWorlds.map((game,index)=><button key={game.id} type="button" aria-label={`Показать ${game.shortName}`} aria-pressed={selectedWorld===game.id} className="grid h-11 w-11 place-items-center" onClick={()=>{const row=mobileRow.current,card=row?.children[index] as HTMLElement|undefined;if(row&&card){mobileIndex.current=index;row.scrollTo({left:card.offsetLeft-row.offsetLeft-(row.clientWidth-card.clientWidth)/2,behavior:reducedMotion()?'auto':'smooth'})}}}><span className={cn('h-1.5 rounded-full transition-all',selectedWorld===game.id?'w-6 bg-white':'w-1.5 bg-white/35')}/></button>)}</div>
+          <p className="text-center text-xs text-white/70">Листай, чтобы выбрать другой мир</p>
         </div>
       </div>
 
@@ -144,7 +168,7 @@ export function WorldHall() {
 }
 
 function HallIntro() {
-  return <div className="relative z-10 mx-auto max-w-3xl px-6 text-center [text-shadow:0_2px_22px_rgba(0,0,0,0.65)]">
+  return <div className="gs-hall-intro relative z-10 mx-auto max-w-3xl px-6 text-center [text-shadow:0_2px_22px_rgba(0,0,0,0.65)]">
     <h1 className="text-[clamp(28px,3.4vw,52px)] font-semibold leading-[1.12] tracking-tight text-white">Найди мир,<br className="sm:hidden"/> в котором останешься</h1>
     <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base">Игровые серверы, новые открытия и сообщества — выбирай, где играть.</p>
   </div>
@@ -187,7 +211,7 @@ function WorldCard({
       onFocus={() => onHover(true)}
       onBlur={() => onHover(false)}
       aria-label={`Открыть мир ${game.name}`}
-      className={cn('group block outline-none', compact ? 'w-full' : 'w-[clamp(210px,17.5vw,340px)]')}
+      className={cn('group block outline-none', compact ? 'gs-mobile-card w-full' : 'w-[clamp(210px,17.5vw,340px)]')}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <div className="gs-float" style={{ animationDelay: `${index * -2.1}s`, transformStyle: 'preserve-3d' }}>

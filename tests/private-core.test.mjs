@@ -23,6 +23,17 @@ import { cleanupTransientData } from '../private-api/retention.mjs'
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
   oauth:{GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test',YANDEX_CLIENT_ID:'test',YANDEX_CLIENT_SECRET:'test',VK_CLIENT_ID:'test'}}
+test('emergency mode pauses user writes without locking out reads or trusting anonymous admin access',async t=>{
+  const h=await harness(t,{config:{emergencyMode:true}})
+  const paused=await h.request('/claims',{serverId:'test',evidence:'A write must not happen'})
+  assert.equal(paused.status,503)
+  assert.equal(paused.r.headers.get('Retry-After'),'300')
+  assert.equal((await h.request('/auth/me')).body.registrationOpen,false)
+  assert.equal((await h.request('/admin/claims')).status,401)
+  assert.equal((await h.request('/admin/claims/test/resolve',{status:'VERIFIED',reason:'Forged admin approval'})).status,401)
+  assert.equal((await h.request('/auth/login',{email:'missing@example.com',password})).status,401)
+  assert.equal((await h.db.query('SELECT count(*)::integer n FROM gs_claims')).rows[0].n,0)
+})
 async function harness(t,options={}) {
   const pg=new PGlite()
   const db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}

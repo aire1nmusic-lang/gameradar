@@ -7,6 +7,7 @@ import { createPublicSnapshot } from './public-snapshot.mjs'
 import { enqueueTelegram } from './copyright.mjs'
 import { operationalSnapshot } from './operations.mjs'
 import { coinIntegrity } from './coin-monitor.mjs'
+import { emergencyBlocks, emergencyLimit } from './security.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
@@ -129,6 +130,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return body
   }
   async function limit(c,bucket,subject,max=10) {
+    max=emergencyLimit(max,config.emergencyMode===true)
     // Direct client IP is set by our HTTP server / trusted Yandex event adapter, never a public header.
     const ip=c.env?.clientIp??'unknown'
     for (const [value,bound] of [[`ip:${ip}`,max*4],[`subject:${subject}`,max]]) {
@@ -154,6 +156,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   }
   app.use('*',async(c,next)=>{
     c.header('Cache-Control','no-store'); c.header('X-Content-Type-Options','nosniff'); c.header('Referrer-Policy','no-referrer')
+    if(emergencyBlocks(c.req.method,new URL(c.req.url).pathname,config.emergencyMode===true)) {
+      c.header('Retry-After','300')
+      fail(503,'emergency_read_only','Временно включена усиленная защита. Просмотр доступен; изменения попробуйте позже.')
+    }
     if (!['GET','HEAD','OPTIONS'].includes(c.req.method)) {
       const paymentCallback=c.req.method==='POST' && new URL(c.req.url).pathname==='/api/v1/payments/robokassa/result'
       if (!paymentCallback && c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
@@ -175,7 +181,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/health',async c=>{ await db.query('SELECT 1'); return c.json({status:'ok',storage:'private-postgresql'}) })
   // Production keeps sign-ups closed until REGISTRATION_OPEN=true; existing accounts still sign in.
-  const registrationOpen=()=>config.registrationOpen!==false
+  const registrationOpen=()=>config.registrationOpen!==false&&config.emergencyMode!==true
   const closedRegistration=()=>fail(403,'registration_closed','Регистрация пока закрыта. Вход доступен только существующим аккаунтам.')
   app.get('/api/v1/auth/me',async c=>{
     const user=await queryUser(c)

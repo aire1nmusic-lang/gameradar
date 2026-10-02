@@ -87,7 +87,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
 
 
       <div className="flex items-start gap-3">
-        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} size="md" />
+        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} kind={server.chronicleId} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate text-[16px] leading-6 font-semibold text-ink-50 transition-colors group-hover:text-white">

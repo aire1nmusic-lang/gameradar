@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
-import { ShelfCard, ShelfRail } from '@/components/world/Shelves'
 import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
@@ -62,12 +61,6 @@ export default function Openings() {
             ]}
           />
         </div>
-
-        {filtered.length > 0 && (
-          <ShelfRail eyebrow={<><CalendarClock size={12} /> Ближайшие</>} title="Открываются первыми">
-            {filtered.slice(0, 8).map((server) => <ShelfCard key={server.slug} server={server} metric="opening" />)}
-          </ShelfRail>
-        )}
 
         <div className="mt-10 space-y-8">
           {groups.length === 0 ? (

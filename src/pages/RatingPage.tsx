@@ -4,7 +4,6 @@ import { Trophy } from 'lucide-react'
 import { GAMES } from '@/data/games'
 import { useRating, useServers } from '@/hooks/data'
 import { ServerList } from '@/components/server/ServerRow'
-import { ShelfCard } from '@/components/world/Shelves'
 import { themeForGame } from '@/data/themes'
 import { Container } from '@/components/layout/Container'
 import { ChipToggle, Segmented } from '@/components/ui/controls'
@@ -61,9 +60,8 @@ function PeopleRatingPage() {
       {GAMES.filter(game => ['lineage2', 'minecraft', 'gtarp'].includes(game.id)).map(game =>
         <ChipToggle key={game.id} active={gameId === game.id} onClick={() => setGameId(game.id)}>{game.shortName}</ChipToggle>)}
     </div>}
-    {error ? <Notice tone="warn" className="mt-6">{error}</Notice> : (loading || (view==='online' && serversLoading && servers.length===0)) ? <p className="mt-6 text-ink-400">Загрузка…</p> : view==='online' ? (byOnline.length ? <div className="mt-6">
-      <div className="grid gap-3 sm:grid-cols-3">{byOnline.slice(0, 3).map((server, index) => <ShelfCard key={server.slug} server={server} rank={index + 1} metric="online" fluid />)}</div>
-      {byOnline.length > 3 && <ServerList className="mt-4" servers={byOnline.slice(3, 40)} from={4} ranked />}
+    {error && view !== 'online' ? <Notice tone="warn" className="mt-6">{error}</Notice> : ((view==='online' ? (serversLoading && servers.length===0) : loading)) ? <p className="mt-6 text-ink-400">Загрузка…</p> : view==='online' ? (byOnline.length ? <div className="mt-6">
+      <ServerList servers={byOnline.slice(0, 50)} ranked showGame={!world} />
     </div> : <Notice tone="info" className="mt-6">Пока ни у одного сервера этой игры нет измеренного онлайна.</Notice>) : (view==='people'?ranked:supported).length ?
       <ol className="mt-6 space-y-2">{(view==='people'?ranked:supported).map((row, index) => <li key={row.server_id}>
         <Link to={`/server/${row.slug}`} className="surface flex items-center gap-4 rounded-lg p-4 hover:border-white/20">

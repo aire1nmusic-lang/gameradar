@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { ArrowRight, CalendarClock, Flame, Plus, Trophy } from 'lucide-react'
+import { ArrowRight, CalendarClock, Flame, LayoutGrid, Plus, Rows3, Trophy } from 'lucide-react'
 import { resolveWorld } from '@/data/themes'
 import { chronicleOfVersion } from '@/data/games'
 import { useServers } from '@/hooks/data'
@@ -10,8 +10,8 @@ import { Container } from '@/components/layout/Container'
 import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
 import { GameHero } from '@/components/game/GameHero'
 import { ChronicleNav } from '@/components/game/ChronicleNav'
-import { ServerList, ServerRowSkeleton } from '@/components/server/ServerRow'
-import { ShelfCard, ShelfMore, ShelfNote, ShelfRail } from '@/components/world/Shelves'
+import { ServerList, ServerRow, ServerRowSkeleton, ServerTiles } from '@/components/server/ServerRow'
+import { RankPanel, ShelfNote } from '@/components/world/Shelves'
 import { ChronicleTiles } from '@/components/world/ChronicleTiles'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
@@ -54,6 +54,13 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     }
   })
   const [limit, setLimit] = useState(12)
+  const [panel, setPanel] = useState<'online' | 'soon' | 'choice'>('online')
+  const [view, setView] = useState<'list' | 'grid'>(() => {
+    try { return localStorage.getItem('gs.view') === 'grid' ? 'grid' : 'list' } catch { return 'list' }
+  })
+  useEffect(() => {
+    try { localStorage.setItem('gs.view', view) } catch { /* optional */ }
+  }, [view])
   useEffect(() => {
     try { sessionStorage.setItem(WORLD_SORT_KEY, sort) } catch { /* session storage is optional */ }
   }, [sort])
@@ -114,7 +121,6 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
 
   if (!game) return null
   const playersOnline = servers.reduce((sum, server) => sum + (server.online.freshness === 'fresh' ? server.online.current : 0), 0)
-  const withOnline = topOnline.length
   const allKnown = sort === 'online' ? listed.slice(0, topOnline.length) : []
   const allUnknown = sort === 'online' ? listed.slice(topOnline.length) : listed
   const listedKnown = allKnown.slice(0, limit)
@@ -147,66 +153,91 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           <div className="mt-8"><EmptyState title="Не удалось загрузить серверы" description="Проверьте соединение и попробуйте ещё раз." action="Повторить" onAction={reload} /></div>
         ) : (
           <>
-            <ShelfRail
-              eyebrow={<><Flame size={12} /> Сейчас играют</>}
-              title={chronicle ? `Топ по онлайну · ${chronicle.label}` : `Топ по онлайну · ${game.shortName}`}
-              action={<ThemedButton to={`/catalog?game=${game.id}&sort=online`} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>Все</ThemedButton>}
-            >
-              {topOnline.length > 0
-                ? [...topOnline.slice(0, 8).map((server, index) => <ShelfCard key={server.slug} server={server} rank={index + 1} metric="online" />), ...(rest.length - Math.min(8, withOnline) > 0 ? [<ShelfMore key="more" count={rest.length - Math.min(8, withOnline)} label={withOnline < rest.length ? 'серверов без измеренного онлайна' : 'серверов в каталоге'} href="#all" />] : [])]
-                : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда проект подключит проверку онлайна или мы получим его из открытых источников." />}
-            </ShelfRail>
-
-            {openings.length > 0 && (
-              <ShelfRail
-                eyebrow={<><CalendarClock size={12} /> Скоро открытие</>}
-                title="Стартуют в ближайшие дни"
-                action={<ThemedButton to={`/openings?game=${game.id}`} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>Все открытия</ThemedButton>}
+            <div className="mt-5 lg:hidden">
+              <Segmented
+                value={panel}
+                onChange={setPanel}
+                className="w-full [&>*]:flex-1"
+                options={[
+                  { value: 'online', label: 'Играют' },
+                  { value: 'soon', label: 'Скоро' },
+                  { value: 'choice', label: 'Выбор' },
+                ]}
+              />
+            </div>
+            <div className="mt-3 grid gap-3 lg:mt-6 lg:grid-cols-3">
+              <RankPanel
+                icon={<Flame size={16} />}
+                className={panel === 'online' ? undefined : 'max-lg:hidden'}
+                title="Сейчас играют"
+                hint={chronicle ? `Топ по онлайну · ${chronicle.label}` : 'Топ по онлайну'}
+                to={`/rating?game=${game.id}`}
               >
-                {openings.slice(0, 8).map((server) => <ShelfCard key={server.slug} server={server} metric="opening" />)}
-              </ShelfRail>
-            )}
+                {topOnline.length > 0
+                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} compact />)
+                  : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда проект подключит проверку онлайна или мы получим его из открытых источников." />}
+              </RankPanel>
 
-            <ShelfRail
-              eyebrow={<><Trophy size={12} /> Выбор игроков</>}
-              title="Народный рейтинг и поддержка"
-              hint="Порядок задают голоса подтверждённых игроков. Поддержка за Coins — отдельная сортировка и в рейтинг не входит."
-            >
-              {topChoice.length > 0
-                ? topChoice.slice(0, 8).map((server, index) => <ShelfCard key={server.slug} server={server} rank={index + 1} metric="support" />)
-                : <ShelfNote title="Голосование скоро откроется" text="Первые голоса игроков появятся вместе с открытием регистрации — здесь будут серверы, которых выбрали сами игроки." />}
-            </ShelfRail>
+              <RankPanel
+                icon={<CalendarClock size={16} />}
+                className={panel === 'soon' ? undefined : 'max-lg:hidden'}
+                title="Скоро открытие"
+                hint="Ближайшие старты"
+                to={`/openings?game=${game.id}`}
+              >
+                {openings.length > 0
+                  ? openings.slice(0, 5).map((server) => <ServerRow key={server.slug} server={server} showGame={false} compact />)
+                  : <ShelfNote title="Ближайших открытий нет" text="Как только проект объявит дату старта, он появится здесь с обратным отсчётом." />}
+              </RankPanel>
 
-            <section id="all" className="mt-12 scroll-mt-24">
+              <RankPanel className={panel === 'choice' ? undefined : 'max-lg:hidden'} icon={<Trophy size={16} />} title="Выбор игроков" hint="Народный рейтинг и поддержка" to="/rating">
+                {topChoice.length > 0
+                  ? topChoice.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" />)
+                  : <ShelfNote title="Голосование скоро откроется" text="Первые голоса игроков появятся вместе с открытием регистрации — здесь будут серверы, которых выбрали сами игроки." />}
+              </RankPanel>
+            </div>
+
+            <section id="all" className="mt-10 scroll-mt-24">
               <SectionHead
                 eyebrow={<><Flame size={12} /> Каталог</>}
                 title={chronicle ? `Все серверы ${chronicle.label}` : `Все серверы ${game.shortName}`}
                 action={{ label: 'Фильтры', to: `/catalog?game=${game.id}` }}
                 right={
-                  <Segmented
-                    value={sort}
-                    onChange={setSort}
-                    size="sm"
-                    className="[&_button]:whitespace-nowrap"
-                    options={[
-                      { value: 'online', label: 'Онлайн' },
-                      { value: 'new', label: 'Новые' },
-                      { value: 'name', label: 'А–Я' },
-                    ]}
-                  />
+                  <>
+                    <Segmented
+                      value={sort}
+                      onChange={setSort}
+                      size="sm"
+                      className="[&_button]:whitespace-nowrap"
+                      options={[
+                        { value: 'online', label: 'Онлайн' },
+                        { value: 'new', label: 'Новые' },
+                        { value: 'name', label: 'А–Я' },
+                      ]}
+                    />
+                    <Segmented
+                      value={view}
+                      onChange={setView}
+                      size="sm"
+                      options={[
+                        { value: 'list', label: <span aria-label="Списком" title="Списком"><Rows3 size={15} /></span> },
+                        { value: 'grid', label: <span aria-label="Плитками" title="Плитками"><LayoutGrid size={15} /></span> },
+                      ]}
+                    />
+                  </>
                 }
               />
               {listed.length > 0 ? (
                 <>
-                  {listedKnown.length > 0 && <ServerList servers={listedKnown} ranked showGame={false} />}
+                  {listedKnown.length > 0 && (view === 'grid' ? <ServerTiles servers={listedKnown} ranked showGame={false} /> : <ServerList servers={listedKnown} ranked showGame={false} />)}
                   {listedUnknown.length > 0 && (
                     <>
                       {listedKnown.length > 0 && (
                         <h3 className="mt-6 mb-2 text-[13px] tracking-wide uppercase" style={{ color: theme.colors.textMuted }}>
-                          Онлайн пока не измерен · {listedUnknown.length}
+                          Онлайн пока не измерен · {allUnknown.length}
                         </h3>
                       )}
-                      <ServerList servers={listedUnknown} showGame={false} />
+                      {view === 'grid' ? <ServerTiles servers={listedUnknown} showGame={false} /> : <ServerList servers={listedUnknown} showGame={false} />}
                     </>
                   )}
                   {hiddenCount > 0 && (

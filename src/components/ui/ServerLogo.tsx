@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react'
-import { Axe, Biohazard, Car, Crosshair, Gamepad2, Pickaxe, Swords, type LucideIcon } from 'lucide-react'
+import { Axe, BedDouble, Biohazard, Car, Cloud, Crosshair, Crown, Flame, Gamepad2, Gem, Lock, Navigation, Pickaxe, Puzzle, Shield, Siren, Skull, Swords, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GAMES_BY_ID } from '@/data/games'
 import { useAppearance } from '@/theme/appearance'
@@ -12,6 +12,23 @@ const GAME_GLYPH: Record<string, LucideIcon> = {
   rust: Axe,
   cs2: Crosshair,
   dayz: Biohazard,
+}
+/** A chronicle or a mode has its own sign, so a list reads at a glance: High Five is a shield, SkyBlock a cloud. */
+const KIND_GLYPH: Record<string, LucideIcon> = {
+  interlude: Swords,
+  'high-five': Shield,
+  essence: Gem,
+  classic: Crown,
+  gracia: Flame,
+  survival: Pickaxe,
+  anarchy: Skull,
+  skyblock: Cloud,
+  bedwars: BedDouble,
+  prison: Lock,
+  modded: Puzzle,
+  fivem: Car,
+  ragemp: Siren,
+  altv: Navigation,
 }
 const GLYPH_PX = { xs: 15, sm: 19, md: 22, lg: 28, xl: 38 } as const
 
@@ -40,6 +57,7 @@ export function ServerLogo({
   hue,
   src,
   gameId,
+  kind,
   size = 'md',
   className,
   style,
@@ -48,6 +66,8 @@ export function ServerLogo({
   hue: number
   /** picks the game sign for the "glyph" and "crest" default styles */
   gameId?: string
+  /** chronicle or mode id: gives the sign its own shape inside the game colours */
+  kind?: string
   /** real logo url; the monogram is drawn until it loads and if it fails */
   src?: string
   size?: keyof typeof SIZES
@@ -59,7 +79,7 @@ export function ServerLogo({
   const { appearance } = useAppearance()
   const showImage = !!src && !failed
   const game = gameId ? GAMES_BY_ID[gameId] : undefined
-  const Glyph = (gameId && GAME_GLYPH[gameId]) || Gamepad2
+  const Glyph = (kind && KIND_GLYPH[kind]) || (gameId && GAME_GLYPH[gameId]) || Gamepad2
 
   // An approved server logo always wins; the default style only fills the gap.
   if (!showImage && game && appearance.icons === 'glyph') {

@@ -272,6 +272,7 @@ function Profile({ server: source }: { server: GameServer }) {
             <ServerLogo
               name={server.name}
               gameId={server.gameId}
+              kind={server.chronicleId ?? chronicle?.id}
               hue={server.hue}
               src={server.logoUrl}
               size="xl"

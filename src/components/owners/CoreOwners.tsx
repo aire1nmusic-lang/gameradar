@@ -103,7 +103,7 @@ export function CoreOwners() {
         <h2 className="text-[24px] sm:text-[28px]">Что вы получаете бесплатно</h2>
         <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {[
-            'Карточка сервера с картинкой вашей хроники или режима',
+            'Карточка сервера со знаком вашей хроники или режима (Interlude, SkyBlock, FiveM…)',
             'Место в «Топ по онлайну» по измеренному числу игроков',
             'Отметка Verified Online при подключённой проверке',
             'История онлайна за 24 часа, 7 и 30 дней',
@@ -116,7 +116,7 @@ export function CoreOwners() {
             </li>
           ))}
         </ul>
-        <p className="mt-4 flex items-center gap-2 text-[13px] text-ink-400"><Users size={14} /> Платные форматы продвижения появятся позже: они всегда будут помечены как реклама и не повлияют на рейтинг.</p>
+        <p className="mt-4 flex items-center gap-2 text-[13px] text-ink-400"><Users size={14} /> Платным станет только своё: собственная аватарка сервера и форматы продвижения. Реклама всегда с пометкой и не влияет на рейтинг.</p>
       </Container>
 
       <Container className="mt-14">

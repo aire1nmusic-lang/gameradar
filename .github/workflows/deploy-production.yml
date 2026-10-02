@@ -1,0 +1,133 @@
+name: Deploy production site
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY to publish gamescout.online'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-site
+  cancel-in-progress: false
+
+env:
+  YC_BUCKET: gamescout-ru-site
+  YC_S3_ENDPOINT: https://storage.yandexcloud.net
+  PUBLIC_API_ORIGIN: https://gamescout.online/
+  PUBLIC_SITE_ORIGIN: https://gamescout.online
+
+jobs:
+  deploy:
+    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Private core tests
+        run: npm run test:private
+
+      - name: Build from live public catalog and verify SEO
+        run: npm run build:catalog -- "${PUBLIC_API_ORIGIN}"
+
+      - name: Bundle gate
+        run: npm run test:bundle
+
+      - name: Require Yandex Object Storage credentials
+        env:
+          YC_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          YC_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+        run: |
+          test -n "$YC_ACCESS_KEY_ID" || { echo "::error::Missing YC_ACCESS_KEY_ID"; exit 1; }
+          test -n "$YC_SECRET_ACCESS_KEY" || { echo "::error::Missing YC_SECRET_ACCESS_KEY"; exit 1; }
+
+      - name: Check AWS CLI
+        run: aws --version
+
+      - name: Backup current production HTML and service files
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          mkdir -p "$RUNNER_TEMP/site-rollback"
+          aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --only-show-errors
+          test -f "$RUNNER_TEMP/site-rollback/index.html"
+
+      - name: Save rollback artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-site-before-${{ github.sha }}
+          path: ${{ runner.temp }}/site-rollback
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload versioned assets first
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          aws s3 sync dist/assets/ "s3://$YC_BUCKET/assets/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "public,max-age=31536000,immutable"             --only-show-errors
+
+      - name: Upload HTML, robots, sitemap and other public files
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          aws s3 sync dist/ "s3://$YC_BUCKET/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
+        # Deliberately no --delete: old hashed assets stay available for rollback.
+
+      - name: Verify production
+        id: verify_live
+        continue-on-error: true
+        env:
+          SEO_BASE_URL: https://gamescout.online
+        run: |
+          npm run test:seo
+          node <<'NODE'
+          const origin='https://gamescout.online'
+          const html=await (await fetch(origin+'/',{signal:AbortSignal.timeout(15000)})).text()
+          const refs=[...new Set([...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))]
+          if(!refs.length) throw new Error('No built JS/CSS asset references found on live home page')
+          for(const path of refs){
+            const r=await fetch(origin+path,{method:'HEAD',signal:AbortSignal.timeout(15000)})
+            if(!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
+          }
+          console.log(`Live asset check passed: ${refs.length} files`)
+          NODE
+
+      - name: Roll back public HTML if verification failed
+        if: steps.verify_live.outcome == 'failure'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          echo "::warning::Live verification failed; restoring previous non-asset files"
+          aws s3 sync "$RUNNER_TEMP/site-rollback/" "s3://$YC_BUCKET/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
+
+      - name: Fail workflow after rollback
+        if: steps.verify_live.outcome == 'failure'
+        run: |
+          echo "::error::Production verification failed and rollback was attempted."
+          exit 1

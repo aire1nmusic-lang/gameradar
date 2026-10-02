@@ -96,7 +96,7 @@ export function ServerRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[15px] leading-5 font-semibold text-ink-50">{server.name}</span>
-          {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
+          {!compact && known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
             <span className="hidden shrink-0 sm:inline-flex"><TrendChip value={change24h} /></span>
           )}
         </div>
@@ -126,7 +126,7 @@ export function ServerRow({
             </div>
             <div className="mt-0.5 flex items-center justify-end gap-1 text-[10.5px] leading-4">
               <LiveDot status={status} stale={stale} className="shrink-0" />
-              <span className={cn('max-w-[92px] truncate sm:max-w-[130px]', stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
+              <span className={cn(compact ? 'max-w-[58px] truncate' : 'max-w-[92px] truncate sm:max-w-[130px]', stale ? 'text-warn-400/85' : status === OnlineStatus.Verified ? 'text-signal-300' : 'text-ink-500')}>
                 {stale ? 'устарело' : measured ? `${source}` : source}
               </span>
             </div>
@@ -151,7 +151,7 @@ export function ServerTile({ server, rank, showGame = false }: { server: GameSer
   return (
     <Link
       to={`/server/${server.slug}`}
-      className={cn('group flex min-w-0 flex-col gap-2 rounded-xl border bg-white/[0.035] p-3 transition-colors hover:bg-white/[0.07]', medal ? '' : 'border-white/[0.09] hover:border-white/20')}
+      className={cn('gs-row group flex min-w-0 flex-col gap-2 rounded-xl border bg-white/[0.035] p-3 transition-colors hover:bg-white/[0.07]', medal ? '' : 'border-white/[0.09] hover:border-white/20')}
       style={medal ? { borderColor: medal.ring } : undefined}
     >
       <div className="flex items-center gap-2.5">

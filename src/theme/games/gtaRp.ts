@@ -64,12 +64,12 @@ export const gtaRpTheme: GameTheme = {
     border: '1px solid rgba(55, 214, 255, 0.3)',
   },
   typography: {
-    display: "'Bahnschrift', 'Archivo Narrow', 'Inter Tight', 'Inter', sans-serif",
+    display: "'Oswald', 'Bahnschrift', 'Archivo Narrow', 'Inter Tight', sans-serif",
     body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     accentTransform: 'uppercase',
     accentSpacing: '0.18em',
     accentWeight: '600',
-    displayScale: 1.04,
+    displayScale: 1.1,
   },
   decor: {
     pattern: 'neon',

@@ -21,12 +21,12 @@ export function RankPanel({ icon, title, hint, to, toLabel = 'Все', className
 }) {
   const theme = useGameTheme()
   return (
-    <section className={cn('flex min-w-0 flex-col rounded-2xl border p-3 sm:p-4', className)} style={{ borderColor: theme.colors.border, background: theme.colors.surface }}>
+    <section className={cn('gs-panel flex min-w-0 flex-col p-3 sm:p-4', className)}>
       <header className="mb-2.5 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: theme.colors.primarySoft, color: theme.colors.primary }}>{icon}</span>
           <div className="min-w-0">
-            <h3 className="truncate text-[15px] leading-5 font-semibold" style={{ color: theme.colors.text }}>{title}</h3>
+            <h3 className="gs-panel-title truncate text-[15px] leading-5 font-semibold" style={{ color: theme.colors.text }}>{title}</h3>
             {hint && <p className="truncate text-[11.5px] leading-4" style={{ color: theme.colors.textMuted }}>{hint}</p>}
           </div>
         </div>

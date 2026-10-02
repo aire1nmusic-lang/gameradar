@@ -64,14 +64,13 @@ export const lineage2Theme: GameTheme = {
     border: '1px solid rgba(216, 178, 92, 0.32)',
   },
   typography: {
-    // One display face for the whole platform: the world's identity comes from
-    // its key art, stone surfaces and pale-gold accents, not from a serif.
-    display: "'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif",
+    // Engraved small caps: the world's own voice for headings and panel titles.
+    display: "'Cormorant SC', 'Inter Tight', 'Inter', Georgia, serif",
     body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     accentTransform: 'uppercase',
     accentSpacing: '0.16em',
     accentWeight: '500',
-    displayScale: 1,
+    displayScale: 1.12,
   },
   decor: {
     pattern: 'stone',

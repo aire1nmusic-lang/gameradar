@@ -1015,3 +1015,82 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   .gs-account-page select { font-size: 16px; }
   .gs-account-page textarea { font-size: 14px; }
 }
+
+/* ── World skins ─────────────────────────────────────────────────────────────
+   Panels and server rows take their look from the world they stand in
+   (data-pattern comes from the theme: stone = Lineage 2, voxel = Minecraft,
+   neon = GTA RP). No pictures needed: borders, bevels and glows are drawn here.
+   Replace or extend with artwork from public/media/skins/<world>/ when it exists. */
+.gs-panel {
+  position: relative;
+  background: var(--gt-surface, rgb(255 255 255 / .03));
+  border: 1px solid var(--gt-border, rgb(255 255 255 / .1));
+  border-radius: 16px;
+}
+.gs-panel-title { font-family: var(--gt-font-display, var(--font-display)); letter-spacing: 0; }
+
+/* Lineage 2 — engraved gold on black stone */
+[data-pattern='stone'] .gs-panel {
+  --gold: rgb(216 178 92 / .55);
+  background: linear-gradient(180deg, rgb(30 25 18 / .97), rgb(12 10 9 / .98));
+  border: 1px solid rgb(216 178 92 / .3);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 4px rgb(8 7 10 / .9), inset 0 0 0 5px rgb(216 178 92 / .13), 0 18px 40px -24px rgb(0 0 0 / .9);
+}
+[data-pattern='stone'] .gs-panel::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--gold), var(--gold)) top left / 16px 1px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) top left / 1px 16px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) top right / 16px 1px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) top right / 1px 16px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) bottom left / 16px 1px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) bottom left / 1px 16px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) bottom right / 16px 1px no-repeat,
+    linear-gradient(var(--gold), var(--gold)) bottom right / 1px 16px no-repeat;
+}
+[data-pattern='stone'] .gs-panel-title { font-weight: 700; font-size: 18px; letter-spacing: .04em; text-transform: uppercase; }
+[data-pattern='stone'] .gs-row {
+  background: linear-gradient(90deg, rgb(216 178 92 / .07), rgb(255 255 255 / .02) 60%);
+  border-color: rgb(216 178 92 / .17);
+  border-radius: 8px;
+}
+[data-pattern='stone'] .gs-row:hover { border-color: rgb(216 178 92 / .5); background: linear-gradient(90deg, rgb(216 178 92 / .13), rgb(255 255 255 / .03) 60%); }
+
+/* Minecraft — dark oak planks with a block bevel */
+[data-pattern='voxel'] .gs-panel {
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / .16) 0 2px, transparent 2px 30px),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / .02) 0 2px, transparent 2px 64px),
+    linear-gradient(180deg, #2d2218, #1d1610);
+  border: 3px solid #0d0906;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #6b4a2b, inset 0 4px 0 2px rgb(255 255 255 / .07), 0 6px 0 -1px rgb(0 0 0 / .55);
+}
+[data-pattern='voxel'] .gs-panel-title { font-weight: 600; font-size: 17px; letter-spacing: .02em; text-shadow: 0 2px 0 rgb(0 0 0 / .55); }
+[data-pattern='voxel'] .gs-row {
+  background: rgb(0 0 0 / .3);
+  border: 2px solid #0b0805;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07), inset 0 -3px 0 rgb(0 0 0 / .35);
+}
+[data-pattern='voxel'] .gs-row:hover { background: rgb(106 190 48 / .13); border-color: #0b0805; box-shadow: inset 0 0 0 1px rgb(106 190 48 / .5), inset 0 -3px 0 rgb(0 0 0 / .35); }
+
+/* GTA RP — neon over night asphalt */
+[data-pattern='neon'] .gs-panel {
+  background: linear-gradient(160deg, rgb(38 16 56 / .95), rgb(14 10 28 / .97));
+  border: 1px solid rgb(255 92 138 / .45);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgb(55 214 255 / .1), 0 0 26px -8px rgb(255 92 138 / .5), 0 0 56px -26px rgb(55 214 255 / .45);
+}
+[data-pattern='neon'] .gs-panel-title { font-weight: 700; font-size: 19px; letter-spacing: .05em; text-transform: uppercase; font-style: italic; }
+[data-pattern='neon'] .gs-row {
+  background: rgb(255 255 255 / .04);
+  border-color: rgb(255 92 138 / .2);
+  border-left: 3px solid rgb(255 92 138 / .75);
+  border-radius: 10px;
+}
+[data-pattern='neon'] .gs-row:hover { background: rgb(255 92 138 / .1); border-color: rgb(255 92 138 / .5); border-left-color: #ff5c8a; box-shadow: 0 0 18px -8px rgb(255 92 138 / .8); }

@@ -64,12 +64,12 @@ export const minecraftTheme: GameTheme = {
     border: '1px solid rgba(106, 190, 48, 0.3)',
   },
   typography: {
-    display: "'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif",
+    display: "'Pixelify Sans', 'Inter Tight', 'Inter', ui-sans-serif, sans-serif",
     body: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     accentTransform: 'uppercase',
     accentSpacing: '0.16em',
     accentWeight: '600',
-    displayScale: 1,
+    displayScale: 1.04,
   },
   decor: {
     pattern: 'voxel',

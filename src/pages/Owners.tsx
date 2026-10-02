@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/Badge'
 import { StatusBadge } from '@/components/trust/status'
 import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
+import { CoreOwners } from '@/components/owners/CoreOwners'
 
 const BENEFITS = [
   {
@@ -107,22 +108,6 @@ export default function Owners() {
   const {privateCore,loading}=useAuth()
   if(loading)return <Container className="py-16">Проверяем доступность кабинета…</Container>
   return privateCore?<CoreOwners/>:<LegacyOwners/>
-}
-
-function CoreOwners() {
-  useSeo({title:'Владельцам серверов',path:'/owners',description:'Подтверждение прав Claim и проверяемые правки карточки сервера в GameScout.'})
-  return <Container className="max-w-4xl space-y-10 py-12 sm:py-16">
-    <div className="space-y-4">
-      <h1 className="text-3xl font-semibold sm:text-4xl">Управление своим сервером</h1>
-      <p className="max-w-2xl text-ink-300">Найдите карточку L2, Minecraft или GTA RP и подайте Claim из неё либо из аккаунта. Администратор проверит основание и выдаст права только на этот сервер.</p>
-      <div className="flex flex-wrap gap-3"><Button to="/catalog">Найти сервер</Button><Button to="/account" variant="outline">Мои серверы и Claim</Button></div>
-    </div>
-    <div className="grid gap-4 sm:grid-cols-2">
-      <section className="surface space-y-2 rounded-xl p-5"><h2 className="text-lg font-medium">После подтверждения</h2><p className="text-sm text-ink-300">Предлагайте нейтральное описание и характеристики: версию, рейты, режимы, дату открытия, регион и страну. Публичная карточка меняется после проверки администратором.</p></section>
-      <section className="surface space-y-2 rounded-xl p-5"><h2 className="text-lg font-medium">Рейтинг и Поддержка</h2><p className="text-sm text-ink-300">Народный рейтинг основан на голосах подтверждённых аккаунтов. Поддержка за GS Coins показывается и сортируется отдельно; покупка Coins не повышает Народный рейтинг.</p></section>
-    </div>
-    <p className="text-sm text-ink-400">Новый сервер пока нельзя отправить через единый аккаунт. Онлайн и статистика отображаются только при наличии фактических данных с указанным источником.</p>
-  </Container>
 }
 
 function LegacyOwners() {

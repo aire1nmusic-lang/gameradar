@@ -35,7 +35,7 @@ export function ChronicleNav({ game, chronicles }: { game: Game; chronicles: Chr
   }
 
   return (
-    <div className="rail -mx-5 px-5 sm:mx-0 sm:flex-wrap sm:px-0">
+    <div className="rail -mx-5 scroll-pl-5 px-5 sm:mx-0 sm:scroll-pl-0 sm:flex-wrap sm:px-0">
       <NavLink
         to={`/${game.slug}`}
         end

@@ -110,7 +110,7 @@ export function FilterPanel({
           </div>
         </Group>
 
-        <Group title="Режим">
+        {(facets?.modes?.length ?? 0) > 0 && <Group title="Режим">
           <div className="flex max-h-[184px] flex-wrap gap-2 overflow-y-auto pr-1">
             {(facets?.modes ?? []).map((mode) => (
               <ChipToggle
@@ -122,9 +122,9 @@ export function FilterPanel({
               </ChipToggle>
             ))}
           </div>
-        </Group>
+        </Group>}
 
-        <Group title="Регион">
+        {(facets?.regions?.length ?? 0) > 0 && <Group title="Регион">
           <div className="flex flex-wrap gap-2">
             {(facets?.regions ?? []).map((region) => (
               <ChipToggle
@@ -136,9 +136,9 @@ export function FilterPanel({
               </ChipToggle>
             ))}
           </div>
-        </Group>
+        </Group>}
 
-        <Group title="Язык">
+        {(facets?.languages?.length ?? 0) > 0 && <Group title="Язык">
           <div className="flex flex-wrap gap-2">
             {(facets?.languages ?? []).map((language) => (
               <ChipToggle
@@ -150,7 +150,7 @@ export function FilterPanel({
               </ChipToggle>
             ))}
           </div>
-        </Group>
+        </Group>}
 
         <Group title="Онлайн">
           <RangeSlider

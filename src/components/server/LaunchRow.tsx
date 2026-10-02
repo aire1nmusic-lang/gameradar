@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { BellRing, CalendarClock, ChevronRight } from 'lucide-react'
+import { CalendarClock, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCountdown, formatLaunch } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
@@ -7,7 +7,7 @@ import type { GameServer } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 
 /**
- * An announced opening as one row: what opens, when, and a reminder.
+ * An announced opening as one row: what opens and when. (No reminder button until reminders really exist.)
  * No online fields — there is nothing to measure before the start.
  */
 export function LaunchRow({ server, className, showGame = true }: { server: GameServer; className?: string; showGame?: boolean }) {
@@ -41,13 +41,6 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
         </div>
         <div className="mt-0.5 hidden text-[11px] text-ink-500 sm:block">{formatLaunch(launch.at)}</div>
       </div>
-      <span
-        className="hidden shrink-0 items-center gap-1.5 rounded-md border border-white/8 px-2 py-1 text-[11.5px] text-ink-400 transition-colors group-hover:border-white/18 group-hover:text-ink-100 md:inline-flex"
-        title="Напомнить об открытии"
-      >
-        <BellRing size={12} />
-        Напомнить
-      </span>
       <ChevronRight size={16} className="hidden shrink-0 text-ink-600 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-ink-300 sm:block" />
     </Link>
   )

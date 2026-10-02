@@ -29,7 +29,8 @@ import {
 } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
-import { useAsync, useServer, useSimilarServers } from '@/hooks/data'
+import { useAsync, useServer, useServers, useSimilarServers } from '@/hooks/data'
+import { RankStrip } from '@/components/profile/RankStrip'
 import { repo } from '@/repositories'
 import { track, visitSource } from '@/services/events'
 import type { ChartRange, GameServer, HistoryEvent } from '@/models'
@@ -141,7 +142,7 @@ function ServerNotFound() {
 }
 
 function Profile({ server: source }: { server: GameServer }) {
-  const { privateCore } = useAuth()
+  const { privateCore, registrationOpen, user: authUser } = useAuth()
   const [restrictions,setRestrictions]=useState<{restrictedLinks:string[];restrictedMaterials:string[]}|null>(null)
   useEffect(()=>{
     if(!privateCore)return
@@ -174,6 +175,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const [claimOpen, setClaimOpen] = useState(false)
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
+  const { data: peers = [] } = useServers({ gameId: server.gameId, limit: 200 }, true)
 
   useSeo({
     title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
@@ -223,7 +225,7 @@ function Profile({ server: source }: { server: GameServer }) {
   return (
     <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
       {/* hero: art of the server's world */}
-      <div className={cn('relative overflow-hidden', showcase ? 'h-[360px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
+      <div className={cn('relative overflow-hidden', showcase ? 'h-[300px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
         <WorldArtSurface
           art={cover}
           fallback={
@@ -264,7 +266,7 @@ function Profile({ server: source }: { server: GameServer }) {
         </Container>
       </div>
 
-      <Container className={cn('relative', showcase ? '-mt-40 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
+      <Container className={cn('relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <ServerLogo
@@ -341,16 +343,20 @@ function Profile({ server: source }: { server: GameServer }) {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-1.5">
-          {server.tags.map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </div>
+        <RankStrip server={server} peers={peers} />
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
-          <div className="min-w-0 space-y-6">
+        {server.tags.length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-1.5 sm:mt-6">
+            {server.tags.map((tag) => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 grid gap-4 sm:mt-8 sm:gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
+          <div className="min-w-0 space-y-4 sm:space-y-6">
             <OnlineSection server={server} />
-            <VotePanel server={server} />
+            <div className="lg:hidden"><VotePanel server={server} /></div>
             {privateCore && <SupportPanel server={server} />}
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
             {server.demo && <ServerMedia server={server} />}
@@ -361,9 +367,10 @@ function Profile({ server: source }: { server: GameServer }) {
 
           <aside className="space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
+              <div className="hidden lg:block"><VotePanel server={server} anchor={false} /></div>
               <TrustPanel online={server.online} />
               <LinksCard server={server} restricted={restrictions?.restrictedLinks??[]} />
-              <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />
+              {(authUser || registrationOpen) && <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />}
             </div>
           </aside>
         </div>
@@ -451,7 +458,7 @@ function OnlineSection({ server }: { server: GameServer }) {
 
   if (status === 'PENDING' && server.launch) {
     return (
-      <section className="surface rounded-xl p-5 sm:p-6">
+      <section className="surface rounded-xl p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[18px]">Открытие сервера</h2>
           <Badge tone="promo" icon={<CalendarClock size={12} />}>
@@ -492,7 +499,7 @@ function OnlineSection({ server }: { server: GameServer }) {
   }
 
   return (
-    <section className="surface rounded-xl p-5 sm:p-6">
+    <section className="surface rounded-xl p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-[18px]">Онлайн</h2>
@@ -520,6 +527,7 @@ function OnlineSection({ server }: { server: GameServer }) {
           value={range}
           onChange={setRange}
           size="sm"
+          className="w-full sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none"
           options={[
             { value: '24h', label: '24 часа' },
             { value: '7d', label: '7 дней' },
@@ -552,18 +560,18 @@ function OnlineSection({ server }: { server: GameServer }) {
         </Notice>
       )}
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {historyLoading?<p className="text-[13px] text-ink-400">Загрузка истории онлайна…</p>
           :historyError?<Notice tone="warn" title="История сейчас недоступна">
             <button type="button" className="underline" onClick={reloadHistory}>Повторить загрузку</button>
           </Notice>:<ObservedHistoryChart samples={samples??[]} range={range}/>}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Сейчас" value={currentKnown ? formatPlayers(server.online) : '—'} accent={status === 'VERIFIED' && currentKnown} />
-        <StatTile label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
-        <StatTile label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
-        <StatTile label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
+        <StatTile className="hidden sm:block" label="Сейчас" value={currentKnown ? formatPlayers(server.online) : '—'} accent={status === 'VERIFIED' && currentKnown} />
+        <StatTile short="Пик 24 ч" label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
+        <StatTile short="Сред. 7 дн." label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
+        <StatTile short="Пик 30 дн." label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
       </div>
     </section>
   )
@@ -571,24 +579,37 @@ function OnlineSection({ server }: { server: GameServer }) {
 
 function StatTile({
   label,
+  short,
   value,
   accent,
   extra,
+  className,
 }: {
   label: string
+  short?: string
   value: string
   accent?: boolean
   extra?: React.ReactNode
+  className?: string
 }) {
   return (
-    <div className="rounded-lg border border-white/6 bg-white/[0.025] px-3.5 py-3">
-      <div className="text-[11px] tracking-[0.06em] text-ink-500 uppercase">{label}</div>
+    <div className={cn('rounded-lg border border-white/6 bg-white/[0.025] px-3 py-2.5 sm:px-3.5 sm:py-3', className)}>
+      <div className="text-[10.5px] tracking-[0.04em] text-ink-500 uppercase sm:text-[11px] sm:tracking-[0.06em]">
+        {short ? (<><span className="sm:hidden">{short}</span><span className="hidden sm:inline">{label}</span></>) : label}
+      </div>
       <div className="mt-1.5 flex items-center gap-2">
         <span className={cn('num text-[17px] font-semibold', accent ? 'text-signal-300' : 'text-ink-50')}>{value}</span>
         {extra}
       </div>
     </div>
   )
+}
+
+/** Imported cards carry a generated paragraph that repeats the facts table; the player keeps the part that is not in it. */
+function cleanDescription(text: string): string {
+  const auto = /^(Режимы|Версии?|Адрес|Рейты|Хроника|Открытие|Онлайн —|Точный онлайн|Сервер (Minecraft|Lineage 2|GTA RP|Rust|CS2|DayZ))/
+  const kept = text.split(/(?<=[.!?])s+/).filter((sentence) => !auto.test(sentence.trim()))
+  return kept.join(' ').trim() || text
 }
 
 function InfoSection({ server }: { server: GameServer }) {
@@ -612,11 +633,11 @@ function InfoSection({ server }: { server: GameServer }) {
     ])
 
   return (
-    <section className="surface rounded-xl p-5 sm:p-6">
+    <section className="surface rounded-xl p-4 sm:p-6">
       <h2 className="text-[18px]">Информация</h2>
       <p id="description" className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.descriptionRestricted
         ? 'Описание временно скрыто на время проверки обращения правообладателя.'
-        : server.description || 'Описание проекта не добавлено.'}</p>
+        : cleanDescription(server.description) || 'Описание проекта не добавлено.'}</p>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {server.highlights.map((item) => (
@@ -658,7 +679,7 @@ function HistorySection({ server }: { server: GameServer }) {
   const events = projectEvents(server)
   if (!events.length) return null
   return (
-    <section className="surface rounded-xl p-5 sm:p-6">
+    <section className="surface rounded-xl p-4 sm:p-6">
       <h2 className="text-[18px]">История проекта</h2>
       <div className="mt-5 space-y-0">
         {events.map((event, index) => (
@@ -678,9 +699,9 @@ function HistorySection({ server }: { server: GameServer }) {
               />
               {index < events.length - 1 && <span className="w-px flex-1 bg-white/8" />}
             </div>
-            <div className="flex flex-1 items-baseline justify-between gap-4 pb-5">
+            <div className="flex flex-1 flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 pb-4 sm:pb-5">
               <span className="text-[13.5px] text-ink-100">{event.label}</span>
-              <span className="shrink-0 text-right font-mono text-[12px] text-ink-400">
+              <span className="font-mono text-[12px] text-ink-400 sm:text-right">
                 {formatDate(event.date)}
                 {formatRelativeDays(event.date) !== formatDate(event.date) && (
                   <span className="ml-2 text-ink-600">{formatRelativeDays(event.date)}</span>
@@ -702,7 +723,7 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
   const total = Math.max(1, server.reviews.length)
 
   return (
-    <section className="surface rounded-xl p-5 sm:p-6">
+    <section className="surface rounded-xl p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[18px]">Отзывы игроков</h2>
         {/* Reviews are not stored yet; the button returns with the real flow. */}
@@ -714,7 +735,7 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
       </div>
 
       {server.reviews.length === 0 ? (
-        <div className="mt-5 rounded-lg border border-dashed border-white/10 px-5 py-10 text-center">
+        <div className="mt-4 rounded-lg border border-dashed border-white/10 px-4 py-5 text-center sm:mt-5 sm:px-5 sm:py-10">
           <p className="text-[14px] text-ink-200">Отзывов пока нет</p>
           <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-ink-400">
             {server.launch
@@ -807,7 +828,7 @@ function LinksCard({ server,restricted=[] }: { server: GameServer;restricted?:st
     { key: 'telegram', icon: <Send size={15} />, url: server.demo ? undefined : server.links.telegram, event: false },
   ].filter(link => !!link.url)
   return (
-    <div className="surface rounded-xl p-5">
+    <div className="surface rounded-xl p-4 sm:p-5">
       <h3 className="mb-3.5 text-[14px] font-medium text-ink-50">Ссылки проекта</h3>
       {restricted.length>0&&<p className="mb-3 text-[12px] text-ink-400">Одна или несколько ссылок временно ограничены на время проверки претензии. Карточка сервера доступна.</p>}
       {links.length ? (
@@ -852,7 +873,7 @@ function LinkRow({ icon, url, onClick }: { icon: React.ReactNode; url: string; o
 
 function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) {
   return (
-    <div className="rounded-xl border border-white/7 bg-ink-900/60 p-5">
+    <div className="rounded-xl border border-white/7 bg-ink-900/60 p-4 sm:p-5">
       <h3 className="text-[14px] font-medium text-ink-50">{owned ? 'Владелец подтверждён' : 'Это ваш сервер?'}</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-ink-400">
         {owned

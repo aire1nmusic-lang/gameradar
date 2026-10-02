@@ -55,9 +55,10 @@ export function ServerRow({
               : server.online.source || 'источник не указан'
 
   const identity = [showGame ? game.shortName : null, (chronicle?.label ?? server.version) || 'Версия не указана'].filter(Boolean)
-  const mode = server.rates ? `Рейты ${server.rates}` : server.modes.length ? `Режим: ${server.modes.join(', ')}` : 'Режим не указан'
+  const mode = server.rates ? `Рейты ${server.rates}` : server.modes.length ? server.modes.join(', ') : ''
   const opening = server.openedAt ?? server.launch?.at
-  const facts = [mode, opening ? `Открытие: ${formatDate(opening)}` : 'Дата открытия не указана', server.region || server.country || 'Регион не указан']
+  // only what is known: a row full of "не указан" is noise
+  const facts = [mode, opening ? `Открытие: ${formatDate(opening)}` : '', server.region || server.country || ''].filter(Boolean)
   const measured = known && freshness === 'fresh'
   const sourceTime = measured ? `${sourceLabel} · ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}` : sourceLabel
 
@@ -91,7 +92,7 @@ export function ServerRow({
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
         <div className="mt-0.5 text-[11px] leading-4 text-ink-500 sm:truncate" title={facts.join(' · ')}>{facts.join(' · ')}</div>
-        {server.support&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
+        {server.support&&server.support.coins>0&&<div className="mt-1 text-[11px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
       </div>
 
       {known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
@@ -115,7 +116,7 @@ export function ServerRow({
                 status === OnlineStatus.Offline ? 'text-ink-500' : known ? 'text-ink-50' : 'text-ink-500',
               )}
             >
-              {measured ? formatPlayers(server.online) : 'Онлайн не указан'}
+              {measured ? formatPlayers(server.online) : <span className="font-sans text-[13px] font-normal">нет данных</span>}
               <span className="ml-2 shrink-0 font-sans text-[11px] font-normal text-ink-400 sm:hidden">Подробнее →</span>
             </div>
             <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10.5px] sm:justify-end">

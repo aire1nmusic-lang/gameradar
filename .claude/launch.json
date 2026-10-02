@@ -4,14 +4,39 @@
     {
       "name": "gameradar",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 5173
     },
     {
       "name": "gamescout-api",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:api"],
+      "runtimeArgs": [
+        "run",
+        "dev:api"
+      ],
       "port": 8787
+    },
+    {
+      "name": "hall-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
+      "port": 5174
+    },
+    {
+      "name": "mobile-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "output/mobile-preview/run.mjs"
+      ],
+      "port": 5175
     }
   ]
 }

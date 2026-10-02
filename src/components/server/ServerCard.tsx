@@ -146,7 +146,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         <span>{server.rates ? `Рейты: ${server.rates}` : server.modes.length ? `Режим: ${server.modes.join(', ')}` : 'Режим не указан'}</span>
         <span>{server.region || 'Регион не указан'}</span>
       </div>
-      {server.support&&<div className="mt-1 text-[12px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
+      {server.support&&server.support.coins>0&&<div className="mt-1 text-[12px] text-ink-400">Поддержка: {server.support.coins} · {server.support.participants} {plural(server.support.participants, ['участник', 'участника', 'участников'])}</div>}
 
       {capacity !== null && <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-white/6">
         <div

@@ -52,16 +52,16 @@ export default function Admin() {
   if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Админский кабинет</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
   const rows=Array.isArray(data)?data as Row[]:[]
   const summary=(!Array.isArray(data)&&data&&typeof data==='object')?data as Row:{}
-  return <main className="mx-auto max-w-6xl space-y-5 px-4 py-8">
-    <h1 className="text-2xl font-semibold">Админский кабинет</h1>
-    <p className="text-sm text-ink-400">Доступ к разделам определяется разрешениями аккаунта. Изменения Claim и ролей записываются в журнал.</p>
-    <nav aria-label="Разделы админки" className="flex flex-wrap gap-2">{allowed.map(tab=><Button key={tab.id} variant={active.id===tab.id?'primary':'outline'} onClick={()=>setSelected(tab.id)}>{tab.label}</Button>)}</nav>
+  return <main className="mx-auto max-w-6xl space-y-4 px-4 py-5 sm:space-y-5 sm:py-8">
+    <h1 className="text-xl font-semibold sm:text-2xl">Админский кабинет</h1>
+    <p className="hidden text-sm text-ink-400 sm:block">Доступ к разделам определяется разрешениями аккаунта. Изменения Claim и ролей записываются в журнал.</p>
+    <nav aria-label="Разделы админки" className="sticky top-14 z-20 -mx-4 flex gap-2 overflow-x-auto bg-ink-950/90 px-4 py-2 backdrop-blur [scrollbar-width:none] sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:bg-transparent sm:p-0 sm:backdrop-blur-none">{allowed.map(tab=><Button key={tab.id} className="shrink-0 whitespace-nowrap" variant={active.id===tab.id?'primary':'outline'} onClick={()=>setSelected(tab.id)}>{tab.label}</Button>)}</nav>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
     {loading?<p>Загрузка…</p>:<>
-      {active.id==='overview'&&<section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[
+      {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{[
         ['Пользователи','users'],['Серверы','servers'],['Claims на проверке','pending_claims'],
         ['Голоса','votes'],['События Поддержки','support_events'],['Ожидают тестовой оплаты','pending_test_payments'],
-      ].map(([label,key])=><div key={key} className="surface rounded-xl p-4"><p className="text-sm text-ink-400">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
+      ].map(([label,key])=><div key={key} className="surface rounded-xl p-3 sm:p-4"><p className="text-xs text-ink-400 sm:text-sm">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
       {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
         <h2 className="text-lg">Оповещения</h2>{(Array.isArray(summary.alerts)?summary.alerts as Row[]:[]).map(row=><article key={value(row,'key')} className="surface rounded-xl p-4 text-sm"><strong>{value(row,'key')}</strong> · {row.active?'Требует внимания':'В норме'} · {row.active?date(row,'opened_at'):date(row,'resolved_at')}</article>)}
         <h2 className="text-lg">Очереди проверки и уведомлений</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.queues??{},null,2)}</pre>
@@ -85,7 +85,7 @@ export default function Admin() {
                 onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/moderation`,{action:row.banned_at?'UNBAN':'BAN',reason:reasons[value(row,'id')]}))}>{row.banned_at?'Разблокировать':'Заблокировать'}</Button>
             </div>}
           </>}
-          {active.id==='servers'&&<><strong>{value(row,'name')}</strong><p>{value(row,'game_id')} · {value(row,'server_id')} · владелец: {value(row,'owner_id')} · Claims: {value(row,'pending_claims')}</p>
+          {active.id==='servers'&&<><div className="flex items-start justify-between gap-3"><strong className="min-w-0 break-words">{value(row,'name')}</strong><span className="shrink-0 rounded-md bg-white/6 px-2 py-0.5 text-xs text-ink-300">{value(row,'game_id')}</span></div><p className="break-all text-xs text-ink-400">{value(row,'server_id')} · владелец: {row.owner_id?value(row,'owner_id'):'нет'} · Claims: {value(row,'pending_claims')}</p>
             {row.monitoring_enabled&&<p>Адрес владельца: {value(row,'monitoring_method')} · {row.monitoring_held?'проверка приостановлена':'проверка разрешена'}</p>}
             {permissions.includes('servers.review')&&(row.monitoring_enabled||row.monitoring_held)&&row.owner_id!==auth.user?.id&&<div className="space-y-2">
               <Textarea aria-label={`Причина изменения мониторинга ${value(row,'name')}`} minLength={10} maxLength={1000}

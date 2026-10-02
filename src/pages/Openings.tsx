@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
+import { useGames } from '@/hooks/data'
+import { ShelfCard, ShelfRail } from '@/components/world/Shelves'
 import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
@@ -9,6 +11,7 @@ import { EmptyState } from '@/components/ui/feedback'
 import { useSeo } from '@/lib/seo'
 
 type Window = 'today' | 'week' | 'all'
+type Scope = 'all' | string
 
 const DAY = 86_400_000
 
@@ -16,17 +19,20 @@ const DAY = 86_400_000
 export default function Openings() {
   useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
+  const [gameId, setGameId] = useState<Scope>('all')
+  const { data: games = [] } = useGames()
   const { data: all = [] } = useOpenings(undefined, 40)
 
   const filtered = useMemo(() => {
     const now = Date.now()
     return all.filter((server) => {
+      if (gameId !== 'all' && server.gameId !== gameId) return false
       const diff = new Date(server.launch?.at ?? 0).getTime() - now
       if (window === 'today') return diff < DAY
       if (window === 'week') return diff < 7 * DAY
       return true
     })
-  }, [all, window])
+  }, [all, window, gameId])
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>()
@@ -60,7 +66,24 @@ export default function Openings() {
           />
         </div>
 
-        <div className="mt-6 space-y-8">
+        {games.length > 1 && (
+          <div className="mt-5">
+            <Segmented
+              value={gameId}
+              onChange={setGameId}
+              size="sm"
+              options={[{ value: 'all', label: 'Все игры' }, ...games.map((game) => ({ value: game.id, label: game.shortName }))]}
+            />
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <ShelfRail eyebrow={<><CalendarClock size={12} /> Ближайшие</>} title="Открываются первыми">
+            {filtered.slice(0, 8).map((server) => <ShelfCard key={server.slug} server={server} metric="opening" />)}
+          </ShelfRail>
+        )}
+
+        <div className="mt-10 space-y-8">
           {groups.length === 0 ? (
             <EmptyState title="В этом диапазоне открытий нет" description="Попробуйте расширить период или посмотрите недавно добавленные серверы." action="Смотреть каталог" actionTo="/catalog?sort=new" />
           ) : (

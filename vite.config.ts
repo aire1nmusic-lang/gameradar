@@ -2,7 +2,7 @@ import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import {fileURLToPath,URL} from 'node:url'
-const apiTarget=process.env.GS_PRIVATE_CORE==='true'?'http://127.0.0.1:8789':'http://127.0.0.1:8787'
+const apiTarget=process.env.GS_API_TARGET??(process.env.GS_PRIVATE_CORE==='true'?'http://127.0.0.1:8789':'http://127.0.0.1:8787')
 export default defineConfig({
  plugins:[react(),tailwindcss()],
  resolve:{alias:{'@':fileURLToPath(new URL('./src',import.meta.url))}},

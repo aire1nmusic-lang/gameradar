@@ -40,7 +40,7 @@ export function Layout() {
         <Outlet />
       </main>
       {/* The hall is only a doorway: no footer or tab bar, everything else lives inside the worlds. */}
-      {!hall && <Footer />}
+      {!hall && !location.pathname.startsWith('/admin') && <Footer />}
       {!hall && <MobileNav />}
       <DesignPanel />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Trophy } from 'lucide-react'
+import { serverArt } from '@/data/themeMedia'
+import { WorldArtSurface } from '@/components/media/WorldArt'
 import type { GameServer } from '@/models'
 import { ApiRequestError, apiRequest } from '@/repositories/http/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -7,7 +10,7 @@ import { TurnstileWidget } from './TurnstileWidget'
 
 type Eligibility={eligible:boolean;used:number;limit:number;windowHours:number;captchaSiteKey:string|null}
 type RankingRow={server_id:string;votes:number}
-export function PrivateVotePanel({server}:{server:GameServer}) {
+export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?:boolean}) {
   const auth=useAuth(), [eligibility,setEligibility]=useState<Eligibility>(),[votes,setVotes]=useState<number>(),[position,setPosition]=useState<number>(),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const [captchaRequired,setCaptchaRequired]=useState(false),[captcha,setCaptcha]=useState(''),[widgetKey,setWidgetKey]=useState(0)
   const key=useRef(crypto.randomUUID())
@@ -51,17 +54,21 @@ export function PrivateVotePanel({server}:{server:GameServer}) {
     }
     finally {setBusy(false)}
   }
-  return <section className="surface space-y-3 rounded-xl p-5 sm:p-6" id="vote">
-    <h2 className="text-[18px]">Народный рейтинг</h2>
-    <p>Голосов в текущем окне: {votes===undefined?'Загрузка…':votes}</p>
-    <p className="text-[13px] text-ink-400">Позиция: {votes===undefined?'загрузка…':position===undefined?'пока не определена':`№ ${position}`}</p>
-    <p className="text-[13px] text-ink-400">Рейтинг основан только на голосах подтверждённых аккаунтов. Регистрация и фильтры не доказывают уникальность человека. Поддержка за Coins на порядок здесь не влияет.</p>
+  return <section id={anchor?"vote":undefined} className="relative isolate space-y-3 overflow-hidden rounded-2xl border p-4 sm:p-6"
+    style={{ borderColor: 'color-mix(in oklab, var(--gt-primary) 42%, transparent)', background: 'linear-gradient(140deg, color-mix(in oklab, var(--gt-primary) 16%, var(--color-ink-900)), var(--color-ink-900) 72%)' }}>
+    <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-[0.22] [mask-image:linear-gradient(to_left,#000,transparent_75%)]"><WorldArtSurface art={serverArt(server)} scrim="none" sizes="500px" width={800} /></span>
+    <div className="flex items-center gap-2 text-[11.5px] font-medium tracking-[0.12em] uppercase" style={{ color: 'var(--gt-primary)' }}><Trophy size={14} /> Народный рейтинг</div>
+    <div className="flex items-end gap-6">
+      <div><div className="num font-display text-[44px] leading-none font-semibold text-ink-50">{votes===undefined?'…':votes}</div><div className="mt-1.5 text-[12.5px] text-ink-300">голосов игроков</div></div>
+      <div><div className="num font-display text-[44px] leading-none font-semibold" style={{ color: position!==undefined&&position<=3 ? 'var(--gt-primary)' : undefined }}>{votes===undefined?'…':position===undefined?'—':'№'+position}</div><div className="mt-1.5 text-[12.5px] text-ink-300">{position===undefined?'позиция появится после первых голосов':'место в рейтинге'}</div></div>
+    </div>
+    <details className="text-[13px] text-ink-400"><summary className="cursor-pointer select-none">Как считается рейтинг</summary><p className="mt-1.5">Рейтинг основан только на голосах подтверждённых аккаунтов. Регистрация и фильтры не доказывают уникальность человека. Поддержка за Coins на порядок здесь не влияет.</p></details>
     {eligibility&&<p className="text-[13px]">Правило: {eligibility.limit} {eligibility.limit===1?'голос':'голосов'} за {eligibility.windowHours} ч. · Использовано: {eligibility.used}</p>}
     {captchaRequired && (eligibility?.captchaSiteKey ?
       <TurnstileWidget key={widgetKey} siteKey={eligibility.captchaSiteKey} onToken={setCaptcha} /> :
       <p role="alert" className="text-[13px] text-ink-400">Дополнительная проверка в этом окружении не подключена.</p>)}
-    {!auth.user?<Button to="/account">Войти для голосования</Button>:!auth.user.emailVerified?<Button to="/account">Подтвердить email</Button>:
-      <Button disabled={busy||eligibility?.eligible===false||(captchaRequired&&!captcha)} onClick={()=>void vote()}>{eligibility?.eligible===false?'Голос уже учтён':busy?'Отправляем…':captchaRequired?'Отправить после проверки':'Голосовать'}</Button>}
+    {!auth.user?(auth.registrationOpen?<Button variant="primary" full to="/account">Войти для голосования</Button>:<p className="text-[13px] text-ink-400">Голосование откроется вместе с регистрацией.</p>):!auth.user.emailVerified?<Button variant="primary" full to="/account">Подтвердить email</Button>:
+      <Button variant="primary" full disabled={busy||eligibility?.eligible===false||(captchaRequired&&!captcha)} onClick={()=>void vote()}>{eligibility?.eligible===false?'Голос уже учтён':busy?'Отправляем…':captchaRequired?'Отправить после проверки':'Голосовать'}</Button>}
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
   </section>
 }

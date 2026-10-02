@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
 import { GAMES } from '@/data/games'
-import { useRating } from '@/hooks/data'
+import { useRating, useServers } from '@/hooks/data'
+import { ServerList } from '@/components/server/ServerRow'
+import { ShelfCard } from '@/components/world/Shelves'
 import { themeForGame } from '@/data/themes'
 import { Container } from '@/components/layout/Container'
 import { ChipToggle, Segmented } from '@/components/ui/controls'
@@ -23,10 +25,12 @@ export default function RatingPage() {
 }
 
 function PeopleRatingPage() {
-  useSeo({ title: 'Рейтинги серверов', path: '/rating', noindex: true,
+  useSeo({ title: 'Рейтинг серверов', path: '/rating',
     description: 'Народный рейтинг по голосам и отдельная Поддержка за GS Coins.' })
   const [gameId, setGameId] = useState('all')
-  const [view,setView] = useState<'people'|'support'>('people')
+  const [view,setView] = useState<'online'|'people'|'support'>('online')
+  const { data: servers = [], loading: serversLoading } = useServers({ gameId: gameId === 'all' ? undefined : gameId, limit: 200 }, true)
+  const byOnline = servers.filter(server => server.online.playersKnown === true && server.online.freshness === 'fresh' && server.online.status !== 'UNKNOWN').sort((a, b) => b.online.current - a.online.current)
   const [rows, setRows] = useState<PeopleRow[]>([])
   const [supportRows,setSupportRows] = useState<SupportRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,8 +47,10 @@ function PeopleRatingPage() {
   const supported = supportRows.filter(row => row.coins > 0 && (gameId === 'all' || row.game_id === gameId))
   return <Container className="pb-16 pt-6 lg:pt-8">
     <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинги серверов</h1>
-    <div className="mt-4"><Segmented value={view} onChange={setView} options={[{value:'people',label:'Народный рейтинг'},{value:'support',label:'Поддержка'}]} /></div>
-    <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">{view==='people'
+    <div className="mt-4"><Segmented value={view} onChange={setView} options={[{value:'online',label:'По онлайну'},{value:'people',label:'Народный'},{value:'support',label:'Поддержка'}]} /></div>
+    <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">{view==='online'
+      ? 'Серверы, у которых онлайн измерен или получен из названного источника. У каждого числа указан источник и время; у серверов без измеренного онлайна места нет.'
+      : view==='people'
       ? 'Порядок определяется только голосами подтверждённых аккаунтов в текущем окне. Поддержка за Coins не влияет на позиции. Регистрация не доказывает уникальность человека.'
       : 'Отдельный порядок по сумме GS Coins, переданных серверам. Поддержка не покупает место в Народном рейтинге; карточки визуально равны.'}</p>
     <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
@@ -52,7 +58,10 @@ function PeopleRatingPage() {
       {GAMES.filter(game => ['lineage2', 'minecraft', 'gtarp'].includes(game.id)).map(game =>
         <ChipToggle key={game.id} active={gameId === game.id} onClick={() => setGameId(game.id)}>{game.shortName}</ChipToggle>)}
     </div>
-    {error ? <Notice tone="warn" className="mt-6">{error}</Notice> : loading ? <p className="mt-6 text-ink-400">Загрузка…</p> : (view==='people'?ranked:supported).length ?
+    {error ? <Notice tone="warn" className="mt-6">{error}</Notice> : (loading || (view==='online' && serversLoading && servers.length===0)) ? <p className="mt-6 text-ink-400">Загрузка…</p> : view==='online' ? (byOnline.length ? <div className="mt-6">
+      <div className="grid gap-3 sm:grid-cols-3">{byOnline.slice(0, 3).map((server, index) => <ShelfCard key={server.slug} server={server} rank={index + 1} metric="online" fluid />)}</div>
+      {byOnline.length > 3 && <ServerList className="mt-4" servers={byOnline.slice(3, 40)} from={4} ranked />}
+    </div> : <Notice tone="info" className="mt-6">Пока ни у одного сервера этой игры нет измеренного онлайна.</Notice>) : (view==='people'?ranked:supported).length ?
       <ol className="mt-6 space-y-2">{(view==='people'?ranked:supported).map((row, index) => <li key={row.server_id}>
         <Link to={`/server/${row.slug}`} className="surface flex items-center gap-4 rounded-lg p-4 hover:border-white/20">
           <span className="num w-8 text-ink-400">{index + 1}</span>

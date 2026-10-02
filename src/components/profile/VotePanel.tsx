@@ -33,7 +33,7 @@ type Result = { kind: 'done'; rewardTitle?: string } | { kind: 'cooldown'; nextA
  * panel says so instead of promising a prize. One vote per nickname per
  * cooldown window, enforced by the backend.
  */
-export function VotePanel({ server }: { server: GameServer }) {
+export function VotePanel({ server, anchor = true }: { server: GameServer; anchor?: boolean }) {
   const auth=useAuth()
   const [nickname, setNickname] = useState(savedNick)
   const [busy, setBusy] = useState(false)
@@ -83,7 +83,7 @@ export function VotePanel({ server }: { server: GameServer }) {
 
   const cooldownHours = reward?.cooldownHours ?? 12
 
-  if(auth.privateCore) return <PrivateVotePanel server={server}/>
+  if(auth.privateCore) return <PrivateVotePanel server={server} anchor={anchor}/>
 
   return (
     <section className="surface rounded-xl p-5 sm:p-6" id="vote">

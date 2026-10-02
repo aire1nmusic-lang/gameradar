@@ -899,7 +899,14 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 .gs-snap-row::-webkit-scrollbar { display: none; }
 .gs-mobile-worlds { --world-width: min(62vw, 300px, 40svh); padding-inline: calc((100% - var(--world-width)) / 2); }
 .gs-mobile-world-card { width: var(--world-width); }
-.gs-mobile-card .gs-float { animation: none; }
+@keyframes gs-mobile-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+.gs-mobile-card .gs-float {
+  animation: gs-mobile-float 6.8s ease-in-out infinite;
+  will-change: transform;
+}
 /* Shared density: every device gets the same compact form and readable rows. */
 .gs-account-entry { min-height: auto; padding-block: 24px; }
 .gs-account-entry .gs-account-body { padding: 24px; }
@@ -929,20 +936,25 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   .gs-mobile-worlds { --world-width: min(62vw, 300px, 34svh); padding-top: 16px; padding-bottom: 12px; }
 }
 @media (max-width: 639px) {
-  .gs-account-entry { min-height: auto; padding: 12px 12px 20px; align-items: start; }
-  .gs-account-entry .gs-account-body { padding: 16px; }
-  .gs-account-entry .gs-account-back { margin-bottom: 10px; min-height: 24px; }
+  .gs-account-entry { min-height: auto; padding: 6px 10px 12px; align-items: start; }
+  .gs-account-entry .gs-account-glass { border-radius: 20px; }
+  .gs-account-entry .gs-account-body { padding: 12px; }
+  .gs-account-entry .gs-account-back { margin-bottom: 6px; min-height: 20px; font-size: 11px; }
   .gs-account-entry .gs-account-eyebrow { display: none; }
-  .gs-account-entry h1 { font-size: 22px; }
+  .gs-account-entry h1 { font-size: 20px; }
   .gs-account-entry .gs-account-intro { display: none; }
-  .gs-account-entry .gs-account-actions { margin-top: 14px; }
+  .gs-account-entry .gs-account-actions { margin-top: 10px; }
   .gs-account-entry .gs-account-actions > *, .gs-account-entry .gs-account-form > * { margin-block: 0; }
   .gs-account-entry .gs-account-actions > :not([hidden]) ~ :not([hidden]),
-  .gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+  .gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 7px; }
   .gs-account-entry .gs-account-submit { height: 44px; }
-  .gs-account-entry .gs-provider-button { height: 44px; padding-inline: 10px; font-size: 13px; gap: 6px; }
-  .gs-account-entry .gs-provider-button > span { width: 26px; height: 26px; }
+  .gs-account-entry .gs-provider-button { height: 44px; padding-inline: 8px; font-size: 13px; gap: 5px; }
+  .gs-account-entry .gs-provider-button > span { width: 24px; height: 24px; }
   .gs-account-entry input { height: 44px; font-size: 16px; }
+  .gs-account-entry .gs-account-form label > span:first-child { margin-bottom: 4px; font-size: 12px; }
+  .gs-account-entry .gs-account-form .mb-2 { margin-bottom: 4px; }
+  .gs-account-entry .gs-account-closed { padding: 7px 9px; line-height: 16px; }
+  .gs-account-entry .gs-account-legal { font-size: 11px; line-height: 16px; }
   .gs-row { display: grid; grid-template-columns: 36px minmax(0,1fr) 44px; gap: 4px 8px; min-height: 0; padding: 10px; border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
   .gs-row > div:first-of-type { width: 36px; height: 36px; }
   .gs-row .gs-row-support { margin-top: 1px; font-size: 10px; }

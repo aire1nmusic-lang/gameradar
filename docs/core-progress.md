@@ -14,6 +14,10 @@
 ## Состояние сейчас
 
 
+**02.10 — autonomous frontend deploy VERIFIED production:** push-triggered workflow run `36998732369` for commit `902d89c` завершился `success`. VERIFIED прошли Yandex access preflight, private tests, live-catalog build/SEO, bundle gate, production backup artifact, upload assets + public files и live production verification; rollback не запускался. Artifact `production-site-before-902d89c...` сохранён до 16.10.2026. Это первая подтверждённая автоматическая публикация фронта без ручного `Run workflow`; mobile catalog/world/account fix `8f58ac8` теперь находится в production. Следом — owner mobile recheck тех же экранов; если будут визуальные регрессии, обычный source-fix в main снова выкатится автоматически через тот же guarded workflow.
+
+
+
 **02.10 — autonomous static production deploy OWNER-APPROVED:** владелец явно разрешил ChatGPT самому выкатывать изменения сайта. `.github/workflows/deploy-production.yml` теперь запускается автоматически на push в `main`, если изменены frontend/build-файлы (`src/**`, `public/**`, `index.html`, package/vite/tsconfig/scripts или сам workflow). Ручной `workflow_dispatch + DEPLOY` оставлен как fallback. Safety gate не ослаблен: перед записью остаются Yandex credential/read preflight, private tests, live-catalog build/SEO, bundle gate, production backup artifact; assets грузятся первыми, HTML после них, post-deploy live verification и автоматический rollback non-asset файлов при ошибке. Docs-only commits не публикуют сайт. Это означает: обычные исправления фронта, которые ChatGPT коммитит в main, теперь могут дойти до production без ПК и без ручного нажатия владельца. DNS, Cloudflare/D1 migrations, VM/backend, реальные платежи и необратимые DB migrations остаются отдельными контурами/approval. Текущий workflow-change commit сам входит в paths и должен выкатить уже прошедший CI mobile-fix `8f58ac8`; production считать VERIFIED только после успешного deploy-run.
 
 

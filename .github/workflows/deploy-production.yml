@@ -1,6 +1,18 @@
 name: Deploy production site
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.*'
+      - 'tsconfig*.json'
+      - 'scripts/**'
+      - '.github/workflows/deploy-production.yml'
   workflow_dispatch:
     inputs:
       confirm:
@@ -23,7 +35,9 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
+    # Owner-approved autonomous frontend release path: source pushes deploy only
+    # after the same test/build/backup gates used by the manual workflow.
+    if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: production

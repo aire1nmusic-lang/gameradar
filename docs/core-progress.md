@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — GitHub Actions CI VERIFIED:** после добавления workflows push-run `36960169646` завершился `success` на main `db89c5a`; Actions в репозитории активны. Владелец сообщил, что `YC_ACCESS_KEY_ID` и `YC_SECRET_ACCESS_KEY` добавлены в repository secrets. GitHub connector намеренно не имеет Secrets API, поэтому наличие/значения секретов нельзя независимо прочитать до ручного production workflow. Следующий шаг — один ручной `Deploy production site` с подтверждением `DEPLOY`; после старта проверить jobs/logs, backup artifact, live SEO/assets и только затем пометить публикацию VERIFIED.
+
+
 **02.10 — GitHub Actions deploy scaffold VERIFIED repository (commit `f8fd5bc`) / production НЕ менялся:** добавлены CI и ручной production deploy для статического сайта. CI на push/PR в main делает npm ci → private suite → build из live public catalog → SEO/reconciliation → bundle check. Production workflow запускается только вручную с подтверждением `DEPLOY`, перед PUT скачивает текущие не-asset файлы bucket в rollback-копию и GitHub artifact, ничего не удаляет, сначала загружает versioned assets, затем HTML/robots/sitemap с no-cache, после публикации проверяет live SEO/404/asset HTTP; при post-check failure автоматически возвращает предыдущие HTML/служебные файлы. Bucket зафиксирован как существующий `gamescout-ru-site`, endpoint `storage.yandexcloud.net`; новые cloud ресурсы и fixed cost0. **BLOCKED activation:** GitHub connector не имеет доступа к Secrets API, поэтому `YC_ACCESS_KEY_ID` и `YC_SECRET_ACCESS_KEY` ещё не заданы. До их добавления deploy намеренно завершится до production writes. Инструкция: `docs/github-production-deploy.md`. Следом: создать отдельный least-privilege ключ только для нужного Object Storage bucket, добавить 2 GitHub secrets, затем первый ручной deploy и live verification.
 
 

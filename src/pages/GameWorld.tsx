@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
 import { ArrowRight, CalendarClock, Flame, Plus, Trophy } from 'lucide-react'
@@ -39,11 +39,22 @@ export default function GameWorld() {
 }
 
 type Sort = 'online' | 'new' | 'name'
+const WORLD_SORT_KEY = 'gs.world.sort'
 
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
-  const [sort, setSort] = useState<Sort>('online')
+  const [sort, setSort] = useState<Sort>(() => {
+    try {
+      const saved = sessionStorage.getItem(WORLD_SORT_KEY)
+      return saved === 'new' || saved === 'name' ? saved : 'online'
+    } catch {
+      return 'online'
+    }
+  })
+  useEffect(() => {
+    try { sessionStorage.setItem(WORLD_SORT_KEY, sort) } catch { /* session storage is optional */ }
+  }, [sort])
 
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
@@ -67,9 +78,18 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     const open = new Set(openings.map((server) => server.slug))
     const rest = servers.filter((server) => !open.has(server.slug))
     const known = (server: GameServer) => server.online.playersKnown !== false && server.online.status !== 'UNKNOWN'
-    const byOnline = (a: GameServer, b: GameServer) => Number(known(b)) - Number(known(a)) || b.online.current - a.online.current
-    if (sort === 'name') return [...rest].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-    if (sort === 'new') return [...rest].sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt))
+    const byName = (a: GameServer, b: GameServer) => a.name.localeCompare(b.name, 'ru', { sensitivity: 'base', numeric: true }) || a.slug.localeCompare(b.slug)
+    const byOnline = (a: GameServer, b: GameServer) =>
+      Number(known(b)) - Number(known(a)) || b.online.current - a.online.current || byName(a, b)
+    const openedAt = (server: GameServer) => {
+      const parsed = Date.parse(server.openedAt ?? server.launch?.at ?? server.addedAt)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    if (sort === 'name') return [...rest].sort(byName)
+    // "Новые" should visibly mean the newest server/opening for players.
+    // Imported catalogue rows can share the same addedAt, which made this tab
+    // appear to do nothing even though the state changed.
+    if (sort === 'new') return [...rest].sort((a, b) => openedAt(b) - openedAt(a) || byName(a, b))
     return [...rest].sort(byOnline)
   }, [servers, openings, sort])
 

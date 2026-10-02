@@ -68,7 +68,7 @@ export default function Account() {
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}/>
-  return <main className="mx-auto max-w-2xl space-y-6 px-4 py-10">
+  return <main className="gs-account-page mx-auto max-w-2xl space-y-6 px-4 py-10">
     <h1 className="text-2xl font-semibold">Аккаунт GameScout</h1>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
     {message&&<p role="status" className="text-signal-400">{message}</p>}
@@ -91,9 +91,9 @@ export default function Account() {
         {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
       </section>
       <AccountCoins key={auth.user.id}/>
-      <section className="space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет. После решения администратора здесь появятся функции владельца выбранного сервера.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
-        <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Укажите, как можно проверить ваши права; пароли и секреты не присылайте.</p>
+      <section className="gs-account-servers space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
+        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
+        <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Пароли и секреты не присылайте.</p>
         <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
           <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
           <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>

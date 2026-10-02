@@ -21,7 +21,7 @@ export function AccountCoins() {
     } finally {if(request===generation.current)setLoading(false)}
   },[])
   useEffect(()=>{void load();return()=>{generation.current++}},[load])
-  return <section className="surface space-y-3 rounded-xl p-5" aria-labelledby="account-coins-heading">
+  return <section className="gs-account-coins surface space-y-3 rounded-xl p-5" aria-labelledby="account-coins-heading">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 id="account-coins-heading" className="text-lg font-semibold">Мои GS Coins</h2>
       <Button variant="outline" disabled={loading} onClick={()=>void load()}>Обновить баланс</Button>
@@ -30,12 +30,11 @@ export function AccountCoins() {
     {error&&<p role="alert" className="text-danger-300">{error}{wallet?' Показаны последние загруженные данные.':''}</p>}
     {wallet&&<>
       <p>Баланс: <strong>{wallet.balance} Coins</strong></p>
-      <p className="text-sm text-ink-400">Номинал: 1 Coin = {wallet.nominalRub} ₽. Coins нельзя вывести или передать другому аккаунту. Возврат Coins в истории не означает возврат рублей.</p>
-      <h3 className="font-medium">Последние операции</h3>
-      {!wallet.ledger.length?<p className="text-ink-400">Операций пока нет.</p>:<ol className="space-y-2">{wallet.ledger.map(entry=><li key={entry.id} className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-white/10 pt-2 text-sm">
+      <p className="gs-account-coins-copy text-sm text-ink-400">1 Coin = {wallet.nominalRub} ₽ · без вывода и переводов. Возврат Coins ≠ возврат рублей.</p>
+      {!wallet.ledger.length?<p className="text-ink-400">Операций пока нет.</p>:<><h3 className="font-medium">Последние операции</h3><ol className="space-y-2">{wallet.ledger.map(entry=><li key={entry.id} className="flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-white/10 pt-2 text-sm">
         <span>{labels[entry.kind]??'Операция'}<span className="block text-xs text-ink-400">{new Date(entry.created_at).toLocaleString('ru-RU')}</span></span>
         <span className="whitespace-nowrap">{entry.delta>0?'+':''}{entry.delta} Coins</span>
-      </li>)}</ol>}
+      </li>)}</ol></>}
       {wallet.ledger.length===100&&<p className="text-xs text-ink-400">Показаны последние 100 операций.</p>}
     </>}
   </section>

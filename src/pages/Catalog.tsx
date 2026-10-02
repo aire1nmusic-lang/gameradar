@@ -25,6 +25,9 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 const PAGE_SIZE = 24
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
+const COMPACT_SORT_LABELS: Record<SortKey, string> = {
+  recommended: 'Рекомендуем', online: 'Онлайн', growth: 'Рост', votes: 'Голоса', support: 'Поддержка', rating: 'Рейтинг', new: 'Новые', launch: 'Открытие',
+}
 
 export default function Catalog() {
   const {game:world}=useWorldNavigation()
@@ -61,7 +64,11 @@ export default function Catalog() {
     [JSON.stringify(query),privateCore,authLoading], true)
   const results = page?.items ?? []
   const total = page?.total ?? 0
-  const activeCount = countActiveFilters(filters)
+  // The selected world is context, not a removable filter. Showing it as an
+  // active chip made the mobile toolbar look broken because clicking X simply
+  // re-added the same game.
+  const uiFilters = world ? { ...filters, games: [] } : filters
+  const activeCount = countActiveFilters(uiFilters)
 
   useEffect(() => {
     setVisible(PAGE_SIZE)
@@ -111,7 +118,7 @@ export default function Catalog() {
   }, [params])
 
   const reset = () => setFilters({ ...EMPTY_FILTERS, games:world?[world.id]:[],query: filters.query })
-  const chips = buildChips(filters, next=>setFilters(world?{...next,games:[world.id]}:next))
+  const chips = buildChips(uiFilters, next=>setFilters(world?{...next,games:[world.id]}:next))
 
   return (
     <div className="pb-16">
@@ -175,7 +182,7 @@ export default function Catalog() {
           <Select
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
-            options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: privateCore && option.key === 'votes' ? 'Народный рейтинг' : option.label }))}
+            options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: COMPACT_SORT_LABELS[option.key] }))}
             className="w-[130px] shrink-0 sm:w-[150px] [&_select]:h-9 [&_select]:text-[13px]"
           />
 

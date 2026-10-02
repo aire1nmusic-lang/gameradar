@@ -124,10 +124,10 @@ export interface Suggestion {
   accent?: string
 }
 
-export async function buildSuggestions(text: string, limit = 7): Promise<Suggestion[]> {
+export async function buildSuggestions(text: string, limit = 7, gameId?:string): Promise<Suggestion[]> {
   const term = text.trim().toLowerCase()
   const out: Suggestion[] = []
-  const games = await repo.games.list()
+  const games = (await repo.games.list()).filter(game=>!gameId||game.id===gameId)
 
   for (const game of games
     .filter((game) => !term || game.name.toLowerCase().includes(term) || game.shortName.toLowerCase().includes(term))
@@ -142,7 +142,7 @@ export async function buildSuggestions(text: string, limit = 7): Promise<Suggest
   }
 
   const servers = await listServers(
-    term ? { query: term, sort: 'online', limit: 4 } : { sort: 'online', verifiedOnly: true, limit: 3 },
+    term ? { gameId,query: term, sort: 'online', limit: 4 } : { gameId,sort: 'online', verifiedOnly: true, limit: 3 },
   )
   for (const server of servers) {
     const game = games.find((item) => item.id === server.gameId)
@@ -158,7 +158,7 @@ export async function buildSuggestions(text: string, limit = 7): Promise<Suggest
     const modes = new Set<string>()
     for (const game of games) for (const mode of game.modes) if (mode.toLowerCase().includes(term)) modes.add(mode)
     for (const mode of Array.from(modes).slice(0, 2)) {
-      out.push({ kind: 'mode', label: mode, sub: 'Режим игры', to: `/catalog?mode=${encodeURIComponent(mode)}` })
+      out.push({ kind: 'mode', label: mode, sub: 'Режим игры', to: `/catalog?mode=${encodeURIComponent(mode)}${gameId?`&game=${encodeURIComponent(gameId)}`:''}` })
     }
   }
 

@@ -51,6 +51,26 @@ export function renderApiSplit(liveTemplate,{vm=true}={}) {
   return `${liveTemplate.slice(0,start)}${apiRoutes.map(route=>routeYaml(route,vm)).join('\n')}\n${liveTemplate.slice(end)}`
 }
 
+/** Keep the deployed API split byte-for-byte; replace only the SPA fallback with prerender routing. */
+export function renderSeoSplit(privateTemplate,staticCandidate) {
+  const fallback='  /{file+}:'
+  const staticStart=staticCandidate.indexOf('  /assets/{file+}:')
+  const privateStart=privateTemplate.indexOf(fallback)
+  if (staticStart<0 || privateStart<0 || !privateTemplate.includes('  /api/v1/auth/{path+}:'))
+    throw new Error('unexpected_gateway_spec')
+  const oldFallback=privateTemplate.slice(privateStart)
+  if (!oldFallback.includes("object: '{file}'") || !/statusCode: 200\s/.test(oldFallback))
+    throw new Error('unexpected_spa_fallback')
+  const bucket=/^        bucket: ([^\r\n]+)$/m.exec(oldFallback)?.[1]
+  const account=/^        service_account_id: ([^\r\n]+)$/m.exec(oldFallback)?.[1]
+  if (!bucket || !account) throw new Error('missing_static_credentials')
+  const staticTail=staticCandidate.slice(staticStart)
+    .replaceAll('__BUCKET__',bucket).replaceAll('__SERVICE_ACCOUNT_ID__',account)
+  if (!staticTail.includes("object: '{file}/index.html'") || !staticTail.includes('statusCode: 404'))
+    throw new Error('unexpected_prerender_spec')
+  return privateTemplate.slice(0,privateStart)+staticTail
+}
+
 export function renderPrivateGateway(staticCandidate,{vm=false}={}) {
   const marker='  /assets/{file+}:'
   const staticStart=staticCandidate.indexOf(marker)
@@ -64,6 +84,27 @@ export function renderPrivateGateway(staticCandidate,{vm=false}={}) {
 
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   const source=await readFile(new URL('../ru-proxy/yandex/gateway.prerender.template.yaml',import.meta.url),'utf8')
+  if (process.argv.includes('--seo-from')) {
+    const input=process.argv[process.argv.indexOf('--seo-from')+1]
+    const output=process.argv[process.argv.indexOf('--out')+1]
+    if (!input || !output || input.startsWith('--') || output.startsWith('--'))
+      throw new Error('Usage: --seo-from EXPORTED_LIVE_SPEC --out PRIVATE_CANDIDATE_PATH')
+    // Both files contain the live gateway secret. Keep them outside Git with owner-only access.
+    const live=await readFile(input,'utf8')
+    const rendered=renderSeoSplit(live,source)
+    await writeFile(output,rendered,{ flag:'wx', mode:0o600 })
+    console.log('SEO gateway candidate written; API routes preserved')
+    process.exit(0)
+  }
+  if (process.argv.includes('--seo-minimal')) {
+    const lf=text=>text.split(String.fromCharCode(13,10)).join(String.fromCharCode(10))
+    const live=lf(await readFile(new URL('../ru-proxy/yandex/gateway.vm-min.template.yaml',import.meta.url),'utf8'))
+    const target=new URL('../ru-proxy/yandex/gateway.vm-seo.template.yaml',import.meta.url)
+    const rendered=renderSeoSplit(live,lf(source))
+    if (process.argv.includes('--write')) await writeFile(target,rendered)
+    else if (lf(await readFile(target,'utf8'))!==rendered) throw new Error('gateway_vm_seo_out_of_date')
+    process.exit(0)
+  }
   if (process.argv.includes('--minimal')) {
     const lf=text=>text.split(String.fromCharCode(13,10)).join(String.fromCharCode(10))
     const live=lf(await readFile(new URL('../ru-proxy/yandex/gateway.template.yaml',import.meta.url),'utf8'))

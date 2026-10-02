@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { buildSuggestions, QUICK_SEARCHES, type Suggestion } from '@/services'
 import { useAsync } from '@/hooks/data'
 import { useLockBodyScroll } from '@/hooks/useUi'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 const ICONS = {
   game: <Gamepad2 size={15} />,
@@ -14,13 +15,14 @@ const ICONS = {
 }
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const {game,scoped}=useWorldNavigation()
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   useLockBodyScroll(open)
 
-  const { data: suggestions = [] } = useAsync(() => buildSuggestions(query), [query], true)
+  const { data: suggestions = [] } = useAsync(() => buildSuggestions(query,7,game?.id), [query,game?.id], false)
 
   useEffect(() => {
     if (open) {
@@ -41,7 +43,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const submit = () => {
     const target = suggestions[cursor]
     if (target) return go(target.to)
-    go(`/catalog?q=${encodeURIComponent(query)}`)
+    go(`${scoped('/catalog')}${game?'&':'?'}q=${encodeURIComponent(query)}`)
   }
 
   return createPortal(
@@ -70,7 +72,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               if (event.key === 'Enter') submit()
               if (event.key === 'Escape') onClose()
             }}
-            placeholder="Найти игру, сервер или режим"
+            placeholder={game?`Найти сервер ${game.shortName}`:'Найти игру, сервер или режим'}
             className="min-w-0 flex-1 bg-transparent text-[16px] text-ink-50 placeholder:text-ink-500 focus:outline-none"
           />
           <button
@@ -88,7 +90,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               <p className="text-[14px] text-ink-200">Ничего не найдено по запросу «{query}»</p>
               <p className="mt-1.5 text-[13px] text-ink-400">Попробуйте название игры, режим или регион</p>
               <button
-                onClick={() => go('/catalog')}
+                onClick={() => go(scoped('/catalog'))}
                 className="mt-4 inline-flex items-center gap-1.5 text-[13px] text-signal-300 hover:text-signal-200"
               >
                 Открыть каталог <ArrowRight size={14} />
@@ -102,7 +104,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
             <div className="mt-2 border-t border-white/6 px-2.5 pt-3 pb-1">
               <div className="mb-2 text-[11px] tracking-[0.12em] text-ink-500 uppercase">Быстрый поиск</div>
               <div className="flex flex-wrap gap-2">
-                {QUICK_SEARCHES.map((item) => (
+                {QUICK_SEARCHES.filter(item=>!game||item.to.includes(game.id)||item.to.startsWith(`/${game.slug}`)).map((item) => (
                   <button
                     key={item.label}
                     onClick={() => go(item.to)}

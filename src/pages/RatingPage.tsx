@@ -15,6 +15,7 @@ import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest } from '@/repositories/http/client'
 import { plural } from '@/lib/format'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 type PeopleRow = { server_id: string; slug: string; name: string; game_id: string; votes: number }
 type SupportRow = { server_id: string; slug: string; name: string; game_id: string; coins: number; participants: number }
@@ -25,11 +26,12 @@ export default function RatingPage() {
 }
 
 function PeopleRatingPage() {
+  const {game:world}=useWorldNavigation()
   useSeo({ title: 'Рейтинг серверов', path: '/rating',
     description: 'Народный рейтинг по голосам и отдельная Поддержка за GS Coins.' })
   const [gameId, setGameId] = useState('all')
   const [view,setView] = useState<'online'|'people'|'support'>('online')
-  const { data: servers = [], loading: serversLoading } = useServers({ gameId: gameId === 'all' ? undefined : gameId, limit: 200 }, true)
+  const { data: servers = [], loading: serversLoading } = useServers({ gameId: (world?.id ?? gameId) === 'all' ? undefined : (world?.id ?? gameId), limit: 200 }, true)
   const byOnline = servers.filter(server => server.online.playersKnown === true && server.online.freshness === 'fresh' && server.online.status !== 'UNKNOWN').sort((a, b) => b.online.current - a.online.current)
   const [rows, setRows] = useState<PeopleRow[]>([])
   const [supportRows,setSupportRows] = useState<SupportRow[]>([])
@@ -43,21 +45,22 @@ function PeopleRatingPage() {
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [])
-  const ranked = rows.filter(row => row.votes > 0 && (gameId === 'all' || row.game_id === gameId))
-  const supported = supportRows.filter(row => row.coins > 0 && (gameId === 'all' || row.game_id === gameId))
+  const selectedGame=world?.id??gameId
+  const ranked = rows.filter(row => row.votes > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
+  const supported = supportRows.filter(row => row.coins > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
   return <Container className="pb-16 pt-6 lg:pt-8">
-    <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинги серверов</h1>
+    <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинги серверов{world?` ${world.shortName}`:''}</h1>
     <div className="mt-4"><Segmented value={view} onChange={setView} options={[{value:'online',label:'По онлайну'},{value:'people',label:'Народный'},{value:'support',label:'Поддержка'}]} /></div>
     <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">{view==='online'
       ? 'Серверы, у которых онлайн измерен или получен из названного источника. У каждого числа указан источник и время; у серверов без измеренного онлайна места нет.'
       : view==='people'
       ? 'Порядок определяется только голосами подтверждённых аккаунтов в текущем окне. Поддержка за Coins не влияет на позиции. Регистрация не доказывает уникальность человека.'
       : 'Отдельный порядок по сумме GS Coins, переданных серверам. Поддержка не покупает место в Народном рейтинге; карточки визуально равны.'}</p>
-    <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
+    {!world&&<div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
       <ChipToggle active={gameId === 'all'} onClick={() => setGameId('all')}>Все игры</ChipToggle>
       {GAMES.filter(game => ['lineage2', 'minecraft', 'gtarp'].includes(game.id)).map(game =>
         <ChipToggle key={game.id} active={gameId === game.id} onClick={() => setGameId(game.id)}>{game.shortName}</ChipToggle>)}
-    </div>
+    </div>}
     {error ? <Notice tone="warn" className="mt-6">{error}</Notice> : (loading || (view==='online' && serversLoading && servers.length===0)) ? <p className="mt-6 text-ink-400">Загрузка…</p> : view==='online' ? (byOnline.length ? <div className="mt-6">
       <div className="grid gap-3 sm:grid-cols-3">{byOnline.slice(0, 3).map((server, index) => <ShelfCard key={server.slug} server={server} rank={index + 1} metric="online" fluid />)}</div>
       {byOnline.length > 3 && <ServerList className="mt-4" servers={byOnline.slice(3, 40)} from={4} ranked />}

@@ -897,7 +897,138 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 /* Phones: the swipe row keeps its scrollbar out of sight. */
 .gs-snap-row { scrollbar-width: none; }
 .gs-snap-row::-webkit-scrollbar { display: none; }
+.gs-mobile-worlds { --world-width: min(62vw, 300px, 40svh); padding-inline: calc((100% - var(--world-width)) / 2); }
+.gs-mobile-world-card { width: var(--world-width); }
+@keyframes gs-mobile-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+.gs-mobile-card .gs-float {
+  animation: gs-mobile-float 6.8s ease-in-out infinite;
+  will-change: transform;
+}
+/* Shared density: every device gets the same compact form and readable rows. */
+.gs-account-entry { min-height: auto; padding-block: 24px; }
+.gs-account-entry .gs-account-body { padding: 24px; }
+.gs-account-entry .gs-account-back { margin-bottom: 10px; min-height: 24px; }
+.gs-account-entry .gs-account-eyebrow, .gs-account-entry .gs-account-intro { display: none; }
+.gs-account-entry h1 { font-size: 26px; }
+.gs-account-entry .gs-account-actions { margin-top: 14px; }
+.gs-account-entry .gs-account-actions > *, .gs-account-entry .gs-account-form > * { margin-block: 0; }
+.gs-account-entry .gs-account-actions > :not([hidden]) ~ :not([hidden]),
+.gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 10px; }
+.gs-account-entry .gs-provider-button, .gs-account-entry .gs-account-submit { height: 44px; }
+.gs-account-entry .gs-provider-button { font-size: 14px; gap: 8px; }
+.gs-account-entry .gs-provider-button > span { width: 26px; height: 26px; }
+.gs-account-entry input { height: 44px; font-size: 16px; }
+.gs-row { min-height: 80px; padding-block: 8px; border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
+.gs-row .gs-row-identity > div { line-height: 15px; }
+.gs-row .gs-row-identity > div:first-child { line-height: 18px; }
+.gs-row .gs-row-support { margin-top: 2px; font-size: 10px; line-height: 12px; }
+.gs-podium-card .gs-podium-cover { height: 92px; }
+.gs-podium-card .gs-podium-body { padding: 28px 14px 12px; }
+.gs-podium-card .gs-podium-body > .mt-3 { margin-top: 8px; }
+.gs-podium-card .gs-podium-body > .mt-4 { margin-top: 10px; }
+@media (max-height: 500px) and (max-width: 1023px) {
+  .gs-hall-phone-content { padding-top: 72px; padding-bottom: 8px; }
+  .gs-hall-intro h1 { font-size: 22px; }
+  .gs-hall-intro p { display: none; }
+  .gs-mobile-worlds { --world-width: min(62vw, 300px, 34svh); padding-top: 16px; padding-bottom: 12px; }
+}
+@media (max-width: 639px) {
+  .gs-account-entry { min-height: auto; padding: 6px 10px 12px; align-items: start; }
+  .gs-account-entry .gs-account-glass { border-radius: 20px; }
+  .gs-account-entry .gs-account-body { padding: 12px; }
+  .gs-account-entry .gs-account-back { margin-bottom: 6px; min-height: 20px; font-size: 11px; }
+  .gs-account-entry .gs-account-eyebrow { display: none; }
+  .gs-account-entry h1 { font-size: 20px; }
+  .gs-account-entry .gs-account-intro { display: none; }
+  .gs-account-entry .gs-account-actions { margin-top: 10px; }
+  .gs-account-entry .gs-account-actions > *, .gs-account-entry .gs-account-form > * { margin-block: 0; }
+  .gs-account-entry .gs-account-actions > :not([hidden]) ~ :not([hidden]),
+  .gs-account-entry .gs-account-form > :not([hidden]) ~ :not([hidden]) { margin-top: 7px; }
+  .gs-account-entry .gs-account-submit { height: 44px; }
+  .gs-account-entry .gs-provider-button { height: 44px; padding-inline: 8px; font-size: 13px; gap: 5px; }
+  .gs-account-entry .gs-provider-button > span { width: 24px; height: 24px; }
+  .gs-account-entry input { height: 44px; font-size: 16px; }
+  .gs-account-entry .gs-account-form label > span:first-child { margin-bottom: 4px; font-size: 12px; }
+  .gs-account-entry .gs-account-form .mb-2 { margin-bottom: 4px; }
+  .gs-account-entry .gs-account-closed { padding: 7px 9px; line-height: 16px; }
+  .gs-account-entry .gs-account-legal { font-size: 11px; line-height: 16px; }
+  .gs-row { display: grid; grid-template-columns: 36px minmax(0,1fr) 44px; gap: 4px 8px; min-height: 0; padding: 10px; border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
+  .gs-row > div:first-of-type { width: 36px; height: 36px; }
+  .gs-row .gs-row-support { margin-top: 1px; font-size: 10px; }
+  .gs-row .gs-row-identity > div { line-height: 14px; }
+  .gs-row .gs-row-identity > div:first-child { line-height: 18px; }
+  .gs-row .gs-row-identity > div:first-child span { font-size: 14px; }
+  .gs-row .gs-row-support { line-height: 12px; }
+  .gs-row .gs-row-rank { display: none; }
+  .gs-row .gs-row-identity { grid-column: 2; }
+  .gs-row .gs-row-online { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; }
+  .gs-row .gs-row-online .gs-row-source { display: none; }
+  .gs-row .gs-row-favorite { grid-column: 3; grid-row: 1; width: 44px; height: 44px; }
+  .gs-row .gs-row-desktop-facts { display: none; }
+  .gs-podium-card .gs-podium-cover { height: 76px; }
+  .gs-podium-card .gs-podium-body { padding: 28px 14px 12px; }
+  .gs-podium-card .gs-podium-body > .mt-3 { margin-top: 8px; }
+  .gs-podium-card .gs-podium-body > .mt-4 { margin-top: 10px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .gs-float, .gs-sheen::before { animation: none; }
+}
+
+/* Account glass lets the hall show through instead of stacking opaque dark panes. */
+.gs-account-glass {
+  background: linear-gradient(135deg, rgb(255 255 255 / .22), rgb(29 36 44 / .38) 55%, rgb(255 255 255 / .12));
+  border: 1px solid rgb(255 255 255 / .42);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .5), inset 0 -1px 0 rgb(255 255 255 / .12), 0 30px 90px rgb(0 0 0 / .3);
+  backdrop-filter: blur(12px) saturate(1.25);
+  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+}
+.gs-account-input { background: rgb(10 17 26 / .38); border-color: rgb(255 255 255 / .3); }
+.gs-provider-button { box-shadow: inset 0 1px 0 rgb(255 255 255 / .15); }
+.gs-provider-button:hover { background: rgb(255 255 255 / .18); border-color: rgb(255 255 255 / .5); }
+@media (prefers-reduced-transparency: reduce) {
+  .gs-account-glass { background: rgb(35 42 52 / .96); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+.gs-account-glass label { color: rgb(255 255 255 / .85); }
+.gs-account-input::placeholder { color: rgb(255 255 255 / .45); }
+
+
+/* 02.10 owner mobile feedback: keep dense lists stable and the account concise. */
+.gs-chronicle-rail {
+  scroll-behavior: smooth;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 639px) {
+  /* Native touch scrolling should not fight snap while a chronicle route remounts. */
+  .gs-chronicle-rail { scroll-snap-type: none; }
+  .gs-chronicle-rail > * { scroll-snap-align: none; }
+
+  /* Scroll-driven row entrance looked like the list itself was moving under a finger. */
+  @supports (animation-timeline: view()) {
+    html[data-motion='lively'] .gs-row { animation: none; }
+  }
+
+  .gs-account-page {
+    padding-top: 18px;
+    padding-bottom: 24px;
+    font-size: 13px;
+    line-height: 1.42;
+  }
+  .gs-account-page > :not([hidden]) ~ :not([hidden]) { margin-top: 14px; }
+  .gs-account-page h1 { font-size: 20px; line-height: 1.2; }
+  .gs-account-page h2 { font-size: 16px; line-height: 1.25; }
+  .gs-account-page h3 { font-size: 14px; line-height: 1.3; }
+  .gs-account-page p { line-height: 1.42; }
+  .gs-account-page .surface { padding: 14px; }
+  .gs-account-page .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 8px; }
+  .gs-account-page .text-sm,
+  .gs-account-page .gs-account-coins-copy { font-size: 12px; line-height: 1.4; }
+  .gs-account-page input,
+  .gs-account-page select { font-size: 16px; }
+  .gs-account-page textarea { font-size: 14px; }
 }

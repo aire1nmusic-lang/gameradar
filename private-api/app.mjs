@@ -5,6 +5,10 @@ import { classifyLocalNickname } from './nickname.mjs'
 import { paymentReceipt, parseTestResult, testCheckoutForm, testPaymentConfig } from './robokassa.mjs'
 import { createPublicSnapshot } from './public-snapshot.mjs'
 import { enqueueTelegram } from './copyright.mjs'
+import { operationalSnapshot } from './operations.mjs'
+import { coinIntegrity } from './coin-monitor.mjs'
+import { emergencyBlocks, emergencyLimit } from './security.mjs'
+import { proofTarget, checkClaimProof } from './claim-proof.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
@@ -71,7 +75,7 @@ const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_au
 const voteRulesDto = row => ({windowHours:row.window_hours,maxPerWindow:row.max_per_window,
   ipDailyLimit:row.ip_daily_limit,deviceDailyLimit:row.device_daily_limit,asnDailyLimit:row.asn_daily_limit})
 
-export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify }) {
+export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify, proofCheck=checkClaimProof }) {
   if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
   if (!!config.turnstileSecret !== !!config.turnstileSiteKey) throw new Error('turnstile_key_pair_required')
   const origin = new URL(config.origin).origin
@@ -95,6 +99,12 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     if (!(await db.query(`SELECT 1 FROM gs_permissions WHERE user_id=$1 AND permission=$2
       UNION SELECT 1 FROM gs_user_roles ur JOIN gs_role_permissions rp ON rp.role=ur.role
       WHERE ur.user_id=$1 AND rp.permission=$2 LIMIT 1`,[user.id,name])).rows.length) fail(403,'forbidden','Недостаточно прав')
+    return user
+  }
+  const ownershipAdmin = async c => {
+    const user=await permission(c,'claims.review')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[user.id])).rows.length)
+      fail(403,'admin_required','Подтверждать владение может только администратор')
     return user
   }
   async function dto(user) {
@@ -121,6 +131,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return body
   }
   async function limit(c,bucket,subject,max=10) {
+    max=emergencyLimit(max,config.emergencyMode===true)
     // Direct client IP is set by our HTTP server / trusted Yandex event adapter, never a public header.
     const ip=c.env?.clientIp??'unknown'
     for (const [value,bound] of [[`ip:${ip}`,max*4],[`subject:${subject}`,max]]) {
@@ -146,6 +157,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   }
   app.use('*',async(c,next)=>{
     c.header('Cache-Control','no-store'); c.header('X-Content-Type-Options','nosniff'); c.header('Referrer-Policy','no-referrer')
+    if(emergencyBlocks(c.req.method,new URL(c.req.url).pathname,config.emergencyMode===true)) {
+      c.header('Retry-After','300')
+      fail(503,'emergency_read_only','Временно включена усиленная защита. Просмотр доступен; изменения попробуйте позже.')
+    }
     if (!['GET','HEAD','OPTIONS'].includes(c.req.method)) {
       const paymentCallback=c.req.method==='POST' && new URL(c.req.url).pathname==='/api/v1/payments/robokassa/result'
       if (!paymentCallback && c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
@@ -167,7 +182,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/health',async c=>{ await db.query('SELECT 1'); return c.json({status:'ok',storage:'private-postgresql'}) })
   // Production keeps sign-ups closed until REGISTRATION_OPEN=true; existing accounts still sign in.
-  const registrationOpen=()=>config.registrationOpen!==false
+  const registrationOpen=()=>config.registrationOpen!==false&&config.emergencyMode!==true
   const closedRegistration=()=>fail(403,'registration_closed','Регистрация пока закрыта. Вход доступен только существующим аккаунтам.')
   app.get('/api/v1/auth/me',async c=>{
     const user=await queryUser(c)
@@ -317,6 +332,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const claim=await db.transaction(async tx=>{
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
       if (!server) fail(404,'not_found','Сервер ещё не импортирован в приватный реестр')
+      if (server.owner_id===user.id) fail(409,'already_owned','Этот сервер уже доступен в вашем кабинете')
       if (server.owner_id && server.owner_id!==user.id) fail(409,'already_claimed','Владелец уже подтверждён')
       const existing=(await tx.query("SELECT * FROM gs_claims WHERE server_id=$1 AND user_id=$2 AND status='PENDING'",[serverId,user.id])).rows[0]
       if (existing) return existing
@@ -326,9 +342,52 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     })
     return c.json(claim,201)
   })
+  app.post('/api/v1/claims/:id/proof',async c=>{
+    const user=await requireUser(c,true),body=await json(c)
+    await limit(c,'claim_proof',user.id,10)
+    if(!['SITE','DNS','MANUAL'].includes(body.method))fail(400,'invalid_method','Выберите способ проверки')
+    const result=await db.transaction(async tx=>{
+      const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 AND user_id=$2 FOR UPDATE',[c.req.param('id'),user.id])).rows[0]
+      if(!claim)fail(404,'not_found','Заявка не найдена')
+      if(claim.status!=='PENDING')fail(409,'claim_closed','Заявка уже рассмотрена')
+      const server=(await tx.query('SELECT website FROM gs_server_registry WHERE server_id=$1',[claim.server_id])).rows[0]
+      let target
+      try{target=proofTarget(server?.website,body.method)}catch{fail(400,'official_site_required','Для этого способа нужен официальный HTTPS-сайт в карточке; выберите ручную проверку')}
+      const code=token(),expiresAt=new Date(Date.now()+30*60*1000).toISOString()
+      await tx.query(`INSERT INTO gs_claim_proofs(claim_id,token_hash,method,target,expires_at) VALUES($1,$2,$3,$4,$5)
+        ON CONFLICT(claim_id) DO UPDATE SET token_hash=EXCLUDED.token_hash,method=EXCLUDED.method,target=EXCLUDED.target,
+        expires_at=EXCLUDED.expires_at,checked_at=NULL,consumed_at=NULL,created_at=now()`,[claim.id,digest(code),body.method,target,expiresAt])
+      await audit(tx,user.id,'claim.proof_issued',claim.id,{method:body.method})
+      return {claimId:claim.id,code,method:body.method,target,expiresAt}
+    })
+    return c.json(result,201)
+  })
+  app.post('/api/v1/claims/:id/proof/check',async c=>{
+    const user=await requireUser(c,true)
+    await limit(c,'claim_proof_check',user.id,10)
+    const proof=(await db.query(`SELECT p.* FROM gs_claim_proofs p JOIN gs_claims c ON c.id=p.claim_id
+      WHERE c.id=$1 AND c.user_id=$2 AND c.status='PENDING' AND p.expires_at>now() AND p.consumed_at IS NULL`,[c.req.param('id'),user.id])).rows[0]
+    if(!proof)fail(409,'proof_expired','Получите новый проверочный код')
+    if(proof.method==='MANUAL')fail(409,'admin_review_required','Код на публичном ресурсе проверяет администратор')
+    let matched=false
+    try{matched=await proofCheck(proof)}catch{fail(422,'proof_unreachable','Ресурс недоступен; проверьте размещение кода или выберите ручную проверку')}
+    if(!matched)fail(422,'proof_mismatch','Код на официальном ресурсе не найден')
+    const result=await db.transaction(async tx=>{
+      const row=(await tx.query(`UPDATE gs_claim_proofs SET checked_at=now() WHERE claim_id=$1 AND token_hash=$2
+        AND expires_at>now() AND consumed_at IS NULL RETURNING claim_id`,[proof.claim_id,proof.token_hash])).rows[0]
+      if(!row)fail(409,'proof_changed','Код изменён или истёк; повторите проверку')
+      await audit(tx,user.id,'claim.proof_checked',proof.claim_id,{method:proof.method})
+      return {checked:true,status:'ADMIN_REVIEW'}
+    })
+    return c.json(result)
+  })
   app.get('/api/v1/owners/me/claims',async c=>{
     const user=await requireUser(c)
-    return c.json((await db.query('SELECT id,server_id,status,evidence,reason,created_at FROM gs_claims WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id])).rows)
+    return c.json((await db.query(`SELECT c.id,c.server_id,c.status,c.evidence,c.reason,c.created_at,
+      p.method AS proof_method,p.checked_at AS proof_checked_at,p.expires_at AS proof_expires_at,
+      (c.status='VERIFIED' AND COALESCE(r.owner_id=c.user_id,false)) AS access_active
+      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
+      WHERE c.user_id=$1 ORDER BY c.created_at DESC LIMIT 100`,[user.id])).rows)
   })
   app.get('/api/v1/owners/me/servers',async c=>{
     const user=await requireUser(c)
@@ -581,7 +640,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       fail(400,'invalid_page','Некорректная страница Поддержки')
     const rows=(await db.query(`SELECT r.server_id,r.slug,r.name,r.game_id,
       COALESCE(sum(s.coins),0)::integer AS coins,count(DISTINCT s.user_id)::integer AS participants
-      FROM gs_server_registry r LEFT JOIN gs_support s ON s.server_id=r.server_id
+      FROM gs_server_registry r LEFT JOIN gs_active_support s ON s.server_id=r.server_id
       GROUP BY r.server_id ORDER BY coins DESC,participants DESC,r.server_id LIMIT $1 OFFSET $2`,[pageLimit,offset])).rows
     return c.json(rows)
   })
@@ -590,8 +649,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     if(!(await db.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
       fail(404,'not_found','Сервер не найден')
     const summary=(await db.query(`SELECT COALESCE(sum(coins),0)::integer AS coins,
-      count(DISTINCT user_id)::integer AS participants FROM gs_support WHERE server_id=$1`,[serverId])).rows[0]
-    const recent=(await db.query(`SELECT public_nick,anonymous,coins,created_at FROM gs_support
+      count(DISTINCT user_id)::integer AS participants FROM gs_active_support WHERE server_id=$1`,[serverId])).rows[0]
+    const recent=(await db.query(`SELECT public_nick,anonymous,coins,created_at FROM gs_active_support
       WHERE server_id=$1 ORDER BY created_at DESC,id DESC LIMIT 10`,[serverId])).rows
     return c.json({...summary,recent})
   })
@@ -607,7 +666,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       if(prior) {
         if(prior.server_id!==serverId||prior.coins!==coins||prior.anonymous!==anonymous)
           fail(409,'idempotency_conflict','Ключ уже использован для другой поддержки')
-        return {id:prior.id,replay:true}
+        const refunded=(await tx.query('SELECT 1 FROM gs_support_refunds WHERE support_id=$1',[prior.id])).rows.length>0
+        return {id:prior.id,replay:true,refunded}
       }
       if(!(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows.length)
         fail(404,'not_found','Сервер не найден')
@@ -657,9 +717,44 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.get('/api/v1/admin/users',async c=>{
     await permission(c,'users.read')
     return c.json((await db.query(`SELECT u.id,u.email,u.display_name,u.email_verified_at,u.banned_at,u.created_at,
-      COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL),'{}') AS roles
+      COALESCE(array_agg(ur.role ORDER BY ur.role) FILTER (WHERE ur.role IS NOT NULL),'{}') AS roles,
+      (SELECT count(*)::integer FROM gs_server_registry r WHERE r.owner_id=u.id) AS owned_server_count,
+      (SELECT count(*)::integer FROM gs_claims cl WHERE cl.user_id=u.id AND cl.status='PENDING') AS pending_claim_count
       FROM gs_users u LEFT JOIN gs_user_roles ur ON ur.user_id=u.id
       GROUP BY u.id ORDER BY u.created_at DESC LIMIT 100`)).rows)
+  })
+  app.get('/api/v1/admin/users/:id/ownership',async c=>{
+    await ownershipAdmin(c)
+    const userId=c.req.param('id')
+    const user=(await db.query('SELECT id,display_name,email_verified_at,banned_at FROM gs_users WHERE id=$1',[userId])).rows[0]
+    if(!user)fail(404,'not_found','Пользователь не найден')
+    const owned=(await db.query('SELECT server_id,game_id,name,slug FROM gs_server_registry WHERE owner_id=$1 ORDER BY game_id,name',[userId])).rows
+    const pending=(await db.query(`SELECT c.id,c.server_id,c.evidence,c.created_at,r.name,r.game_id
+      FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id
+      WHERE c.user_id=$1 AND c.status='PENDING' ORDER BY c.created_at`,[userId])).rows
+    return c.json({userId,status:owned.length?'OWNER':'PLAYER',owned,pending,emailVerified:!!user.email_verified_at,banned:!!user.banned_at})
+  })
+  app.post('/api/v1/admin/users/:id/ownership',async c=>{
+    const admin=await ownershipAdmin(c),body=await json(c)
+    if(body.action!=='REVOKE')fail(400,'invalid_action','Подтверждение владельца выполняется только через Claim')
+    const serverId=textOf(body.serverId,1,100),reason=textOf(body.reason,10,1000),userId=c.req.param('id')
+    if(admin.id===userId)fail(403,'self_review','Нельзя менять собственное владение')
+    const result=await db.transaction(async tx=>{
+      const user=(await tx.query('SELECT id FROM gs_users WHERE id=$1',[userId])).rows[0]
+      if(!user)fail(404,'not_found','Пользователь не найден')
+      const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[serverId])).rows[0]
+      if(!server)fail(404,'not_found','Сервер не найден')
+      if(!server.owner_id)return {ok:true,replay:true,status:'PLAYER'}
+      if(server.owner_id!==userId)fail(409,'owner_changed','Владелец сервера уже изменился')
+      await tx.query(`UPDATE gs_owner_monitoring_overrides SET enabled=false,method=NULL,host=NULL,port=NULL,
+        api_url=NULL,updated_by=$1,updated_at=now() WHERE server_id=$2`,[admin.id,serverId])
+      const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=NULL,version=version+1 WHERE server_id=$1 RETURNING version',[serverId])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,serverId,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[serverId,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,admin.id,'ownership.revoked',userId,{serverId,reason})
+      return {ok:true,replay:false,status:'PLAYER'}
+    })
+    return c.json(result)
   })
   app.post('/api/v1/admin/users/:id/moderation',async c=>{
     const admin=await permission(c,'users.manage'),body=await json(c)
@@ -781,13 +876,109 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/support',async c=>{
     await permission(c,'support.read')
-    return c.json((await db.query(`SELECT id,server_id,user_id,coins,anonymous,public_nick,nickname_decision,created_at
-      FROM gs_support ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+    return c.json((await db.query(`SELECT s.id,s.server_id,s.user_id,s.coins,s.anonymous,s.public_nick,s.nickname_decision,s.created_at,
+      r.created_at AS refunded_at,r.reason AS refund_reason,r.ledger_id AS refund_ledger_id
+      FROM gs_support s LEFT JOIN gs_support_refunds r ON r.support_id=s.id
+      ORDER BY s.created_at DESC,s.id DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/support/:id/refund',async c=>{
+    const admin=await permission(c,'support.refund')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[admin.id])).rows.length)
+      fail(403,'admin_required','Только администратор может отменить Поддержку')
+    const supportId=c.req.param('id'),body=await json(c),reason=textOf(body.reason,10,1000)
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128)
+    await limit(c,'support-refund',admin.id,20)
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`support-refund:${admin.id}:${idem}`])
+      const prior=(await tx.query('SELECT * FROM gs_support_refunds WHERE actor_id=$1 AND idempotency_key=$2',[admin.id,idem])).rows[0]
+      if(prior) {
+        if(prior.support_id!==supportId||prior.reason!==reason)
+          fail(409,'idempotency_conflict','Ключ уже использован для другой отмены')
+        return {id:supportId,ledgerId:prior.ledger_id,replay:true}
+      }
+      const target=(await tx.query('SELECT user_id FROM gs_support WHERE id=$1',[supportId])).rows[0]
+      if(!target) fail(404,'not_found','Поддержка не найдена')
+      if(target.user_id===admin.id) fail(403,'self_review','Нельзя отменять свою Поддержку')
+      // Same lock as spending: refund and spend cannot lose a balance update.
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[target.user_id])
+      const support=(await tx.query('SELECT * FROM gs_support WHERE id=$1 FOR UPDATE',[supportId])).rows[0]
+      if((await tx.query('SELECT 1 FROM gs_support_refunds WHERE support_id=$1',[supportId])).rows.length)
+        fail(409,'already_refunded','Поддержка уже отменена')
+      const debit=(await tx.query('SELECT * FROM gs_coin_ledger WHERE id=$1',[support.ledger_id])).rows[0]
+      if(!debit||debit.kind!=='SUPPORT'||debit.user_id!==support.user_id||debit.delta!==-support.coins||debit.related_id!==supportId)
+        fail(409,'ledger_mismatch','Запись ledger требует сверки')
+      const updated=(await tx.query(`UPDATE gs_coin_accounts SET balance=balance+$1
+        WHERE user_id=$2 AND balance<=2147483647-$1 RETURNING balance`,[support.coins,support.user_id])).rows[0]
+      if(!updated) fail(409,'balance_mismatch','Баланс требует сверки')
+      const ledgerId=token()
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,related_id,idempotency_key,details)
+        VALUES($1,$2,'REFUND',$3,$4,$5,$6)`,[ledgerId,support.user_id,support.coins,supportId,
+        `support-refund:${ledgerId}`,JSON.stringify({source:'support-correction',serverId:support.server_id,originalLedgerId:support.ledger_id})])
+      await tx.query(`INSERT INTO gs_support_refunds(support_id,ledger_id,actor_id,reason,idempotency_key)
+        VALUES($1,$2,$3,$4,$5)`,[supportId,ledgerId,admin.id,reason,idem])
+      const changed=(await tx.query('UPDATE gs_server_registry SET version=version+1 WHERE server_id=$1 RETURNING version',[support.server_id])).rows[0]
+      const snapshot=await createPublicSnapshot(tx,support.server_id,changed.version)
+      await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',
+        [support.server_id,changed.version,JSON.stringify(snapshot)])
+      await audit(tx,admin.id,'support.refunded',supportId,{serverId:support.server_id,coins:support.coins,ledgerId,reason})
+      return {id:supportId,ledgerId,replay:false}
+    })
+    return c.json(result,result.replay?200:201)
+  })
+  app.get('/api/v1/admin/coins/integrity',async c=>{
+    await permission(c,'coins.read')
+    return c.json(await coinIntegrity(db))
+  })
+  app.get('/api/v1/admin/coins/journal',async c=>{
+    await permission(c,'coins.read')
+    const kind=c.req.query('kind')||'',userId=c.req.query('userId')||'',relatedId=c.req.query('relatedId')||''
+    const page=Number(c.req.query('page')||1)
+    if(!Number.isInteger(page)||page<1||page>100000||userId.length>128||relatedId.length>128
+      ||(kind&&!['PURCHASE','SUPPORT','AVATAR','LINK_SLOT','REFUND','ADJUSTMENT'].includes(kind)))fail(400,'invalid_filter','Некорректный фильтр')
+    const args=[kind,userId,relatedId],where=`($1='' OR kind=$1) AND ($2='' OR user_id=$2) AND ($3='' OR related_id=$3)`
+    const result=(await db.query(`SELECT (SELECT count(*)::int FROM gs_coin_ledger WHERE ${where}) total,
+      COALESCE((SELECT jsonb_agg(x) FROM (SELECT id,user_id,kind,delta,related_id,details,created_at FROM gs_coin_ledger
+        WHERE ${where} ORDER BY created_at DESC,id DESC LIMIT 50 OFFSET $4) x),'[]'::jsonb) items`,[...args,(page-1)*50])).rows[0]
+    return c.json({...result,page,pageSize:50})
   })
   app.get('/api/v1/admin/coins/ledger',async c=>{
     await permission(c,'coins.read')
-    return c.json((await db.query(`SELECT id,user_id,kind,delta,related_id,created_at
+    return c.json((await db.query(`SELECT id,user_id,kind,delta,related_id,details,created_at
       FROM gs_coin_ledger ORDER BY created_at DESC,id DESC LIMIT 100`)).rows)
+  })
+  app.post('/api/v1/admin/users/:id/coins/grant',async c=>{
+    const admin=await permission(c,'coins.read')
+    if(!(await db.query("SELECT 1 FROM gs_user_roles WHERE user_id=$1 AND role='ADMIN'",[admin.id])).rows.length)
+      fail(403,'admin_required','Начислять бонусы может только ADMIN')
+    const body=await json(c),userId=c.req.param('id'),coins=body.coins
+    const reason=textOf(body.reason,10,500),category=body.category
+    const idem=textOf(c.req.header('Idempotency-Key'),16,128),key=`promo:${admin.id}:${idem}`
+    if(!['GIFT','BARTER','PROMO'].includes(category))fail(400,'invalid_category','Укажите основание начисления')
+    if(!Number.isSafeInteger(coins)||coins<1||coins>1000)fail(400,'invalid_coins','Начисление: 1–1000 Coins')
+    await limit(c,'coins-grant',admin.id,20)
+    const result=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[key])
+      const prior=(await tx.query('SELECT * FROM gs_coin_ledger WHERE idempotency_key=$1',[key])).rows[0]
+      if(prior){
+        if(prior.user_id!==userId||prior.delta!==coins||prior.kind!=='ADJUSTMENT'
+          ||prior.details?.source!=='admin-promo'||prior.details?.category!==category||prior.details?.reason!==reason)
+          fail(409,'idempotency_conflict','Ключ уже использован для другого начисления')
+        return {id:prior.id,replay:true}
+      }
+      const target=(await tx.query('SELECT email_verified_at,banned_at FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
+      if(!target)fail(404,'not_found','Пользователь не найден')
+      if(!target.email_verified_at||target.banned_at)fail(409,'recipient_unavailable','Нужен активный аккаунт с подтвержденной почтой')
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[userId])
+      await tx.query('INSERT INTO gs_coin_accounts(user_id,balance) VALUES($1,0) ON CONFLICT DO NOTHING',[userId])
+      const updated=(await tx.query('UPDATE gs_coin_accounts SET balance=balance+$1 WHERE user_id=$2 AND balance<=2147483647-$1 RETURNING balance',[coins,userId])).rows[0]
+      if(!updated)fail(409,'balance_limit','Достигнут предел баланса')
+      const id=token()
+      await tx.query(`INSERT INTO gs_coin_ledger(id,user_id,kind,delta,idempotency_key,details)
+        VALUES($1,$2,'ADJUSTMENT',$3,$4,$5)`,[id,userId,coins,key,JSON.stringify({source:'admin-promo',category,reason,actorId:admin.id})])
+      await audit(tx,admin.id,'coins.granted',userId,{ledgerId:id,coins,category,reason})
+      return {id,replay:false}
+    })
+    return c.json(result,result.replay?200:201)
   })
   app.get('/api/v1/admin/payments',async c=>{
     await permission(c,'payments.read')
@@ -979,10 +1170,13 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')
-    return c.json((await db.query("SELECT c.*,s.name,s.game_id FROM gs_claims c JOIN gs_server_registry s USING(server_id) WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100")).rows)
+    return c.json((await db.query(`SELECT c.*,s.name,s.game_id,s.website,p.method AS proof_method,
+      p.target AS proof_target,p.expires_at AS proof_expires_at,p.checked_at AS proof_checked_at
+      FROM gs_claims c JOIN gs_server_registry s USING(server_id) LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
+      WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100`)).rows)
   })
   app.post('/api/v1/admin/claims/:id/resolve',async c=>{
-    const admin=await permission(c,'claims.review'), body=await json(c), reason=textOf(body.reason,10,1000)
+    const admin=await ownershipAdmin(c), body=await json(c), reason=textOf(body.reason,10,1000)
     if (!['VERIFIED','REJECTED'].includes(body.status)) fail(400,'invalid_status','Укажите решение')
     const result=await db.transaction(async tx=>{
       const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 FOR UPDATE',[c.req.param('id')])).rows[0]
@@ -994,10 +1188,20 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       }
       const server=(await tx.query('SELECT * FROM gs_server_registry WHERE server_id=$1 FOR UPDATE',[claim.server_id])).rows[0]
       if (body.status==='VERIFIED') {
+        const proof=(await tx.query('SELECT * FROM gs_claim_proofs WHERE claim_id=$1 FOR UPDATE',[claim.id])).rows[0]
+        if(!proof||proof.consumed_at||Date.parse(proof.expires_at)<=Date.now())fail(409,'proof_required','Нужен действующий проверочный код владельца')
+        if(proof.method!=='MANUAL'&&proof.target!==proofTarget(server.website,proof.method))fail(409,'proof_changed','Официальный сайт изменён; получите новый код')
+        if(proof.method==='MANUAL') {
+          if(typeof body.observedToken!=='string'||digest(body.observedToken.trim())!==proof.token_hash)
+            fail(409,'proof_required','Введите код, который вы лично увидели на официальном публичном ресурсе проекта')
+        } else if(!proof.checked_at)fail(409,'proof_required','Владелец должен сначала проверить код на сайте или в DNS')
+        const applicant=(await tx.query('SELECT email_verified_at,banned_at FROM gs_users WHERE id=$1',[claim.user_id])).rows[0]
+        if(!applicant?.email_verified_at||applicant.banned_at)fail(403,'applicant_ineligible','Заявитель должен иметь активный аккаунт с подтверждённым email')
         if (server.owner_id && server.owner_id!==claim.user_id) fail(409,'already_claimed','Владелец уже подтверждён')
         const changed=(await tx.query('UPDATE gs_server_registry SET owner_id=$1,version=version+1 WHERE server_id=$2 RETURNING version',[claim.user_id,server.server_id])).rows[0]
         const snapshot=await createPublicSnapshot(tx,server.server_id,changed.version)
         await tx.query('INSERT INTO gs_public_outbox(server_id,version,payload) VALUES($1,$2,$3)',[server.server_id,changed.version,JSON.stringify(snapshot)])
+        await tx.query('UPDATE gs_claim_proofs SET consumed_at=now() WHERE claim_id=$1',[claim.id])
       }
       const updated=(await tx.query('UPDATE gs_claims SET status=$1,reviewer_id=$2,reason=$3,resolved_at=now() WHERE id=$4 RETURNING *',[body.status,admin.id,reason,claim.id])).rows[0]
       await audit(tx,admin.id,'claim.'+body.status.toLowerCase(),claim.id,{serverId:server.server_id})
@@ -1013,8 +1217,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       (SELECT count(*)::integer FROM gs_telegram_outbox WHERE delivered_at IS NULL) AS telegram,
       (SELECT COALESCE(EXTRACT(EPOCH FROM now()-min(created_at)),0)::integer
         FROM gs_telegram_outbox WHERE delivered_at IS NULL) AS telegram_oldest_seconds`)).rows[0]
-    return c.json({projection:await outboxHealth(db),
-      alerts:(await db.query('SELECT key,active,opened_at,resolved_at,last_snapshot FROM gs_system_alerts ORDER BY key')).rows,queues,
+    return c.json({projection:await outboxHealth(db),operations:await operationalSnapshot(db),
+      alerts:(await db.query("SELECT key,active,opened_at,resolved_at,last_snapshot FROM gs_system_alerts WHERE key NOT IN ('maintenance_heartbeat','backup_heartbeat') ORDER BY key")).rows,queues,
       events:(await db.query('SELECT id,action,target,created_at FROM gs_audit ORDER BY id DESC LIMIT 50')).rows})
   })
   // Explicit public allowlist. Private cookies and identifying headers never reach D1.

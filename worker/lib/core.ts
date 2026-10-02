@@ -5,6 +5,8 @@ export interface Env {
   /** "true" turns on the D1-backed accounts (worker/routes/accounts.ts). Off by default: the private PostgreSQL API in Russia owns accounts. */
   ACCOUNTS_IN_D1?: string
   PUBLIC_PROJECTION_SECRET?: string
+  TELEGRAM_RELAY_BOT_TOKEN?: string
+  TELEGRAM_RELAY_CHAT_ID?: string
   DB: D1Database
   ENVIRONMENT?: string
   DEV_AUTH_ENABLED?: string

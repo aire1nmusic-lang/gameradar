@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Gamepad2, Heart, Home, LayoutList, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 /** The five places a player goes. Adding a server is an owner action and lives on /owners. */
 const ITEMS = [
@@ -18,13 +19,15 @@ const HIDDEN = [/^\/add-server/, /^\/server\//]
 export function MobileNav() {
   const { favorites } = useFavorites()
   const location = useLocation()
+  const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.08] bg-ink-950/95 backdrop-blur-md md:hidden">
       <div className="mx-auto grid h-[56px] max-w-lg grid-cols-5 items-stretch">
         {ITEMS.map((item) => (
-          <NavItem key={item.to} {...item} badge={item.to === '/favorites' ? favorites.length : 0} />
+          <NavItem key={item.to} {...item} to={item.to==='/games'&&game?`/${game.slug}`:['/catalog','/rating','/favorites'].includes(item.to)?scoped(item.to):item.to}
+            label={item.to==='/games'&&game?'Мой мир':item.to==='/'?'Зал миров':item.label} badge={item.to === '/favorites' ? favorites.length : 0} />
         ))}
       </div>
     </nav>

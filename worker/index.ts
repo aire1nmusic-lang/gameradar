@@ -44,6 +44,7 @@ import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, st
 import { accountRoutes } from './routes/accounts.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 import { applyPublicSnapshot, parsePublicSnapshot } from './lib/public-projection.ts'
+import { deliverRelayNotice, relayNotice } from './lib/telegram-relay.ts'
 
 const app = new Hono<AppEnv>()
 
@@ -95,6 +96,20 @@ function allowedOrigins(env: Env): string[] {
 
 app.use('*', async (c, next) => {
   c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
+
+  if(c.req.path==='/api/internal/telegram-relay'&&c.req.method==='POST') {
+    if(!(await sameSecret(c.req.header('Authorization')?.replace(/^Bearer /,'')??'',c.env.PUBLIC_PROJECTION_SECRET)))throw forbidden()
+    if(Number(c.req.header('Content-Length')??0)>256)throw badRequest('Payload too large')
+    const text=await c.req.text()
+    if(text.length>256)throw badRequest('Payload too large')
+    let dto
+    try {dto=relayNotice(JSON.parse(text))}catch {throw badRequest('Invalid technical incident')}
+    try {return c.json(await deliverRelayNotice({botToken:c.env.TELEGRAM_RELAY_BOT_TOKEN,chatId:c.env.TELEGRAM_RELAY_CHAT_ID},dto))}
+    catch(error) {
+      const code=error instanceof Error&&/^(relay_unconfigured|relay_transport_failed|relay_delivery_failed|relay_telegram_http_\d{3})$/.test(error.message)?error.message:'relay_delivery_failed'
+      throw new ApiError(502,'Техническое уведомление не доставлено',code)
+    }
+  }
 
   if (c.req.path === '/api/internal/public-projection' && c.req.method === 'POST') {
     if (!(await sameSecret(c.req.header('Authorization')?.replace(/^Bearer /,'') ?? '', c.env.PUBLIC_PROJECTION_SECRET))) throw forbidden()

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
 import { ArrowRight, CalendarClock, Flame, Plus, Trophy } from 'lucide-react'
@@ -40,12 +40,23 @@ export default function GameWorld() {
 }
 
 type Sort = 'online' | 'new' | 'name'
+const WORLD_SORT_KEY = 'gs.world.sort'
 
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
-  const [sort, setSort] = useState<Sort>('online')
+  const [sort, setSort] = useState<Sort>(() => {
+    try {
+      const saved = sessionStorage.getItem(WORLD_SORT_KEY)
+      return saved === 'new' || saved === 'name' ? saved : 'online'
+    } catch {
+      return 'online'
+    }
+  })
   const [limit, setLimit] = useState(12)
+  useEffect(() => {
+    try { sessionStorage.setItem(WORLD_SORT_KEY, sort) } catch { /* session storage is optional */ }
+  }, [sort])
 
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
@@ -79,8 +90,14 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     [rest],
   )
   const listed = useMemo(() => {
-    if (sort === 'name') return [...rest].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
-    if (sort === 'new') return [...rest].sort((a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt))
+    const byName = (a: GameServer, b: GameServer) => a.name.localeCompare(b.name, 'ru', { sensitivity: 'base', numeric: true }) || a.slug.localeCompare(b.slug)
+    const openedAt = (server: GameServer) => {
+      const parsed = Date.parse(server.openedAt ?? server.launch?.at ?? server.addedAt)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+    if (sort === 'name') return [...rest].sort(byName)
+    // "Новые" means the newest opening, not the import date: imported rows share one addedAt.
+    if (sort === 'new') return [...rest].sort((a, b) => openedAt(b) - openedAt(a) || byName(a, b))
     return [...topOnline, ...rest.filter((server) => !known(server))]
   }, [rest, topOnline, sort])
   const counts = useMemo(() => {
@@ -144,7 +161,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               <ShelfRail
                 eyebrow={<><CalendarClock size={12} /> Скоро открытие</>}
                 title="Стартуют в ближайшие дни"
-                action={<ThemedButton to="/openings" variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>Все открытия</ThemedButton>}
+                action={<ThemedButton to={`/openings?game=${game.id}`} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>Все открытия</ThemedButton>}
               >
                 {openings.slice(0, 8).map((server) => <ShelfCard key={server.slug} server={server} metric="opening" />)}
               </ShelfRail>

@@ -48,7 +48,7 @@ export function ObservedHistoryChart({samples,range}:{samples:OnlineSample[];ran
       <thead className="text-ink-400"><tr><th className="py-1 pr-3">Когда измерено</th><th className="py-1 pr-3">Игроков</th><th className="py-1">Источник</th></tr></thead>
       <tbody>{points.slice(-5).reverse().map((point,index)=><tr key={`${point.at}-${index}`} className="border-t border-white/7">
         <td className="py-1.5 pr-3 whitespace-nowrap">{dateTime(point.at)}</td><td className="py-1.5 pr-3">{formatNumber(point.players)}</td>
-        <td className="py-1.5">{point.sourceName??'Источник не указан'}{point.fetchedAt&&point.fetchedAt!==point.at?` · получено ${dateTime(point.fetchedAt)}`:''}</td>
+        <td className="py-1.5 [overflow-wrap:anywhere]">{point.sourceName??'Источник не указан'}{point.fetchedAt&&point.fetchedAt!==point.at?` · получено ${dateTime(point.fetchedAt)}`:''}</td>
       </tr>)}</tbody>
     </table></div>
   </div>

@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Container } from './Container'
 import { Logo } from './Logo'
 import { GAMES } from '@/data/games'
 import { useAuth } from '@/hooks/useAuth'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 const COLUMNS = [
   {
@@ -27,7 +28,10 @@ const COLUMNS = [
 ]
 
 export function Footer() {
+  const {pathname}=useLocation()
+  const compactPrivate=pathname==='/account'||pathname.startsWith('/admin')
   const { privateCore, loading }=useAuth()
+  const {game:world,loading:worldPending,scoped}=useWorldNavigation()
   const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
     ...column,links:[
       {label:'Найти свой сервер',to:'/catalog'},
@@ -38,8 +42,8 @@ export function Footer() {
   }:column):COLUMNS
   return (
     <footer className="mt-10 border-t border-white/6 bg-ink-1000/60 pb-24 lg:pb-0">
-      <Container className="py-12">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <Container className={compactPrivate?'py-5 lg:py-12':'py-8 lg:py-12'}>
+        <div className={`${compactPrivate?'hidden lg:grid':'grid'} gap-6 lg:gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]`}>
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-ink-400">
@@ -53,12 +57,12 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-3.5 text-[13px] font-medium tracking-[0.08em] text-ink-500 uppercase">Игры</h4>
+            <h4 className="mb-3.5 text-[13px] font-medium tracking-[0.08em] text-ink-500 uppercase">{world?'Ваш мир':'Миры'}</h4>
             <ul className="space-y-2.5">
-              {GAMES.slice(0, 6).map((game) => (
+              {(worldPending?[]:world?[world]:GAMES.slice(0, 3)).map((game) => (
                 <li key={game.id}>
                   <Link
-                    to={`/catalog?game=${game.id}`}
+                    to={`/${game.slug}`}
                     className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50"
                   >
                     {game.shortName}
@@ -76,7 +80,7 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
+                    <Link to={['/catalog','/rating','/openings','/favorites'].includes(link.to)?scoped(link.to):link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
                       {link.label}
                     </Link>
                   </li>
@@ -86,13 +90,13 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between">
-          <p className="max-w-2xl">
+        <div className={`${compactPrivate?'lg:mt-12':'mt-8 lg:mt-12'} flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between`}>
+          <p className={compactPrivate?'hidden lg:block max-w-2xl':'max-w-2xl'}>
             Карточки серверов собраны из открытых источников — у каждой указаны источник и дата сверки. Онлайн
             со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
             подтвердить сервер и управлять карточкой.
           </p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 sm:shrink-0">
+          <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 sm:shrink-0">
             <Link to="/terms" className="transition-colors hover:text-ink-300">Условия</Link>
             <Link to="/privacy" className="transition-colors hover:text-ink-300">Приватность</Link>
             <Link to="/copyright" className="transition-colors hover:text-ink-300">Правообладателям</Link>

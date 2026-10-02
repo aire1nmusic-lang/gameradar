@@ -12,6 +12,7 @@ deploy/vm/.env
 deploy/vm/pg-tls/
 deploy/vm/backups/
 output/
+cold-backups/
 .playwright-cli/
 *.tsbuildinfo
 

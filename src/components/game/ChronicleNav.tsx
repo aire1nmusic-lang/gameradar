@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useLayoutEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { formatCompact } from '@/lib/format'
 import type { Chronicle, Game } from '@/models'
@@ -12,6 +13,15 @@ import { ArtImage } from '@/components/media/WorldArt'
  */
 export function ChronicleNav({ game, chronicles }: { game: Game; chronicles: Chronicle[] }) {
   const theme = useGameTheme()
+  const pathname = useLocation().pathname
+  const railRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      railRef.current?.querySelector<HTMLElement>('[aria-current="page"]')
+        ?.scrollIntoView({ block: 'nearest', inline: 'center' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [pathname])
   if (chronicles.length === 0) return null
 
   const item = (active: boolean) =>
@@ -35,7 +45,7 @@ export function ChronicleNav({ game, chronicles }: { game: Game; chronicles: Chr
   }
 
   return (
-    <div className="rail -mx-5 scroll-pl-5 px-5 sm:mx-0 sm:scroll-pl-0 sm:flex-wrap sm:px-0">
+    <div ref={railRef} className="rail gs-chronicle-rail -mx-5 scroll-pl-5 px-5 sm:mx-0 sm:scroll-pl-0 sm:flex-wrap sm:px-0">
       <NavLink
         to={`/${game.slug}`}
         end

@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Textarea } from '@/components/ui/controls'
+import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
+import { CoinGrant } from '@/components/admin/CoinGrant'
+import { CoinsJournal } from '@/components/admin/CoinsJournal'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -25,6 +28,7 @@ const tabs:Tab[]=[
 type Row=Record<string,unknown>
 const value=(row:Row,key:string)=>String(row[key]??'—')
 const date=(row:Row,key:string)=>row[key]?new Date(String(row[key])).toLocaleString('ru-RU'):'—'
+const serverNoun=(count:number)=>count%10===1&&count%100!==11?'сервер':count%10>=2&&count%10<=4&&(count%100<12||count%100>14)?'сервера':'серверов'
 
 export default function Admin() {
   useSeo({title:'Админский кабинет',path:'/admin',noindex:true})
@@ -33,6 +37,7 @@ export default function Admin() {
   const [selected,setSelected]=useState('overview'),[data,setData]=useState<unknown>()
   const [loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('')
   const [reasons,setReasons]=useState<Record<string,string>>({})
+  const refundKeys=useRef<Record<string,{reason:string;key:string}>>({})
   const active=allowed.find(tab=>tab.id===selected)??allowed[0]
   async function load(tab:Tab) {
     setLoading(true);setError('')
@@ -48,6 +53,15 @@ export default function Admin() {
     catch(e) {setError(e instanceof Error?e.message:'Не удалось сохранить решение')}
     finally {setBusy(false)}
   }
+  async function refundSupport(id:string) {
+    const reason=(reasons[id]??'').trim()
+    const prior=refundKeys.current[id]
+    const key=prior?.reason===reason?prior.key:crypto.randomUUID()
+    refundKeys.current[id]={reason,key}
+    return apiRequest(`/admin/support/${encodeURIComponent(id)}/refund`,{
+      method:'POST',headers:{'Idempotency-Key':key},body:JSON.stringify({reason}),
+    })
+  }
   if(auth.loading)return <main className="mx-auto max-w-6xl p-6">Проверяем права…</main>
   if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Админский кабинет</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
   const rows=Array.isArray(data)?data as Row[]:[]
@@ -62,19 +76,24 @@ export default function Admin() {
         ['Пользователи','users'],['Серверы','servers'],['Claims на проверке','pending_claims'],
         ['Голоса','votes'],['События Поддержки','support_events'],['Ожидают тестовой оплаты','pending_test_payments'],
       ].map(([label,key])=><div key={key} className="surface rounded-xl p-3 sm:p-4"><p className="text-xs text-ink-400 sm:text-sm">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
-      {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
+      {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Состояние private API и расписания</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.operations??{},null,2)}</pre>
+        <h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
         <h2 className="text-lg">Оповещения</h2>{(Array.isArray(summary.alerts)?summary.alerts as Row[]:[]).map(row=><article key={value(row,'key')} className="surface rounded-xl p-4 text-sm"><strong>{value(row,'key')}</strong> · {row.active?'Требует внимания':'В норме'} · {row.active?date(row,'opened_at'):date(row,'resolved_at')}</article>)}
         <h2 className="text-lg">Очереди проверки и уведомлений</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.queues??{},null,2)}</pre>
         <h2 className="text-lg">Последние системные события</h2>{(Array.isArray(summary.events)?summary.events as Row[]:[]).map(row=><article key={value(row,'id')} className="surface rounded-xl p-4 text-sm">{value(row,'action')} · {value(row,'target')} · {date(row,'created_at')}</article>)}
       </section>}
       {active.id==='payments'&&<PaymentReconciliation />}
+      {active.id==='coins'&&<CoinsJournal />}
       {active.id==='vote-rules'&&<VoteRulesEditor key={JSON.stringify(summary)} current={summary} busy={busy}
         onSave={input=>act(()=>apiSend('/admin/vote-rules',input))}/>}
-      {!['overview','system','vote-rules'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
+      {!['overview','system','vote-rules','coins'].includes(active.id)&&<section className="space-y-3" aria-label={active.label}>
         {!rows.length&&<p className="text-ink-400">В этом разделе пока нет записей.</p>}
         {rows.map((row,index)=><article key={value(row,'id')==='—'?`${active.id}-${index}`:value(row,'id')} className="surface space-y-2 rounded-xl p-4 text-sm">
           {active.id==='users'&&<><strong>{value(row,'display_name')}</strong><p>{value(row,'email')} · {row.email_verified_at?'Email подтверждён':'Email не подтверждён'} · {row.banned_at?'Заблокирован':'Активен'} · {date(row,'created_at')}</p>
             <p className="break-all text-xs text-ink-400">ID {value(row,'id')} · роли: {Array.isArray(row.roles)&&row.roles.length?row.roles.join(', '):'PLAYER'}</p>
+            <p>Статус ЛК: {Number(row.owned_server_count)>0?`Игрок и владелец · ${row.owned_server_count} ${serverNoun(Number(row.owned_server_count))}`:'Игрок'} · заявки: {value(row,'pending_claim_count')}</p>
+            {auth.user?.roles.includes('ADMIN')&&<OwnershipAccess userId={value(row,'id')} self={row.id===auth.user.id} onChanged={()=>void load(active)}/>}
+            {auth.user?.roles.includes('ADMIN')&&permissions.includes('coins.read')&&!!row.email_verified_at&&!row.banned_at&&<CoinGrant userId={value(row,'id')} onChanged={()=>void load(active)}/>}
             {permissions.includes('roles.manage')&&row.id!==auth.user?.id&&<div className="flex flex-wrap gap-2">{(['MODERATOR','FINANCE','COPYRIGHT','SUPPORT'] as const).map(role=>{
               const has=Array.isArray(row.roles)&&row.roles.includes(role)
               return <Button key={role} variant="outline" disabled={busy} onClick={()=>void act(()=>apiSend(`/admin/users/${encodeURIComponent(value(row,'id'))}/roles`,{role,action:has?'REVOKE':'GRANT'}))}>{has?'Снять':'Дать'} {role}</Button>
@@ -108,9 +127,10 @@ export default function Admin() {
               onClick={()=>void act(()=>apiSend(`/admin/server-fact-edits/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='APPROVED'?'Опубликовать':'Отклонить'}</Button>)}</div>
           </>}
           {active.id==='claims'&&<><strong>{value(row,'name')} · {value(row,'server_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'evidence')}</p>
-            <Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+            {auth.user?.roles.includes('ADMIN')&&<><Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
             <div className="flex gap-2">{(['VERIFIED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
               onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+            </>}
           </>}
           {active.id==='votes'&&<><strong>{value(row,'server_id')} · {row.review_status==='VOIDED'?'Исключён из рейтинга':'Учитывается'}</strong>
             <p className="break-words">Голос {value(row,'id')} · пользователь {value(row,'user_id')} · ASN {value(row,'asn')} · {date(row,'created_at')}</p>
@@ -124,8 +144,19 @@ export default function Admin() {
                 {row.review_status==='VOIDED'?'Восстановить голос':'Исключить голос'}</Button>
             </div>}
           </>}
-          {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p></>}
-          {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p></>}
+          {active.id==='support'&&<><strong>{value(row,'server_id')} · {value(row,'coins')} Coins</strong><p>{value(row,'public_nick')} · {row.anonymous?'анонимно':'публично'} · {value(row,'nickname_decision')} · {date(row,'created_at')}</p>
+            {row.refunded_at?<p>Отменена {date(row,'refunded_at')} · {value(row,'refund_reason')}</p>:
+              auth.user?.roles.includes('ADMIN')&&permissions.includes('support.refund')&&row.user_id!==auth.user?.id&&<div className="space-y-2">
+                <p className="text-ink-400">Coins вернутся тому же игроку. Это отмена Поддержки, а не возврат рублей. Исходная операция останется в журнале.</p>
+                <Textarea aria-label={`Причина отмены Поддержки ${value(row,'id')}`} minLength={10} maxLength={1000}
+                  value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+                <Button variant="outline" disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
+                  onClick={()=>void act(()=>refundSupport(value(row,'id')))}>Отменить Поддержку и вернуть Coins</Button>
+              </div>}
+          </>}
+          {active.id==='coins'&&<><strong>{value(row,'kind')} · {value(row,'delta')} Coins</strong><p>Пользователь {value(row,'user_id')} · связь {value(row,'related_id')} · {date(row,'created_at')}</p>
+            {row.details&&typeof row.details==='object'&&<pre className="overflow-auto whitespace-pre-wrap break-words text-xs">{JSON.stringify(row.details,null,2)}</pre>}
+          </>}
           {active.id==='payments'&&<><strong>Тестовый заказ {value(row,'id')} · {value(row,'status')}</strong><p>{value(row,'coins')} Coins · {Number(row.amount_kopecks)/100} ₽ · пользователь {value(row,'user_id')} · {date(row,'created_at')}</p></>}
           {active.id==='moderation'&&<><strong>{value(row,'nickname')} · {value(row,'status')}</strong><p>Сервер {value(row,'server_id')} · попыток AI: {value(row,'attempts')} · {date(row,'created_at')}</p>
             <Textarea aria-label="Основание модерации" minLength={10} maxLength={1000} value={reasons[value(row,'support_id')]??''}

@@ -67,7 +67,7 @@ export function ServerLogo({
       <div
         className={cn('relative grid shrink-0 place-items-center overflow-hidden text-white', SIZES[size], className)}
         style={{
-          background: `linear-gradient(145deg, ${game.from}, ${game.to})`,
+          background: `linear-gradient(145deg, color-mix(in srgb, ${game.from} 24%, #29313a), color-mix(in srgb, ${game.to} 16%, #171d24))`,
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.1)',
           ...style,
         }}
@@ -86,7 +86,7 @@ export function ServerLogo({
           className="absolute inset-0 grid place-items-center font-display font-semibold tracking-tight text-white/95"
           style={{
             clipPath: 'polygon(50% 0, 100% 13%, 100% 58%, 50% 100%, 0 58%, 0 13%)',
-            background: `linear-gradient(160deg, hsl(${hue} 64% 46%), hsl(${(hue + 38) % 360} 60% 24%))`,
+            background: `linear-gradient(160deg, hsl(${hue} 20% 30%), hsl(${(hue + 38) % 360} 16% 20%))`,
           }}
         >
           <span className="-mt-[8%] drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">{initialsOf(name)}</span>
@@ -113,7 +113,7 @@ export function ServerLogo({
       style={{
         background: showImage
           ? 'var(--color-ink-800)'
-          : `linear-gradient(145deg, hsl(${hue} 62% 40%), hsl(${(hue + 42) % 360} 58% 22%))`,
+          : `linear-gradient(145deg, hsl(${hue} 20% 30%), hsl(${(hue + 42) % 360} 16% 20%))`,
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 0 0 1px rgba(255,255,255,0.08)',
         ...style,
       }}

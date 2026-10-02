@@ -7,6 +7,7 @@
 #   npx wrangler deploy --config ru-proxy/wrangler.origin.toml
 #   npx wrangler secret put PROXY_SECRET --config ru-proxy/wrangler.origin.toml
 name = "gamescout-origin"
+keep_vars = true
 main = "../worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -22,6 +23,7 @@ migrations_dir = "../migrations"
 [vars]
 ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
+PUBLIC_ONLY = "true"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # The mirror's public origins (comma-separated, https only).
 EXTRA_ORIGINS = "https://gamescout-ru.vercel.app,https://new.gamescout.online,https://d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net"

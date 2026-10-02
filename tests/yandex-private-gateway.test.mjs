@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { apiRoutes, renderApiSplit, renderPrivateGateway } from '../scripts/yandex-private-gateway.mjs'
+import { apiRoutes, renderApiSplit, renderPrivateGateway, renderSeoSplit } from '../scripts/yandex-private-gateway.mjs'
 
 // Windows checkouts turn LF into CRLF; the comparison is about content, not line endings.
 const lf=text=>text.split('\r\n').join('\n')
@@ -85,4 +85,24 @@ test('minimal cutover keeps the live gateway and swaps only the /api block',()=>
   assert.ok(minimal.endsWith(live.slice(live.indexOf('  /__gs/health:'))))
   assert.ok(!minimal.includes('serverless_containers'))
   assert.equal((minimal.match(/type: http\n/g)??[]).length,apiRoutes.filter(route=>route.target==='private').length)
+})
+
+test('SEO gateway keeps the private API split and replaces only the SPA fallback',()=>{
+  const privateSpec=lf(readFileSync('ru-proxy/yandex/gateway.vm-min.template.yaml','utf8'))
+  const staticSpec=lf(readFileSync('ru-proxy/yandex/gateway.prerender.template.yaml','utf8'))
+  const seoSpec=lf(readFileSync('ru-proxy/yandex/gateway.vm-seo.template.yaml','utf8'))
+  assert.equal(seoSpec,renderSeoSplit(privateSpec,staticSpec))
+  assert.equal(seoSpec.slice(0,seoSpec.indexOf('  /assets/{file+}:')),
+    privateSpec.slice(0,privateSpec.indexOf('  /{file+}:')))
+  assert.match(seoSpec,/object: '\{file\}\/index\.html'/)
+  assert.match(seoSpec,/statusCode: 404/)
+  assert.ok(!seoSpec.includes('object: index.html\n          statusCode: 200'))
+  assert.equal((seoSpec.match(/X-GS-Gateway: __PRIVATE_GATEWAY_SECRET__/g)??[]).length,
+    (privateSpec.match(/X-GS-Gateway: __PRIVATE_GATEWAY_SECRET__/g)??[]).length)
+  const configured=privateSpec.replaceAll('__BUCKET__','live-bucket').replaceAll('__SERVICE_ACCOUNT_ID__','live-service-account')
+  const configuredSeo=renderSeoSplit(configured,staticSpec)
+  assert.ok(!configuredSeo.includes('__BUCKET__'))
+  assert.ok(!configuredSeo.includes('__SERVICE_ACCOUNT_ID__'))
+  assert.match(configuredSeo,/bucket: live-bucket/)
+  assert.throws(()=>renderSeoSplit(privateSpec.replace("object: '{file}'",'object: other.html'),staticSpec),/unexpected_spa_fallback/)
 })

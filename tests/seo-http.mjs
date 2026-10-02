@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { publicPages, ORIGIN } from '../scripts/public-pages.mjs'
+import { publicPages, publicRecords, ORIGIN } from '../scripts/public-pages.mjs'
 
 const pages = publicPages()
 const xml = readFileSync('public/sitemap.xml', 'utf8')
@@ -28,17 +28,37 @@ assert.match(missing, /Страница не найдена/)
 
 const base = process.env.SEO_BASE_URL
 if (base) {
-  const sample = ['/', '/catalog?game=gtarp', '/lineage-2', '/minecraft', '/gta-rp', '/server/new-day-rp', '/copyright', '/rating', '/admin']
+  const profiles = ['lineage2','minecraft','gtarp'].map(game => {
+    const record = publicRecords().find(row => row.game === game)
+    assert.ok(record, `${game}: server snapshot required`)
+    return `/server/${record.slug}`
+  })
+  const sample = ['/', '/catalog?game=gtarp', '/lineage-2', '/minecraft', '/gta-rp', ...profiles, '/copyright', '/rating', '/admin', '/account']
   for (const path of sample) {
-    const response = await fetch(new URL(path, base), { redirect: 'follow' })
+    const response = await fetch(new URL(path, base), { redirect: 'follow', signal: AbortSignal.timeout(15000) })
     assert.equal(response.status, 200, `${path}: HTTP`)
     const source = await response.text()
     const logicalPath = path.split('?')[0]
-    assert.equal(extract(source, /<meta name="robots" content="([^"]+)"/), ['/rating', '/admin'].includes(logicalPath) ? 'noindex, nofollow' : 'index, follow', `${path}: robots`)
-    if (!['/rating', '/admin'].includes(logicalPath)) assert.equal(extract(source, /<link rel="canonical" href="([^"]+)"/), ORIGIN + logicalPath, `${path}: canonical`)
+    const privatePage = ['/rating', '/admin', '/account'].includes(logicalPath)
+    assert.equal(extract(source, /<meta name="robots" content="([^"]+)"/), privatePage ? 'noindex, nofollow' : 'index, follow', `${path}: robots`)
+    if (!privatePage) {
+      assert.equal(extract(source, /<link rel="canonical" href="([^"]+)"/), ORIGIN + logicalPath, `${path}: canonical`)
+      const expected = pages.find(page => page.path === logicalPath)
+      assert.ok(expected, `${path}: public snapshot exists`)
+      assert.equal(extract(source, /<title>([^<]+)<\/title>/), extract(html(logicalPath), /<title>([^<]+)<\/title>/), `${path}: specific title`)
+      assert.ok(extract(source, /<meta name="description" content="([^"]+)"/).length > 20, `${path}: description`)
+    }
     assert.match(source, /<h1>/, `${path}: content`)
   }
-  const unknown = await fetch(new URL('/nonexistent-seo-route-7249', base), { redirect: 'follow' })
+  for (const path of ['/robots.txt','/sitemap.xml']) {
+    const response = await fetch(new URL(path, base), { signal: AbortSignal.timeout(15000) })
+    assert.equal(response.status,200,`${path}: HTTP`)
+    const source = await response.text()
+    assert.ok(!source.includes('<!doctype html>'),`${path}: no SPA fallback`)
+    assert.ok(source.includes(ORIGIN),`${path}: production origin`)
+    if(path === '/sitemap.xml') assert.ok(!source.includes(`${ORIGIN}/account`), 'sitemap excludes account')
+  }
+  const unknown = await fetch(new URL('/nonexistent-seo-route-7249', base), { redirect: 'follow', signal: AbortSignal.timeout(15000) })
   assert.equal(unknown.status, 404, 'unknown route must return HTTP 404')
   assert.match(await unknown.text(), /<meta name="robots" content="noindex, nofollow"/)
 }

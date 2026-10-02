@@ -7,6 +7,7 @@ import type { CatalogFilters } from '@/services'
 import { useFacets, useServers } from '@/hooks/data'
 import { Checkbox, ChipToggle, RangeSlider, Select, Toggle } from '@/components/ui/controls'
 import { StatusBadge } from '@/components/trust/status'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 function toggleValue(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -42,7 +43,8 @@ export function FilterPanel({
 }) {
   // Facets come from the catalogue itself, so the panel never has to know
   // which values exist — the API answers that.
-  const { data: facets } = useFacets()
+  const {game:world}=useWorldNavigation()
+  const { data: facets } = useFacets(world?.id)
   const { data: allServers = [] } = useServers({ limit: 500 })
 
   const gameCounts = useMemo(() => {
@@ -77,7 +79,7 @@ export function FilterPanel({
       </div>
 
       <div className="mt-2">
-        <Group title="Игра">
+        {!world&&<Group title="Игра">
           <div className="-mx-2 space-y-0.5">
             {GAMES.filter((game) => gameCounts[game.id]).map((game) => (
               <Checkbox
@@ -94,7 +96,7 @@ export function FilterPanel({
               />
             ))}
           </div>
-        </Group>
+        </Group>}
 
         <Group title="Версия / хроники">
           <div className="flex flex-wrap gap-2">

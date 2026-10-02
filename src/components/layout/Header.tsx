@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Container } from './Container'
 import { GamesMenu } from './GamesMenu'
 import { Logo } from './Logo'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 /**
  * Four places a player goes, and search in the middle. Owner links live in
@@ -19,6 +20,7 @@ const NAV = [
 /** `bare`: over the hall of worlds — transparent, only the logo and the account. */
 export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
+  const {game,scoped}=useWorldNavigation()
   const accountLabel=auth.user?.displayName || 'Аккаунт'
   const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex'
   // Over the hall the account button is a pane of glass like the cards.
@@ -28,14 +30,15 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   return (
     <header className={bare ? 'absolute inset-x-0 top-0 z-50' : 'sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md'}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
-        <Logo />
+        <Logo className={!bare?'max-md:[&_.gs-wordmark]:hidden':undefined} />
+        {!bare&&<div className="md:hidden"><GamesMenu /></div>}
 
         {!bare && <nav className="ml-1 hidden items-center gap-0.5 md:flex">
           <GamesMenu />
           {NAV.map((item) => (
             <NavLink
               key={item.to}
-              to={item.to}
+              to={scoped(item.to)}
               className={({ isActive }) =>
                 cn(
                   'rounded-md px-3 py-2 text-[14px] transition-colors duration-150',
@@ -56,7 +59,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
           <Search size={15} className="shrink-0" />
           <span className="min-w-0 flex-1 truncate text-left">
             <span className="lg:hidden">Поиск</span>
-            <span className="hidden lg:inline">Сервер, игра, режим…</span>
+            <span className="hidden lg:inline">{game?`Поиск в ${game.shortName}`:'Сервер, игра, режим…'}</span>
           </span>
           <kbd className="hidden rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-ink-500 lg:block">⌘K</kbd>
         </button>}

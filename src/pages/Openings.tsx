@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
-import { useGames } from '@/hooks/data'
 import { ShelfCard, ShelfRail } from '@/components/world/Shelves'
 import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
@@ -9,30 +8,28 @@ import { LaunchRow } from '@/components/server/LaunchRow'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { useSeo } from '@/lib/seo'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 type Window = 'today' | 'week' | 'all'
-type Scope = 'all' | string
 
 const DAY = 86_400_000
 
 /** Announced openings as a calendar: one row per server, grouped by day. */
 export default function Openings() {
+  const {game}=useWorldNavigation()
   useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
-  const [gameId, setGameId] = useState<Scope>('all')
-  const { data: games = [] } = useGames()
-  const { data: all = [] } = useOpenings(undefined, 40)
+  const { data: all = [] } = useOpenings(game?.id, 40)
 
   const filtered = useMemo(() => {
     const now = Date.now()
     return all.filter((server) => {
-      if (gameId !== 'all' && server.gameId !== gameId) return false
       const diff = new Date(server.launch?.at ?? 0).getTime() - now
       if (window === 'today') return diff < DAY
       if (window === 'week') return diff < 7 * DAY
       return true
     })
-  }, [all, window, gameId])
+  }, [all, window])
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>()
@@ -53,7 +50,7 @@ export default function Openings() {
               <CalendarClock size={13} />
               Открытия
             </div>
-            <h1 className="text-[26px] leading-tight sm:text-[30px]">Что открывается в ближайшие дни</h1>
+            <h1 className="text-[26px] leading-tight sm:text-[30px]">{game?`Открытия ${game.shortName}`:'Что открывается в ближайшие дни'}</h1>
           </div>
           <Segmented
             value={window}
@@ -65,17 +62,6 @@ export default function Openings() {
             ]}
           />
         </div>
-
-        {games.length > 1 && (
-          <div className="mt-5">
-            <Segmented
-              value={gameId}
-              onChange={setGameId}
-              size="sm"
-              options={[{ value: 'all', label: 'Все игры' }, ...games.map((game) => ({ value: game.id, label: game.shortName }))]}
-            />
-          </div>
-        )}
 
         {filtered.length > 0 && (
           <ShelfRail eyebrow={<><CalendarClock size={12} /> Ближайшие</>} title="Открываются первыми">

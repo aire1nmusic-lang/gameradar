@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — remote operations expansion, repository prepared:** после VERIFIED GitHub→Yandex static deploy добавлены два следующих контура. `.github/workflows/deploy-cloudflare.yml` — ручной guarded deploy существующего Cloudflare Worker с typecheck/API+monitoring regression, Wrangler dry-run, live API check; D1 migrations намеренно не выполняет. `.github/workflows/check-yandex-vm.yml` — только read-only SSH reality-check production VM (path/compose/API health), без записи/рестарта; полноценный VM deploy будет строиться только после наблюдения реальной раскладки. Новых платных ресурсов0. **BLOCKED activation:** нужны GitHub secrets Cloudflare (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) и VM SSH (`VM_SSH_HOST`, `VM_SSH_USER`, `VM_SSH_PRIVATE_KEY`, `VM_SSH_KNOWN_HOSTS`, `VM_DEPLOY_PATH`). Секреты в Git/чат не помещать. Инструкция `docs/remote-operations.md`.
+
+
 **02.10 — GitHub → Yandex static production deploy VERIFIED:** workflow run `36964066180` завершился `success`: Yandex bucket read preflight, private tests, live catalog build/reconciliation, bundle gate, backup production, rollback artifact, asset upload, public-file upload и live production verification прошли; rollback не запускался. Artifact `production-site-before-b17a63c...` сохранён на 14 дней. Это закрывает удалённое управление статическим фронтендом через GitHub Actions без локального ПК. Не означает полный remote-control всего проекта: Cloudflare Worker/D1/Queue и Yandex VM/private API пока не имеют отдельных GitHub deploy workflows.
 
 

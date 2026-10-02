@@ -1,0 +1,81 @@
+name: Deploy Cloudflare public API
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY_CLOUDFLARE to publish Worker'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.inputs.confirm == 'DEPLOY_CLOUDFLARE' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run dev:setup
+
+      - name: Require Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Worker API regression
+        run: npm run test:api
+
+      - name: Monitoring regression
+        run: npm run test:monitoring
+
+      - name: Wrangler dry run
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx wrangler deploy --dry-run
+
+      - name: Deploy existing Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx wrangler deploy
+
+      - name: Verify live public API
+        run: |
+          node <<'NODE'
+          const base='https://gamescout.online/api/v1'
+          for (const path of ['/health','/games','/servers?limit=1']) {
+            const r=await fetch(base+path,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)})
+            if(!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
+            const body=await r.text()
+            if(!body) throw new Error(`${path}: empty response`)
+            console.log(`${path}: HTTP ${r.status}`)
+          }
+          NODE
+
+# D1 production migrations are intentionally NOT applied here.
+# They require a separate reviewed/manual migration action.

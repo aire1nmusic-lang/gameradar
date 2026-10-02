@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — Yandex VM remote-access setup narrowed after repository reality-check:** current production docs identify private host `priv.gamescout.online`, VM-side rollback under `/home/spl23071994` and working tree `~/gamescout-staging`; read-only GitHub workflow now uses defaults host=`priv.gamescout.online`, user=`spl23071994`, path=`/home/spl23071994/gamescout-staging`. Only two GitHub secrets remain: existing operator SSH private key and the already-trusted known_hosts entry. No VM write/restart/deploy is enabled yet. Next gate: verify existing PC can SSH non-interactively, add the two secrets, run read-only check, then generate a deployment workflow from observed VM state with backup/health/rollback. Production DB migrations remain separate approval.
+
+
 **02.10 — remote operations expansion, repository prepared:** после VERIFIED GitHub→Yandex static deploy добавлены два следующих контура. `.github/workflows/deploy-cloudflare.yml` — ручной guarded deploy существующего Cloudflare Worker с typecheck/API+monitoring regression, Wrangler dry-run, live API check; D1 migrations намеренно не выполняет. `.github/workflows/check-yandex-vm.yml` — только read-only SSH reality-check production VM (path/compose/API health), без записи/рестарта; полноценный VM deploy будет строиться только после наблюдения реальной раскладки. Новых платных ресурсов0. **BLOCKED activation:** нужны GitHub secrets Cloudflare (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`) и VM SSH (`VM_SSH_HOST`, `VM_SSH_USER`, `VM_SSH_PRIVATE_KEY`, `VM_SSH_KNOWN_HOSTS`, `VM_DEPLOY_PATH`). Секреты в Git/чат не помещать. Инструкция `docs/remote-operations.md`.
 
 

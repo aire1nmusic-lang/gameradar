@@ -120,8 +120,10 @@ jobs:
           const refs=[...new Set([...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))]
           if(!refs.length) throw new Error('No built JS/CSS asset references found on live home page')
           for(const path of refs){
-            const r=await fetch(origin+path,{method:'HEAD',signal:AbortSignal.timeout(15000)})
+            const r=await fetch(origin+path,{signal:AbortSignal.timeout(15000)})
             if(!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
+            const body=await r.arrayBuffer()
+            if(!body.byteLength) throw new Error(`${path}: empty response`)
           }
           console.log(`Live asset check passed: ${refs.length} files`)
           NODE

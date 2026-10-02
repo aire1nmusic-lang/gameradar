@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — GitHub → Yandex static production deploy VERIFIED:** workflow run `36964066180` завершился `success`: Yandex bucket read preflight, private tests, live catalog build/reconciliation, bundle gate, backup production, rollback artifact, asset upload, public-file upload и live production verification прошли; rollback не запускался. Artifact `production-site-before-b17a63c...` сохранён на 14 дней. Это закрывает удалённое управление статическим фронтендом через GitHub Actions без локального ПК. Не означает полный remote-control всего проекта: Cloudflare Worker/D1/Queue и Yandex VM/private API пока не имеют отдельных GitHub deploy workflows.
+
+
 **02.10 — второй GitHub production deploy BLOCKED ложной asset-проверкой, IAM уже VERIFIED:** attempt2 run `36962896416` после выдачи роли успешно прошёл backup production, сохранил rollback artifact, загрузил новые versioned assets и non-asset public files, затем live SEO90 HTTP прошёл. Ошибка была только в нашей дополнительной проверке JS/CSS: `HEAD /assets/index-JYED6Uvh.js` получил HTTP405, хотя hosting не обязан поддерживать HEAD для asset route. Workflow корректно выполнил rollback прежних non-asset файлов и завершился failure; новые hashed assets остались в bucket без влияния на текущую старую HTML-версию. Значит Yandex IAM/read/write и rollback path уже фактически подтверждены. Исправление commit `616c315`: asset verification теперь делает обычный GET и проверяет непустой body. Следом нужен новый ручной production workflow с текущего main; старый rerun нельзя использовать, потому что он повторяет старую версию workflow из исходного commit.
 
 

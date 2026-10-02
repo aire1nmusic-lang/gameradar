@@ -15,23 +15,24 @@ concurrency:
   group: yandex-vm-readonly
   cancel-in-progress: true
 
+env:
+  VM_SSH_HOST: priv.gamescout.online
+  VM_SSH_USER: spl23071994
+  VM_DEPLOY_PATH: /home/spl23071994/gamescout-staging
+
 jobs:
   check:
     if: ${{ github.event.inputs.confirm == 'CHECK_VM' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Require VM SSH settings
+      - name: Require VM SSH secrets
         env:
-          VM_SSH_HOST: ${{ secrets.VM_SSH_HOST }}
-          VM_SSH_USER: ${{ secrets.VM_SSH_USER }}
           VM_SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          VM_DEPLOY_PATH: ${{ secrets.VM_DEPLOY_PATH }}
+          VM_SSH_KNOWN_HOSTS: ${{ secrets.VM_SSH_KNOWN_HOSTS }}
         run: |
-          test -n "$VM_SSH_HOST" || { echo "::error::Missing VM_SSH_HOST"; exit 1; }
-          test -n "$VM_SSH_USER" || { echo "::error::Missing VM_SSH_USER"; exit 1; }
           test -n "$VM_SSH_PRIVATE_KEY" || { echo "::error::Missing VM_SSH_PRIVATE_KEY"; exit 1; }
-          test -n "$VM_DEPLOY_PATH" || { echo "::error::Missing VM_DEPLOY_PATH"; exit 1; }
+          test -n "$VM_SSH_KNOWN_HOSTS" || { echo "::error::Missing VM_SSH_KNOWN_HOSTS"; exit 1; }
 
       - name: Prepare SSH
         env:
@@ -42,19 +43,10 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s\n' "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_gamescout
           chmod 600 ~/.ssh/id_gamescout
-          if [ -n "$VM_SSH_KNOWN_HOSTS" ]; then
-            printf '%s\n' "$VM_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          else
-            echo "::error::Missing VM_SSH_KNOWN_HOSTS; refusing TOFU for production VM"
-            exit 1
-          fi
+          printf '%s\n' "$VM_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
       - name: Read-only production VM reality check
-        env:
-          VM_SSH_HOST: ${{ secrets.VM_SSH_HOST }}
-          VM_SSH_USER: ${{ secrets.VM_SSH_USER }}
-          VM_DEPLOY_PATH: ${{ secrets.VM_DEPLOY_PATH }}
         run: |
           ssh -i ~/.ssh/id_gamescout -o BatchMode=yes -o StrictHostKeyChecking=yes "${VM_SSH_USER}@${VM_SSH_HOST}"             "DEPLOY_PATH='${VM_DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
@@ -64,8 +56,17 @@ jobs:
           test -f "$DEPLOY_PATH/deploy/vm/compose.yaml"
           test -f "$DEPLOY_PATH/deploy/vm/.env"
           cd "$DEPLOY_PATH/deploy/vm"
-          docker compose version
-          docker compose ps
-          docker compose exec -T api node -e "fetch('http://127.0.0.1:8080/api/v1/health').then(async r=>{console.log('api-health',r.status);if(!r.ok)process.exit(1)}).catch(e=>{console.error(e);process.exit(1)})"
+
+          compose() {
+            if docker compose version >/dev/null 2>&1; then
+              docker compose "$@"
+            else
+              sudo -n docker compose "$@"
+            fi
+          }
+
+          compose version
+          compose ps
+          compose exec -T api node -e "fetch('http://127.0.0.1:8080/api/v1/health').then(async r=>{console.log('api-health',r.status);if(!r.ok)process.exit(1)}).catch(e=>{console.error(e);process.exit(1)})"
           echo "VM read-only check passed"
           REMOTE

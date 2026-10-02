@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — первый GitHub production deploy BLOCKED до записи:** run `36962896416` успешно прошёл private56/56, live catalog70/70, SEO/reconciliation0 и bundle gate; оба GitHub secrets присутствуют. Падение произошло на первом read-only backup-вызове Yandex Object Storage: `ListObjectsV2 AccessDenied` для bucket `gamescout-ru-site`. Шаги upload/production verification не запускались, поэтому production этим run не изменён и rollback не требовался. VERIFIED причина на границе IAM: ключи распознаны, но сервисному аккаунту не хватает доступа к bucket либо роль не назначена на этот bucket. По документации Yandex роль `storage.uploader` включает list/read/upload и подходит текущему workflow без delete. Workflow обновлён: теперь read-access preflight выполняется до долгих тестов и выдаёт понятную ошибку. Следом владелец один раз назначает `storage.uploader` сервисному аккаунту на Object Storage → `gamescout-ru-site`, затем повторный ручной deploy.
+
+
 **02.10 — GitHub Actions CI VERIFIED:** после добавления workflows push-run `36960169646` завершился `success` на main `db89c5a`; Actions в репозитории активны. Владелец сообщил, что `YC_ACCESS_KEY_ID` и `YC_SECRET_ACCESS_KEY` добавлены в repository secrets. GitHub connector намеренно не имеет Secrets API, поэтому наличие/значения секретов нельзя независимо прочитать до ручного production workflow. Следующий шаг — один ручной `Deploy production site` с подтверждением `DEPLOY`; после старта проверить jobs/logs, backup artifact, live SEO/assets и только затем пометить публикацию VERIFIED.
 
 

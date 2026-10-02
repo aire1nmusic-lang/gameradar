@@ -13,6 +13,9 @@
 
 ## Состояние сейчас
 
+**02.10 — второй GitHub production deploy BLOCKED ложной asset-проверкой, IAM уже VERIFIED:** attempt2 run `36962896416` после выдачи роли успешно прошёл backup production, сохранил rollback artifact, загрузил новые versioned assets и non-asset public files, затем live SEO90 HTTP прошёл. Ошибка была только в нашей дополнительной проверке JS/CSS: `HEAD /assets/index-JYED6Uvh.js` получил HTTP405, хотя hosting не обязан поддерживать HEAD для asset route. Workflow корректно выполнил rollback прежних non-asset файлов и завершился failure; новые hashed assets остались в bucket без влияния на текущую старую HTML-версию. Значит Yandex IAM/read/write и rollback path уже фактически подтверждены. Исправление commit `616c315`: asset verification теперь делает обычный GET и проверяет непустой body. Следом нужен новый ручной production workflow с текущего main; старый rerun нельзя использовать, потому что он повторяет старую версию workflow из исходного commit.
+
+
 **02.10 — первый GitHub production deploy BLOCKED до записи:** run `36962896416` успешно прошёл private56/56, live catalog70/70, SEO/reconciliation0 и bundle gate; оба GitHub secrets присутствуют. Падение произошло на первом read-only backup-вызове Yandex Object Storage: `ListObjectsV2 AccessDenied` для bucket `gamescout-ru-site`. Шаги upload/production verification не запускались, поэтому production этим run не изменён и rollback не требовался. VERIFIED причина на границе IAM: ключи распознаны, но сервисному аккаунту не хватает доступа к bucket либо роль не назначена на этот bucket. По документации Yandex роль `storage.uploader` включает list/read/upload и подходит текущему workflow без delete. Workflow обновлён: теперь read-access preflight выполняется до долгих тестов и выдаёт понятную ошибку. Следом владелец один раз назначает `storage.uploader` сервисному аккаунту на Object Storage → `gamescout-ru-site`, затем повторный ручной deploy.
 
 

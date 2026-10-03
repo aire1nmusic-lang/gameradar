@@ -10,21 +10,22 @@ export { RankMedal } from '@/components/ui/RankMedal'
  * One panel of the "where to play" strip — a short ranked list, no pictures:
  * top by online, openings that are about to happen, players' choice.
  */
-export function RankPanel({ icon, title, hint, to, toLabel = 'Все', className, children }: {
-  icon: ReactNode
+export function RankPanel({ icon, title, hint, to, toLabel = 'Все', className, plainMobile = false, children }: {
+  icon?: ReactNode
   title: string
   hint?: string
   to?: string
   toLabel?: string
   className?: string
+  plainMobile?: boolean
   children: ReactNode
 }) {
   const theme = useGameTheme()
   return (
-    <section className={cn('gs-panel flex min-w-0 flex-col p-3 sm:p-4', className)}>
+    <section className={cn('gs-panel flex min-w-0 flex-col p-3 sm:p-4', plainMobile && 'gs-panel-mobile-plain', className)}>
       <header className="mb-2.5 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: theme.colors.primarySoft, color: theme.colors.primary }}>{icon}</span>
+          {icon && <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: theme.colors.primarySoft, color: theme.colors.primary }}>{icon}</span>}
           <div className="min-w-0">
             <h3 className="gs-panel-title truncate text-[15px] leading-5 font-semibold" style={{ color: theme.colors.text }}>{title}</h3>
             {hint && <p className="truncate text-[11.5px] leading-4" style={{ color: theme.colors.textMuted }}>{hint}</p>}
@@ -36,7 +37,7 @@ export function RankPanel({ icon, title, hint, to, toLabel = 'Все', className
           </Link>
         )}
       </header>
-      <div className="flex-1 space-y-1.5">{children}</div>
+      <div className="flex-1 space-y-2">{children}</div>
     </section>
   )
 }

@@ -100,8 +100,7 @@ export function ServerRow({
             <span className="hidden shrink-0 sm:inline-flex"><TrendChip value={change24h} /></span>
           )}
         </div>
-        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] leading-4 text-ink-400">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
+        <div className="mt-0.5 flex min-w-0 items-center text-[12px] leading-4 text-ink-400">
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
       </div>

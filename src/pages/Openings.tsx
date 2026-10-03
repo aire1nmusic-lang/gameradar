@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
 import { Container } from '@/components/layout/Container'
@@ -46,7 +46,7 @@ export default function Openings() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
-              <CalendarClock size={13} />
+              <WorldIcon name="opening" size={13} />
               Открытия
             </div>
             <h1 className="text-[26px] leading-tight sm:text-[30px]">{game?`Открытия ${game.shortName}`:'Что открывается в ближайшие дни'}</h1>
@@ -64,7 +64,7 @@ export default function Openings() {
 
         <div className="mt-10 space-y-8">
           {groups.length === 0 ? (
-            <EmptyState title="В этом диапазоне открытий нет" description="Попробуйте расширить период или посмотрите недавно добавленные серверы." action="Смотреть каталог" actionTo="/catalog?sort=new" />
+            <EmptyState title="В этом диапазоне открытий нет" description="Попробуйте расширить период или посмотрите недавно добавленные серверы." action="Смотреть каталог" actionTo={game?`/catalog?game=${game.id}&sort=new`:'/catalog?sort=new'} />
           ) : (
             groups.map(([key, servers]) => {
               const date = new Date(servers[0].launch?.at ?? Date.now())

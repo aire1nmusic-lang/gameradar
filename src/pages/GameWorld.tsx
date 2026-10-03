@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { ArrowRight, Flame, LayoutGrid, Plus, Rows3 } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { resolveWorld } from '@/data/themes'
 import { chronicleOfVersion } from '@/data/games'
 import { useServers } from '@/hooks/data'
 import type { GameServer } from '@/models'
 import { Container } from '@/components/layout/Container'
-import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme, type GameTheme } from '@/theme'
+import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
+import { lightWorldTheme } from '@/theme/lightWorld'
 import { GameHero } from '@/components/game/GameHero'
 import { ChronicleNav } from '@/components/game/ChronicleNav'
 import { ServerList, ServerRow, ServerRowSkeleton, ServerTiles } from '@/components/server/ServerRow'
@@ -17,42 +18,6 @@ import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { breadcrumbs, useSeo } from '@/lib/seo'
 import { useAppearance } from '@/theme/appearance'
-
-function lightWorldTheme(theme: GameTheme): GameTheme {
-  return {
-    ...theme,
-    colors: {
-      ...theme.colors,
-      bg: '#F4EFE6',
-      bgDeep: '#EAE2D5',
-      surface: 'rgba(255,250,242,0.94)',
-      surfaceRaised: '#FBF6ED',
-      border: 'rgba(91,70,38,0.16)',
-      borderStrong: 'rgba(175,128,43,0.45)',
-      text: '#202127',
-      textMuted: '#66656A',
-      textFaint: '#89847C',
-    },
-    gradients: {
-      ...theme.gradients,
-      hero: 'linear-gradient(180deg, #EDE3D3 0%, #F4EFE6 100%)',
-    },
-    glow: {
-      ...theme.glow,
-      soft: '0 10px 30px -18px rgba(83,64,35,0.24)',
-      strong: '0 18px 46px -24px rgba(83,64,35,0.32)',
-      ring: '0 0 0 1px rgba(175,128,43,0.24)',
-    },
-    card: {
-      ...theme.card,
-      background: 'linear-gradient(180deg, rgba(255,251,245,.98), rgba(247,240,229,.98))',
-      border: '1px solid rgba(91,70,38,.14)',
-      shadow: '0 8px 24px -16px rgba(83,64,35,.24)',
-      shadowHover: '0 12px 30px -16px rgba(83,64,35,.30)',
-      overlay: 'linear-gradient(to top, rgba(244,239,230,.96) 14%, rgba(244,239,230,.45) 58%, rgba(244,239,230,.04))',
-    },
-  }
-}
 
 /**
  * A game world: /minecraft, /lineage-2, /lineage-2/interlude.
@@ -242,7 +207,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
 
             <section id="all" className="mt-10 scroll-mt-24">
               <SectionHead
-                eyebrow={<><Flame size={12} /> Каталог</>}
+                eyebrow={<><WorldIcon name="catalog" size={13} /> Каталог</>}
                 title={chronicle ? `Все серверы ${chronicle.label}` : `Все серверы ${game.shortName}`}
                 action={{ label: 'Фильтры', to: `/catalog?game=${game.id}` }}
                 right={
@@ -263,8 +228,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                       onChange={setView}
                       size="sm"
                       options={[
-                        { value: 'list', label: <span aria-label="Списком" title="Списком"><Rows3 size={15} /></span> },
-                        { value: 'grid', label: <span aria-label="Плитками" title="Плитками"><LayoutGrid size={15} /></span> },
+                        { value: 'list', label: <span aria-label="Списком" title="Списком"><WorldIcon name="list" size={15} /></span> },
+                        { value: 'grid', label: <span aria-label="Плитками" title="Плитками"><WorldIcon name="grid" size={15} /></span> },
                       ]}
                     />
                   </>
@@ -306,7 +271,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               Разместите проект бесплатно и подключите проверку онлайна.
             </p>
           </div>
-          <ThemedButton to="/owners" icon={<Plus size={14} />}>
+          <ThemedButton to="/owners" icon={<WorldIcon name="plus" size={14} />}>
             Узнать больше
           </ThemedButton>
         </div>
@@ -325,7 +290,7 @@ function SectionHead({ eyebrow, title, action, right }: { eyebrow: React.ReactNo
       <div className="flex flex-wrap items-center gap-2">
         {right}
         {action && (
-          <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>
+          <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<WorldIcon name="chevronRight" size={14} />}>
             {action.label}
           </ThemedButton>
         )}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { GAMES } from '@/data/games'
 import { useRating, useServers } from '@/hooks/data'
 import { ServerList } from '@/components/server/ServerRow'
@@ -47,7 +47,7 @@ function PeopleRatingPage() {
   const selectedGame=world?.id??gameId
   const ranked = rows.filter(row => row.votes > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
   const supported = supportRows.filter(row => row.coins > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
-  return <Container className="pb-16 pt-6 lg:pt-8">
+  return <div className="pb-16"><Container className="pt-6 lg:pt-8">
     <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинги серверов{world?` ${world.shortName}`:''}</h1>
     <div className="mt-4"><Segmented value={view} onChange={setView} options={[{value:'online',label:'По онлайну'},{value:'people',label:'Народный'},{value:'support',label:'Поддержка'}]} /></div>
     <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">{view==='online'
@@ -70,7 +70,7 @@ function PeopleRatingPage() {
           <span className="num text-sm text-ink-300">{'votes' in row ? `${row.votes} ${plural(row.votes, ['голос', 'голоса', 'голосов'])}` : `${row.coins} Coins · ${row.participants} ${plural(row.participants, ['участник', 'участника', 'участников'])}`}</span>
         </Link>
       </li>)}</ol> : <Notice tone="info" className="mt-6">{view==='people'?'В этой игре пока нет голосов в текущем окне.':'В этой игре серверы пока не получили поддержку.'}</Notice>}
-  </Container>
+  </Container></div>
 }
 
 type View = 'organic' | 'combined'
@@ -80,8 +80,10 @@ type View = 'organic' | 'combined'
  * the independent order; the boost-aware order is a labelled switch.
  */
 function LegacyRatingPage() {
+  const {game:world}=useWorldNavigation()
   useSeo({ title: 'Рейтинг серверов', path: '/rating', description: 'Независимый рейтинг игровых серверов GameScout: онлайн с учётом доверия к источнику, голоса игроков, стабильность.' })
-  const [gameId, setGameId] = useState<string>('all')
+  const [gameId, setGameId] = useState<string>(()=>world?.id??'all')
+  useEffect(()=>{if(world)setGameId(world.id)},[world?.id])
   const [view, setView] = useState<View>('organic')
 
   const scope = gameId === 'all' ? undefined : gameId
@@ -96,7 +98,7 @@ function LegacyRatingPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
-              <Trophy size={13} />
+              <WorldIcon name="vote" size={13} />
               Рейтинг
             </div>
             <h1 className="text-[26px] leading-tight sm:text-[30px]">ТОП серверов</h1>
@@ -119,7 +121,7 @@ function LegacyRatingPage() {
           </Notice>
         )}
 
-        <div className="no-scrollbar -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
+        {!world&&<div className="no-scrollbar -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
           <ChipToggle active={gameId === 'all'} onClick={() => setGameId('all')} className="shrink-0">
             Все игры
           </ChipToggle>
@@ -128,7 +130,7 @@ function LegacyRatingPage() {
               {item.shortName}
             </ChipToggle>
           ))}
-        </div>
+        </div>}
 
         <ThemeScope theme={theme} as="div" className="mt-6">
           {entries.length > 0 ? (

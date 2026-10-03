@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { formatNumber, plural } from '@/lib/format'
 import { useServers } from '@/hooks/data'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -23,7 +23,7 @@ export default function Favorites() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
-              <Heart size={13} />
+              <WorldIcon name="favorite" size={13} />
               Избранное
             </div>
             <h1 className="text-[26px] leading-tight sm:text-[30px]">Ваши серверы{game?` ${game.shortName}`:''}</h1>
@@ -43,7 +43,7 @@ export default function Favorites() {
         <div className="mt-6">
           {servers.length === 0 ? (
             <EmptyState
-              icon={<Heart size={22} />}
+              icon={<WorldIcon name="favorite" size={22} />}
               title="Пока ничего не сохранено"
               description="Нажимайте на сердце у сервера — здесь соберётся ваш личный список с актуальным онлайном."
               action="Открыть каталог"

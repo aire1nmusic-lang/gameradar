@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, Search } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { worldArt } from '@/data/themeMedia'
@@ -71,7 +71,7 @@ export function GameHero({
           </Link>
           {chronicle && (
             <>
-              <ChevronRight size={12} />
+              <WorldIcon name="chevronRight" size={12} />
               <Link to={`/${game.slug}`} className="transition-colors hover:text-[var(--gt-text)]">
                 {game.shortName}
               </Link>
@@ -92,7 +92,7 @@ export function GameHero({
           className="mt-4 flex max-w-lg items-center gap-2 rounded-xl border p-1.5 pl-3.5"
           style={{ borderColor: theme.colors.borderStrong, background: `color-mix(in oklab, ${theme.colors.bgDeep} 82%, transparent)` }}
         >
-          <Search size={17} className="shrink-0" style={{ color: theme.colors.textFaint }} />
+          <WorldIcon name="search" size={17} className="shrink-0" style={{ color: theme.colors.textFaint }} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}

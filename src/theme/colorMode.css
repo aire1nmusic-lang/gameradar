@@ -369,3 +369,56 @@ html[data-color-mode='light'] .gs-provider-icon--discord { background: rgb(88 10
   .gs-admin-hero { min-height: 166px; }
   .gs-admin-tabs { margin-top: -2px; }
 }
+
+
+/* World chrome: the shell itself is part of the constructor.
+   Utility routes keep the selected world, so the header/tab bar do not visually
+   jump back to the neutral platform between L2 pages. */
+html[data-world='lineage2'][data-color-mode='dark'] .gs-site-header {
+  background: rgb(8 7 10 / .96) !important;
+  border-color: rgb(216 178 92 / .14) !important;
+  box-shadow: 0 10px 32px -28px rgb(216 178 92 / .40);
+}
+html[data-world='lineage2'][data-color-mode='dark'] .gs-mobile-nav {
+  background: rgb(8 7 10 / .96) !important;
+  border-color: rgb(216 178 92 / .14) !important;
+  box-shadow: 0 -10px 32px -28px rgb(216 178 92 / .34);
+}
+html[data-world='lineage2'] .gs-theme-toggle {
+  border-color: rgb(216 178 92 / .18);
+}
+html[data-world='lineage2'] .gs-mobile-nav .bg-signal-400,
+html[data-world='lineage2'] .gs-mobile-nav .bg-signal-500 {
+  background: #d8b25c !important;
+}
+html[data-world='lineage2'] .gs-mobile-nav a[aria-current='page'] {
+  color: #f3e6c6;
+}
+html[data-world='lineage2'][data-color-mode='light'] .gs-mobile-nav a[aria-current='page'] {
+  color: #6e4e17;
+}
+.gs-world-utility .surface,
+.gs-world-utility .surface-raised {
+  background: var(--gt-card-bg);
+  border-color: var(--gt-border);
+  box-shadow: var(--gt-card-shadow);
+}
+.gs-world-utility h1,
+.gs-world-utility h2,
+.gs-world-utility h3 {
+  font-family: var(--gt-font-display, var(--font-display));
+}
+.gs-world-icon {
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+html[data-world='lineage2'][data-color-mode='dark'] .gs-site-footer {
+  background:
+    linear-gradient(180deg, rgb(9 8 11 / .98), rgb(5 5 8 / .99)) !important;
+  border-color: rgb(216 178 92 / .12) !important;
+}
+html[data-world='lineage2'][data-color-mode='light'] .gs-site-footer {
+  background: linear-gradient(180deg, #eee6da, #e8decf) !important;
+  border-color: rgb(111 80 37 / .12) !important;
+}

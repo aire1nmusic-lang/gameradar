@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { LayoutGrid, List, Search, SlidersHorizontal, X } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
@@ -132,7 +132,7 @@ export default function Catalog() {
         </div>
 
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22">
-          <Search size={17} className="shrink-0 text-ink-400" />
+          <WorldIcon name="search" size={17} className="shrink-0 text-ink-400" />
           <input
             value={filters.query}
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
@@ -141,7 +141,7 @@ export default function Catalog() {
           />
           {filters.query && (
             <button onClick={() => setFilters({ ...filters, query: '' })} aria-label="Очистить" className="grid h-8 w-8 place-items-center rounded-md text-ink-400 hover:bg-white/6 hover:text-ink-50">
-              <X size={16} />
+              <WorldIcon name="close" size={16} />
             </button>
           )}
         </div>
@@ -154,7 +154,7 @@ export default function Catalog() {
             onClick={() => setFiltersOpen(true)}
             className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
           >
-            <SlidersHorizontal size={14} />
+            <WorldIcon name="filter" size={14} />
             Фильтры
             {activeCount > 0 && (
               <span className="num grid h-[18px] min-w-[18px] place-items-center rounded-full bg-signal-500 px-1 text-[10px] font-semibold text-ink-950">{activeCount}</span>
@@ -169,7 +169,7 @@ export default function Catalog() {
                 className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] py-1 pr-2 pl-3 text-[12.5px] text-ink-200 transition-colors hover:border-white/20"
               >
                 {chip.label}
-                <X size={12} className="text-ink-500 group-hover:text-ink-200" />
+                <WorldIcon name="close" size={12} className="text-ink-500 group-hover:text-ink-200" />
               </button>
             ))}
             {chips.length > 1 && (
@@ -188,10 +188,10 @@ export default function Catalog() {
 
           <div className="hidden shrink-0 items-center rounded-md border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
             <ViewButton active={view === 'list'} onClick={() => setView('list')} label="Список">
-              <List size={15} />
+              <WorldIcon name="list" size={15} />
             </ViewButton>
             <ViewButton active={view === 'grid'} onClick={() => setView('grid')} label="Плитка">
-              <LayoutGrid size={15} />
+              <WorldIcon name="grid" size={15} />
             </ViewButton>
           </div>
         </Container>

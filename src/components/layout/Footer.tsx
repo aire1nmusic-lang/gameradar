@@ -80,7 +80,7 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={['/catalog','/rating','/openings','/favorites'].includes(link.to)?scoped(link.to):link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
+                    <Link to={['/catalog','/rating','/openings','/favorites','/account','/owners','/dashboard','/add-server'].includes(link.to)?scoped(link.to):link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
                       {link.label}
                     </Link>
                   </li>

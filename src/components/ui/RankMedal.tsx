@@ -1,22 +1,27 @@
 import { cn } from '@/lib/utils'
 
 export const MEDAL: Record<number, { bg: string; ring: string; text: string }> = {
-  1: { bg: 'linear-gradient(145deg,#ffe08a,#e0a82e 55%,#b9791a)', ring: 'rgba(255,214,102,.55)', text: '#3b2503' },
-  2: { bg: 'linear-gradient(145deg,#f3f5f8,#b8c0cc 55%,#8c96a5)', ring: 'rgba(214,222,235,.5)', text: '#222a35' },
-  3: { bg: 'linear-gradient(145deg,#f1c19a,#cd7f44 55%,#955224)', ring: 'rgba(222,150,96,.5)', text: '#3a1c07' },
+  1: { bg: 'linear-gradient(160deg,#f8dda0 0%,#c99534 58%,#765019 100%)', ring: 'rgba(226,188,104,.50)', text: '#2b1d08' },
+  2: { bg: 'linear-gradient(160deg,#eef1f5 0%,#a9b2bf 58%,#5f6876 100%)', ring: 'rgba(196,205,218,.42)', text: '#1f2630' },
+  3: { bg: 'linear-gradient(160deg,#e8b68f 0%,#b96f3f 58%,#6f3d25 100%)', ring: 'rgba(205,132,83,.42)', text: '#26150c' },
 }
 
-/** Place in a ranking: gold, silver and bronze for the top three, a quiet number after. */
+/** Compact heraldic rank mark: reads like a game ranking, not a casino coin. */
 export function RankMedal({ rank, className }: { rank: number; className?: string }) {
   const medal = MEDAL[rank]
   return (
     <span
       className={cn(
-        'num grid h-7 w-7 shrink-0 place-items-center rounded-full font-display text-[13px] font-bold',
-        !medal && 'text-ink-500',
+        'num grid h-8 w-7 shrink-0 place-items-center font-display text-[12px] font-bold',
+        !medal && 'text-ink-400',
         className,
       )}
-      style={medal ? { background: medal.bg, color: medal.text, boxShadow: `0 0 0 2px ${medal.ring}, 0 4px 10px -4px rgba(0,0,0,.8)` } : undefined}
+      style={{
+        clipPath: 'polygon(50% 0, 92% 18%, 84% 73%, 50% 100%, 16% 73%, 8% 18%)',
+        background: medal?.bg ?? 'linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.035))',
+        color: medal?.text,
+        boxShadow: medal ? `inset 0 1px 0 rgba(255,255,255,.35), 0 5px 12px -7px ${medal.ring}` : 'inset 0 0 0 1px rgba(255,255,255,.10)',
+      }}
     >
       {rank}
     </span>

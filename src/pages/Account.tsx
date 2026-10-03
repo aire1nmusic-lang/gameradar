@@ -9,7 +9,7 @@ import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
 import { ClaimProof } from '@/components/account/ClaimProof'
 import { GsMark } from '@/components/layout/Logo'
-import { Check, ChevronRight, Copy, Gamepad2, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Copy, Gamepad2, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}

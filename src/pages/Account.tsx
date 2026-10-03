@@ -9,7 +9,8 @@ import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
 import { ClaimProof } from '@/components/account/ClaimProof'
 import { GsMark } from '@/components/layout/Logo'
-import { ChevronRight, Copy, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
+import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -23,6 +24,7 @@ const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Ян
 export default function Account() {
   useSeo({title:'Аккаунт',path:'/account',noindex:true})
   const auth=useAuth(), profile=auth.user as (typeof auth.user & Profile)
+  const {scoped}=useWorldNavigation()
   const [mode,setMode]=useState<'login'|'register'|'reset'>('login')
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState('')
   const [message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false)
@@ -107,9 +109,9 @@ export default function Account() {
           </div>
           <div className="mt-1 flex min-w-0 items-center gap-2 text-[12px] opacity-68">
             <span className="truncate">{profile?.email??'Email не привязан'}</span>
-            {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg hover:bg-current/5"><Copy size={13}/></button>}
+            {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg hover:bg-current/5"><WorldIcon name="copy" size={13}/></button>}
           </div>
-          {profile?.email&&<div className="mt-1 flex items-center gap-1.5 text-[11px] opacity-65">{profile.emailVerified?<><ShieldCheck size={13} className="text-signal-400"/> Email подтверждён</>:<>Email требует подтверждения</>}</div>}
+          {profile?.email&&<div className="mt-1 flex items-center gap-1.5 text-[11px] opacity-65">{profile.emailVerified?<><WorldIcon name="shield" size={13} className="text-signal-400"/> Email подтверждён</>:<>Email требует подтверждения</>}</div>}
         </div>
       </div>
       {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="mt-4 flex gap-2">
@@ -119,9 +121,9 @@ export default function Account() {
     </section>
 
     {!!auth.providers.length&&<section>
-      <h2 className="mb-3 flex items-center justify-between text-[16px] font-semibold"><span>Подключение аккаунтов</span><ChevronRight size={17} className="opacity-55"/></h2>
+      <h2 className="mb-3 flex items-center justify-between text-[16px] font-semibold"><span>Подключение аккаунтов</span><WorldIcon name="chevronRight" size={17} className="opacity-55"/></h2>
       <div className="grid grid-cols-2 gap-3">
-        {auth.providers.map(p=><button key={p} type="button" onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)} className="gs-provider-tile group flex min-h-[82px] items-center gap-3 rounded-[18px] border p-3 text-left transition-transform active:scale-[.985]">
+        {auth.providers.map(p=><button key={p} type="button" onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=${encodeURIComponent(scoped('/account'))}`)} className="gs-provider-tile group flex min-h-[82px] items-center gap-3 rounded-[18px] border p-3 text-left transition-transform active:scale-[.985]">
           <span className={"gs-provider-icon gs-provider-icon--"+p+" grid h-11 w-11 shrink-0 place-items-center rounded-full border text-[18px] font-bold"}>{p==='google'?<GoogleBrandIcon/>:p==='discord'?<DiscordBrandIcon/>:providerLabels[p]?.slice(0,1)??p.slice(0,1).toUpperCase()}</span>
           <span className="min-w-0"><strong className="block truncate text-[14px]">{providerLabels[p]??p}</strong><span className="mt-0.5 block text-[11px] opacity-60">Подключить</span></span>
         </button>)}
@@ -131,21 +133,21 @@ export default function Account() {
     <section>
       <h2 className="mb-3 text-[16px] font-semibold">Действия с аккаунтом</h2>
       <div className="grid grid-cols-2 gap-3">
-        <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action flex h-14 items-center justify-center gap-2 rounded-[16px] border text-[13px] font-medium disabled:opacity-50"><LogOut size={17}/>Выйти</button>
-        {isAdmin?<Button to="/admin" className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<Settings size={17}/>} iconRight={<ChevronRight size={16}/>}>Админский кабинет</Button>
-          :<Button to="/catalog" className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<Search size={17}/>} iconRight={<ChevronRight size={16}/>}>Найти сервер</Button>}
+        <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action flex h-14 items-center justify-center gap-2 rounded-[16px] border text-[13px] font-medium disabled:opacity-50"><WorldIcon name="logout" size={17}/>Выйти</button>
+        {isAdmin?<Button to={scoped('/admin')} className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<WorldIcon name="admin" size={17}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Админский кабинет</Button>
+          :<Button to={scoped('/catalog')} className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<WorldIcon name="search" size={17}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Найти сервер</Button>}
       </div>
     </section>
 
     <AccountCoins key={auth.user.id}/>
 
     <section className="gs-account-servers space-y-3">
-      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><ChevronRight size={18} className="opacity-55"/></h2>
+      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><WorldIcon name="chevronRight" size={18} className="opacity-55"/></h2>
       {!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
-        <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><Server size={25}/></span>
+        <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>
         <h3 className="mt-4 text-[15px] font-semibold">Подтверждённых серверов пока нет</h3>
         <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed opacity-62">Добавьте сервер, чтобы отслеживать онлайн, рейтинг и получать уведомления.</p>
-        <Button to="/catalog" className="gs-find-server mt-5 h-11 min-w-[220px] rounded-xl" icon={<Search size={16}/>} iconRight={<ChevronRight size={16}/>}>Найти серверы</Button>
+        <Button to={scoped('/catalog')} className="gs-find-server mt-5 h-11 min-w-[220px] rounded-xl" icon={<WorldIcon name="search" size={16}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Найти серверы</Button>
       </div>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
 
       <details className="gs-account-claim rounded-[18px] border p-4">

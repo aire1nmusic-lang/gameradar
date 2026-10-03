@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { Moon, Search, Sun, UserRound } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { Container } from './Container'
@@ -58,7 +58,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
           onClick={onSearch}
           className="group ml-auto hidden h-10 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[300px]"
         >
-          <Search size={15} className="shrink-0" />
+          <WorldIcon name="search" size={16} className="shrink-0" />
           <span className="min-w-0 flex-1 truncate text-left">
             <span className="lg:hidden">Поиск</span>
             <span className="hidden lg:inline">{game?`Поиск в ${game.shortName}`:'Сервер, игра, режим…'}</span>
@@ -73,27 +73,27 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
           title={colorMode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
           className="gs-theme-toggle ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-ink-200 backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-ink-50 active:scale-95 md:ml-0"
         >
-          {colorMode === 'dark' ? <Sun size={19} strokeWidth={1.8} /> : <Moon size={19} strokeWidth={1.8} />}
+          {colorMode === 'dark' ? <WorldIcon name="sun" size={20} /> : <WorldIcon name="moon" size={20} />}
         </button>
 
-        {auth.privateCore ? <Link to="/account" aria-label={`Аккаунт: ${accountLabel}`} className={accountClass}>
-          <UserRound size={15} className="shrink-0" /><span className="truncate">{accountLabel}</span>
+        {auth.privateCore ? <Link to={scoped('/account')} aria-label={`Аккаунт: ${accountLabel}`} className={accountClass}>
+          <WorldIcon name="profile" size={16} className="shrink-0" /><span className="truncate">{accountLabel}</span>
         </Link> : <button
           onClick={onLogin}
           className={accountClass}
         >
-          <UserRound size={15} />
+          <WorldIcon name="profile" size={16} />
           {auth.user?.displayName || 'Войти'}
         </button>}
 
-        {auth.privateCore ? <Link to="/account" aria-label={`Аккаунт: ${accountLabel}`} className={mobileAccountClass}>
-          <UserRound size={20} />
+        {auth.privateCore ? <Link to={scoped('/account')} aria-label={`Аккаунт: ${accountLabel}`} className={mobileAccountClass}>
+          <WorldIcon name="profile" size={21} />
         </Link> : <button
           onClick={onLogin}
           aria-label={auth.user?`Аккаунт: ${auth.user.displayName}`:'Войти'}
           className={mobileAccountClass}
         >
-          <UserRound size={20} />
+          <WorldIcon name="profile" size={21} />
         </button>}
       </Container>
     </header>

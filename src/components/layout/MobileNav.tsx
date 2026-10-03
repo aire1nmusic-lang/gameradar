@@ -1,15 +1,15 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Heart, Home, LayoutList, UserRound } from 'lucide-react'
+import { WorldIcon, type WorldIconName } from '@/components/icons/WorldIcon'
 import { cn } from '@/lib/utils'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 /** Four primary mobile destinations: simple enough to hit with one hand. */
-const ITEMS = [
-  { to: '/', label: 'Главная', icon: Home, end: true },
-  { to: '/catalog', label: 'Серверы', icon: LayoutList, end: false },
-  { to: '/favorites', label: 'Избранное', icon: Heart, end: false },
-  { to: '/account', label: 'Профиль', icon: UserRound, end: false },
+const ITEMS:{to:string;label:string;icon:WorldIconName;end:boolean}[] = [
+  { to: '/', label: 'Главная', icon: 'home', end: true },
+  { to: '/catalog', label: 'Серверы', icon: 'servers', end: false },
+  { to: '/favorites', label: 'Избранное', icon: 'favorite', end: false },
+  { to: '/account', label: 'Профиль', icon: 'profile', end: false },
 ]
 
 /** Routes whose own bottom bar replaces the navigation (a server profile has one CTA bar). */
@@ -18,7 +18,7 @@ const HIDDEN = [/^\/add-server/, /^\/server\//]
 export function MobileNav() {
   const { favorites } = useFavorites()
   const location = useLocation()
-  const {scoped}=useWorldNavigation()
+  const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
   return (
@@ -28,7 +28,7 @@ export function MobileNav() {
           <NavItem
             key={item.to}
             {...item}
-            to={['/catalog','/favorites'].includes(item.to) ? scoped(item.to) : item.to}
+            to={item.to==='/'&&game ? `/${game.slug}` : ['/catalog','/favorites','/account'].includes(item.to) ? scoped(item.to) : item.to}
             badge={item.to === '/favorites' ? favorites.length : 0}
           />
         ))}
@@ -37,7 +37,7 @@ export function MobileNav() {
   )
 }
 
-function NavItem({ to, label, icon: Icon, end, badge }: { to: string; label: string; icon: typeof Home; end: boolean; badge: number }) {
+function NavItem({ to, label, icon, end, badge }: { to: string; label: string; icon: WorldIconName; end: boolean; badge: number }) {
   return (
     <NavLink
       to={to}
@@ -49,7 +49,7 @@ function NavItem({ to, label, icon: Icon, end, badge }: { to: string; label: str
       {({ isActive }) => (
         <>
           <span className="relative">
-            <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
+            <WorldIcon name={icon} size={21} strokeWidth={isActive ? 2.1 : 1.7} />
             {badge > 0 && (
               <span className="num absolute -top-1.5 -right-2 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-signal-500 px-1 text-[9px] font-semibold text-ink-950">
                 {badge}

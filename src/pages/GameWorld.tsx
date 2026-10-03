@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { ArrowRight, Flame, LayoutGrid, Plus, Rows3 } from 'lucide-react'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { resolveWorld } from '@/data/themes'
 import { chronicleOfVersion } from '@/data/games'
 import { useServers } from '@/hooks/data'
@@ -242,7 +242,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
 
             <section id="all" className="mt-10 scroll-mt-24">
               <SectionHead
-                eyebrow={<><Flame size={12} /> Каталог</>}
+                eyebrow={<><WorldIcon name="catalog" size={13} /> Каталог</>}
                 title={chronicle ? `Все серверы ${chronicle.label}` : `Все серверы ${game.shortName}`}
                 action={{ label: 'Фильтры', to: `/catalog?game=${game.id}` }}
                 right={
@@ -263,8 +263,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                       onChange={setView}
                       size="sm"
                       options={[
-                        { value: 'list', label: <span aria-label="Списком" title="Списком"><Rows3 size={15} /></span> },
-                        { value: 'grid', label: <span aria-label="Плитками" title="Плитками"><LayoutGrid size={15} /></span> },
+                        { value: 'list', label: <span aria-label="Списком" title="Списком"><WorldIcon name="list" size={15} /></span> },
+                        { value: 'grid', label: <span aria-label="Плитками" title="Плитками"><WorldIcon name="grid" size={15} /></span> },
                       ]}
                     />
                   </>
@@ -306,7 +306,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               Разместите проект бесплатно и подключите проверку онлайна.
             </p>
           </div>
-          <ThemedButton to="/owners" icon={<Plus size={14} />}>
+          <ThemedButton to="/owners" icon={<WorldIcon name="plus" size={14} />}>
             Узнать больше
           </ThemedButton>
         </div>
@@ -325,7 +325,7 @@ function SectionHead({ eyebrow, title, action, right }: { eyebrow: React.ReactNo
       <div className="flex flex-wrap items-center gap-2">
         {right}
         {action && (
-          <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<ArrowRight size={14} />}>
+          <ThemedButton to={action.to} variant="ghost" size="sm" iconRight={<WorldIcon name="chevronRight" size={14} />}>
             {action.label}
           </ThemedButton>
         )}

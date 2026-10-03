@@ -7,7 +7,7 @@ import { Field, Input, Textarea } from '@/components/ui/controls'
 import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
 import { CoinGrant } from '@/components/admin/CoinGrant'
 import { CoinsJournal } from '@/components/admin/CoinsJournal'
-import { ClipboardCheck, CreditCard, Headphones, Server, Users, Vote } from 'lucide-react'
+import { WorldIcon, type WorldIconName } from '@/components/icons/WorldIcon'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -26,14 +26,14 @@ const tabs:Tab[]=[
   {id:'copyright',label:'Copyright',permission:'copyright.read',path:'/admin/copyright'},
   {id:'system',label:'События',permission:'system.read',path:'/admin/system'},
 ]
-const overviewCards=[
-  {label:'Пользователи',key:'users',tone:'violet',Icon:Users},
-  {label:'Серверы',key:'servers',tone:'gold',Icon:Server},
-  {label:'Claims на проверке',key:'pending_claims',tone:'blue',Icon:ClipboardCheck},
-  {label:'Голоса',key:'votes',tone:'purple',Icon:Vote},
-  {label:'События Поддержки',key:'support_events',tone:'orange',Icon:Headphones},
-  {label:'Ожидают тестовой оплаты',key:'pending_test_payments',tone:'green',Icon:CreditCard},
-] as const
+const overviewCards:{label:string;key:string;tone:string;icon:WorldIconName}[]=[
+  {label:'Пользователи',key:'users',tone:'violet',icon:'users'},
+  {label:'Серверы',key:'servers',tone:'gold',icon:'servers'},
+  {label:'Claims на проверке',key:'pending_claims',tone:'blue',icon:'claim'},
+  {label:'Голоса',key:'votes',tone:'purple',icon:'vote'},
+  {label:'События Поддержки',key:'support_events',tone:'orange',icon:'support'},
+  {label:'Ожидают тестовой оплаты',key:'pending_test_payments',tone:'green',icon:'payment'},
+]
 
 type Row=Record<string,unknown>
 const value=(row:Row,key:string)=>String(row[key]??'—')
@@ -87,9 +87,9 @@ export default function Admin() {
     <nav aria-label="Разделы админки" className="gs-admin-tabs sticky top-[60px] z-20 -mx-4 flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:p-0">{allowed.map(tab=><button key={tab.id} type="button" className={"gs-admin-tab shrink-0 whitespace-nowrap rounded-[15px] border px-4 py-2.5 text-[13px] font-medium transition-all "+(active.id===tab.id?'is-active':'')} onClick={()=>setSelected(tab.id)}>{tab.label}</button>)}</nav>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
     {loading?<p>Загрузка…</p>:<>
-      {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{overviewCards.map(({label,key,tone,Icon})=><div key={key} className={"gs-admin-stat gs-admin-stat--"+tone+" relative overflow-hidden rounded-[20px] border p-4 sm:p-5"}>
+      {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{overviewCards.map(({label,key,tone,icon})=><div key={key} className={"gs-admin-stat gs-admin-stat--"+tone+" relative overflow-hidden rounded-[20px] border p-4 sm:p-5"}>
         <div className="relative z-10 flex items-center gap-3">
-          <span className="gs-admin-stat-icon grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border"><Icon size={21} strokeWidth={1.8}/></span>
+          <span className="gs-admin-stat-icon grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border"><WorldIcon name={icon} size={21} strokeWidth={1.75}/></span>
           <div className="min-w-0"><p className="text-[11px] leading-tight text-ink-300 sm:text-[12px]">{label}</p><strong className="num mt-1 block text-[28px] leading-none text-ink-50 sm:text-[32px]">{value(summary,key)}</strong></div>
         </div>
       </div>)}</section>}

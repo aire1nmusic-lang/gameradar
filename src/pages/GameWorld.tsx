@@ -226,7 +226,7 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
                 to="/rating?sort=support"
               >
                 {topSupport.length > 0
-                  ? topSupport.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  ? topSupport.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} metric="support" compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
                   : <ShelfNote title="Поддержки пока нет" text="Когда игроки начнут поддерживать серверы, лидеры появятся здесь." />}
               </RankPanel>
 
@@ -246,7 +246,7 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
                 to={`/rating?game=${game.id}`}
               >
                 {topOnline.length > 0
-                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
                   : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда мы получим свежие данные." />}
               </RankPanel>
             </div>

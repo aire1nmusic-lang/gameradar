@@ -412,3 +412,13 @@ html[data-world='lineage2'][data-color-mode='light'] .gs-mobile-nav a[aria-curre
   vector-effect: non-scaling-stroke;
   shape-rendering: geometricPrecision;
 }
+
+html[data-world='lineage2'][data-color-mode='dark'] .gs-site-footer {
+  background:
+    linear-gradient(180deg, rgb(9 8 11 / .98), rgb(5 5 8 / .99)) !important;
+  border-color: rgb(216 178 92 / .12) !important;
+}
+html[data-world='lineage2'][data-color-mode='light'] .gs-site-footer {
+  background: linear-gradient(180deg, #eee6da, #e8decf) !important;
+  border-color: rgb(111 80 37 / .12) !important;
+}

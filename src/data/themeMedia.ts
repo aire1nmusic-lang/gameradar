@@ -63,11 +63,11 @@ const keyart = (base: string, alt: string, tone: ArtTone, mobile: string, deskto
    ──────────────────────────────────────────────────────────────────────────── */
 
 const ART = {
-  l2Master: keyart('lineage-2/master', 'Lineage 2 — рыцарь, эльфийка, тёмная эльфийка, орк и гном на скале перед Башней Дерзости и Аденом на закате', 'medium', '74% 45%', '55% 40%'),
-  l2Interlude: art('lineage-2/interlude-approved', 'Lineage 2 Interlude — розововолосая разбойница на фоне фэнтезийного города на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [400]),
-  l2HighFive: art('lineage-2/high-five-approved', 'Lineage 2 High Five — рыжеволосая волшебница, луна и синий магический город', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [400]),
-  l2Classic: art('lineage-2/classic-approved', 'Lineage 2 Classic — орк-воин у заснеженной крепости', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [400]),
-  l2Essence: art('lineage-2/essence-approved', 'Lineage 2 Essence — воительница в светлых доспехах на фоне замка на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [400]),
+  l2Master: art('lineage-2/hero-user-v7', 'Lineage 2 — яркий фэнтезийный город на закате с розововолосой героиней', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [800]),
+  l2Interlude: art('lineage-2/interlude-user-v7', 'Lineage 2 Interlude — розововолосая разбойница на фоне фэнтезийного города на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
+  l2HighFive: art('lineage-2/high-five-user-v7', 'Lineage 2 High Five — рыжеволосая волшебница, луна и синий магический город', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
+  l2Classic: art('lineage-2/classic-user-v7', 'Lineage 2 Classic — орк-воин у заснеженной крепости', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
+  l2Essence: art('lineage-2/essence-user-v7', 'Lineage 2 Essence — воительница в светлых доспехах на фоне замка на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
   mcMaster: keyart('minecraft/master', 'Minecraft — солнечная долина с деревней, каменным замком и водопадом, игрок в алмазной броне', 'bright', '82% 55%', '60% 50%'),
   mcAnarchy: keyart('minecraft/anarchy', 'Minecraft Anarchy — разрушенный блочный город с лавой ночью', 'dark', '70% 55%'),
   mcSkyBlock: keyart('minecraft/skyblock', 'Minecraft SkyBlock — парящие острова с водопадами на рассвете, домик и сундук', 'bright', '70% 50%', '55% 50%'),

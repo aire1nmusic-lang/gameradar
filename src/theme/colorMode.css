@@ -83,7 +83,7 @@ html[data-color-mode='light'] .skeleton {
   background:
     linear-gradient(90deg, rgb(7 9 15 / .95) 0%, rgb(8 10 17 / .84) 50%, rgb(8 10 17 / .32) 100%),
     linear-gradient(0deg, rgb(7 9 15 / .72), transparent 70%),
-    url('/media/worlds/lineage-2/master-800.webp') center 38% / cover no-repeat;
+    url('/media/worlds/lineage-2/hero-user-v7-800.webp') center 38% / cover no-repeat;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 24px 50px -36px rgb(0 0 0 / .9);
 }
 .gs-account-kicker { color: #c493ff; }
@@ -166,7 +166,7 @@ html[data-color-mode='light'] .gs-account-hero {
   background:
     linear-gradient(90deg, rgb(250 246 238 / .97) 0%, rgb(250 246 238 / .88) 46%, rgb(250 246 238 / .30) 100%),
     linear-gradient(0deg, rgb(250 246 238 / .50), transparent 70%),
-    url('/media/worlds/lineage-2/master-800.webp') center 38% / cover no-repeat;
+    url('/media/worlds/lineage-2/hero-user-v7-800.webp') center 38% / cover no-repeat;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), 0 20px 42px -34px rgb(93 65 29 / .35);
 }
 html[data-color-mode='light'] .gs-account-kicker { color: #9a6816; }

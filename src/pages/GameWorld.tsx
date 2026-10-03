@@ -16,42 +16,40 @@ import { ChronicleTiles } from '@/components/world/ChronicleTiles'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { breadcrumbs, useSeo } from '@/lib/seo'
+import { useAppearance } from '@/theme/appearance'
 
-type WorldColorMode = 'dark' | 'light'
-const L2_COLOR_MODE_KEY = 'gs.lineage2.color-mode'
-
-function lineageLightTheme(theme: GameTheme): GameTheme {
+function lightWorldTheme(theme: GameTheme): GameTheme {
   return {
     ...theme,
     colors: {
       ...theme.colors,
-      bg: '#EDF3F8',
-      bgDeep: '#E3EBF1',
-      surface: 'rgba(255,255,255,0.94)',
-      surfaceRaised: '#FFFFFF',
-      border: 'rgba(31,45,58,0.12)',
-      borderStrong: 'rgba(176,141,60,0.38)',
-      text: '#101820',
-      textMuted: '#5F6B76',
-      textFaint: '#7B8791',
+      bg: '#F4EFE6',
+      bgDeep: '#EAE2D5',
+      surface: 'rgba(255,250,242,0.94)',
+      surfaceRaised: '#FBF6ED',
+      border: 'rgba(91,70,38,0.16)',
+      borderStrong: 'rgba(175,128,43,0.45)',
+      text: '#202127',
+      textMuted: '#66656A',
+      textFaint: '#89847C',
     },
     gradients: {
       ...theme.gradients,
-      hero: 'linear-gradient(180deg, #DDE8F0 0%, #EDF3F8 100%)',
+      hero: 'linear-gradient(180deg, #EDE3D3 0%, #F4EFE6 100%)',
     },
     glow: {
       ...theme.glow,
-      soft: '0 10px 30px -18px rgba(32,48,62,0.24)',
-      strong: '0 18px 46px -24px rgba(32,48,62,0.32)',
-      ring: '0 0 0 1px rgba(176,141,60,0.22)',
+      soft: '0 10px 30px -18px rgba(83,64,35,0.24)',
+      strong: '0 18px 46px -24px rgba(83,64,35,0.32)',
+      ring: '0 0 0 1px rgba(175,128,43,0.24)',
     },
     card: {
       ...theme.card,
-      background: 'linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,250,252,.98))',
-      border: '1px solid rgba(31,45,58,.12)',
-      shadow: '0 8px 24px -16px rgba(32,48,62,.28)',
-      shadowHover: '0 12px 30px -16px rgba(32,48,62,.34)',
-      overlay: 'linear-gradient(to top, rgba(237,243,248,.96) 14%, rgba(237,243,248,.45) 58%, rgba(237,243,248,.04))',
+      background: 'linear-gradient(180deg, rgba(255,251,245,.98), rgba(247,240,229,.98))',
+      border: '1px solid rgba(91,70,38,.14)',
+      shadow: '0 8px 24px -16px rgba(83,64,35,.24)',
+      shadowHover: '0 12px 30px -16px rgba(83,64,35,.30)',
+      overlay: 'linear-gradient(to top, rgba(244,239,230,.96) 14%, rgba(244,239,230,.45) 58%, rgba(244,239,230,.04))',
     },
   }
 }
@@ -66,32 +64,20 @@ export default function GameWorld() {
   const world = resolveWorld(gameSlug, chronicleSlug)
   // Arriving through a gate of the hall: the world opens out of its own colour.
   const fromPortal = !!(useLocation().state as { portal?: boolean } | null)?.portal
-  const [colorMode, setColorMode] = useState<WorldColorMode>(() => {
-    try { return localStorage.getItem(L2_COLOR_MODE_KEY) === 'light' ? 'light' : 'dark' } catch { return 'dark' }
-  })
+  const { colorMode } = useAppearance()
   const isLineage2 = world.game?.id === 'lineage2'
-  const activeTheme = isLineage2 && colorMode === 'light' ? lineageLightTheme(world.theme) : world.theme
-
-  useEffect(() => {
-    if (!isLineage2) return
-    try { localStorage.setItem(L2_COLOR_MODE_KEY, colorMode) } catch { /* optional preference */ }
-    const root = document.documentElement
-    root.dataset.worldMode = colorMode
-    return () => { delete root.dataset.worldMode }
-  }, [colorMode, isLineage2])
+  const activeTheme = colorMode === 'light' ? lightWorldTheme(world.theme) : world.theme
 
   // unknown single-segment url — this route sits below every static route
   if (!world.game) return <NotFound />
   if (chronicleSlug && !world.chronicle) return <Navigate to={`/${world.game.slug}`} replace />
 
-  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative', isLineage2 ? 'gs-mobile-world' : '', isLineage2 && colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
+  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative', isLineage2 ? 'gs-mobile-world' : '', colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
   return (
     <ThemeScope theme={activeTheme} as="div" className={scopeClass}>
       <WorldBody
         gameSlug={world.game.slug}
         chronicleSlug={world.chronicle?.slug}
-        colorMode={isLineage2 ? colorMode : undefined}
-        onToggleColorMode={isLineage2 ? () => setColorMode((mode) => mode === 'dark' ? 'light' : 'dark') : undefined}
         key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`}
       />
     </ThemeScope>
@@ -101,7 +87,7 @@ export default function GameWorld() {
 type Sort = 'online' | 'new' | 'name'
 const WORLD_SORT_KEY = 'gs.world.sort'
 
-function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { gameSlug: string; chronicleSlug?: string; colorMode?: WorldColorMode; onToggleColorMode?: () => void }) {
+function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const [sort, setSort] = useState<Sort>(() => {
@@ -154,6 +140,12 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
       .sort((a, b) => (b.support?.coins ?? 0) - (a.support?.coins ?? 0) || b.votes - a.votes),
     [rest],
   )
+  const communityVotes = useMemo(
+    () => rest.filter((server) => server.votes > 0).sort((a, b) => b.votes - a.votes),
+    [rest],
+  )
+  const supportRows = topSupport.length > 0 ? topSupport : communityVotes
+  const supportMetric: 'support' | 'votes' = topSupport.length > 0 ? 'support' : 'votes'
   const listed = useMemo(() => {
     const byName = (a: GameServer, b: GameServer) => a.name.localeCompare(b.name, 'ru', { sensitivity: 'base', numeric: true }) || a.slug.localeCompare(b.slug)
     const openedAt = (server: GameServer) => {
@@ -194,8 +186,6 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
         serversCount={(loading || error) && servers.length === 0 ? undefined : servers.length}
         playersOnline={playersOnline}
         openings={openings.length}
-        colorMode={colorMode}
-        onToggleColorMode={onToggleColorMode}
       />
 
       <Container className="relative pb-16">
@@ -222,11 +212,11 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
             <div className="mt-6 grid gap-5 lg:grid-cols-3 lg:gap-3">
               <RankPanel
                 plainMobile
-                title="Топ по поддержке"
+                title={topSupport.length > 0 ? 'Топ по поддержке' : 'Топ сообщества'}
               >
-                {topSupport.length > 0
-                  ? topSupport.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} metric="support" compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
-                  : <ShelfNote title="Поддержки пока нет" text="Когда игроки начнут поддерживать серверы, лидеры появятся здесь." />}
+                {supportRows.length > 0
+                  ? supportRows.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric={supportMetric} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  : <ShelfNote title="Рейтинг пока формируется" text="Здесь появятся серверы, за которые уже проголосовало сообщество." />}
               </RankPanel>
 
               <RankPanel
@@ -245,7 +235,7 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
                 to={`/rating?game=${game.id}`}
               >
                 {topOnline.length > 0
-                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
                   : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда мы получим свежие данные." />}
               </RankPanel>
             </div>
@@ -282,7 +272,7 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
               />
               {listed.length > 0 ? (
                 <>
-                  {listedKnown.length > 0 && (view === 'grid' ? <ServerTiles servers={listedKnown} ranked showGame={false} /> : <ServerList servers={listedKnown} ranked showGame={false} />)}
+                  {listedKnown.length > 0 && (view === 'grid' ? <ServerTiles servers={listedKnown} showGame={false} /> : <ServerList servers={listedKnown} showGame={false} />)}
                   {listedUnknown.length > 0 && (
                     <>
                       {listedKnown.length > 0 && (

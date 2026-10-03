@@ -8,6 +8,8 @@ import { Notice } from '@/components/ui/feedback'
 import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
 import { ClaimProof } from '@/components/account/ClaimProof'
+import { GsMark } from '@/components/layout/Logo'
+import { ChevronRight, Copy, Gamepad2, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -68,49 +70,107 @@ export default function Account() {
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}/>
-  return <main className="gs-account-page mx-auto max-w-2xl space-y-6 px-4 py-10">
-    <h1 className="text-2xl font-semibold">Аккаунт GameScout</h1>
-    {error&&<p role="alert" className="text-danger-300">{error}</p>}
-    {message&&<p role="status" className="text-signal-400">{message}</p>}
-    {linkToken&&<section className="surface space-y-3 p-5">
-      <h2>Подтверждение {purpose==='reset'?'нового пароля':'email'}</h2>
+  const isAdmin=!!profile?.permissions?.length
+  const playerStatus=profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'
+  const copyEmail=()=>{if(profile?.email&&navigator.clipboard)void navigator.clipboard.writeText(profile.email)}
+
+  return <main className="gs-account-page gs-account-premium mx-auto w-full max-w-2xl space-y-6 px-4 py-6 sm:py-8">
+    <section className="gs-account-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
+      <div className="relative z-10 max-w-[420px]">
+        <p className="gs-account-kicker text-[12px] font-semibold uppercase tracking-[0.16em]">Аккаунт</p>
+        <h1 className="mt-1 text-[32px] font-bold leading-[1.05] sm:text-[38px]">GameScout</h1>
+        <p className="mt-3 max-w-sm text-[13px] leading-relaxed opacity-70 sm:text-[14px]">Профиль, подключённые сервисы и игровая активность в одном месте.</p>
+      </div>
+    </section>
+
+    {error&&<p role="alert" className="rounded-xl border border-danger-400/25 bg-danger-500/8 px-4 py-3 text-[13px] text-danger-300">{error}</p>}
+    {message&&<p role="status" className="rounded-xl border border-signal-400/20 bg-signal-500/8 px-4 py-3 text-[13px] text-signal-400">{message}</p>}
+
+    {linkToken&&<section className="gs-account-card space-y-3 rounded-[22px] border p-5">
+      <h2 className="text-[17px] font-semibold">Подтверждение {purpose==='reset'?'нового пароля':'email'}</h2>
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy} onClick={()=>run(async()=>{
         const path=purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm'
         await apiSend(path,{token:linkToken,password});setLinkToken('')
       },purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}
-    <>
 
-      <section className="surface space-y-3 p-5"><h2 className="text-lg">{auth.user.displayName}</h2>
-        <p>Статус ЛК: <strong>{profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'}</strong>{owned.length?` · подтверждено серверов: ${owned.length}`:''}</p>
-        <p className="break-all">{profile?.email??'Email не привязан'} · {profile?.emailVerified?'Подтверждён':'Нужно подтверждение для голосования и Claim'}</p>
-        {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="space-y-3"><Field label="Email"><Input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></Field><Button type="submit" disabled={busy}>Подтвердить email</Button></form>}
-        <div className="flex flex-wrap gap-2">{auth.providers.map(p=><Button key={p} onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)}>Привязать {providerLabels[p]??p}</Button>)}</div>
-        <Button disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')}>Выйти</Button>
-        {!!profile?.permissions?.length&&<Button to="/admin" variant="outline">Админский кабинет</Button>}
-      </section>
-      <AccountCoins key={auth.user.id}/>
-      <section className="gs-account-servers space-y-3"><h2 className="text-lg font-semibold">Мои серверы</h2>
-        {!owned.length?<p className="text-ink-400">Подтверждённых серверов пока нет.</p>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
-        <h3>Подтверждение прав на сервер</h3><p className="text-ink-400">Заявку проверяет администратор. Пароли и секреты не присылайте.</p>
-        <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
-          <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
-          <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
-          <Button type="submit" disabled={busy||!profile?.emailVerified}>Подать Claim</Button>
-        </form>
-        {claims.map(c=><div key={c.id} className="space-y-2"><p>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={reload}/>}</div>)}
-      </section>
-      {profile?.roles?.includes('ADMIN')&&<section className="space-y-4"><h2 className="text-lg font-semibold">Администратор: заявки Claim</h2>
-        <Button onClick={()=>run(reload,'Очередь обновлена.')} disabled={busy}>Обновить</Button>
-        {!queue.length&&<p>Нет заявок на проверку.</p>}
-        {queue.map(c=><div key={c.id} className="surface space-y-3 p-4"><p>{c.name??c.server_id}</p><p className="whitespace-pre-wrap break-words">{c.evidence}</p>
-          <Field label="Результат проверки и основание решения"><Textarea minLength={10} maxLength={1000} value={reasons[c.id]??''} onChange={e=>setReasons({...reasons,[c.id]:e.target.value})}/></Field>
-          <Field label="Код, лично проверенный на официальном ресурсе (для ручного способа)"><Input value={observedCodes[c.id]??''} onChange={e=>setObservedCodes({...observedCodes,[c.id]:e.target.value})}/></Field>
-          <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id],observedToken:observedCodes[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
-        </div>)}
-      </section>}
-    </>
+    <section className="gs-account-card rounded-[22px] border p-4 sm:p-5">
+      <div className="flex min-w-0 items-center gap-4">
+        <span className="gs-account-avatar grid h-16 w-16 shrink-0 place-items-center rounded-full border">
+          <GsMark height={34} live />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="truncate text-[18px] font-semibold">{auth.user.displayName}</h2>
+            <span className="gs-account-status inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium"><span className="h-1.5 w-1.5 rounded-full bg-signal-400"/>{playerStatus}</span>
+          </div>
+          <div className="mt-1 flex min-w-0 items-center gap-2 text-[12px] opacity-68">
+            <span className="truncate">{profile?.email??'Email не привязан'}</span>
+            {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg hover:bg-current/5"><Copy size={13}/></button>}
+          </div>
+          {profile?.email&&<div className="mt-1 flex items-center gap-1.5 text-[11px] opacity-65">{profile.emailVerified?<><ShieldCheck size={13} className="text-signal-400"/> Email подтверждён</>:<>Email требует подтверждения</>}</div>}
+        </div>
+      </div>
+      {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="mt-4 flex gap-2">
+        <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email"/>
+        <Button type="submit" disabled={busy}>Подтвердить</Button>
+      </form>}
+    </section>
+
+    {!!auth.providers.length&&<section>
+      <h2 className="mb-3 flex items-center justify-between text-[16px] font-semibold"><span>Подключение аккаунтов</span><ChevronRight size={17} className="opacity-55"/></h2>
+      <div className="grid grid-cols-2 gap-3">
+        {auth.providers.map(p=><button key={p} type="button" onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)} className="gs-provider-tile group flex min-h-[82px] items-center gap-3 rounded-[18px] border p-3 text-left transition-transform active:scale-[.985]">
+          <span className="gs-provider-icon grid h-11 w-11 shrink-0 place-items-center rounded-full border text-[18px] font-bold">{p==='google'?<span className="font-sans">G</span>:p==='discord'?<Gamepad2 size={21}/>:providerLabels[p]?.slice(0,1)??p.slice(0,1).toUpperCase()}</span>
+          <span className="min-w-0"><strong className="block truncate text-[14px]">{providerLabels[p]??p}</strong><span className="mt-0.5 block text-[11px] opacity-60">Подключить</span></span>
+        </button>)}
+      </div>
+    </section>}
+
+    <section>
+      <h2 className="mb-3 text-[16px] font-semibold">Действия с аккаунтом</h2>
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action flex h-14 items-center justify-center gap-2 rounded-[16px] border text-[13px] font-medium disabled:opacity-50"><LogOut size={17}/>Выйти</button>
+        {isAdmin?<Button to="/admin" className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<Settings size={17}/>} iconRight={<ChevronRight size={16}/>}>Админский кабинет</Button>
+          :<Button to="/catalog" className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<Search size={17}/>} iconRight={<ChevronRight size={16}/>}>Найти сервер</Button>}
+      </div>
+    </section>
+
+    <AccountCoins key={auth.user.id}/>
+
+    <section className="gs-account-servers space-y-3">
+      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><ChevronRight size={18} className="opacity-55"/></h2>
+      {!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
+        <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><Server size={25}/></span>
+        <h3 className="mt-4 text-[15px] font-semibold">Подтверждённых серверов пока нет</h3>
+        <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed opacity-62">Добавьте сервер, чтобы отслеживать онлайн, рейтинг и получать уведомления.</p>
+        <Button to="/catalog" className="gs-find-server mt-5 h-11 min-w-[220px] rounded-xl" icon={<Search size={16}/>} iconRight={<ChevronRight size={16}/>}>Найти серверы</Button>
+      </div>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
+
+      <details className="gs-account-claim rounded-[18px] border p-4">
+        <summary className="cursor-pointer list-none text-[13px] font-semibold">Подтвердить права на сервер</summary>
+        <div className="mt-4 space-y-3">
+          <p className="text-[12px] opacity-62">Заявку проверяет администратор. Пароли и секреты не присылайте.</p>
+          <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
+            <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
+            <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
+            <Button type="submit" disabled={busy||!profile?.emailVerified}>Подать Claim</Button>
+          </form>
+          {claims.map(c=><div key={c.id} className="space-y-2 text-[12px]"><p>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={reload}/>}</div>)}
+        </div>
+      </details>
+    </section>
+
+    {profile?.roles?.includes('ADMIN')&&<section className="gs-account-card space-y-4 rounded-[22px] border p-5"><h2 className="text-[17px] font-semibold">Администратор: заявки Claim</h2>
+      <Button onClick={()=>run(reload,'Очередь обновлена.')} disabled={busy}>Обновить</Button>
+      {!queue.length&&<p className="text-[12px] opacity-60">Нет заявок на проверку.</p>}
+      {queue.map(c=><div key={c.id} className="surface space-y-3 p-4"><p>{c.name??c.server_id}</p><p className="whitespace-pre-wrap break-words">{c.evidence}</p>
+        <Field label="Результат проверки и основание решения"><Textarea minLength={10} maxLength={1000} value={reasons[c.id]??''} onChange={e=>setReasons({...reasons,[c.id]:e.target.value})}/></Field>
+        <Field label="Код, лично проверенный на официальном ресурсе (для ручного способа)"><Input value={observedCodes[c.id]??''} onChange={e=>setObservedCodes({...observedCodes,[c.id]:e.target.value})}/></Field>
+        <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id],observedToken:observedCodes[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+      </div>)}
+    </section>}
   </main>
 }
 

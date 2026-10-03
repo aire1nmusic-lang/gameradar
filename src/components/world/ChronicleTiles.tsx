@@ -18,8 +18,9 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
   className?: string
 }) {
   const theme = useGameTheme()
-  // a chronicle with no servers yet is not an entry point
-  const shown = chronicles.filter((chronicle) => counts[chronicle.id]?.servers)
+  // Lineage 2 keeps its full chronicle navigation visible even when a chronicle
+  // has no servers yet. Empty chronicles are valid discovery/filter entry points.
+  const shown = game.id === 'lineage2' ? chronicles : chronicles.filter((chronicle) => counts[chronicle.id]?.servers)
   if (shown.length < 2) return null
 
   if (game.id === 'lineage2') {
@@ -63,7 +64,7 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
           <div className={cn('rail sm:mx-0 sm:scroll-pl-0 sm:px-0', className)} style={{ gap: 8 }}>
             {shown.map((chronicle) => {
               const art = worldArt('hero', game.id, chronicle.id)
-              const count = counts[chronicle.id]
+              const count = counts[chronicle.id] ?? { servers: 0, online: 0 }
               return (
                 <Link
                   key={chronicle.id}
@@ -91,7 +92,7 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
     <div className={cn('rail -mx-5 scroll-pl-5 px-5 sm:mx-0 sm:scroll-pl-0 sm:px-0', className)} style={{ gap: 8 }}>
       {shown.map((chronicle) => {
         const art = worldArt('hero', game.id, chronicle.id)
-        const count = counts[chronicle.id]
+        const count = counts[chronicle.id] ?? { servers: 0, online: 0 }
         return (
           <Link
             key={chronicle.id}

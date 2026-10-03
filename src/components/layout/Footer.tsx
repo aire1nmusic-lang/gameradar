@@ -41,9 +41,9 @@ export function Footer() {
     ],
   }:column):COLUMNS
   return (
-    <footer className="mt-10 border-t border-white/6 bg-ink-1000/60 pb-24 lg:pb-0">
-      <Container className={compactPrivate?'py-5 lg:py-12':'py-8 lg:py-12'}>
-        <div className={`${compactPrivate?'hidden lg:grid':'grid'} gap-6 lg:gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]`}>
+    <footer className="gs-site-footer mt-6 border-t border-white/6 bg-ink-1000/60 pb-20 lg:mt-10 lg:pb-0">
+      <Container className={compactPrivate?'py-3 lg:py-12':'py-3 lg:py-12'}>
+        <div className="hidden gap-6 lg:grid lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10">
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-ink-400">
@@ -90,8 +90,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className={`${compactPrivate?'lg:mt-12':'mt-8 lg:mt-12'} flex flex-col gap-4 border-t border-white/6 pt-6 text-[12px] text-ink-500 sm:flex-row sm:items-center sm:justify-between`}>
-          <p className={compactPrivate?'hidden lg:block max-w-2xl':'max-w-2xl'}>
+        <div className={`${compactPrivate?'lg:mt-12':'lg:mt-12'} flex flex-col gap-2 border-white/6 text-[11px] text-ink-500 lg:border-t lg:pt-6 lg:text-[12px] sm:flex-row sm:items-center sm:justify-between`}>
+          <p className="hidden max-w-2xl lg:block">
             Карточки серверов собраны из открытых источников — у каждой указаны источник и дата сверки. Онлайн
             со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
             подтвердить сервер и управлять карточкой.
@@ -99,7 +99,7 @@ export function Footer() {
           <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 sm:shrink-0">
             <Link to="/terms" className="transition-colors hover:text-ink-300">Условия</Link>
             <Link to="/privacy" className="transition-colors hover:text-ink-300">Приватность</Link>
-            <Link to="/copyright" className="transition-colors hover:text-ink-300">Правообладателям</Link>
+            <Link to="/copyright" className="hidden transition-colors hover:text-ink-300 sm:inline">Правообладателям</Link>
             <span>© 2026 GameScout</span>
           </div>
         </div>

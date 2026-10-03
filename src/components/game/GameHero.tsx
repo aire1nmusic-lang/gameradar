@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, Moon, Search, Sun } from 'lucide-react'
+import { ChevronRight, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCompact, formatNumber, plural } from '@/lib/format'
 import { worldArt } from '@/data/themeMedia'
@@ -19,8 +19,6 @@ export function GameHero({
   serversCount,
   playersOnline,
   openings = 0,
-  colorMode,
-  onToggleColorMode,
 }: {
   game: Game
   chronicle?: Chronicle
@@ -28,8 +26,6 @@ export function GameHero({
   serversCount?: number
   playersOnline: number
   openings?: number
-  colorMode?: 'dark' | 'light'
-  onToggleColorMode?: () => void
 }) {
   const theme = useGameTheme()
   const navigate = useNavigate()
@@ -54,25 +50,6 @@ export function GameHero({
 
   return (
     <section className={cn('gs-hero relative overflow-hidden', !art && 'gt-hero')}>
-      {onToggleColorMode && (
-        <button
-          type="button"
-          onClick={onToggleColorMode}
-          aria-label={colorMode === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
-          title={colorMode === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-          className="absolute top-4 right-5 z-20 hidden h-10 w-10 place-items-center rounded-full border backdrop-blur-md transition-all duration-200 active:scale-95 max-lg:grid"
-          style={{
-            borderColor: theme.colors.borderStrong,
-            background: `color-mix(in oklab, ${theme.colors.surface} 58%, transparent)`,
-            color: theme.colors.text,
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.18), 0 8px 22px -14px rgba(0,0,0,.45)',
-          }}
-        >
-          <span className="grid place-items-center transition-transform duration-200">
-            {colorMode === 'light' ? <Moon size={19} strokeWidth={1.8} /> : <Sun size={19} strokeWidth={1.8} />}
-          </span>
-        </button>
-      )}
       {art ? (
         <WorldArtSurface art={art} scrim="poster" sizes="100vw" priority width={2560} />
       ) : (

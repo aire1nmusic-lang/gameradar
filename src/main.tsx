@@ -3,13 +3,15 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { initializeRepositories } from '@/repositories'
 import { AuthProvider } from '@/hooks/useAuth'
-import { AppearanceProvider, applyAppearance, readAppearance } from '@/theme/appearance'
+import { AppearanceProvider, applyAppearance, applyColorMode, readAppearance, readColorMode } from '@/theme/appearance'
 import App from './App'
 import './index.css'
+import '@/theme/colorMode.css'
 import '@/theme/worldFonts'
 
 // The owner's look choices land on <html> before anything renders: no flash of the default.
 applyAppearance(readAppearance())
+applyColorMode(readColorMode())
 
 const rootElement = document.getElementById('root')!
 /** The skeleton index.html paints before any script runs; kept on screen until the catalogue is ready. */

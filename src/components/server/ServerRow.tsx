@@ -11,7 +11,7 @@ import { RankMedal, MEDAL } from '@/components/ui/RankMedal'
 import { TrendChip } from '@/components/ui/Badge'
 import { LiveDot, STATUS_META } from '@/components/trust/status'
 
-export type RowMetric = 'auto' | 'support'
+export type RowMetric = 'auto' | 'support' | 'votes'
 
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
 
@@ -108,12 +108,16 @@ export function ServerRow({
       <div className="shrink-0 text-right">
         {metric === 'support' ? (
           <>
-            <div className="num text-[16px] leading-5 font-semibold text-ink-50">{support > 0 ? support : server.votes}</div>
+            <div className="num text-[16px] leading-5 font-semibold text-ink-50">{support}</div>
             <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">
-              {support > 0 ? `${server.support?.participants ?? 0} ${plural(server.support?.participants ?? 0, ['участник', 'участника', 'участников'])}` : 'голосов'}
+              {server.support?.participants ?? 0} {plural(server.support?.participants ?? 0, ['участник', 'участника', 'участников'])}
             </div>
           </>
-        ) : launching ? (
+        ) : metric === 'votes' ? (
+          <>
+            <div className="num text-[16px] leading-5 font-semibold text-ink-50">{server.votes}</div>
+            <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">голосов</div>
+          </>        ) : launching ? (
           <>
             <div className="num text-[14px] leading-5 font-semibold whitespace-nowrap text-promo-200">{formatCountdown(server.launch!.at)}</div>
             <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">{shortDate(server.launch!.at)}</div>

@@ -6,6 +6,7 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { AppearanceProvider, applyAppearance, applyColorMode, readAppearance, readColorMode } from '@/theme/appearance'
 import App from './App'
 import './index.css'
+import '@/theme/colorMode.css'
 import '@/theme/worldFonts'
 
 // The owner's look choices land on <html> before anything renders: no flash of the default.

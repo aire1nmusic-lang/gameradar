@@ -223,7 +223,6 @@ function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { 
               <RankPanel
                 plainMobile
                 title="Топ по поддержке"
-                to="/rating?sort=support"
               >
                 {topSupport.length > 0
                   ? topSupport.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} metric="support" compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)

@@ -18,16 +18,26 @@ export function WorldNavigationProvider({children}:{children:ReactNode}) {
 
   // Utility pages are parts of the same world shell. Keep the last explicit
   // world so Profile/Admin/Favorites do not suddenly fall back to a generic skin.
+  const utilityRoute=/^\/(catalog|favorites|rating|openings|account|admin|owners|dashboard|add-server)(\/|$)/.test(location.pathname)
   const rememberedId=useMemo(()=>{
     if(explicitGame)return explicitGame.id
+    if(!utilityRoute)return undefined
     try{return localStorage.getItem(LAST_WORLD_KEY)??undefined}catch{return undefined}
-  },[explicitGame?.id,location.pathname,location.search])
+  },[explicitGame?.id,location.pathname,location.search,utilityRoute])
   const game=explicitGame??GAMES.find(g=>g.id===rememberedId)
 
   useEffect(()=>{
-    if(!explicitGame)return
-    try{localStorage.setItem(LAST_WORLD_KEY,explicitGame.id)}catch{/* optional */}
+    if(explicitGame){
+      try{localStorage.setItem(LAST_WORLD_KEY,explicitGame.id)}catch{/* optional */}
+    }
   },[explicitGame?.id])
+
+  useEffect(()=>{
+    const root=document.documentElement
+    if(game)root.dataset.world=game.id
+    else delete root.dataset.world
+    return()=>{ if(root.dataset.world===game?.id) delete root.dataset.world }
+  },[game?.id])
 
   return <WorldContext.Provider value={{game,loading:!!slug&&!server}}>{children}</WorldContext.Provider>
 }

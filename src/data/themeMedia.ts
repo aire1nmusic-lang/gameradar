@@ -63,11 +63,17 @@ const keyart = (base: string, alt: string, tone: ArtTone, mobile: string, deskto
    ──────────────────────────────────────────────────────────────────────────── */
 
 const ART = {
-  l2Master: art('lineage-2/hero-user-v7', 'Lineage 2 — яркий фэнтезийный город на закате с розововолосой героиней', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [800]),
-  l2Interlude: art('lineage-2/interlude-user-v7', 'Lineage 2 Interlude — розововолосая разбойница на фоне фэнтезийного города на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
-  l2HighFive: art('lineage-2/high-five-user-v7', 'Lineage 2 High Five — рыжеволосая волшебница, луна и синий магический город', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
-  l2Classic: art('lineage-2/classic-user-v7', 'Lineage 2 Classic — орк-воин у заснеженной крепости', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
-  l2Essence: art('lineage-2/essence-user-v7', 'Lineage 2 Essence — воительница в светлых доспехах на фоне замка на закате', 'medium', { desktop: '50% 45%', mobile: '50% 45%' }, [192]),
+  // Full-page art stays high-resolution. Approved portrait crops are a separate card layer,
+  // so chronicle tiles keep the selected images without forcing 192px artwork into page heroes.
+  l2Master: keyart('lineage-2/master', 'Lineage 2 — герои на фоне фэнтезийного королевства на закате', 'medium', '67% 50%', '54% 50%'),
+  l2InterludeHero: keyart('lineage-2/interlude', 'Lineage 2 Interlude — эльфийский мир на закате', 'medium', '68% 50%', '54% 50%'),
+  l2HighFiveHero: keyart('lineage-2/high-five', 'Lineage 2 High Five — осада замка и герои', 'medium', '68% 50%', '55% 50%'),
+  l2EssenceHero: keyart('lineage-2/essence', 'Lineage 2 Essence — герои над королевством', 'medium', '70% 50%', '55% 50%'),
+  l2ClassicHero: keyart('lineage-2/classic', 'Lineage 2 Classic — битва с драконом', 'medium', '70% 50%', '55% 50%'),
+  l2InterludeCard: art('lineage-2/interlude-user-v7', 'Lineage 2 Interlude — розововолосая разбойница', 'medium', { desktop: '50% 46%', mobile: '50% 46%' }, [192]),
+  l2HighFiveCard: art('lineage-2/high-five-user-v7', 'Lineage 2 High Five — рыжеволосая волшебница', 'medium', { desktop: '50% 42%', mobile: '50% 42%' }, [192]),
+  l2EssenceCard: art('lineage-2/essence-user-v7', 'Lineage 2 Essence — воительница в светлых доспехах', 'medium', { desktop: '50% 38%', mobile: '50% 38%' }, [192]),
+  l2ClassicCard: art('lineage-2/classic-user-v7', 'Lineage 2 Classic — орк-воин', 'medium', { desktop: '50% 38%', mobile: '50% 38%' }, [192]),
   mcMaster: keyart('minecraft/master', 'Minecraft — солнечная долина с деревней, каменным замком и водопадом, игрок в алмазной броне', 'bright', '82% 55%', '60% 50%'),
   mcAnarchy: keyart('minecraft/anarchy', 'Minecraft Anarchy — разрушенный блочный город с лавой ночью', 'dark', '70% 55%'),
   mcSkyBlock: keyart('minecraft/skyblock', 'Minecraft SkyBlock — парящие острова с водопадами на рассвете, домик и сундук', 'bright', '70% 50%', '55% 50%'),
@@ -94,13 +100,13 @@ const solo = (item: WorldArt): Partial<WorldMedia> => ({ hero: item, card: item,
 
 const WORLDS: Record<string, Partial<WorldMedia>> = {
   // ── Lineage 2 — one master, one look per chronicle ───────────────────────
-  lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFive, gallery: [ART.l2Master, ART.l2Interlude, ART.l2HighFive, ART.l2Classic, ART.l2Essence] },
-  'lineage2:interlude': solo(ART.l2Interlude),
-  'lineage2:high-five': solo(ART.l2HighFive),
-  'lineage2:classic': solo(ART.l2Classic),
-  'lineage2:essence': solo(ART.l2Essence),
-  // Gracia Final has no art of its own yet: the era sits between Interlude and High Five.
-  'lineage2:gracia': solo(ART.l2HighFive),
+  lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFiveHero, gallery: [ART.l2Master, ART.l2InterludeHero, ART.l2HighFiveHero, ART.l2ClassicHero, ART.l2EssenceHero] },
+  'lineage2:interlude': { hero: ART.l2InterludeHero, card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
+  'lineage2:high-five': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
+  'lineage2:classic': { hero: ART.l2ClassicHero, card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
+  'lineage2:essence': { hero: ART.l2EssenceHero, card: ART.l2EssenceCard, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
+  // Gracia Final stays text-only in the compact rail for now, but its route gets a full-resolution era image.
+  'lineage2:gracia': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
 
   // ── Minecraft — the survival world fronts the game, modes vary ───────────
   minecraft: { hero: ART.mcMaster, card: ART.mcMaster, promo: ART.mcSkyBlock, gallery: [ART.mcMaster, ART.mcSkyBlock, ART.mcMinigames, ART.mcAnarchy] },

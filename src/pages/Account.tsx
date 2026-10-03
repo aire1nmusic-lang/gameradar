@@ -9,7 +9,7 @@ import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
 import { ClaimProof } from '@/components/account/ClaimProof'
 import { GsMark } from '@/components/layout/Logo'
-import { ChevronRight, Copy, Gamepad2, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Copy, LogOut, Search, Server, Settings, ShieldCheck } from 'lucide-react'
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -122,7 +122,7 @@ export default function Account() {
       <h2 className="mb-3 flex items-center justify-between text-[16px] font-semibold"><span>Подключение аккаунтов</span><ChevronRight size={17} className="opacity-55"/></h2>
       <div className="grid grid-cols-2 gap-3">
         {auth.providers.map(p=><button key={p} type="button" onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=/account`)} className="gs-provider-tile group flex min-h-[82px] items-center gap-3 rounded-[18px] border p-3 text-left transition-transform active:scale-[.985]">
-          <span className="gs-provider-icon grid h-11 w-11 shrink-0 place-items-center rounded-full border text-[18px] font-bold">{p==='google'?<span className="font-sans">G</span>:p==='discord'?<Gamepad2 size={21}/>:providerLabels[p]?.slice(0,1)??p.slice(0,1).toUpperCase()}</span>
+          <span className={"gs-provider-icon gs-provider-icon--"+p+" grid h-11 w-11 shrink-0 place-items-center rounded-full border text-[18px] font-bold"}>{p==='google'?<GoogleBrandIcon/>:p==='discord'?<DiscordBrandIcon/>:providerLabels[p]?.slice(0,1)??p.slice(0,1).toUpperCase()}</span>
           <span className="min-w-0"><strong className="block truncate text-[14px]">{providerLabels[p]??p}</strong><span className="mt-0.5 block text-[11px] opacity-60">Подключить</span></span>
         </button>)}
       </div>
@@ -172,6 +172,23 @@ export default function Account() {
       </div>)}
     </section>}
   </main>
+}
+
+function GoogleBrandIcon() {
+  return <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden>
+    <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.3h6.45a5.51 5.51 0 0 1-2.39 3.62v3.01h3.87c2.27-2.09 3.56-5.17 3.56-8.66z"/>
+    <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.9l-3.87-3.01c-1.07.72-2.44 1.15-4.08 1.15-3.13 0-5.78-2.11-6.73-4.95H1.27v3.1A12 12 0 0 0 12 24z"/>
+    <path fill="#FBBC05" d="M5.27 14.29A7.24 7.24 0 0 1 4.89 12c0-.8.14-1.57.38-2.29v-3.1H1.27A12 12 0 0 0 0 12c0 1.93.46 3.76 1.27 5.39l4-3.1z"/>
+    <path fill="#EA4335" d="M12 4.76c1.76 0 3.34.61 4.58 1.79l3.43-3.43A11.5 11.5 0 0 0 12 0 12 12 0 0 0 1.27 6.61l4 3.1c.95-2.84 3.6-4.95 6.73-4.95z"/>
+  </svg>
+}
+
+function DiscordBrandIcon() {
+  return <span className="grid h-8 w-8 place-items-center rounded-full bg-[#5865F2]">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden fill="white">
+      <path d="M19.5 5.35A17.2 17.2 0 0 0 15.22 4l-.52 1.06a15.8 15.8 0 0 0-5.39 0L8.78 4A17.6 17.6 0 0 0 4.5 5.36C1.8 9.37 1.07 13.28 1.43 17.13a17.4 17.4 0 0 0 5.25 2.65l1.28-1.75a10.8 10.8 0 0 1-2.02-.97l.5-.39c3.9 1.8 8.13 1.8 11.98 0l.51.39c-.65.38-1.33.7-2.03.97l1.28 1.75a17.3 17.3 0 0 0 5.25-2.65c.43-4.46-.73-8.33-3.93-11.78ZM8.6 14.78c-1.17 0-2.13-1.08-2.13-2.4 0-1.33.94-2.41 2.13-2.41 1.2 0 2.15 1.09 2.13 2.4 0 1.33-.94 2.41-2.13 2.41Zm6.8 0c-1.17 0-2.13-1.08-2.13-2.4 0-1.33.94-2.41 2.13-2.41 1.2 0 2.15 1.09 2.13 2.4 0 1.33-.93 2.41-2.13 2.41Z"/>
+    </svg>
+  </span>
 }
 
 function OwnerSummary({server}:{server:Owned}) {

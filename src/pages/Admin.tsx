@@ -7,6 +7,7 @@ import { Field, Input, Textarea } from '@/components/ui/controls'
 import { OwnershipAccess } from '@/components/admin/OwnershipAccess'
 import { CoinGrant } from '@/components/admin/CoinGrant'
 import { CoinsJournal } from '@/components/admin/CoinsJournal'
+import { ClipboardCheck, CreditCard, Headphones, Server, Users, Vote } from 'lucide-react'
 
 type Tab={id:string;label:string;permission:string;path:string}
 const tabs:Tab[]=[
@@ -25,6 +26,15 @@ const tabs:Tab[]=[
   {id:'copyright',label:'Copyright',permission:'copyright.read',path:'/admin/copyright'},
   {id:'system',label:'События',permission:'system.read',path:'/admin/system'},
 ]
+const overviewCards=[
+  {label:'Пользователи',key:'users',tone:'violet',Icon:Users},
+  {label:'Серверы',key:'servers',tone:'gold',Icon:Server},
+  {label:'Claims на проверке',key:'pending_claims',tone:'blue',Icon:ClipboardCheck},
+  {label:'Голоса',key:'votes',tone:'purple',Icon:Vote},
+  {label:'События Поддержки',key:'support_events',tone:'orange',Icon:Headphones},
+  {label:'Ожидают тестовой оплаты',key:'pending_test_payments',tone:'green',Icon:CreditCard},
+] as const
+
 type Row=Record<string,unknown>
 const value=(row:Row,key:string)=>String(row[key]??'—')
 const date=(row:Row,key:string)=>row[key]?new Date(String(row[key])).toLocaleString('ru-RU'):'—'
@@ -66,16 +76,23 @@ export default function Admin() {
   if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Админский кабинет</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
   const rows=Array.isArray(data)?data as Row[]:[]
   const summary=(!Array.isArray(data)&&data&&typeof data==='object')?data as Row:{}
-  return <main className="mx-auto max-w-6xl space-y-4 px-4 py-5 sm:space-y-5 sm:py-8">
-    <h1 className="text-xl font-semibold sm:text-2xl">Админский кабинет</h1>
-    <p className="hidden text-sm text-ink-400 sm:block">Доступ к разделам определяется разрешениями аккаунта. Изменения Claim и ролей записываются в журнал.</p>
-    <nav aria-label="Разделы админки" className="sticky top-14 z-20 -mx-4 flex gap-2 overflow-x-auto bg-ink-950/90 px-4 py-2 backdrop-blur [scrollbar-width:none] sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:bg-transparent sm:p-0 sm:backdrop-blur-none">{allowed.map(tab=><Button key={tab.id} className="shrink-0 whitespace-nowrap" variant={active.id===tab.id?'primary':'outline'} onClick={()=>setSelected(tab.id)}>{tab.label}</Button>)}</nav>
+  return <main className="gs-admin-premium mx-auto max-w-6xl space-y-4 px-4 py-5 sm:space-y-5 sm:py-8">
+    <section className="gs-admin-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
+      <div className="relative z-10 max-w-[620px]">
+        <p className="gs-admin-kicker text-[11px] font-semibold uppercase tracking-[0.18em]">GameScout Control</p>
+        <h1 className="mt-1 text-[30px] font-semibold leading-[1.05] sm:text-[44px]">Админский кабинет</h1>
+        <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-ink-300 sm:text-[14px]">Управление серверами, пользователями, правками и внутренними операциями GameScout.</p>
+      </div>
+    </section>
+    <nav aria-label="Разделы админки" className="gs-admin-tabs sticky top-[60px] z-20 -mx-4 flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:p-0">{allowed.map(tab=><button key={tab.id} type="button" className={"gs-admin-tab shrink-0 whitespace-nowrap rounded-[15px] border px-4 py-2.5 text-[13px] font-medium transition-all "+(active.id===tab.id?'is-active':'')} onClick={()=>setSelected(tab.id)}>{tab.label}</button>)}</nav>
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
     {loading?<p>Загрузка…</p>:<>
-      {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{[
-        ['Пользователи','users'],['Серверы','servers'],['Claims на проверке','pending_claims'],
-        ['Голоса','votes'],['События Поддержки','support_events'],['Ожидают тестовой оплаты','pending_test_payments'],
-      ].map(([label,key])=><div key={key} className="surface rounded-xl p-3 sm:p-4"><p className="text-xs text-ink-400 sm:text-sm">{label}</p><strong className="text-xl">{value(summary,key)}</strong></div>)}</section>}
+      {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{overviewCards.map(({label,key,tone,Icon})=><div key={key} className={"gs-admin-stat gs-admin-stat--"+tone+" relative overflow-hidden rounded-[20px] border p-4 sm:p-5"}>
+        <div className="relative z-10 flex items-center gap-3">
+          <span className="gs-admin-stat-icon grid h-11 w-11 shrink-0 place-items-center rounded-[14px] border"><Icon size={21} strokeWidth={1.8}/></span>
+          <div className="min-w-0"><p className="text-[11px] leading-tight text-ink-300 sm:text-[12px]">{label}</p><strong className="num mt-1 block text-[28px] leading-none text-ink-50 sm:text-[32px]">{value(summary,key)}</strong></div>
+        </div>
+      </div>)}</section>}
       {active.id==='system'&&<section className="space-y-3"><h2 className="text-lg">Состояние private API и расписания</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.operations??{},null,2)}</pre>
         <h2 className="text-lg">Публичная проекция</h2><pre className="surface overflow-auto rounded-xl p-4 text-xs">{JSON.stringify(summary.projection??{},null,2)}</pre>
         <h2 className="text-lg">Оповещения</h2>{(Array.isArray(summary.alerts)?summary.alerts as Row[]:[]).map(row=><article key={value(row,'key')} className="surface rounded-xl p-4 text-sm"><strong>{value(row,'key')}</strong> · {row.active?'Требует внимания':'В норме'} · {row.active?date(row,'opened_at'):date(row,'resolved_at')}</article>)}

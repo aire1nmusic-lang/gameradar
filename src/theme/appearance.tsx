@@ -14,6 +14,7 @@ export type HeroSize = 'compact' | 'large' | 'cinematic'
 export type Motion = 'calm' | 'lively'
 export type IconStyle = 'monogram' | 'glyph' | 'crest'
 export type LogoMode = 'live' | 'cyan' | 'neon'
+export type ColorMode = 'dark' | 'light'
 
 export type Appearance = {
   surface: Surface
@@ -59,6 +60,7 @@ export const APPEARANCE_OPTIONS = {
 } as const satisfies Record<keyof Appearance, readonly { value: string; label: string; hint: string }[]>
 
 const STORAGE_KEY = 'gs.appearance.v1'
+const COLOR_MODE_KEY = 'gs.color-mode.v1'
 const DESIGNER_KEY = 'gs.designer'
 
 function sanitize(raw: unknown): Appearance {
@@ -78,6 +80,18 @@ export function readAppearance(): Appearance {
   } catch {
     return { ...APPEARANCE_DEFAULTS }
   }
+}
+
+export function readColorMode(): ColorMode {
+  try {
+    return localStorage.getItem(COLOR_MODE_KEY) === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
+  }
+}
+
+export function applyColorMode(mode: ColorMode) {
+  document.documentElement.dataset.colorMode = mode
 }
 
 /** Puts the choice on <html>; called before the first render and on every change. */
@@ -114,6 +128,9 @@ type AppearanceContextValue = {
   reset: () => void
   designer: boolean
   setDesignerMode: (on: boolean) => void
+  colorMode: ColorMode
+  setColorMode: (mode: ColorMode) => void
+  toggleColorMode: () => void
 }
 
 const AppearanceContext = createContext<AppearanceContextValue>({
@@ -122,11 +139,15 @@ const AppearanceContext = createContext<AppearanceContextValue>({
   reset: () => undefined,
   designer: false,
   setDesignerMode: () => undefined,
+  colorMode: 'dark',
+  setColorMode: () => undefined,
+  toggleColorMode: () => undefined,
 })
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [appearance, setAppearance] = useState<Appearance>(readAppearance)
   const [designer, setDesignerState] = useState(isDesigner)
+  const [colorMode, setColorModeState] = useState<ColorMode>(readColorMode)
 
   const commit = useCallback((next: Appearance) => {
     setAppearance(next)
@@ -135,6 +156,16 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     } catch {
       // storage blocked: the choice lasts for this page view
+    }
+  }, [])
+
+  const setColorMode = useCallback((mode: ColorMode) => {
+    setColorModeState(mode)
+    applyColorMode(mode)
+    try {
+      localStorage.setItem(COLOR_MODE_KEY, mode)
+    } catch {
+      // storage blocked: keep the preference for this page view
     }
   }, [])
 
@@ -148,8 +179,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
         setDesigner(on)
         setDesignerState(on)
       },
+      colorMode,
+      setColorMode,
+      toggleColorMode: () => setColorMode(colorMode === 'dark' ? 'light' : 'dark'),
     }),
-    [appearance, commit, designer],
+    [appearance, colorMode, commit, designer, setColorMode],
   )
 
   return <AppearanceContext value={value}>{children}</AppearanceContext>

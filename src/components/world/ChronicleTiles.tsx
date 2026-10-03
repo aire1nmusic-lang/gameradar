@@ -31,7 +31,7 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
       <>
         <div className={cn('rail -mx-5 scroll-pl-5 px-5 pb-2 lg:hidden', className)} style={{ gap: 9 }}>
           {popular.map((chronicle) => {
-            const art = worldArt('hero', game.id, chronicle.id)
+            const art = worldArt('card', game.id, chronicle.id)
             return (
               <Link
                 key={chronicle.id}
@@ -63,7 +63,7 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
         <div className="hidden lg:block">
           <div className={cn('rail sm:mx-0 sm:scroll-pl-0 sm:px-0', className)} style={{ gap: 8 }}>
             {shown.map((chronicle) => {
-              const art = worldArt('hero', game.id, chronicle.id)
+              const art = worldArt('card', game.id, chronicle.id)
               const count = counts[chronicle.id] ?? { servers: 0, online: 0 }
               return (
                 <Link
@@ -91,7 +91,7 @@ export function ChronicleTiles({ game, chronicles, counts, className }: {
   return (
     <div className={cn('rail -mx-5 scroll-pl-5 px-5 sm:mx-0 sm:scroll-pl-0 sm:px-0', className)} style={{ gap: 8 }}>
       {shown.map((chronicle) => {
-        const art = worldArt('hero', game.id, chronicle.id)
+        const art = worldArt('card', game.id, chronicle.id)
         const count = counts[chronicle.id] ?? { servers: 0, online: 0 }
         return (
           <Link

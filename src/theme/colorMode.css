@@ -81,9 +81,9 @@ html[data-color-mode='light'] .skeleton {
   min-height: 168px;
   border-color: var(--account-border);
   background:
-    linear-gradient(90deg, rgb(7 9 15 / .95) 0%, rgb(8 10 17 / .84) 50%, rgb(8 10 17 / .32) 100%),
-    linear-gradient(0deg, rgb(7 9 15 / .72), transparent 70%),
-    url('/media/worlds/lineage-2/hero-user-v7-800.webp') center 38% / cover no-repeat;
+    linear-gradient(90deg, rgb(7 9 15 / .90) 0%, rgb(8 10 17 / .70) 50%, rgb(8 10 17 / .18) 100%),
+    linear-gradient(0deg, rgb(7 9 15 / .55), transparent 70%),
+    url('/media/worlds/lineage-2/master-800.webp') center 38% / cover no-repeat;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 24px 50px -36px rgb(0 0 0 / .9);
 }
 .gs-account-kicker { color: #c493ff; }
@@ -166,7 +166,7 @@ html[data-color-mode='light'] .gs-account-hero {
   background:
     linear-gradient(90deg, rgb(250 246 238 / .97) 0%, rgb(250 246 238 / .88) 46%, rgb(250 246 238 / .30) 100%),
     linear-gradient(0deg, rgb(250 246 238 / .50), transparent 70%),
-    url('/media/worlds/lineage-2/hero-user-v7-800.webp') center 38% / cover no-repeat;
+    url('/media/worlds/lineage-2/master-800.webp') center 38% / cover no-repeat;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), 0 20px 42px -34px rgb(93 65 29 / .35);
 }
 html[data-color-mode='light'] .gs-account-kicker { color: #9a6816; }
@@ -238,4 +238,134 @@ html[data-color-mode='light'] .gs-world-light .gs-row {
   .gs-account-premium { padding-top: 16px; padding-bottom: 22px; }
   .gs-account-hero { min-height: 156px; }
   .gs-account-premium h1 { font-size: 30px; }
+}
+
+
+/* Admin premium dashboard — same L2 world language, but operational content stays clean. */
+.gs-admin-premium {
+  --admin-card: linear-gradient(145deg, rgb(18 20 30 / .97), rgb(11 13 20 / .96));
+  --admin-border: rgb(148 111 255 / .22);
+  --admin-gold: #e0ad4f;
+}
+.gs-admin-premium::before {
+  content: '';
+  position: fixed;
+  inset: 60px 0 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58% 34% at 88% 0%, rgb(219 148 47 / .08), transparent 70%),
+    radial-gradient(60% 36% at 8% 22%, rgb(115 68 218 / .09), transparent 72%);
+}
+.gs-admin-hero {
+  min-height: 178px;
+  border-color: rgb(210 164 75 / .28);
+  background:
+    linear-gradient(90deg, rgb(7 9 14 / .92) 0%, rgb(8 10 16 / .68) 54%, rgb(8 10 16 / .18) 100%),
+    linear-gradient(0deg, rgb(7 9 14 / .58), transparent 72%),
+    url('/media/worlds/lineage-2/master-800.webp') center 50% / cover no-repeat;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 24px 54px -38px rgb(0 0 0 / .92);
+}
+.gs-admin-kicker { color: #d7a64d; }
+.gs-admin-tabs {
+  background: color-mix(in oklab, var(--color-ink-950) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.gs-admin-tab {
+  color: var(--color-ink-200);
+  border-color: rgb(255 255 255 / .10);
+  background: linear-gradient(180deg, rgb(255 255 255 / .045), rgb(255 255 255 / .025));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .04);
+}
+.gs-admin-tab:hover { border-color: rgb(224 173 79 / .30); color: var(--color-ink-50); }
+.gs-admin-tab.is-active {
+  color: #20180b;
+  border-color: #d7a545;
+  background: linear-gradient(180deg, #f0cf79, #d6a63d);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .55), 0 9px 24px -16px rgb(223 167 64 / .85);
+}
+.gs-admin-stat {
+  background: var(--admin-card);
+  border-color: var(--admin-border);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .055), 0 18px 44px -34px rgb(0 0 0 / .9);
+}
+.gs-admin-stat::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -60px;
+  bottom: -80px;
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: .22;
+}
+.gs-admin-stat-icon { background: rgb(11 14 23 / .74); border-color: rgb(255 255 255 / .09); }
+.gs-admin-stat--violet { border-color: rgb(159 99 255 / .42); }
+.gs-admin-stat--violet::after { background: #8d4be8; }
+.gs-admin-stat--violet .gs-admin-stat-icon { color: #bd8cff; border-color: rgb(175 118 255 / .24); }
+.gs-admin-stat--gold { border-color: rgb(226 174 75 / .44); }
+.gs-admin-stat--gold::after { background: #d99e37; }
+.gs-admin-stat--gold .gs-admin-stat-icon { color: #efc15f; border-color: rgb(226 174 75 / .24); }
+.gs-admin-stat--blue { border-color: rgb(75 142 238 / .36); }
+.gs-admin-stat--blue::after { background: #347dd8; }
+.gs-admin-stat--blue .gs-admin-stat-icon { color: #75adff; border-color: rgb(75 142 238 / .22); }
+.gs-admin-stat--purple { border-color: rgb(190 92 238 / .34); }
+.gs-admin-stat--purple::after { background: #a142d6; }
+.gs-admin-stat--purple .gs-admin-stat-icon { color: #d27bff; border-color: rgb(190 92 238 / .22); }
+.gs-admin-stat--orange { border-color: rgb(235 113 70 / .34); }
+.gs-admin-stat--orange::after { background: #d45f36; }
+.gs-admin-stat--orange .gs-admin-stat-icon { color: #ff966f; border-color: rgb(235 113 70 / .22); }
+.gs-admin-stat--green { border-color: rgb(54 191 127 / .34); }
+.gs-admin-stat--green::after { background: #25a96d; }
+.gs-admin-stat--green .gs-admin-stat-icon { color: #67e3a8; border-color: rgb(54 191 127 / .22); }
+
+/* Keep operational rows text-first: no server thumbnails in admin lists. */
+.gs-admin-premium .surface {
+  border-color: rgb(255 255 255 / .08);
+  background: linear-gradient(145deg, rgb(18 20 28 / .96), rgb(12 14 20 / .96));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .04), 0 16px 38px -32px rgb(0 0 0 / .88);
+}
+
+.gs-provider-icon--google { background: #fff !important; }
+.gs-provider-icon--discord { background: rgb(88 101 242 / .14) !important; border-color: rgb(88 101 242 / .30) !important; }
+
+html[data-color-mode='light'] .gs-admin-premium {
+  --admin-card: linear-gradient(145deg, rgb(255 251 244 / .98), rgb(245 236 223 / .96));
+  --admin-border: rgb(145 107 49 / .20);
+}
+html[data-color-mode='light'] .gs-admin-hero {
+  border-color: rgb(146 105 42 / .25);
+  background:
+    linear-gradient(90deg, rgb(250 246 238 / .97) 0%, rgb(250 246 238 / .87) 48%, rgb(250 246 238 / .28) 100%),
+    linear-gradient(0deg, rgb(250 246 238 / .45), transparent 70%),
+    url('/media/worlds/lineage-2/master-800.webp') center 50% / cover no-repeat;
+}
+html[data-color-mode='light'] .gs-admin-kicker { color: #a36c13; }
+html[data-color-mode='light'] .gs-admin-tabs { background: rgb(248 243 234 / .94); }
+html[data-color-mode='light'] .gs-admin-tab {
+  color: #4c4842;
+  border-color: rgb(102 75 38 / .15);
+  background: rgb(255 252 246 / .72);
+}
+html[data-color-mode='light'] .gs-admin-stat {
+  border-color: rgb(118 85 41 / .14);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .85), 0 16px 38px -30px rgb(75 52 26 / .25);
+}
+html[data-color-mode='light'] .gs-admin-stat-icon {
+  background: rgb(255 255 255 / .64);
+  border-color: rgb(100 76 44 / .12);
+}
+html[data-color-mode='light'] .gs-admin-premium .surface {
+  background: rgb(255 251 244 / .94);
+  border-color: rgb(101 74 38 / .13);
+  box-shadow: 0 12px 30px -24px rgb(76 54 28 / .28);
+}
+html[data-color-mode='light'] .gs-provider-icon--discord { background: rgb(88 101 242 / .10) !important; }
+
+@media (max-width: 639px) {
+  .gs-admin-premium { padding-top: 14px; }
+  .gs-admin-hero { min-height: 166px; }
+  .gs-admin-tabs { margin-top: -2px; }
 }

@@ -1094,3 +1094,67 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   border-radius: 10px;
 }
 [data-pattern='neon'] .gs-row:hover { background: rgb(255 92 138 / .1); border-color: rgb(255 92 138 / .5); border-left-color: #ff5c8a; box-shadow: 0 0 18px -8px rgb(255 92 138 / .8); }
+
+
+/* ── Mobile game-world refresh ──────────────────────────────────────────────
+   Keep phone layouts touch-safe and visually quiet. The desktop skins remain
+   intact; Lineage 2 can additionally switch to a clean light palette. */
+@media (max-width: 1023px) {
+  .gs-mobile-world .gs-hero {
+    min-height: 190px !important;
+  }
+
+  .gs-panel-mobile-plain {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .gs-panel-mobile-plain::before {
+    display: none !important;
+  }
+  [data-pattern='stone'] .gs-panel-mobile-plain .gs-panel-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+
+  [data-pattern='stone'].gs-mobile-world .gs-row {
+    background: var(--gt-surface-raised);
+    border: 1px solid var(--gt-border);
+    border-radius: 15px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / .05),
+      0 8px 24px -18px rgb(0 0 0 / .65);
+  }
+  [data-pattern='stone'].gs-mobile-world .gs-row:hover {
+    background: var(--gt-surface-raised);
+    border-color: var(--gt-border-strong);
+  }
+
+  .gs-world-light .gs-row .text-ink-50 { color: var(--gt-text) !important; }
+  .gs-world-light .gs-row .text-ink-400 { color: var(--gt-text-muted) !important; }
+  .gs-world-light .gs-row .text-ink-500,
+  .gs-world-light .gs-row .text-ink-600 { color: var(--gt-text-faint) !important; }
+
+  html[data-world-mode='light'] .gs-site-header {
+    background: rgb(255 255 255 / .92) !important;
+    border-color: rgb(31 45 58 / .10) !important;
+  }
+  html[data-world-mode='light'] .gs-site-header .text-ink-200,
+  html[data-world-mode='light'] .gs-site-header .text-ink-100,
+  html[data-world-mode='light'] .gs-site-header .text-ink-50 {
+    color: #26333f !important;
+  }
+
+  html[data-world-mode='light'] .gs-mobile-nav {
+    background: rgb(255 255 255 / .95) !important;
+    border-color: rgb(31 45 58 / .10) !important;
+  }
+  html[data-world-mode='light'] .gs-mobile-nav .text-ink-50 { color: #101820 !important; }
+  html[data-world-mode='light'] .gs-mobile-nav .text-ink-400 { color: #75818c !important; }
+  html[data-world-mode='light'] .gs-mobile-nav .bg-signal-400 { background: #B08D3C !important; }
+}

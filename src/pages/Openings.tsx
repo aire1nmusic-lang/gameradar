@@ -8,7 +8,6 @@ import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { useSeo } from '@/lib/seo'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
-import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 type Window = 'today' | 'week' | 'all'
 
@@ -42,7 +41,7 @@ export default function Openings() {
   }, [filtered])
 
   return (
-    <WorldPageScope className="pb-16">
+    <div className="pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -92,6 +91,6 @@ export default function Openings() {
           )}
         </div>
       </Container>
-    </WorldPageScope>
+    </div>
   )
 }

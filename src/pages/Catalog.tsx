@@ -21,7 +21,6 @@ import { InlinePromo } from '@/components/ads/AdSlots'
 import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
-import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 const PAGE_SIZE = 24
 type View = 'list' | 'grid'
@@ -122,7 +121,7 @@ export default function Catalog() {
   const chips = buildChips(uiFilters, next=>setFilters(world?{...next,games:[world.id]}:next))
 
   return (
-    <WorldPageScope className="pb-16">
+    <div className="pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов{world?` ${world.shortName}`:''}</h1>
@@ -281,7 +280,7 @@ export default function Catalog() {
       >
         <FilterPanel filters={filters} onChange={setFilters} onReset={reset} showReset={false} />
       </Sheet>
-    </WorldPageScope>
+    </div>
   )
 }
 

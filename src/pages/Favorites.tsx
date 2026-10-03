@@ -8,7 +8,6 @@ import { EmptyState } from '@/components/ui/feedback'
 import { Button } from '@/components/ui/Button'
 import { useSeo } from '@/lib/seo'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
-import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 export default function Favorites() {
   const {game,scoped}=useWorldNavigation()
@@ -19,7 +18,7 @@ export default function Favorites() {
   const totalOnline = servers.reduce((sum, server) => sum + server.online.current, 0)
 
   return (
-    <WorldPageScope className="pb-16">
+    <div className="pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -60,6 +59,6 @@ export default function Favorites() {
           )}
         </div>
       </Container>
-    </WorldPageScope>
+    </div>
   )
 }

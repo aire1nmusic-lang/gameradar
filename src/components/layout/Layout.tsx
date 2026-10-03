@@ -8,6 +8,7 @@ import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
 import { WorldNavigationProvider } from '@/hooks/useWorldNavigation'
+import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
@@ -39,7 +40,7 @@ export function Layout() {
       <BackgroundField />
       <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
       <main className="relative flex-1">
-        <Outlet />
+        <WorldPageScope><Outlet /></WorldPageScope>
       </main>
       {/* The hall is only a doorway: no footer or tab bar, everything else lives inside the worlds. */}
       {!hall && !location.pathname.startsWith('/admin') && <Footer />}

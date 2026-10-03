@@ -15,7 +15,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiRequest } from '@/repositories/http/client'
 import { plural } from '@/lib/format'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
-import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 type PeopleRow = { server_id: string; slug: string; name: string; game_id: string; votes: number }
 type SupportRow = { server_id: string; slug: string; name: string; game_id: string; coins: number; participants: number }
@@ -48,7 +47,7 @@ function PeopleRatingPage() {
   const selectedGame=world?.id??gameId
   const ranked = rows.filter(row => row.votes > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
   const supported = supportRows.filter(row => row.coins > 0 && (selectedGame === 'all' || row.game_id === selectedGame))
-  return <WorldPageScope className="pb-16"><Container className="pt-6 lg:pt-8">
+  return <div className="pb-16"><Container className="pt-6 lg:pt-8">
     <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинги серверов{world?` ${world.shortName}`:''}</h1>
     <div className="mt-4"><Segmented value={view} onChange={setView} options={[{value:'online',label:'По онлайну'},{value:'people',label:'Народный'},{value:'support',label:'Поддержка'}]} /></div>
     <p className="mt-2 max-w-2xl text-[13.5px] text-ink-400">{view==='online'
@@ -71,7 +70,7 @@ function PeopleRatingPage() {
           <span className="num text-sm text-ink-300">{'votes' in row ? `${row.votes} ${plural(row.votes, ['голос', 'голоса', 'голосов'])}` : `${row.coins} Coins · ${row.participants} ${plural(row.participants, ['участник', 'участника', 'участников'])}`}</span>
         </Link>
       </li>)}</ol> : <Notice tone="info" className="mt-6">{view==='people'?'В этой игре пока нет голосов в текущем окне.':'В этой игре серверы пока не получили поддержку.'}</Notice>}
-  </Container></WorldPageScope>
+  </Container></div>
 }
 
 type View = 'organic' | 'combined'
@@ -94,7 +93,7 @@ function LegacyRatingPage() {
   const theme = useMemo(() => themeForGame(gameId === 'all' ? 'core' : gameId), [gameId])
 
   return (
-    <WorldPageScope className="pb-16">
+    <div className="pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -145,6 +144,6 @@ function LegacyRatingPage() {
           )}
         </ThemeScope>
       </Container>
-    </WorldPageScope>
+    </div>
   )
 }

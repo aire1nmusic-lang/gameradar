@@ -75,6 +75,9 @@ export default function GameWorld() {
   useEffect(() => {
     if (!isLineage2) return
     try { localStorage.setItem(L2_COLOR_MODE_KEY, colorMode) } catch { /* optional preference */ }
+    const root = document.documentElement
+    root.dataset.worldMode = colorMode
+    return () => { delete root.dataset.worldMode }
   }, [colorMode, isLineage2])
 
   // unknown single-segment url — this route sits below every static route

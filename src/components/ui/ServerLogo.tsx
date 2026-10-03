@@ -87,6 +87,30 @@ export function ServerLogo({
     : ((kind && KIND_GLYPH[kind]) || (gameId && GAME_GLYPH[gameId]) || Gamepad2)
 
   // An approved server logo always wins; the default style only fills the gap.
+  // Lineage 2 free/default avatar: approved neutral tree emblem. Paid/official logo always wins above it.
+  if (!showImage && forceGameGlyph && gameId === 'lineage2') {
+    return (
+      <div
+        className={cn('relative grid shrink-0 place-items-center overflow-hidden text-white', SIZES[size], className)}
+        style={{
+          background: '#101711',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(207,174,103,0.28)',
+          ...style,
+        }}
+        aria-hidden
+      >
+        <img
+          src="/media/ui/lineage2-default-avatar.webp"
+          alt=""
+          draggable={false}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      </div>
+    )
+  }
+
   if (!showImage && game && (forceGameGlyph || appearance.icons === 'glyph')) {
     return (
       <div

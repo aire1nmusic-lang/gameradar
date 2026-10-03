@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { ArrowRight, CalendarClock, Flame, LayoutGrid, Plus, Rows3, Trophy } from 'lucide-react'
+import { ArrowRight, Flame, LayoutGrid, Plus, Rows3 } from 'lucide-react'
 import { resolveWorld } from '@/data/themes'
 import { chronicleOfVersion } from '@/data/games'
 import { useServers } from '@/hooks/data'
 import type { GameServer } from '@/models'
 import { Container } from '@/components/layout/Container'
-import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
+import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme, type GameTheme } from '@/theme'
 import { GameHero } from '@/components/game/GameHero'
 import { ChronicleNav } from '@/components/game/ChronicleNav'
 import { ServerList, ServerRow, ServerRowSkeleton, ServerTiles } from '@/components/server/ServerRow'
@@ -16,6 +16,45 @@ import { ChronicleTiles } from '@/components/world/ChronicleTiles'
 import { Segmented } from '@/components/ui/controls'
 import { EmptyState } from '@/components/ui/feedback'
 import { breadcrumbs, useSeo } from '@/lib/seo'
+
+type WorldColorMode = 'dark' | 'light'
+const L2_COLOR_MODE_KEY = 'gs.lineage2.color-mode'
+
+function lineageLightTheme(theme: GameTheme): GameTheme {
+  return {
+    ...theme,
+    colors: {
+      ...theme.colors,
+      bg: '#EDF3F8',
+      bgDeep: '#E3EBF1',
+      surface: 'rgba(255,255,255,0.94)',
+      surfaceRaised: '#FFFFFF',
+      border: 'rgba(31,45,58,0.12)',
+      borderStrong: 'rgba(176,141,60,0.38)',
+      text: '#101820',
+      textMuted: '#5F6B76',
+      textFaint: '#7B8791',
+    },
+    gradients: {
+      ...theme.gradients,
+      hero: 'linear-gradient(180deg, #DDE8F0 0%, #EDF3F8 100%)',
+    },
+    glow: {
+      ...theme.glow,
+      soft: '0 10px 30px -18px rgba(32,48,62,0.24)',
+      strong: '0 18px 46px -24px rgba(32,48,62,0.32)',
+      ring: '0 0 0 1px rgba(176,141,60,0.22)',
+    },
+    card: {
+      ...theme.card,
+      background: 'linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,250,252,.98))',
+      border: '1px solid rgba(31,45,58,.12)',
+      shadow: '0 8px 24px -16px rgba(32,48,62,.28)',
+      shadowHover: '0 12px 30px -16px rgba(32,48,62,.34)',
+      overlay: 'linear-gradient(to top, rgba(237,243,248,.96) 14%, rgba(237,243,248,.45) 58%, rgba(237,243,248,.04))',
+    },
+  }
+}
 
 /**
  * A game world: /minecraft, /lineage-2, /lineage-2/interlude.
@@ -27,14 +66,34 @@ export default function GameWorld() {
   const world = resolveWorld(gameSlug, chronicleSlug)
   // Arriving through a gate of the hall: the world opens out of its own colour.
   const fromPortal = !!(useLocation().state as { portal?: boolean } | null)?.portal
+  const [colorMode, setColorMode] = useState<WorldColorMode>(() => {
+    try { return localStorage.getItem(L2_COLOR_MODE_KEY) === 'light' ? 'light' : 'dark' } catch { return 'dark' }
+  })
+  const isLineage2 = world.game?.id === 'lineage2'
+  const activeTheme = isLineage2 && colorMode === 'light' ? lineageLightTheme(world.theme) : world.theme
+
+  useEffect(() => {
+    if (!isLineage2) return
+    try { localStorage.setItem(L2_COLOR_MODE_KEY, colorMode) } catch { /* optional preference */ }
+    const root = document.documentElement
+    root.dataset.worldMode = colorMode
+    return () => { delete root.dataset.worldMode }
+  }, [colorMode, isLineage2])
 
   // unknown single-segment url — this route sits below every static route
   if (!world.game) return <NotFound />
   if (chronicleSlug && !world.chronicle) return <Navigate to={`/${world.game.slug}`} replace />
 
+  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative', isLineage2 ? 'gs-mobile-world' : '', isLineage2 && colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
   return (
-    <ThemeScope theme={world.theme} as="div" className={fromPortal ? 'gs-world-enter relative' : 'relative'}>
-      <WorldBody gameSlug={world.game.slug} chronicleSlug={world.chronicle?.slug} key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`} />
+    <ThemeScope theme={activeTheme} as="div" className={scopeClass}>
+      <WorldBody
+        gameSlug={world.game.slug}
+        chronicleSlug={world.chronicle?.slug}
+        colorMode={isLineage2 ? colorMode : undefined}
+        onToggleColorMode={isLineage2 ? () => setColorMode((mode) => mode === 'dark' ? 'light' : 'dark') : undefined}
+        key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`}
+      />
     </ThemeScope>
   )
 }
@@ -42,7 +101,7 @@ export default function GameWorld() {
 type Sort = 'online' | 'new' | 'name'
 const WORLD_SORT_KEY = 'gs.world.sort'
 
-function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
+function WorldBody({ gameSlug, chronicleSlug, colorMode, onToggleColorMode }: { gameSlug: string; chronicleSlug?: string; colorMode?: WorldColorMode; onToggleColorMode?: () => void }) {
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const [sort, setSort] = useState<Sort>(() => {
@@ -54,7 +113,6 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     }
   })
   const [limit, setLimit] = useState(12)
-  const [panel, setPanel] = useState<'online' | 'soon' | 'choice'>('online')
   const [view, setView] = useState<'list' | 'grid'>(() => {
     try { return localStorage.getItem('gs.view') === 'grid' ? 'grid' : 'list' } catch { return 'list' }
   })
@@ -91,9 +149,9 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     return servers.filter((server) => !open.has(server.slug))
   }, [servers, openings])
   const topOnline = useMemo(() => rest.filter(known).sort((a, b) => b.online.current - a.online.current), [rest])
-  const topChoice = useMemo(
-    () => rest.filter((server) => server.votes > 0 || (server.support?.coins ?? 0) > 0)
-      .sort((a, b) => b.votes - a.votes || (b.support?.coins ?? 0) - (a.support?.coins ?? 0)),
+  const topSupport = useMemo(
+    () => rest.filter((server) => (server.support?.coins ?? 0) > 0)
+      .sort((a, b) => (b.support?.coins ?? 0) - (a.support?.coins ?? 0) || b.votes - a.votes),
     [rest],
   )
   const listed = useMemo(() => {
@@ -130,7 +188,15 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   return (
     <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>
       {/* No count until the list arrives: a slow or failed request must not read as "0 серверов". */}
-      <GameHero game={game} chronicle={chronicle} serversCount={(loading || error) && servers.length === 0 ? undefined : servers.length} playersOnline={playersOnline} openings={openings.length} />
+      <GameHero
+        game={game}
+        chronicle={chronicle}
+        serversCount={(loading || error) && servers.length === 0 ? undefined : servers.length}
+        playersOnline={playersOnline}
+        openings={openings.length}
+        colorMode={colorMode}
+        onToggleColorMode={onToggleColorMode}
+      />
 
       <Container className="relative pb-16">
         {chronicle ? (
@@ -153,47 +219,34 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           <div className="mt-8"><EmptyState title="Не удалось загрузить серверы" description="Проверьте соединение и попробуйте ещё раз." action="Повторить" onAction={reload} /></div>
         ) : (
           <>
-            <div className="mt-5 lg:hidden">
-              <Segmented
-                value={panel}
-                onChange={setPanel}
-                className="w-full [&>*]:flex-1"
-                options={[
-                  { value: 'online', label: 'Играют' },
-                  { value: 'soon', label: 'Скоро' },
-                  { value: 'choice', label: 'Выбор' },
-                ]}
-              />
-            </div>
-            <div className="mt-3 grid gap-3 lg:mt-6 lg:grid-cols-3">
+            <div className="mt-6 grid gap-5 lg:grid-cols-3 lg:gap-3">
               <RankPanel
-                icon={<Flame size={16} />}
-                className={panel === 'online' ? undefined : 'max-lg:hidden'}
-                title="Сейчас играют"
-                hint={chronicle ? `Топ по онлайну · ${chronicle.label}` : 'Топ по онлайну'}
-                to={`/rating?game=${game.id}`}
+                plainMobile
+                title="Топ по поддержке"
               >
-                {topOnline.length > 0
-                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} compact />)
-                  : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда проект подключит проверку онлайна или мы получим его из открытых источников." />}
+                {topSupport.length > 0
+                  ? topSupport.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} metric="support" compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  : <ShelfNote title="Поддержки пока нет" text="Когда игроки начнут поддерживать серверы, лидеры появятся здесь." />}
               </RankPanel>
 
               <RankPanel
-                icon={<CalendarClock size={16} />}
-                className={panel === 'soon' ? undefined : 'max-lg:hidden'}
+                plainMobile
                 title="Скоро открытие"
-                hint="Ближайшие старты"
                 to={`/openings?game=${game.id}`}
               >
                 {openings.length > 0
-                  ? openings.slice(0, 5).map((server) => <ServerRow key={server.slug} server={server} showGame={false} compact />)
-                  : <ShelfNote title="Ближайших открытий нет" text="Как только проект объявит дату старта, он появится здесь с обратным отсчётом." />}
+                  ? openings.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  : <ShelfNote title="Ближайших открытий нет" text="Как только проект объявит дату старта, он появится здесь." />}
               </RankPanel>
 
-              <RankPanel className={panel === 'choice' ? undefined : 'max-lg:hidden'} icon={<Trophy size={16} />} title="Выбор игроков" hint="Народный рейтинг и поддержка" to="/rating">
-                {topChoice.length > 0
-                  ? topChoice.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" />)
-                  : <ShelfNote title="Голосование скоро откроется" text="Первые голоса игроков появятся вместе с открытием регистрации — здесь будут серверы, которых выбрали сами игроки." />}
+              <RankPanel
+                plainMobile
+                title="Сейчас играют"
+                to={`/rating?game=${game.id}`}
+              >
+                {topOnline.length > 0
+                  ? topOnline.slice(0, 5).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 3 ? 'max-lg:hidden' : undefined} />)
+                  : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда мы получим свежие данные." />}
               </RankPanel>
             </div>
 

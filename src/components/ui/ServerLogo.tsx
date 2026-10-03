@@ -61,6 +61,7 @@ export function ServerLogo({
   size = 'md',
   className,
   style,
+  forceGameGlyph = false,
 }: {
   name: string
   hue: number
@@ -72,6 +73,8 @@ export function ServerLogo({
   src?: string
   size?: keyof typeof SIZES
   className?: string
+  /** keep one neutral fallback per game even if the designer preference is monogram/crest */
+  forceGameGlyph?: boolean
   /** extra style — themed worlds use it to paint a ring in the world colour */
   style?: CSSProperties
 }) {
@@ -79,10 +82,12 @@ export function ServerLogo({
   const { appearance } = useAppearance()
   const showImage = !!src && !failed
   const game = gameId ? GAMES_BY_ID[gameId] : undefined
-  const Glyph = (kind && KIND_GLYPH[kind]) || (gameId && GAME_GLYPH[gameId]) || Gamepad2
+  const Glyph = forceGameGlyph
+    ? ((gameId && GAME_GLYPH[gameId]) || Gamepad2)
+    : ((kind && KIND_GLYPH[kind]) || (gameId && GAME_GLYPH[gameId]) || Gamepad2)
 
   // An approved server logo always wins; the default style only fills the gap.
-  if (!showImage && game && appearance.icons === 'glyph') {
+  if (!showImage && game && (forceGameGlyph || appearance.icons === 'glyph')) {
     return (
       <div
         className={cn('relative grid shrink-0 place-items-center overflow-hidden text-white', SIZES[size], className)}

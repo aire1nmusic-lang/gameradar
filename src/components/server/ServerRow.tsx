@@ -83,7 +83,7 @@ export function ServerRow({
       to={`/server/${server.slug}`}
       title={tooltip}
       className={cn(
-        'gs-row group relative flex min-h-[58px] items-center gap-2.5 rounded-xl border bg-white/[0.035] px-2.5 py-2 transition-colors duration-150 hover:bg-white/[0.07] sm:gap-3 sm:px-3',
+        'gs-row group relative flex min-h-[76px] items-center gap-2.5 rounded-xl border bg-white/[0.035] px-2.5 py-2.5 transition-colors duration-150 hover:bg-white/[0.07] sm:gap-3 sm:px-3 lg:min-h-[58px] lg:py-2',
         medal ? '' : 'border-white/[0.09] hover:border-white/20',
         className,
       )}
@@ -91,7 +91,7 @@ export function ServerRow({
     >
       {rank !== undefined && <RankMedal rank={rank} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
-      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} kind={server.chronicleId ?? chronicle?.id} src={server.logoUrl} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="h-12 w-12 lg:h-10 lg:w-10" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -100,8 +100,7 @@ export function ServerRow({
             <span className="hidden shrink-0 sm:inline-flex"><TrendChip value={change24h} /></span>
           )}
         </div>
-        <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] leading-4 text-ink-400">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
+        <div className="mt-0.5 flex min-w-0 items-center text-[12px] leading-4 text-ink-400">
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
       </div>
@@ -156,7 +155,7 @@ export function ServerTile({ server, rank, showGame = false }: { server: GameSer
     >
       <div className="flex items-center gap-2.5">
         {rank !== undefined && <RankMedal rank={rank} className="h-6 w-6 text-[12px]" />}
-        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} kind={server.chronicleId ?? chronicle?.id} src={server.logoUrl} size="xs" />
+        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="xs" forceGameGlyph />
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14px] leading-5 font-semibold text-ink-50">{server.name}</div>
           <div className="truncate text-[11.5px] leading-4 text-ink-400">{sub.join(' · ')}</div>
@@ -215,7 +214,7 @@ export function ServerRowSkeleton() {
 /** A stack of rows with the standard spacing. */
 export function ServerList({ servers, from = 1, ranked, showGame, metric, className }: { servers: GameServer[]; from?: number; ranked?: boolean; showGame?: boolean; metric?: RowMetric; className?: string }) {
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('space-y-2', className)}>
       {servers.map((server, index) => (
         <ServerRow key={server.slug} server={server} rank={ranked ? from + index : undefined} showGame={showGame} metric={metric} />
       ))}

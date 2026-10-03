@@ -77,7 +77,8 @@ export default function GameWorld() {
     <ThemeScope theme={activeTheme} as="div" className={scopeClass}>
       <WorldBody
         gameSlug={world.game.slug}
-        chronicleSlug={world.chronicle?.slug}        key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`}
+        chronicleSlug={world.chronicle?.slug}
+        key={`${world.game.slug}-${world.chronicle?.slug ?? 'all'}`}
       />
     </ThemeScope>
   )
@@ -271,7 +272,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               />
               {listed.length > 0 ? (
                 <>
-                  {listedKnown.length > 0 && (view === 'grid' ? <ServerTiles servers={listedKnown} ranked showGame={false} /> : <ServerList servers={listedKnown} ranked showGame={false} />)}
+                  {listedKnown.length > 0 && (view === 'grid' ? <ServerTiles servers={listedKnown} showGame={false} /> : <ServerList servers={listedKnown} showGame={false} />)}
                   {listedUnknown.length > 0 && (
                     <>
                       {listedKnown.length > 0 && (

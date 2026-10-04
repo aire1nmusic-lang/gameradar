@@ -22,7 +22,7 @@ const NAV = [
 export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
   const {pathname}=useLocation()
-  const overArt=bare||pathname==='/account'||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
+  const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
   const accountLabel=auth.user?.displayName || 'Аккаунт'

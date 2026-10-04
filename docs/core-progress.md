@@ -17,6 +17,12 @@
 
 ## Состояние сейчас
 
+**04.10 — final follow-up local VERIFIED:** typecheck/build +56account +14adminproof viewport/theme cases passed after label/contrast refinements; reviewed adminlight390: all header controls readable, code label visible, no overflow. Intermediate workflow37210613246 canceled before any Backup/Upload based on separately verified stage; auto-review approved evidenced cancellation. Current production e7da49a remains valid. Final source includes6b29dfd manual-proof relocation plus this refinement; next commit/push, guarded production checks. Private source migration approval still pending, source/image held prior. Costs0new resources/Actions existing; rollback source/static backup.
+
+
+**04.10 — final admin preservation refinement:** local admin proof screenshots caught dark header labels on dark shell in light mode; header admin routes now use white/shadow contrast; proof field has visible Field label instead of placeholder-only. Intermediate6b29dfd deploy37210613246 cancellation first rejected by auto-review because stage unknown; separate read VERIFIED Build in_progress/allBackupUpload pending, then cancellation requested with evidence before writes (no bypass). Final local70cases rerunning; e7da49a production already VERIFIED, no private migration. CostexistingActions only; next finalfollowup commit/guarded publish.
+
+
 **04.10 — e7da49a frontend VERIFIED PRODUCTION:** deploy37209414886 attempt2 SUCCESS, CI37209414850 SUCCESS. Pre/post: core56, live70catalog/reconcile0,100HTML,90rawSEO, current build/cache/assets, loader/world matrix +56account guest/player/owner/admin fixtures. Real authenticated IAB check1440darklight/320/390/768/1024light confirmed grid/admin shortcut/logout/contrast/nooverflow; reset theme/viewport, no account write/logout. Backupartifact11306396105 expires18.10, screenshots11306127385; no rollback needed. Session-source private migration still BLOCKED auto-review approval (old method unknown honest). Follow-up observedToken moved to /admin Claims: local56account+14admin-proof cases/typecheck passed, reviewed390light screenshot; commit/publish follow-up next to preserve manual fallback. Costs0newresources/Actions+existingrequests.
 
 

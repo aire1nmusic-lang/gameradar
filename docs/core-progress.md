@@ -13,6 +13,8 @@
 
 ## Состояние сейчас
 
+**04.10 — visual loader correction VERIFIED dist/browser, production pending.** Read-only QA run37200023350/d9f14ad success: fast/slow IMAGES on8viewports320×568/390×844/844×390/768×1024/1024×768/1024×800/1440×900/1920×1080; incomplete hall hidden, full-opacity approvedGSv7 loader screenshots, then4decoded assets (real background+3cards) and real-ready screenshots. Cached games + pendingAPI refresh passed; image-error keepsloader thenreloadRetry recovers; API503Retry/nestedroute passed. Earlier syntheticPNG route responses produced naturalWidth0 inChromium, SVGfixture + actualWebP asset verification resolved harness failures; no source gate failure inferred from PNGtests. Artifact11301922846 contains16 screenshots. Publish adds polite loader status only, visualunchanged; same guarded deploy retests before/afterupload. New services0, Actionsminutes/standardexistingstorage; rollback existing staticbackup/revertsource. Previous screenshot acceptance remains superseded; actualproduction result next.
+
 **04.10 current blocker:** browser readiness timed out on both correction attempts before production writes; read-only DOM/image diagnostics running. Earlier loader acceptance is reopened; do not report fixed until actual visual gate passes.
 
 
@@ -833,3 +835,8 @@ VERIFIED: code b6b051a отправлен в main; tree clean после source 
 ### 04.10 — visual boot browser blocker
 
 04.10 diagnostics: deploy37199219388/d0449ed and37199340927/7cd741d both passed56 tests/build/bundle but browser first fast boot timed out15s; backup/upload never ran, production unchanged. Valid PNG alone did not resolve it; exact DOM/image readiness now logged on failure (be151d2), read-only quick browser workflow7286d57 avoids repeating core/deploy while diagnosing. Scratch browser install failed truncated downloads; no alternate authenticated access attempted. New fixed costs0; Actions minutes. Next observe BOOT DIAGNOSTIC to fix actual gate, then full guarded deploy; not VERIFIED.
+
+
+### 04.10 — actual visual gate acceptance before production
+
+**04.10 — visual loader correction VERIFIED dist/browser, production pending.** Read-only QA run37200023350/d9f14ad success: fast/slow IMAGES on8viewports320×568/390×844/844×390/768×1024/1024×768/1024×800/1440×900/1920×1080; incomplete hall hidden, full-opacity approvedGSv7 loader screenshots, then4decoded assets (real background+3cards) and real-ready screenshots. Cached games + pendingAPI refresh passed; image-error keepsloader thenreloadRetry recovers; API503Retry/nestedroute passed. Earlier syntheticPNG route responses produced naturalWidth0 inChromium, SVGfixture + actualWebP asset verification resolved harness failures; no source gate failure inferred from PNGtests. Artifact11301922846 contains16 screenshots. Publish adds polite loader status only, visualunchanged; same guarded deploy retests before/afterupload. New services0, Actionsminutes/standardexistingstorage; rollback existing staticbackup/revertsource. Previous screenshot acceptance remains superseded; actualproduction result next.

@@ -40,8 +40,8 @@ const value=(row:Row,key:string)=>String(row[key]??'—')
 const date=(row:Row,key:string)=>row[key]?new Date(String(row[key])).toLocaleString('ru-RU'):'—'
 const serverNoun=(count:number)=>count%10===1&&count%100!==11?'сервер':count%10>=2&&count%10<=4&&(count%100<12||count%100>14)?'сервера':'серверов'
 
-export default function Admin() {
-  useSeo({title:'Админский кабинет',path:'/admin',noindex:true})
+export default function Admin({embedded=false}:{embedded?:boolean}) {
+  useSeo({title:embedded?'Аккаунт':'Админский кабинет',path:embedded?'/account':'/admin',noindex:true})
   const auth=useAuth(),permissions=auth.user?.permissions??[]
   const allowed=tabs.filter(tab=>permissions.includes(tab.permission))
   const [selected,setSelected]=useState('overview'),[data,setData]=useState<unknown>()
@@ -73,14 +73,15 @@ export default function Admin() {
     })
   }
   if(auth.loading)return <main className="mx-auto max-w-6xl p-6">Проверяем права…</main>
-  if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Админский кабинет</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
+  if(!auth.privateCore||!auth.user||!allowed.length)return <main className="mx-auto max-w-6xl p-6"><h1 className="text-2xl">Управление GameScout</h1><p className="mt-3 text-ink-400">Нет доступа к админскому кабинету.</p></main>
   const rows=Array.isArray(data)?data as Row[]:[]
   const summary=(!Array.isArray(data)&&data&&typeof data==='object')?data as Row:{}
-  return <main className="gs-admin-premium mx-auto max-w-6xl space-y-4 px-4 py-5 sm:space-y-5 sm:py-8">
+  const Wrapper = embedded ? 'section' : 'main'
+  return <Wrapper className="gs-admin-premium mx-auto max-w-6xl space-y-4 px-4 py-5 sm:space-y-5 sm:py-8">
     <section className="gs-admin-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
       <div className="relative z-10 max-w-[620px]">
         <p className="gs-admin-kicker text-[11px] font-semibold uppercase tracking-[0.18em]">GameScout Control</p>
-        <h1 className="mt-1 text-[30px] font-semibold leading-[1.05] sm:text-[44px]">Админский кабинет</h1>
+        <h1 className="mt-1 text-[30px] font-semibold leading-[1.05] sm:text-[44px]">Управление GameScout</h1>
         <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-ink-300 sm:text-[14px]">Управление серверами, пользователями, правками и внутренними операциями GameScout.</p>
       </div>
     </section>
@@ -202,7 +203,7 @@ export default function Admin() {
         </article>)}
       </section>}
     </>}
-  </main>
+  </Wrapper>
 }
 
 const ruleFields=[

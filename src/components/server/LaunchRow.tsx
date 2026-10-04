@@ -15,7 +15,6 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const launch = server.launch
   if (!launch) return null
-  const soon = new Date(launch.at).getTime() - Date.now() < 12 * 3_600_000
   const sub = [showGame ? game.shortName : null, chronicle?.label ?? server.version, server.rates ? `рейты ${server.rates}` : null].filter(Boolean)
 
   return (
@@ -35,7 +34,7 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
         </div>
       </div>
       <div className="shrink-0 text-right" title={formatLaunch(launch.at)}>
-        <div className={cn('num inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums sm:text-[13px]', soon ? 'text-promo-200' : 'text-ink-100')}>
+        <div className={cn('num inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums sm:text-[13px]', 'text-ink-100')}>
           <CalendarClock size={13} className="hidden text-ink-500 sm:block" />
           {formatCountdown(launch.at)}
         </div>

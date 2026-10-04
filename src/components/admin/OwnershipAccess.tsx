@@ -39,7 +39,7 @@ export function OwnershipAccess({userId,self,onChanged}:{userId:string;self:bool
       {message&&<p role="status" className="text-signal-400">{message}</p>}
       {!access&&!error&&<p>Загружаем права…</p>}
       {access&&<>
-        <p><strong>Статус: {access.status==='OWNER'?'Игрок и владелец':'Игрок'}</strong>
+        <p><strong>Статус: {access.status==='OWNER'?'Владелец сервера':'Игрок'}</strong>
           {' · '}Подтверждённых серверов: {access.owned.length}</p>
         <p className="text-ink-400">Права владельца выдаются только по конкретному серверу после вашего решения по Claim. Глобальный доступ ко всем серверам не выдаётся.</p>
         {!access.pending.length&&<p className="text-ink-400">Заявок на подтверждение сейчас нет.</p>}

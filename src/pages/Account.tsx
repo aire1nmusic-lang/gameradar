@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Admin from './Admin'
 import { Mail } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
@@ -72,7 +73,9 @@ export default function Account() {
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}/>
-  const playerStatus=profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'
+  const isAdmin = profile?.roles?.includes('ADMIN') === true
+  const canManage = !!profile?.permissions?.length
+  const playerStatus=isAdmin?'Администратор':profile?.roles?.includes('OWNER')?'Владелец сервера':'Игрок'
   const copyEmail=()=>{if(profile?.email&&navigator.clipboard)void navigator.clipboard.writeText(profile.email)}
 
   return <main className="gs-account-page gs-account-premium mx-auto w-full space-y-6 px-4 py-6 sm:py-8">
@@ -129,7 +132,7 @@ export default function Account() {
     </aside>
     <div className="gs-account-workspace space-y-5">
 
-    <section className="gs-account-servers space-y-3">
+    {canManage ? <Admin embedded/> : <section className="gs-account-servers space-y-3">
       <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><WorldIcon name="chevronRight" size={18} className="opacity-55"/></h2>
       {!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
         <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>
@@ -150,7 +153,7 @@ export default function Account() {
           {claims.map(c=><div key={c.id} className="space-y-2 text-[12px]"><p>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={reload}/>}</div>)}
         </div>
       </details>
-    </section>
+    </section>}
 
 
     </div>

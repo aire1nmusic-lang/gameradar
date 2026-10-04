@@ -2,6 +2,7 @@ import { repo } from '@/repositories'
 import type { GameServer, Page, ServerQuery, SortKey } from '@/models'
 import { apiRequest } from '@/repositories/http/client'
 import type { CatalogFilters } from './filterState'
+import { balancedCatalog } from './discoveryRanking'
 
 /**
  * Catalogue use-cases: searching, filtering and the discovery rails.
@@ -10,7 +11,7 @@ import type { CatalogFilters } from './filterState'
  */
 
 export const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: 'recommended', label: 'Рекомендуемые' },
+  { key: 'recommended', label: 'Общий топ' },
   { key: 'online', label: 'По онлайну' },
   { key: 'growth', label: 'По росту' },
   { key: 'votes', label: 'По голосам' },
@@ -46,7 +47,44 @@ export function toServerQuery(filters: CatalogFilters, sort: SortKey, limit?: nu
 }
 
 export function searchServers(query: ServerQuery): Promise<Page<GameServer>> {
+  if (query.sort === 'recommended') return balancedSortedServers(query)
   return repo.servers.query(query)
+}
+
+async function publicCards(query: ServerQuery): Promise<GameServer[]> {
+  const items: GameServer[] = []
+  for (let offset = 0; ; offset += 100) {
+    const page = await repo.servers.query({ ...query, sort: 'new', offset, limit: 100 })
+    items.push(...page.items)
+    if (!page.items.length || items.length >= page.total) break
+  }
+  return items
+}
+
+export async function discoveryServers(query: ServerQuery = {}): Promise<GameServer[]> {
+  const items = await publicCards(query)
+  const load = async (path: string) => {
+    const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
+    for (let offset = 0; ; offset += 100) {
+      const page = await apiRequest<typeof rows>(`${path}?limit=100&offset=${offset}`)
+      rows.push(...page)
+      if (page.length < 100) return rows
+    }
+  }
+  const [people, support] = await Promise.all([load('/people-rating'), load('/support/ranking')])
+  const votes = new Map(people.map(row => [row.server_id, row.votes ?? 0]))
+  const coins = new Map(support.map(row => [row.server_id, row]))
+  return items.map(server => ({...server, votes: votes.get(server.id) ?? 0, support: {coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0}}))
+}
+
+async function balancedSortedServers(query: ServerQuery): Promise<Page<GameServer>> {
+  const universe = await discoveryServers({gameId: query.gameId, gameIds: query.gameIds})
+  const order = new Map(balancedCatalog(universe).map((server, index) => [server.id, index]))
+  const filtered = await publicCards({...query, offset: 0, limit: undefined})
+  const enriched = new Map(universe.map(server => [server.id, server]))
+  const sorted = filtered.map(server => enriched.get(server.id) ?? server).sort((a,b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity))
+  const offset = query.offset ?? 0, limit = query.limit ?? 24
+  return {items: sorted.slice(offset, offset + limit), total: sorted.length, offset, limit}
 }
 
 /** Read-only join at the UI boundary: private vote counts order public cards. */

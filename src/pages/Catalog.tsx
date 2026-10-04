@@ -26,7 +26,7 @@ const PAGE_SIZE = 24
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 const COMPACT_SORT_LABELS: Record<SortKey, string> = {
-  recommended: 'Рекомендуем', online: 'Онлайн', growth: 'Рост', votes: 'Голоса', support: 'Поддержка', rating: 'Рейтинг', new: 'Новые', launch: 'Открытие',
+  recommended: 'Общий топ', online: 'Онлайн', growth: 'Рост', votes: 'Голоса', support: 'Поддержка', rating: 'Рейтинг', new: 'Новые', launch: 'Открытие',
 }
 
 export default function Catalog() {
@@ -198,6 +198,7 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
+        {sort === 'recommended' && <p className="mb-4 text-sm text-ink-300">Общий топ: голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. Народный рейтинг считается отдельно.</p>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading ? (
@@ -237,14 +238,14 @@ export default function Catalog() {
                         <InlinePromo gameId={filters.games[0]} />
                       </ThemeScope>
                     )}
-                    <ServerCard server={server} />
+                    <div className="relative">{sort === 'recommended' && index < 3 && <span className="absolute top-3 right-3 z-10 rounded-full bg-ink-950 px-2 py-1 text-xs text-signal-400">Общий топ {index + 1}</span>}<ServerCard server={server} /></div>
                   </Fragment>
                 ))}
               </div>
             ) : (
               <div className="space-y-1.5">
                 {results.map((server, index) => (
-                  <ServerRow key={server.slug} server={server} rank={sort === 'online' || sort === 'recommended' ? index + 1 : undefined} />
+                  <ServerRow key={server.slug} server={server} rank={sort === 'recommended' && index < 3 ? index + 1 : undefined} />
                 ))}
               </div>
             )}

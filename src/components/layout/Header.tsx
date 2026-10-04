@@ -22,9 +22,9 @@ const NAV = [
 export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
   const {pathname}=useLocation()
-  const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
+  const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const accountLabel=auth.user?.displayName || 'Аккаунт'
   const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
   // Over the hall the account button is a pane of glass like the cards.
@@ -97,9 +97,6 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
         >
           <WorldIcon name="profile" size={21} />
         </button>}
-        {!!auth.user?.permissions?.length&&<Link to={scoped('/admin')} aria-label="Админский кабинет" title="Админский кабинет" className="gs-header-admin inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-2 text-sm font-semibold xl:px-3">
-          <WorldIcon name="admin" size={20}/><span className="hidden xl:inline">Админка</span>
-        </Link>}
       </Container>
     </header>
   )

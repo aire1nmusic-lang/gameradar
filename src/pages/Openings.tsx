@@ -22,8 +22,9 @@ export default function Openings() {
 
   const filtered = useMemo(() => {
     const now = Date.now()
-    return all.filter((server) => {
+    return [...all].sort((a,b) => Date.parse(a.launch?.at ?? "") - Date.parse(b.launch?.at ?? "")).filter((server) => {
       const diff = new Date(server.launch?.at ?? 0).getTime() - now
+      if (diff < 0) return false
       if (window === 'today') return diff < DAY
       if (window === 'week') return diff < 7 * DAY
       return true

@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'
 import Home from '@/pages/Home'
 import Games from '@/pages/Games'
@@ -15,7 +15,6 @@ import UiStates from '@/pages/UiStates'
 import NotFound from '@/pages/NotFound'
 import GameWorld from '@/pages/GameWorld'
 import Account from '@/pages/Account'
-import Admin from '@/pages/Admin'
 import { Privacy, Terms } from '@/pages/Legal'
 import Copyright from '@/pages/Copyright'
 import Design from '@/pages/Design'
@@ -35,7 +34,7 @@ export default function App() {
         <Route path="add-server" element={<AddServer />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="account" element={<Account />} />
-        <Route path="admin" element={<Admin />} />
+        <Route path="admin" element={<Navigate to="/account" replace />} />
         <Route path="copyright" element={<Copyright />} />
         <Route path="privacy" element={<Privacy />} />
         <Route path="terms" element={<Terms />} />

@@ -1,64 +1,32 @@
 <!doctype html>
 <html lang="ru" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#08090D" />
-    <title>GameScout — навигатор по игровым серверам</title>
-    <meta
-      name="description"
-      content="GameScout — независимый навигатор по игровым серверам: проверенный онлайн, рейтинги, открытия и рост проектов."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&family=Saira:wdth,wght@112.5,800&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <!-- Boot shell: what the first paint looks like while the app and the game list load.
-         React reuses this markup until the catalogue is ready (see main.tsx). -->
-    <style>
-      html, body { background: #08090d; margin: 0; }
-      .bs { min-height: 100vh; color: #e8eaf0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-      .bs-head { height: 60px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; }
-      .bs-wrap { width: 100%; max-width: 1208px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; }
-      .bs-row { display: flex; align-items: center; gap: 14px; }
-      .bs-logo { display: flex; align-items: center; gap: 10px; }
-      .bs-word { font-family: Saira, 'Inter Tight', system-ui, sans-serif; font-weight: 800; font-stretch: 112.5%; font-size: 20px; letter-spacing: -.01em; color: #f2f4f7; line-height: 1; }
-      .bs-word span { color: #34e6f5; }
-      .bs-sk { background: linear-gradient(90deg, #12151c 0%, #1a1e27 45%, #12151c 90%); background-size: 200% 100%; animation: bs-shine 1.4s ease-in-out infinite; border-radius: 8px; }
-      .bs-nav { display: none; gap: 10px; margin-left: 10px; }
-      .bs-grow { flex: 1; }
-      .bs-hero { padding: 56px 0 28px; text-align: center; }
-      .bs-title { width: min(420px, 80%); height: 40px; margin: 0 auto; }
-      .bs-search { width: min(576px, 100%); height: 52px; margin: 22px auto 0; border-radius: 16px; }
-      .bs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
-      .bs-tile { height: 148px; border-radius: 14px; }
-      .bs-msg { margin-top: 28px; text-align: center; font-size: 14px; color: #9aa1b2; }
-      .bs-msg button { margin-top: 12px; padding: 9px 16px; border-radius: 8px; border: 0; background: #f2f3f7; color: #08090d; font: 500 14px Inter, system-ui, sans-serif; cursor: pointer; }
-      @media (min-width: 768px) { .bs-nav { display: flex; } .bs-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } .bs-hero { padding-top: 72px; } }
-      @keyframes bs-shine { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
-      @media (prefers-reduced-motion: reduce) { .bs-sk { animation: none; } }
-    </style>
-      <!-- The hall of worlds is the first thing a visitor sees: fetch it before the app starts. -->
-    <link rel="preload" as="image" href="/media/hub/nave-1920.webp" imagesrcset="/media/hub/nave-1280.webp 1280w, /media/hub/nave-1920.webp 1920w, /media/hub/nave-2560.webp 2560w, /media/hub/nave-3840.webp 3840w" imagesizes="100vw" media="(min-width: 1024px)" fetchpriority="high" />
-    <link rel="preload" as="image" href="/media/hub/nave-m-720.webp" imagesrcset="/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w" imagesizes="100vw" media="(max-width: 1023px)" fetchpriority="high" />
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#08090D" />
+<title>GameScout — навигатор по игровым серверам</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@112.5,800&display=swap" rel="stylesheet" />
+<style>
+html,body,#root{margin:0;min-height:100%;background:#08090d}
+.gs-loader{height:100vh;display:flex;align-items:center;justify-content:center;background:#08090d;color:#fff;overflow:hidden;font-family:Arial,sans-serif}
+.gs-box{display:flex;flex-direction:column;align-items:center;animation:gs-in .8s ease both;position:relative}
+.gs-logo{width:72px;filter:drop-shadow(0 0 14px rgba(52,230,245,.18))}
+.gs-name{margin-top:14px;font-family:Saira,Arial;font-size:34px;font-weight:800;letter-spacing:.02em}
+.gs-game{color:#f8fafc}.gs-scout{color:#34e6f5}
+.gs-text{margin-top:24px;color:#98a2b3;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.gs-dot{display:inline-block;animation:dot 1.5s infinite;opacity:.25}.gs-dot:nth-child(2){animation-delay:.2s}.gs-dot:nth-child(3){animation-delay:.4s}
+@keyframes dot{50%{opacity:1}}
+.fire{position:absolute;width:5px;height:5px;border-radius:50%;background:#34e6f5;opacity:.25;filter:blur(1px);animation:float 8s infinite}
+.f1{transform:translate(-90px,-70px)}.f2{transform:translate(90px,-40px);animation-delay:2s}.f3{transform:translate(-110px,60px);animation-delay:4s}.f4{transform:translate(120px,70px);animation-delay:1s}
+@keyframes float{50%{opacity:.5;translate:0 -20px}}
+@media(min-width:768px){.gs-logo{width:110px}.gs-name{font-size:54px}.gs-text{font-size:13px}}
+@media(max-width:767px){.gs-logo{width:58px}.gs-name{font-size:28px}}
+</style>
 </head>
-  <body>
-    <div id="root"><div class="bs" aria-busy="true" aria-label="GameScout загружается">
-      <header class="bs-head"><div class="bs-wrap bs-row">
-        <span class="bs-logo"><svg viewBox="284 317.5 729.5 431.5" width="51" height="30" aria-hidden="true"><path fill="#dfe4ea" d="M787.5 321.5 L485 321.5 L288 519 L503 734 L503 611.5 L404 513 L515 402 L707 402 Z M606 486 L473.5 486 L553.5 566 L590 566 L590 582.5 L527 645.5 L527 745 L696 576 Z"/><path fill="#34e6f5" d="M990 397.5 L767 397.5 L664 500.5 L750.5 587 L907 587 L859 635 L713.5 635 L625.5 723.5 L879.5 723.5 L1009.5 593.5 L923 507 L766 507 L799.5 473.5 L914 473.5 Z"/></svg><span class="bs-word">Game<span>Scout</span></span></span>
-        <span class="bs-nav"><span class="bs-sk" style="width:64px;height:14px"></span><span class="bs-sk" style="width:64px;height:14px"></span><span class="bs-sk" style="width:64px;height:14px"></span></span>
-        <span class="bs-grow"></span><span class="bs-sk" style="width:84px;height:36px"></span>
-      </div></header>
-      <main class="bs-wrap">
-        <div class="bs-hero"><div class="bs-sk bs-title"></div><div class="bs-sk bs-search"></div></div>
-        <div class="bs-grid"><div class="bs-sk bs-tile"></div><div class="bs-sk bs-tile"></div><div class="bs-sk bs-tile"></div><div class="bs-sk bs-tile"></div><div class="bs-sk bs-tile"></div><div class="bs-sk bs-tile"></div></div>
-      </main>
-    </div></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<body>
+<div id="root"><div class="gs-loader" aria-busy="true"><span class="fire f1"></span><span class="fire f2"></span><span class="fire f3"></span><span class="fire f4"></span><div class="gs-box"><svg class="gs-logo" viewBox="284 317.5 729.5 431.5"><path fill="#dfe4ea" d="M787.5 321.5L485 321.5 288 519 503 734 503 611.5 404 513 515 402 707 402Z M606 486 473.5 486 553.5 566 590 566 590 582.5 527 645.5 527 745 696 576Z"/><path fill="#34e6f5" d="M990 397.5 767 397.5 664 500.5 750.5 587 907 587 859 635 713.5 635 625.5 723.5 879.5 723.5 1009.5 593.5 923 507 766 507 799.5 473.5 914 473.5Z"/></svg><div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div><div class="gs-text">Подготавливаем миры<span class="gs-dot">.</span><span class="gs-dot">.</span><span class="gs-dot">.</span></div></div></div></div>
+<script type="module" src="/src/main.tsx"></script>
+</body>
 </html>

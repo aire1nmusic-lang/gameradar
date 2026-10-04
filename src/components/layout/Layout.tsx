@@ -19,8 +19,32 @@ export function Layout() {
   const hall = location.pathname === '/'
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 900)
-    return () => window.clearTimeout(timer)
+    let cancelled = false
+
+    const finish = async () => {
+      try {
+        if (document.fonts?.ready) await document.fonts.ready
+      } catch {
+        // Font loading failure should not block the app.
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!cancelled) setLoading(false)
+        })
+      })
+    }
+
+    if (document.readyState === 'complete') {
+      finish()
+    } else {
+      window.addEventListener('load', finish, { once: true })
+    }
+
+    return () => {
+      cancelled = true
+      window.removeEventListener('load', finish)
+    }
   }, [])
 
   useEffect(() => {

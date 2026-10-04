@@ -45,7 +45,7 @@ function Bootstrap() {
   if (!ready) {
     return (
       <>
-        <div className={showLoader ? 'loader-visible' : 'loader-hidden'} dangerouslySetInnerHTML={{ __html: bootShell }} />
+        <div style={{ display: showLoader ? 'block' : 'none' }} dangerouslySetInnerHTML={{ __html: bootShell }} />
         {error && (
           <div className="bs-msg" role="alert" style={{ position: 'fixed', left: 0, right: 0, top: '42vh' }}>
             <div>Не удалось загрузить каталог. Проверьте соединение.</div>

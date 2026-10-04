@@ -1,5 +1,8 @@
 # GameScout — текущее состояние и журнал передачи работы
 
+
+**04.10 — loader REOPENED: exact owner HTML integration prepared, production pending.** Владелец уточнил исходник gamescout_loader_original_logo(1).html: прежний v7 не является нужным дизайном. index.html теперь переносит его реальные SVG solid white/cyan fills, Inter/Arial, logo65/110/150, title32/48/68, 3cyan lights и original animations. Первые1500ms только #000; при долгой загрузке оригинальный overlay #07090d; root остается скрыт до actual image load/decode. Tests проверяют original visual properties и black pending, прежняя8viewport/realimage/retry матрица сохранена. git status: no local checkout; source via GitHub. Проверки/deploy pending; предыдущую v7 приемку не считать приемкой дизайна. Новых ресурсов0; Actions/existing bucket PUT. Откат guarded static backup/revert source. Далее full CI→production QA→screenshots.
+
 **Обновлено: 04.10.2026. Ядро НЕ готово к приемке.** Этот файл — первая точка входа для любого ИИ или разработчика. Сначала читать **«Состояние сейчас»**, **«Следующие действия»**, **«Блокеры»** и только затем исторический журнал ниже. Объем и критерии приемки: [roadmap](roadmap-2026-09-27.md); архитектура и исходный аудит: [Reality Check](core-reality-check.md). Старые записи ниже описывают состояние *на дату их написания* и не отменяют актуальную сводку.
 
 ## Правило ведения файла — обязательно для каждого следующего исполнителя

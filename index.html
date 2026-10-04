@@ -23,110 +23,44 @@
     <style>
       html, body, #root { margin: 0; min-height: 100%; background: #08090d; }
       body { overflow-x: hidden; }
+      html.gs-boot-pending, .gs-boot-pending body, .gs-boot-pending #root { background: #000; }
       .gs-boot-pending #root { visibility: hidden; }
-
+      /* Exact owner-provided gamescout_loader_original_logo(1).html, scoped to boot. */
+      .gs-loader, .gs-loader * { box-sizing: border-box; }
       .gs-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        min-height: 100vh;
-        min-height: 100dvh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background: #08090d;
-        color: #fff;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity .22s ease;
+        position: fixed; inset: 0; z-index: 9999;
+        min-height: 100vh; min-height: 100dvh;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; background: #07090d;
+        font-family: Inter, Arial, sans-serif; line-height: normal; color: #fff;
+        opacity: 0; visibility: hidden; pointer-events: none;
       }
-      .gs-loader-visible .gs-loader {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
-      
-
-      .gs-box {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        animation: gs-enter .8s cubic-bezier(.22,.9,.25,1) both;
-      }
-      @keyframes gs-enter {
-        from { opacity: 0; transform: translateY(16px) scale(.985); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      .gs-mark {
-        width: 52px;
-        height: auto;
-        filter: drop-shadow(0 0 10px rgba(52,230,245,.16));
-      }
-      .gs-name {
-        margin-top: 12px;
-        font-family: Saira, "Inter Tight", system-ui, sans-serif;
-        font-size: 27px;
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: .02em;
-      }
-      .gs-game { color: #f8fafc; }
-      .gs-scout {
-        background: linear-gradient(90deg,#34e6f5 0%,#8b5cf6 55%,#34e6f5 100%);
-        background-size: 220% 100%;
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        animation: gs-flow 6s linear infinite;
-      }
-      @keyframes gs-flow { to { background-position: 220% 0; } }
-
-      .gs-status {
-        margin-top: 20px;
-        color: #98a2b3;
-        font-size: 9px;
-        letter-spacing: .16em;
-        text-transform: uppercase;
-      }
-      .gs-status-dot {
-        display: inline-block;
-        width: 4px;
-        opacity: .25;
-        animation: gs-dot 1.4s infinite;
-      }
+      .gs-loader-visible .gs-loader { opacity: 1; visibility: visible; pointer-events: auto; }
+      .gs-box { text-align: center; }
+      .gs-loader-visible .gs-box { animation: gs-show .8s ease; }
+      .gs-logo { width: 110px; margin: auto; filter: drop-shadow(0 0 25px rgba(52,230,245,.18)); }
+      .gs-logo svg { width: 100%; height: auto; display: inline; vertical-align: baseline; }
+      .gs-name { margin-top: 18px; font-size: 48px; font-weight: 800; letter-spacing: .02em; }
+      .gs-game { color: #e9edf2; }
+      .gs-scout { background: linear-gradient(90deg,#34e6f5,#8b5cf6,#34e6f5); background-size: 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: gs-shine 5s linear infinite; }
+      .gs-status { margin-top: 24px; color: #9aa4b2; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; }
+      .gs-status-dot { animation: gs-blink 1.4s infinite; }
       .gs-status-dot:nth-child(2) { animation-delay: .2s; }
       .gs-status-dot:nth-child(3) { animation-delay: .4s; }
-      @keyframes gs-dot { 50% { opacity: 1; } }
-
-      .gs-firefly {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        opacity: .18;
-        background: radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(52,230,245,.72) 35%,rgba(52,230,245,0) 74%);
-        filter: blur(.25px);
-        animation: gs-drift 8s ease-in-out infinite;
+      .gs-firefly { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #34e6f5; opacity: .25; animation: gs-float 8s infinite; }
+      .gs-firefly.f1 { left: 35%; top: 30%; }
+      .gs-firefly.f2 { right: 35%; top: 40%; }
+      .gs-firefly.f3 { left: 40%; bottom: 30%; }
+      @keyframes gs-show { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; } }
+      @keyframes gs-shine { to { background-position: 200%; } }
+      @keyframes gs-blink { 50% { opacity: .2; } }
+      @keyframes gs-float { 50% { transform: translateY(-20px); opacity: .6; } }
+      @media (max-width: 600px) {
+        .gs-logo { width: 65px; } .gs-name { font-size: 32px; } .gs-status { font-size: 9px; }
       }
-      .gs-firefly.f1 { margin-left: -78px; margin-top: -66px; animation-duration: 7.4s; }
-      .gs-firefly.f2 { margin-left: 72px; margin-top: -52px; animation-duration: 8.8s; animation-delay: -1.2s; }
-      .gs-firefly.f3 { margin-left: -88px; margin-top: 42px; animation-duration: 9.2s; animation-delay: -2.4s; }
-      .gs-firefly.f4 { margin-left: 82px; margin-top: 46px; animation-duration: 7.8s; animation-delay: -3.1s; }
-      .gs-firefly.f5 { margin-left: -22px; margin-top: -94px; animation-duration: 9.6s; animation-delay: -1.8s; }
-      .gs-firefly.f6 { margin-left: 18px; margin-top: 78px; animation-duration: 8.2s; animation-delay: -2.7s; }
-      @keyframes gs-drift {
-        0%   { transform: translate3d(0,0,0) scale(.92); opacity: .14; }
-        25%  { transform: translate3d(7px,-12px,0) scale(1); opacity: .38; }
-        50%  { transform: translate3d(-5px,-20px,0) scale(1.06); opacity: .28; }
-        75%  { transform: translate3d(8px,-8px,0) scale(.98); opacity: .34; }
-        100% { transform: translate3d(0,0,0) scale(.92); opacity: .14; }
+      @media (min-width: 1200px) { .gs-logo { width: 150px; } .gs-name { font-size: 68px; } }
+      @media (prefers-reduced-motion: reduce) {
+        .gs-loader-visible .gs-box, .gs-scout, .gs-status-dot, .gs-firefly { animation: none; }
       }
 
       .gs-error {
@@ -149,24 +83,6 @@
         font: 600 13px Inter, system-ui, sans-serif;
       }
 
-      @media (min-width: 768px) and (max-width: 1023px) {
-        .gs-mark { width: 78px; }
-        .gs-name { margin-top: 15px; font-size: 38px; }
-        .gs-status { margin-top: 26px; font-size: 11px; }
-      }
-      @media (min-width: 1024px) and (max-width: 1439px) {
-        .gs-mark { width: 110px; }
-        .gs-name { margin-top: 18px; font-size: 52px; }
-        .gs-status { margin-top: 30px; font-size: 12px; }
-      }
-      @media (min-width: 1440px) {
-        .gs-mark { width: 135px; }
-        .gs-name { margin-top: 20px; font-size: 64px; }
-        .gs-status { margin-top: 34px; font-size: 13px; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .gs-box, .gs-scout, .gs-status-dot, .gs-firefly { animation: none; }
-      }
     </style>
 
     <link rel="preload" as="image" href="/media/hub/nave-1920.webp"
@@ -179,24 +95,14 @@
   <body>
     <div id="root"></div>
       <div class="gs-loader" role="status" aria-live="polite" aria-busy="true" aria-label="GameScout загружается">
-        <span class="gs-firefly f1"></span><span class="gs-firefly f2"></span>
-        <span class="gs-firefly f3"></span><span class="gs-firefly f4"></span>
-        <span class="gs-firefly f5"></span><span class="gs-firefly f6"></span>
+        <span class="gs-firefly f1"></span><span class="gs-firefly f2"></span><span class="gs-firefly f3"></span>
         <div class="gs-box">
+          <div class="gs-logo">
           <svg class="gs-mark" viewBox="284 317.5 729.5 431.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="boot-g" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#f8fafc" />
-                <stop offset="1" stop-color="#94a3b8" />
-              </linearGradient>
-              <linearGradient id="boot-s" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#34e6f5" />
-                <stop offset="1" stop-color="#7c3aed" />
-              </linearGradient>
-            </defs>
-            <path fill="url(#boot-g)" d="M787.5 321.5 L485 321.5 L288 519 L503 734 L503 611.5 L404 513 L515 402 L707 402 Z M606 486 L473.5 486 L553.5 566 L590 566 L590 582.5 L527 645.5 L527 745 L696 576 Z" />
-            <path fill="url(#boot-s)" d="M990 397.5 L767 397.5 L664 500.5 L750.5 587 L907 587 L859 635 L713.5 635 L625.5 723.5 L879.5 723.5 L1009.5 593.5 L923 507 L766 507 L799.5 473.5 L914 473.5 Z" />
+            <path fill="#e9edf2" d="M787.5 321.5 L485 321.5 L288 519 L503 734 L503 611.5 L404 513 L515 402 L707 402 Z M606 486 L473.5 486 L553.5 566 L590 566 L590 582.5 L527 645.5 L527 745 L696 576 Z" />
+            <path fill="#34e6f5" d="M990 397.5 L767 397.5 L664 500.5 L750.5 587 L907 587 L859 635 L713.5 635 L625.5 723.5 L879.5 723.5 L1009.5 593.5 L923 507 L766 507 L799.5 473.5 L914 473.5 Z" />
           </svg>
+          </div>
           <div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div>
           <div class="gs-status">Подготавливаем миры<span class="gs-status-dot">.</span><span class="gs-status-dot">.</span><span class="gs-status-dot">.</span></div>
         </div>

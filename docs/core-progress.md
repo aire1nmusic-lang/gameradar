@@ -17,6 +17,12 @@
 
 ## Состояние сейчас
 
+**04.10 — official source attempt1 FAILED before writes:** workflow37222419998 dataset validation passed, Wrangler D1 preparation read failed; no backup/apply step ran and no source configuration changed. Error wrapper omitted Wrangler stdout, so cause not yet known. Added workflow read-only SELECT1 diagnostic for next attempt (no extra credentials/permissive bypass). UI source013866c full gates still running, CI37222380378 SUCCESS. Latest control12cases with anonymous stored-flag isolation passed; local final44px buildpassed. CostexistingActions/reads,0newresources; no externalrollback needed. Next diagnose source permission/tool issue, continue independent UI production gates.
+
+
+**04.10 — publication dispatched source013866c4f71e6ee1811ed1e9fa3646e1893cce31:** git commit29files/pushmain successful. Deploy37222380372, CI37222380378, LoaderQA37222380358 in progress. Source update37222419998 dispatched separately for two official counters, backup beforewrites; result pending. Final loader local passed all8boot+80inner theme cases/retry/cached/error after closed-detail decode correction; final touch-area build70/100HTML/90SEO/reconcile0 passed; final control rerun running. Production UI currently previous94a4422 until guarded upload. Costs0newservices/existingActions+reads; rollback staticbackup and sourceconfig artifact. Next final run status, real monitor samples, signed-in responsive UI read-only proof.
+
+
 **04.10 — final local proofs before dispatch:** responsive discovery144 and account70 passed on final composition; control/demo12theme/viewport cases passed with5group/context tabs (reviewed1440light/390dark screenshots), anonymous flag isolation extra rerun underway. Source19tests PASS/typecheck PASS/build70/100HTML/90SEO/reconcile0 PASS. Header controls/hero find/All hit areas now44px, to be rechecked by guarded full publication gates. Loader stalled twice at closed chronicle image decode: diagnosed QA awaiting lazy images in closed details; filtered only closed details (hidden images not visual prerequisites), restart in progress, no false VERIFIED loader claim. No production writes yet. Backup/apply source-only workflow ready. Cost0newresources; revert+static/source backups rollback. Next commit/push gated UI and source updater, wait complete, actual live read-only visual/count proofs.
 
 

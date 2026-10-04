@@ -23,6 +23,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run import:check
+      - name: Diagnose public D1 read permissions
+        run: npx wrangler d1 execute gamescout --remote --json --command "SELECT 1 AS readable"
       - name: Read backup and prepare guarded source-only plan
         run: node scripts/update-official-sources.mjs
       - name: Preserve backup before writes

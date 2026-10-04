@@ -35,6 +35,14 @@ const matrix = [[320,568],[390,844],[844,390],[768,1024],[1024,768],[1024,800],[
 async function setup(width, height, mode, path = '/') {
   const context = await browser.newContext({ viewport: { width, height } })
   const page = await context.newPage()
+  page.on('requestfailed', request => {
+    if (request.url().includes('/media/hub/')) console.log('IMAGE REQUEST FAILED', request.url(), request.failure())
+  })
+  page.on('console', message => {
+    if (message.type() === 'error') console.log('BROWSER ERROR', message.text())
+  })
+  page.on('pageerror', error => console.log('BROWSER PAGE ERROR', error.message))
+
   await page.addInitScript(() => {
     window.__loaderShown = false
     new MutationObserver(() => {
@@ -44,7 +52,7 @@ async function setup(width, height, mode, path = '/') {
   let release
   const gate = new Promise(r => { release = r })
   let failing = mode === 'error' || mode === 'image-error'
-  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQkdMAAACkAFt2Ll/jAAAAAElFTkSuQmCC', 'base64')
+  const pixel = '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#123456"/></svg>'
   if (mode === 'cached') await page.addInitScript(games => {
     localStorage.setItem('gs.games.v1', JSON.stringify({ at: Date.now(), games: JSON.parse(games) }))
   }, games)
@@ -59,7 +67,7 @@ async function setup(width, height, mode, path = '/') {
       if (mode === 'real-images') return route.continue()
       if (mode === 'visual-slow') await gate
       if (mode === 'image-error' && failing) return route.abort()
-      return route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
+      return route.fulfill({ status: 200, contentType: 'image/svg+xml', body: pixel })
     }
     // Optional fonts never hold boot. Critical images have a separate gate.
     if (/\.(?:webp|png|jpe?g|woff2?)(?:$)/.test(url.pathname) || /fonts\.(?:googleapis|gstatic)\.com/.test(url.hostname)) return route.abort()

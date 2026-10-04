@@ -145,8 +145,9 @@ export default function Admin() {
           </>}
           {active.id==='claims'&&<><strong>{value(row,'name')} · {value(row,'server_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'evidence')}</p>
             {auth.user?.roles.includes('ADMIN')&&<><Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
+            <Input aria-label="Код, лично проверенный на официальном ресурсе" placeholder="Код ручного подтверждения (если используется)" value={reasons['proof:'+value(row,'id')]??''} onChange={e=>setReasons({...reasons,['proof:'+value(row,'id')]:e.target.value})}/>
             <div className="flex gap-2">{(['VERIFIED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
-              onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+              onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')],observedToken:reasons['proof:'+value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
             </>}
           </>}
           {active.id==='votes'&&<><strong>{value(row,'server_id')} · {row.review_status==='VOIDED'?'Исключён из рейтинга':'Учитывается'}</strong>

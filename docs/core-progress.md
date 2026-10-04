@@ -17,6 +17,18 @@
 
 ## Состояние сейчас
 
+**04.10 — e7da49a frontend VERIFIED PRODUCTION:** deploy37209414886 attempt2 SUCCESS, CI37209414850 SUCCESS. Pre/post: core56, live70catalog/reconcile0,100HTML,90rawSEO, current build/cache/assets, loader/world matrix +56account guest/player/owner/admin fixtures. Real authenticated IAB check1440darklight/320/390/768/1024light confirmed grid/admin shortcut/logout/contrast/nooverflow; reset theme/viewport, no account write/logout. Backupartifact11306396105 expires18.10, screenshots11306127385; no rollback needed. Session-source private migration still BLOCKED auto-review approval (old method unknown honest). Follow-up observedToken moved to /admin Claims: local56account+14admin-proof cases/typecheck passed, reviewed390light screenshot; commit/publish follow-up next to preserve manual fallback. Costs0newresources/Actions+existingrequests.
+
+
+**04.10 — live account VERIFIED, follow-up preservation:** second deploy attempt reached production verification after preflight pass and upload. Actual existing authenticated IAB account (no logout/newuser/write):1440 dark/light then320/390/768/1024 light, no overflow, two columns768+, admin shortcut, logout below grid, transparent header, unknown old method correctly shown; original theme/viewport restored. Review found old account manual Claim observedToken field had no counterpart in /admin; follow-up moves field into ADMIN Claims and passes observedToken, preserving current backend22 policy. QA extended14admin proof viewport/theme cases; not yet published follow-up. Costs0newresources. Next full gate/follow-up commit/live verification; source-method migration remains awaiting explicit approval.
+
+
+**04.10 — deploy attempt1 stopped BEFORE production VERIFIED:** run37209414886 core/build/bundle passed, existing loader timing assertion "No artificial minimum display time" failed at1920px (tests/loader-browser.mjs:133), before backup/upload. CI37209414850 success. Same loader source unchanged by this slice; local entire loader matrix passed. Rerun failed job once (attempt2), do not bypass predeploy gate. No site write, no rollback required yet. Next inspect rerun; owner session migration approval still pending. Costs existingActions only/no newresource.
+
+
+**04.10 — frontend publication dispatched:** e7da49a pushed main (baseline4bb9aa7), guarded deploy37209414886 and CI37209414850 running. No DNS/VMmigration/payment change in frontend workflow. Prior source_method apply remains denied until explicit approval; holding staged backend restores old app/db and vm-api tag without restart to prevent accidental use of schema23 code against22. Staged tar/new image kept for approved resume. Current source/UI correct by local tests, production pending actualworkflow/liveQA. Cost0newresources/Actions+existingbucket; rollback workflowbackup/source.
+
+
 **04.10 — account final source acceptance VERIFIED local:** final account guest/player/owner/admin matrix320×568,390×844,768×1024,1024×768,1440×900,844×390,1920×1080 ×dark/light (56cases). Desktop/tablet two columns, login centered, 44px entry actions, no horizontal overflow; permissioned admin header/exit bottom, provider source fixtures email/Google correct. Reviewed final guest dark/light desktop, player dark desktop/light tablet and admin mobile screenshots (output/account-review-qa). Removed duplicated inline ADMIN Claim queue, /admin existing queue retained. Scene continuous/wordmark readable, header no strip. Local UI fixtures are NOT real account E2E. Core56pass, provenance regression email+Google/VK/Yandex/Discord+linking unchanged+legacyNULL passed, build/typecheck/bundle pass. Github deploy now gates account QA before/after publication alongside loader/world/90SEO. Production UI pending push/Actions; production API migration23 still BLOCKED auto-review owner approval. Costs0newresources, rollback Actions static backup + previous API; next push and live gates.
 
 
@@ -918,3 +930,6 @@ Baseline4bb9aa7 synced; Oct1 edits preserved in stash. Responsive columns/card c
 
 ### 04.10 — final account visual gate
 Verified56 browser fixture scenarios across7viewports/darklight; visual review fixed logo shadow and background seam. Added account QA into guarded production workflow. Core/provenance tests pass; real private source icon requires migration23 approval (auto-review refusal recorded above). Preparing source commit and frontend publication; no VM migration applied.
+
+### 04.10 — published account acceptance
+Main e7da49a published and all postdeploy gates passed, first timing-only failed before writes; retry success. Actual existing LK read verified at5widths and both desktop themes, no new users/claims/transactions. Backupartifact11306396105; staged backend held on prior source/image until approval. Follow-up keeps manual proof field in admin queue,70local viewport/theme checks passed.

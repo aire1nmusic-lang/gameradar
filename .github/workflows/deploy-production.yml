@@ -95,7 +95,6 @@ jobs:
           }
           ;(async()=>{
             await walk('dist')
-            await writeFile('dist/build-version.json',JSON.stringify({build:process.env.GITHUB_SHA}))
           })().catch(error=>{console.error(error);process.exit(1)})
           NODE
 
@@ -169,10 +168,6 @@ jobs:
           const cfStatus=(response.headers.get('cf-cache-status')||'').toUpperCase()
           if(cfStatus==='HIT') throw new Error('Cloudflare served index.html from stale edge cache (CF-Cache-Status: HIT)')
 
-          const versionResponse=await fetch(origin+`/build-version.json?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)})
-          if(!versionResponse.ok) throw new Error(`build-version.json: HTTP ${versionResponse.status}`)
-          const version=await versionResponse.json()
-          if(version.build!==expected) throw new Error(`Version marker mismatch: expected ${expected}, got ${version.build}`)
 
           const refs=[...new Set([...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))]
           if(!refs.length) throw new Error('No built JS/CSS asset references found on live home page')

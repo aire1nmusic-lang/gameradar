@@ -103,10 +103,11 @@ function Bootstrap() {
       if (checking) return
       checking = true
       try {
-        const response = await fetch(`/build-version.json?t=${Date.now()}`, { cache: 'no-store' })
+        const response = await fetch(`/?_gs_v=${Date.now()}`, { cache: 'no-store' })
         if (!response.ok) return
-        const payload = await response.json() as { build?: string }
-        if (payload.build && payload.build !== currentBuild) window.location.reload()
+        const source = await response.text()
+        const latestBuild = source.match(/<meta name="gs-build" content="([^"]+)"/)?.[1]
+        if (latestBuild && latestBuild !== currentBuild) window.location.reload()
       } catch {
         // A version check must never disturb the user.
       } finally {

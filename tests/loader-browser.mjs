@@ -168,7 +168,7 @@ try {
       const inner = await setup(width, height, 'inner-pages', path)
       await ready(inner.page)
       if (path === '/account') await inner.page.locator('.gs-account-entry').waitFor()
-      await inner.page.locator('main img').evaluateAll(images => Promise.all(images.filter(img => img.getBoundingClientRect().width > 0).map(img => img.decode().catch(() => {}))))
+      await inner.page.locator('main img').evaluateAll(images => Promise.all(images.filter(img => !img.closest('details:not([open])') && img.getBoundingClientRect().width > 0).map(img => img.decode().catch(() => {}))))
       for (const theme of ['dark', 'light']) {
         if (theme === 'light') await inner.page.getByRole('button', { name: 'Включить светлую тему', exact: true }).click()
         await inner.page.waitForFunction(mode => document.documentElement.dataset.colorMode === mode, theme)
@@ -179,7 +179,7 @@ try {
         if (width < 768) {
           const bottomChrome = await inner.page.locator('.gs-mobile-nav').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow, blur: getComputedStyle(el).backdropFilter }))
           assert.deepEqual(bottomChrome, { background: theme === 'light' ? 'rgba(251, 247, 238, 0.97)' : 'rgba(13, 16, 24, 0.97)', border: '0px', shadow: 'none', blur: 'none' }, 'Bottom controls have a readable surface over scrolling content')
-          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 4)
+          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 5)
         }
         if (path === '/account') assert.ok((await inner.page.locator('.gs-account-entry').boundingBox()).height >= height, 'Account scenery reaches viewport bottom with no empty theme-colored gap')
         const headerRect = await inner.page.locator('.gs-site-header').boundingBox()

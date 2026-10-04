@@ -1,0 +1,35 @@
+name: Update two official online sources
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: official-source-update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run import:check
+      - name: Read backup and prepare guarded source-only plan
+        run: node scripts/update-official-sources.mjs
+      - name: Preserve backup before writes
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-online-source-backup
+          path: output/official-source-update/
+          retention-days: 14
+      - name: Apply two reversible source configurations
+        run: node scripts/update-official-sources.mjs --apply

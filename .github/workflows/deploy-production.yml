@@ -112,6 +112,7 @@ jobs:
           node tests/account-browser.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
           node tests/discovery-browser.mjs
+          node tests/visual-control-browser.mjs
 
       - name: Backup current production HTML and service files
         env:
@@ -194,6 +195,7 @@ jobs:
           LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
+          CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
 
       - name: Roll back public HTML if verification failed
         if: steps.verify_live.outcome == 'failure'
@@ -221,5 +223,6 @@ jobs:
             output/loader-qa
             output/account-review-qa
             output/discovery-qa
+            output/control-qa
           retention-days: 14
           if-no-files-found: ignore

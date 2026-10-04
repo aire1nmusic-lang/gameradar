@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Axe, BedDouble, Biohazard, Car, Cloud, Crosshair, Crown, Flame, Gamepad2, Gem, Lock, Navigation, Pickaxe, Puzzle, Shield, Siren, Skull, Swords, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GAMES_BY_ID } from '@/data/games'
@@ -79,6 +79,7 @@ export function ServerLogo({
   style?: CSSProperties
 }) {
   const [failed, setFailed] = useState(false)
+  useEffect(()=>setFailed(false),[src])
   const { appearance } = useAppearance()
   const showImage = !!src && !failed
   const game = gameId ? GAMES_BY_ID[gameId] : undefined

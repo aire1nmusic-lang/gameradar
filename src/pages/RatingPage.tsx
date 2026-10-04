@@ -1,3 +1,4 @@
+import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { GAMES } from '@/data/games'
@@ -12,11 +13,12 @@ import { useSeo } from '@/lib/seo'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 export default function RatingPage() {
+  const demo=useVisualDemo()
   const {game:world} = useWorldNavigation()
   const [params] = useSearchParams()
   const [gameId, setGameId] = useState('all')
   const selected = world?.id ?? gameId
-  const {data: servers = [], loading, error, reload} = useAsync(() => discoveryServers({gameId: selected === 'all' ? undefined : selected}), [selected], true)
+  const {data: servers = [], loading, error, reload} = useAsync(() => discoveryServers({gameId: selected === 'all' ? undefined : selected},demo), [selected,demo], true)
   useSeo({title: 'Рейтинг серверов', path: '/rating', description: 'Поддержка за Coins и отдельный Народный рейтинг по голосам.'})
   const link = (metric: string, expanded: boolean) => {
     const next = new URLSearchParams(params)

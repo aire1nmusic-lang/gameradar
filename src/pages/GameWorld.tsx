@@ -1,3 +1,4 @@
+import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { useMemo } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
@@ -50,6 +51,7 @@ export default function GameWorld() {
 }
 
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
+  const demo=useVisualDemo()
   const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
@@ -66,7 +68,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
       ]),
     ],
   })
-  const { data: servers = [], loading, error, reload } = useAsync(() => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id}), [game?.id, chronicle?.id], true)
+  const { data: servers = [], loading, error, reload } = useAsync(() => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo), [game?.id, chronicle?.id,demo], true)
 
   const known = hasFreshOnline
   const openings = useMemo(
@@ -115,9 +117,10 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
             <ChronicleNav game={game} chronicles={game.chronicles} />
           </div>
         ) : (
-          <div className="mt-6">
+          <details className="gs-chronicle-disclosure mt-3">
+            <summary>Хроники и режимы</summary>
             <ChronicleTiles game={game} chronicles={game.chronicles} counts={counts} />
-          </div>
+          </details>
         )}
 
         {loading && servers.length === 0 ? (
@@ -129,7 +132,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           <div className="mt-8"><EmptyState title="Не удалось загрузить серверы" description="Проверьте соединение и попробуйте ещё раз." action="Повторить" onAction={reload} /></div>
         ) : (
           <>
-            <div className="mt-6 grid gap-5 lg:grid-cols-3 lg:gap-3">
+            <div className={`gs-world-ranks ${openings.length?'gs-has-openings':'gs-no-openings'} mt-4 grid gap-5 lg:grid-cols-3 lg:gap-3`}>
               <RankPanel
                 plainMobile
                 title="Топ поддержка"

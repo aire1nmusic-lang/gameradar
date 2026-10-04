@@ -2,6 +2,7 @@ import { repo } from '@/repositories'
 import type { GameServer, Page, ServerQuery, SortKey } from '@/models'
 import { apiRequest } from '@/repositories/http/client'
 import type { CatalogFilters } from './filterState'
+import { visualDemo } from './visualDemo'
 import { balancedCatalog } from './discoveryRanking'
 
 /**
@@ -46,7 +47,8 @@ export function toServerQuery(filters: CatalogFilters, sort: SortKey, limit?: nu
   }
 }
 
-export function searchServers(query: ServerQuery): Promise<Page<GameServer>> {
+export function searchServers(query: ServerQuery, demo = false): Promise<Page<GameServer>> {
+  if (demo) return demoSortedServers(query)
   if (query.sort === 'recommended') return balancedSortedServers(query)
   return repo.servers.query(query)
 }
@@ -61,8 +63,25 @@ async function publicCards(query: ServerQuery): Promise<GameServer[]> {
   return items
 }
 
-export async function discoveryServers(query: ServerQuery = {}): Promise<GameServer[]> {
-  const items = await publicCards(query)
+const discoveryCache=new Map<string,{at:number;result:Promise<GameServer[]>}>()
+export function discoveryServers(query:ServerQuery={},demo=false):Promise<GameServer[]>{
+ const key=JSON.stringify(query),cached=discoveryCache.get(key)
+ let result=cached&&Date.now()-cached.at<15000?cached.result:undefined
+ if(!result){result=loadDiscoveryServers(query);discoveryCache.set(key,{at:Date.now(),result});result.catch(()=>discoveryCache.delete(key))}
+ return demo?result.then(visualDemo):result
+}
+async function demoSortedServers(query:ServerQuery):Promise<Page<GameServer>>{
+ const universe=await discoveryServers({gameId:query.gameId,gameIds:query.gameIds},true)
+ const filtered=await publicCards({...query,limit:undefined,offset:0}),ids=new Set(filtered.map(s=>s.id))
+ let sorted=universe.filter(s=>ids.has(s.id))
+ if(query.sort==='recommended'){const order=new Map(balancedCatalog(universe).map((s,i)=>[s.id,i]));sorted.sort((a,b)=>order.get(a.id)!-order.get(b.id)!)}
+ else if(query.sort==='votes')sorted.sort((a,b)=>b.votes-a.votes)
+ else if(query.sort==='support')sorted.sort((a,b)=>(b.support?.coins??0)-(a.support?.coins??0))
+ else {const order=new Map(filtered.map((s,i)=>[s.id,i]));sorted.sort((a,b)=>order.get(a.id)!-order.get(b.id)!)}
+ const offset=query.offset??0,limit=query.limit??24
+ return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
+}
+async function loadDiscoveryServers(query: ServerQuery = {}): Promise<GameServer[]> {
   const load = async (path: string) => {
     const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
     for (let offset = 0; ; offset += 100) {
@@ -71,7 +90,7 @@ export async function discoveryServers(query: ServerQuery = {}): Promise<GameSer
       if (page.length < 100) return rows
     }
   }
-  const [people, support] = await Promise.all([load('/people-rating'), load('/support/ranking')])
+  const [items, people, support] = await Promise.all([publicCards(query),load('/people-rating'),load('/support/ranking')])
   const votes = new Map(people.map(row => [row.server_id, row.votes ?? 0]))
   const coins = new Map(support.map(row => [row.server_id, row]))
   return items.map(server => ({...server, votes: votes.get(server.id) ?? 0, support: {coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0}}))

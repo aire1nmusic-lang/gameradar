@@ -101,7 +101,7 @@ export function GameHero({
             className="h-9 min-w-0 flex-1 bg-transparent text-[15px] focus:outline-none"
             style={{ color: theme.colors.text }}
           />
-          <ThemedButton onClick={submit} size="sm" className="shrink-0">
+          <ThemedButton onClick={submit} size="sm" className="min-h-11 shrink-0">
             Найти
           </ThemedButton>
         </div>

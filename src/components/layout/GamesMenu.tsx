@@ -41,7 +41,7 @@ export function GamesMenu() {
         aria-expanded={open}
         aria-label={current?`Сменить мир: ${current.shortName}`:'Выбрать мир'}
         className={cn(
-          'flex items-center gap-1 rounded-md px-3 py-2 text-[13.5px] transition-colors duration-200',
+          'flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-[13.5px] transition-colors duration-200',
           active || open ? 'text-ink-50' : 'text-ink-300 hover:text-ink-50',
         )}
       >

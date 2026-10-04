@@ -8,7 +8,8 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 const ITEMS:{to:string;label:string;icon:WorldIconName;end:boolean}[] = [
   { to: '/', label: 'Главная', icon: 'home', end: true },
   { to: '/catalog', label: 'Серверы', icon: 'servers', end: false },
-  { to: '/favorites', label: 'Избранное', icon: 'favorite', end: false },
+  { to: '/rating', label: 'Рейтинг', icon: 'vote', end: false },
+  { to: '/openings', label: 'Открытия', icon: 'opening', end: false },
   { to: '/account', label: 'Профиль', icon: 'profile', end: false },
 ]
 
@@ -22,13 +23,13 @@ export function MobileNav() {
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
   return (
-    <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 md:hidden">
-      <div className="mx-auto grid h-[58px] max-w-lg grid-cols-4 items-stretch">
+    <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 lg:hidden">
+      <div className="mx-auto grid h-[58px] max-w-2xl grid-cols-5 items-stretch">
         {ITEMS.map((item) => (
           <NavItem
             key={item.to}
             {...item}
-            to={item.to==='/'&&game ? `/${game.slug}` : ['/catalog','/favorites','/account'].includes(item.to) ? scoped(item.to) : item.to}
+            to={item.to==='/'&&game ? `/${game.slug}` : ['/catalog','/rating','/openings','/account'].includes(item.to) ? scoped(item.to) : item.to}
             badge={item.to === '/favorites' ? favorites.length : 0}
           />
         ))}

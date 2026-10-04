@@ -409,14 +409,14 @@
     ],
     "checkedAt": "2026-09-22",
     "confidence": "confirmed",
-    "notes": "Catalogues link lin2game.com/x10, which redirects to thebattle.club. Opening date unclear, so left null. Complex also has HF x15 'RETRO' and other worlds. Opening 2026-06-19T20:00+03:00 per the official site. Online: server-rendered data attribute on the official page (LIKELY — not a visible label).",
+    "notes": "Catalogues link lin2game.com/x10, which redirects to thebattle.club. Opening date unclear, so left null. Complex also has HF x15 'RETRO' and other worlds. Opening 2026-06-19T20:00+03:00 per the official site. Online: server-rendered data attribute on the official page (LIKELY — not a visible label). 2026-10-04: official HTML maps NOSTALGIA x10 to legacy class server_eternal_x15; visible label and numeric counter checked together. Previous server_nostalgia selector removed by site.",
     "onlineSources": [
       {
         "provider": "official_html",
         "url": "https://thebattle.club/ru",
         "config": {
           "url": "https://thebattle.club/ru",
-          "regex": "server_nostalgia\" data-gw-server-online-max=\"\\d+\" data-gw-server-online=\"(\\d+)\""
+          "regex": "server_eternal_x15\"[^>]*data-gw-server-online=\"(\\d+)\""
         }
       }
     ]
@@ -777,7 +777,17 @@
     ],
     "checkedAt": "2026-09-22",
     "confidence": "confirmed",
-    "notes": "Site: 'Interlude x30 September 19 — 18:00' (timezone not stated). Homepage server-renders a per-world online count (x30 NEW 3708, x10 OLD 1344, x1 OLD 627 at check time), which is a candidate official counter. Complex also runs x1, x10, x1200, MultiCraft x100."
+    "notes": "Site: 'Interlude x30 September 19 — 18:00' (timezone not stated). Homepage server-renders a per-world online count (x30 NEW 3708, x10 OLD 1344, x1 OLD 627 at check time), which is a candidate official counter. Complex also runs x1, x10, x1200, MultiCraft x100. 2026-10-04: official homepage x30 Interlude NEW uses data-server-id=5; public JSON /online-count key5 checked. Do not reuse key9 for upcoming x100000.",
+    "onlineSources": [
+      {
+        "provider": "official_json",
+        "url": "https://l2mad.net/",
+        "config": {
+          "url": "https://l2mad.net/online-count",
+          "path": "5"
+        }
+      }
+    ]
   },
   {
     "key": "l2:l2mad.net:x100000",

@@ -13,6 +13,7 @@ import { useAppearance } from '@/theme/appearance'
  * the footer and the owner pages — they are not the site's navigation.
  */
 const NAV = [
+  { to: '/', label: 'Главная' },
   { to: '/catalog', label: 'Каталог' },
   { to: '/rating', label: 'Рейтинг' },
   { to: '/openings', label: 'Открытия' },
@@ -26,26 +27,26 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const {game,scoped}=useWorldNavigation()
   const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const accountLabel=auth.user?.displayName || 'Аккаунт'
-  const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
+  const accountClassBase='hidden h-11 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
   // Over the hall the account button is a pane of glass like the cards.
   const accountClass=bare?accountClassBase+' gs-glass border-white/20 text-white':accountClassBase
-  const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
+  const mobileAccountClassBase='grid h-11 w-11 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
   const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
     <header className={`gs-site-header ${overArt?'gs-header-over-art':''} ${bare?'gs-hall-header':''} absolute inset-x-0 top-0 z-50`}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
         <Logo className={!bare?'max-xl:[&_.gs-wordmark]:hidden':undefined} />
-        {!bare&&<div className="xl:hidden"><GamesMenu /></div>}
+        {!bare&&<div className="lg:hidden"><GamesMenu /></div>}
 
-        {!bare && <nav className="ml-1 hidden items-center gap-0.5 xl:flex">
+        {!bare && <nav className="ml-1 hidden items-center gap-0.5 lg:flex">
           <GamesMenu />
           {NAV.map((item) => (
             <NavLink
               key={item.to}
-              to={scoped(item.to)}
+              to={item.to === '/' ? (game ? `/${game.slug}` : '/') : scoped(item.to)} end={item.to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'rounded-md px-3 py-2 text-[14px] transition-colors duration-150',
+                  'inline-flex min-h-11 items-center rounded-md px-2 py-2 text-[13px] transition-colors duration-150',
                   isActive ? 'bg-white/[0.07] text-ink-50' : 'text-ink-300 hover:bg-white/[0.05] hover:text-ink-50',
                 )
               }
@@ -58,7 +59,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
 
         {!bare && <button
           onClick={onSearch}
-          className="group ml-auto hidden h-10 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[300px]"
+          className="group ml-auto hidden h-11 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[180px] xl:w-[240px]"
         >
           <WorldIcon name="search" size={16} className="shrink-0" />
           <span className="min-w-0 flex-1 truncate text-left">
@@ -73,7 +74,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
           onClick={toggleColorMode}
           aria-label={colorMode === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
           title={colorMode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-          className="gs-theme-toggle ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-ink-200 backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-ink-50 active:scale-95 md:ml-0"
+          className="gs-theme-toggle ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-ink-200 backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-ink-50 active:scale-95 md:ml-0"
         >
           {colorMode === 'dark' ? <WorldIcon name="sun" size={20} /> : <WorldIcon name="moon" size={20} />}
         </button>

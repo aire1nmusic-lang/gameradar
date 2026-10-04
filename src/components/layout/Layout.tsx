@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { VisualDemoBanner } from './VisualDemoBanner'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { MobileNav } from './MobileNav'
@@ -40,7 +41,7 @@ export function Layout() {
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
-            <WorldPageScope><Outlet /></WorldPageScope>
+            <VisualDemoBanner/><WorldPageScope><Outlet /></WorldPageScope>
           </main>
           {!hall && !location.pathname.startsWith('/admin') && <Footer />}
           {!hall && <MobileNav />}

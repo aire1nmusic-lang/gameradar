@@ -1,3 +1,4 @@
+import { useVisualDemo, setVisualDemo } from '@/hooks/useVisualDemo'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
@@ -16,20 +17,27 @@ const tabs:Tab[]=[
   {id:'server-edits',label:'Правки серверов',permission:'servers.review',path:'/admin/server-edits'},
   {id:'server-facts',label:'Характеристики',permission:'servers.review',path:'/admin/server-fact-edits'},
   {id:'users',label:'Пользователи',permission:'users.read',path:'/admin/users'},
-  {id:'claims',label:'Claims',permission:'claims.review',path:'/admin/claims'},
+  {id:'claims',label:'Права владельцев',permission:'claims.review',path:'/admin/claims'},
   {id:'votes',label:'Голоса',permission:'votes.read',path:'/admin/votes'},
   {id:'vote-rules',label:'Правила голосования',permission:'votes.configure',path:'/admin/vote-rules'},
   {id:'support',label:'Поддержка',permission:'support.read',path:'/admin/support'},
   {id:'coins',label:'Coins',permission:'coins.read',path:'/admin/coins/ledger'},
   {id:'payments',label:'Платежи',permission:'payments.read',path:'/admin/payments'},
   {id:'moderation',label:'Модерация',permission:'moderation.manage',path:'/admin/moderation/nicknames'},
-  {id:'copyright',label:'Copyright',permission:'copyright.read',path:'/admin/copyright'},
+  {id:'copyright',label:'Авторские права',permission:'copyright.read',path:'/admin/copyright'},
   {id:'system',label:'События',permission:'system.read',path:'/admin/system'},
+]
+const groups = [
+ {label:'Обзор',ids:['overview','system']},
+ {label:'Серверы',ids:['servers','server-edits','server-facts','claims']},
+ {label:'Сообщество',ids:['users','votes','vote-rules']},
+ {label:'Экономика',ids:['support','coins','payments']},
+ {label:'Проверки',ids:['moderation','copyright']},
 ]
 const overviewCards:{label:string;key:string;tone:string;icon:WorldIconName}[]=[
   {label:'Пользователи',key:'users',tone:'violet',icon:'users'},
   {label:'Серверы',key:'servers',tone:'gold',icon:'servers'},
-  {label:'Claims на проверке',key:'pending_claims',tone:'blue',icon:'claim'},
+  {label:'Права на проверке',key:'pending_claims',tone:'blue',icon:'claim'},
   {label:'Голоса',key:'votes',tone:'purple',icon:'vote'},
   {label:'События Поддержки',key:'support_events',tone:'orange',icon:'support'},
   {label:'Ожидают тестовой оплаты',key:'pending_test_payments',tone:'green',icon:'payment'},
@@ -42,6 +50,7 @@ const serverNoun=(count:number)=>count%10===1&&count%100!==11?'сервер':cou
 
 export default function Admin({embedded=false}:{embedded?:boolean}) {
   useSeo({title:embedded?'Аккаунт':'Админский кабинет',path:embedded?'/account':'/admin',noindex:true})
+  const demo=useVisualDemo()
   const auth=useAuth(),permissions=auth.user?.permissions??[]
   const allowed=tabs.filter(tab=>permissions.includes(tab.permission))
   const [selected,setSelected]=useState('overview'),[data,setData]=useState<unknown>()
@@ -85,7 +94,12 @@ export default function Admin({embedded=false}:{embedded?:boolean}) {
         <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-ink-300 sm:text-[14px]">Управление серверами, пользователями, правками и внутренними операциями GameScout.</p>
       </div>
     </section>
-    <nav aria-label="Разделы админки" className="gs-admin-tabs sticky top-[60px] z-20 -mx-4 flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:p-0">{allowed.map(tab=><button key={tab.id} type="button" className={"gs-admin-tab shrink-0 whitespace-nowrap rounded-[15px] border px-4 py-2.5 text-[13px] font-medium transition-all "+(active.id===tab.id?'is-active':'')} onClick={()=>setSelected(tab.id)}>{tab.label}</button>)}</nav>
+    <nav aria-label="Разделы админки" className="gs-admin-navigation">
+ <label className="gs-admin-select">Раздел управления<select value={active.id} onChange={e=>setSelected(e.target.value)}>{groups.map(group=><optgroup key={group.label} label={group.label}>{allowed.filter(tab=>group.ids.includes(tab.id)).map(tab=><option key={tab.id} value={tab.id}>{tab.label}</option>)}</optgroup>)}</select></label>
+ <div className="gs-admin-desktop-nav"><div className="gs-admin-groups">{groups.filter(group=>allowed.some(tab=>group.ids.includes(tab.id))).map(group=><button key={group.label} type="button" aria-pressed={group.ids.includes(active.id)} onClick={()=>setSelected(allowed.find(tab=>group.ids.includes(tab.id))!.id)}>{group.label}</button>)}</div>
+ <div className="gs-admin-subtabs">{allowed.filter(tab=>groups.find(group=>group.ids.includes(active.id))?.ids.includes(tab.id)).map(tab=><button key={tab.id} type="button" className={'gs-admin-tab '+(active.id===tab.id?'is-active':'')} aria-current={active.id===tab.id?'page':undefined} onClick={()=>setSelected(tab.id)}>{tab.label}</button>)}</div></div>
+ </nav>
+    {auth.user.roles?.includes('ADMIN')&&<section className="gs-demo-control"><div><strong>Проверка визуала</strong><p>Примерные голоса, поддержка и аватарки. Реальные рейтинги и баланс не меняются.</p></div><button type="button" aria-pressed={demo} onClick={()=>setVisualDemo(!demo)}>{demo?'Выключить демо':'Включить демо'}</button></section>}
     {error&&<p role="alert" className="text-danger-300">{error}</p>}
     {loading?<p>Загрузка…</p>:<>
       {active.id==='overview'&&<section className="grid grid-cols-2 gap-3 lg:grid-cols-3">{overviewCards.map(({label,key,tone,icon})=><div key={key} className={"gs-admin-stat gs-admin-stat--"+tone+" relative overflow-hidden rounded-[20px] border p-4 sm:p-5"}>

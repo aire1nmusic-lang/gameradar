@@ -1,3 +1,4 @@
+import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { WorldIcon } from '@/components/icons/WorldIcon'
@@ -30,6 +31,7 @@ const COMPACT_SORT_LABELS: Record<SortKey, string> = {
 }
 
 export default function Catalog() {
+  const demo=useVisualDemo()
   const {game:world}=useWorldNavigation()
   const { privateCore, loading: authLoading } = useAuth()
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
@@ -58,10 +60,10 @@ export default function Catalog() {
 
   const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
   const { data: page, loading, error, reload } = useAsync(
-    () => privateCore && sort === 'votes' ? peopleSortedServers(query)
+    () => demo ? searchServers(query,true) : privateCore && sort === 'votes' ? peopleSortedServers(query)
       : privateCore && sort === 'support' ? supportSortedServers(query)
         : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query),
-    [JSON.stringify(query),privateCore,authLoading], true)
+    [JSON.stringify(query),privateCore,authLoading,demo], true)
   const results = page?.items ?? []
   const total = page?.total ?? 0
   // The selected world is context, not a removable filter. Showing it as an

@@ -186,3 +186,18 @@ test('Steam: another address in the answer is refused; an empty list means down'
   const broken = steamApi([200, {}])
   await assert.rejects(readSource(steam({ address: '203.0.114.10:27015' }), { fetcher: broken, resolveHost }, withKey), { code: 'invalid_payload' })
 })
+
+// Multi-world sources must match one named world, never a project total or first counter.
+test('curated L2 sources select Nostalgia and x30 without taking neighbours', async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const rows=JSON.parse(await readFile('import/lineage2.json','utf8'))
+ const battle=rows.find(r=>r.key==='l2:thebattle.club:nostalgia-x10').onlineSources[0]
+ const mad=rows.find(r=>r.key==='l2:l2mad.net:x30').onlineSources[0]
+ const fetcher=routes({
+  [battle.config.url]:[200,'<div class="server_nostalgia server_retro_x7" data-rx-online="0"></div><div class="server_eternal_x15" data-gw-server-online-max="5000" data-gw-server-online="3788">NOSTALGIA x10</div><div class="server_eternal_x100" data-gw-server-online="973"></div>'],
+  [mad.config.url]:[200,{'5':2790,'6':1566,'9':651}],
+ })
+ assert.equal((await readSource({...battle,tier:'OFFICIAL',name:'Сайт проекта'},{fetcher,resolveHost})).online,3788)
+ assert.equal((await readSource({...mad,tier:'OFFICIAL',name:'Сайт проекта'},{fetcher,resolveHost})).online,2790)
+ await assert.rejects(()=>readSource({...battle,tier:'OFFICIAL',name:'Сайт проекта'},{resolveHost,fetcher:routes({[battle.config.url]:[200,'<div class="server_eternal_x100" data-gw-server-online="973"></div>']})}),/player count/)
+})

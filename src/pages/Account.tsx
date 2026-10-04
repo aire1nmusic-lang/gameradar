@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import Admin from './Admin'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Mail } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
@@ -13,6 +12,8 @@ import { ClaimProof } from '@/components/account/ClaimProof'
 import { GsMark } from '@/components/layout/Logo'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
+
+const Admin=lazy(()=>import('./Admin'))
 
 type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
@@ -78,7 +79,7 @@ export default function Account() {
   const playerStatus=isAdmin?'Администратор':profile?.roles?.includes('OWNER')?'Владелец сервера':'Игрок'
   const copyEmail=()=>{if(profile?.email&&navigator.clipboard)void navigator.clipboard.writeText(profile.email)}
 
-  return <main className="gs-account-page gs-account-premium mx-auto w-full space-y-6 px-4 py-6 sm:py-8">
+  return <main className={`gs-account-page gs-account-premium ${canManage?'gs-account-manager':''} mx-auto w-full space-y-6 px-4 py-6 sm:py-8`}>
     <section className="gs-account-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
       <div className="relative z-10 max-w-[420px]">
         <p className="gs-account-kicker text-[12px] font-semibold uppercase tracking-[0.16em]">Аккаунт</p>
@@ -128,11 +129,12 @@ export default function Account() {
       </form>}
     </section>
 
-    <AccountCoins key={auth.user.id}/>
+    <Button to={scoped('/favorites')} icon={<WorldIcon name="favorite" size={16}/>}>Избранные серверы</Button>
+    <details className="gs-account-wallet" open={!canManage}><summary>Мои Coins</summary><AccountCoins key={auth.user.id}/></details>
     </aside>
     <div className="gs-account-workspace space-y-5">
 
-    {canManage ? <Admin embedded/> : <section className="gs-account-servers space-y-3">
+    {canManage ? <Suspense fallback={<p>Загружаем управление…</p>}><Admin embedded/></Suspense> : <section className="gs-account-servers space-y-3">
       <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><WorldIcon name="chevronRight" size={18} className="opacity-55"/></h2>
       {!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
         <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>

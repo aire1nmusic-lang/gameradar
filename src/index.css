@@ -1186,3 +1186,53 @@ html[data-color-mode] .gs-site-footer {
   padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   align-items: flex-start;
 }
+
+/* Responsive discovery and management navigation. */
+.gs-chronicle-disclosure > summary { cursor:pointer; min-height:44px; display:flex; align-items:center; font-weight:600; font-size:14px; }
+.gs-chronicle-tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; padding:10px 0; }
+.gs-chronicle-tile { position:relative; isolation:isolate; aspect-ratio:2/1; overflow:hidden; border-radius:14px; border:1px solid var(--gt-border); }
+.gs-chronicle-caption { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:end; padding:12px; color:white; background:linear-gradient(transparent,rgba(5,7,11,.9)); font:14px/1.25 var(--font-sans); }
+.gs-chronicle-caption small { font-size:11px; opacity:.85; }
+.gs-admin-navigation { padding:14px; border:1px solid var(--color-ink-700); border-radius:18px; background:var(--color-ink-900); }
+.gs-admin-select { display:flex; flex-direction:column; gap:8px; font-size:13px; }
+.gs-admin-select select { width:100%; min-height:44px; border:1px solid var(--color-ink-600); border-radius:10px; background:var(--color-ink-900); color:var(--color-ink-50); padding:8px 12px; font:inherit; }
+.gs-admin-groups { display:none; }
+.gs-account-wallet > summary { cursor:pointer; padding:12px 0; font-weight:600; }
+@media(min-width:1024px) {
+ .gs-admin-select { display:none; }
+ .gs-admin-groups { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+ .gs-admin-groups summary { cursor:pointer; padding:10px 6px; font-weight:600; font-size:13px; }
+ .gs-admin-groups .gs-admin-tab { width:100%; min-height:44px; text-align:left; padding:8px; margin-top:4px; border-radius:8px; font-size:12px; }
+ .gs-account-manager .gs-account-grid { grid-template-columns:minmax(240px,.6fr) minmax(0,1.65fr); }
+}
+@media(max-width:1023px) {
+ .gs-page-main { padding-bottom:64px; }
+ .gs-world-ranks.gs-has-openings > :nth-child(2), .gs-world-ranks.gs-no-openings > :nth-child(3) { order:-1; }
+ .gs-hero { min-height:190px !important; }
+ .gs-hero-title { font-size:28px !important; }
+ .gs-account-manager .gs-account-hero { display:none; }
+ .gs-account-manager .gs-account-grid { display:flex; flex-direction:column; }
+ .gs-account-manager .gs-account-workspace { order:-1; }
+ .gs-account-manager .gs-admin-hero { padding:16px; }
+ .gs-account-manager .gs-admin-hero h1 { font-size:24px; }
+ .gs-account-manager .gs-admin-hero p:last-child { display:none; }
+}
+
+.gs-demo-banner,.gs-demo-control { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; border:1px solid #c99736; border-radius:12px; background:var(--color-ink-900); color:var(--color-ink-50); font-size:13px; }
+.gs-demo-banner { position:relative; z-index:10; margin:8px 16px; }
+.gs-demo-banner span,.gs-demo-control > div { flex:1; min-width:160px; }
+.gs-demo-banner button,.gs-demo-banner a,.gs-demo-control button { min-height:44px; padding:10px 14px; border:1px solid #c99736; border-radius:8px; }
+.gs-demo-control p { margin-top:4px; font-size:12px; }
+
+.gs-page-main:has(.gs-demo-banner) .gs-hero { margin-top:0; }
+
+.gs-admin-desktop-nav { display:none; }
+@media(min-width:1024px) {
+ .gs-admin-desktop-nav { display:block; }
+ .gs-admin-groups button { min-height:44px; border:1px solid var(--color-ink-700); border-radius:10px; padding:8px; font-weight:600; font-size:13px; }
+ .gs-admin-groups button[aria-pressed='true'] { color:#20180b; border-color:#d7a545; background:linear-gradient(#f0cf79,#d6a63d); }
+ .gs-admin-subtabs { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+ .gs-admin-subtabs button { min-height:44px; padding:8px 14px; border:1px solid var(--color-ink-700); border-radius:10px; font-size:13px; }
+}
+.gs-account-manager .gs-admin-hero { min-height:0; }
+.gs-account-wallet > summary { padding:12px 16px; border-radius:12px; background:var(--color-ink-900); color:var(--color-ink-50); }

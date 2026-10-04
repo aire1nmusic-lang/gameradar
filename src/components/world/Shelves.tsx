@@ -32,7 +32,7 @@ export function RankPanel({ icon, title, hint, to, toLabel = 'Все', className
           </div>
         </div>
         {to && (
-          <Link to={to} className="inline-flex shrink-0 items-center gap-1 text-[12.5px] transition-colors hover:text-white" style={{ color: theme.colors.textMuted }}>
+          <Link to={to} className="inline-flex min-h-11 shrink-0 items-center gap-1 text-[12.5px] transition-colors hover:text-white" style={{ color: theme.colors.textMuted }}>
             {toLabel} <ArrowRight size={13} />
           </Link>
         )}

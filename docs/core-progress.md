@@ -17,6 +17,27 @@
 
 ## Состояние сейчас
 
+**04.10 — followup transition guard VERIFIED local:** final source resultcontextkey +nonempty mountguard; build/typecheck70/100/90/reconcile0 PASS,studio first5sizes×3games×2themes PASS and844×390 finalcorrected testPASS. Test clock advances16s beyond15srawcache thenholds real catalogue GET; demo forecast/action absent before release, returns afteractualdata; noPOST. Prior final36 rerun failed test expectation because shared rawcache resolves immediately (test itself nowexpirescache); initial regression genuinelycaught empty mount andfixed. Same-context refreshing retains previous data, mode/game switch hides old result. 192b40d guarded deploySUCCESS/CI SUCCESS; backup11312347553/QA11312323802 retained. No DB/private/DNS/payment writes. Next commit/push tinyguard followup with fullpublication checks, then docs closure.
+
+
+**04.10 — transition regression attempt1/diagnostic2 failed locally, fixed:** context-mismatch could briefly mount empty SupportStudio before hookloading update, causing empty selectedid when same-context cached result arrived. Delayed fixture test exposed real issue, no production newrevision/no financialwrites. Added servers.length mountguard; finaltest/build nowrequired. 192b40d deploySUCCESS/CI SUCCESS, QAartifact11312323802 expires18.10 19:34:58UTC,backup11312347553. Userdemorestored viaactualADMINUI; native darkviewport retained. Costs0newresources,source revert/productionbackup rollback. Next corrected regression/full36 and guardedfollowup.
+
+
+**04.10 — live demo-off transition HYPOTHESIS resolved in source, pending tests:** actualdemooff briefly retained prior exampleforecast while real GET loaded; wallet0disabledaction and backend guards unchanged,no writes. Real settled data VERIFIED30/6/30,allCoins/votes0,forecast#1/1,wallet0actiondisabled. Added result contextKey(game/demo) so oldcontext cannot mount calculator/transactionUI whileloading; samecontext30srefresh retains data. Added delayed-catalogue regression in studioQA. No production revisionyet; restore userdemoviaUI aftercheck; finalbuild/test then guarded followup publication required. Costs0newresources/source rollback.
+
+
+**04.10 — production backup VERIFIED:** deploy37227539229 completed all prepublication browser matrices19:22UTC; rollback artifact11312347553 expires18.10.2026 19:22UTC; existing hashedassets retained. Uploaded192b40d verified actualIAB; final postproduction guard started19:22:37UTC stillrunning. No rollback triggered sofar. Costs existingActions/PUT,no newresources. Next completeguard, saveQAartifact,commitfinaldocs.
+
+
+**04.10 — all3world live spotchecks VERIFIED:** signed-in IAB Minecraft37/0openings/37 allservers, forecast#19→#6 at100Coins,pixelmedal; GTA RP3/0openings/3,forecast#1,neonchamfermedal. L2full6size/theme matrixalreadyverified. Restored native961×1244/dark/L2ratingforecast100 and retainedlocaldemoon; usertabmarked deliverable. One anchorclick stale-node afterviewportreset resolved byfreshAX/retarget (no bypass). Reviewed actualdesktopforecast/lightworld screenshots. Final deployguardpending; no financialwrites/cost0newresources; next finalguard/artifact/close docs.
+
+
+**04.10 — 192b40d actual signed-in IAB VERIFIED, final workflow pending:** production currentbuild observed192b40d; real signed-in localdemo Rating30support/6datedopenings/30votes across320×568/390×844/768×1024/1024×768/1440×900/844×390 anddark/light,no horizontaloverflow,demo haszero transactionbuttons. Selecteddemo server5Coins→#22,100→#8, counteranimation/rail350ms observed; anchorentryworks. Live lightworldsame6sizes: header transparent,darknavrgb24/37/49,shadow none,nooverflow. Screenshot output/live-support-studio-1440.png,390.png andlive-support-light-header-1440.png ignored/privateartifact only. No realfinancial/vote/role/APIwrite executed; demo browserlocalexamples not actualmarketleaders. CI37227539292 SUCCESS; deploy37227539229 postproduction browser guard stillinprogress. Cost existingActions/storage0newresources,rollbackbackup. Next finalworkflow/artifacts and restoreviewport/theme,documentclosed slice.
+
+
+**04.10 — 192b40d dispatched VERIFIED Git:** candidate192b40d6ef8ebc999d0de65da664d46cd636e3c2 committed/pushed main after scoped git authorization; deploy37227539229 andCI37227539292 inprogress. Local final matrices/account70 passed, backup/postpublication guard pending. NoDB/private migration/DNS/realpayments changes. Costs existingActions/storage only, rollbackworkflow backup/sourceprevious0cde1ef. Next wait gates and actual signed-in UI before completion.
+
+
 **04.10 — commit attempt1 BLOCKED sandbox:** Git index.lock denied in default filesystem sandbox, source/docs edits preserved; git push reported Everything up-to-date because candidate commit was not created. No production change. Not an auto-review refusal. Next request narrowly scoped git index commit authorization, then push guarded deployment. Costs0,rollback unnecessary.
 
 
@@ -1128,4 +1149,32 @@ Main e7da49a published and all postdeploy gates passed, first timing-only failed
 
 
 **04.10 — commit attempt1 BLOCKED sandbox:** Git index.lock denied in default filesystem sandbox, source/docs edits preserved; git push reported Everything up-to-date because candidate commit was not created. No production change. Not an auto-review refusal. Next request narrowly scoped git index commit authorization, then push guarded deployment. Costs0,rollback unnecessary.
+
+
+
+**04.10 — 192b40d dispatched VERIFIED Git:** candidate192b40d6ef8ebc999d0de65da664d46cd636e3c2 committed/pushed main after scoped git authorization; deploy37227539229 andCI37227539292 inprogress. Local final matrices/account70 passed, backup/postpublication guard pending. NoDB/private migration/DNS/realpayments changes. Costs existingActions/storage only, rollbackworkflow backup/sourceprevious0cde1ef. Next wait gates and actual signed-in UI before completion.
+
+
+
+**04.10 — 192b40d actual signed-in IAB VERIFIED, final workflow pending:** production currentbuild observed192b40d; real signed-in localdemo Rating30support/6datedopenings/30votes across320×568/390×844/768×1024/1024×768/1440×900/844×390 anddark/light,no horizontaloverflow,demo haszero transactionbuttons. Selecteddemo server5Coins→#22,100→#8, counteranimation/rail350ms observed; anchorentryworks. Live lightworldsame6sizes: header transparent,darknavrgb24/37/49,shadow none,nooverflow. Screenshot output/live-support-studio-1440.png,390.png andlive-support-light-header-1440.png ignored/privateartifact only. No realfinancial/vote/role/APIwrite executed; demo browserlocalexamples not actualmarketleaders. CI37227539292 SUCCESS; deploy37227539229 postproduction browser guard stillinprogress. Cost existingActions/storage0newresources,rollbackbackup. Next finalworkflow/artifacts and restoreviewport/theme,documentclosed slice.
+
+
+
+**04.10 — all3world live spotchecks VERIFIED:** signed-in IAB Minecraft37/0openings/37 allservers, forecast#19→#6 at100Coins,pixelmedal; GTA RP3/0openings/3,forecast#1,neonchamfermedal. L2full6size/theme matrixalreadyverified. Restored native961×1244/dark/L2ratingforecast100 and retainedlocaldemoon; usertabmarked deliverable. One anchorclick stale-node afterviewportreset resolved byfreshAX/retarget (no bypass). Reviewed actualdesktopforecast/lightworld screenshots. Final deployguardpending; no financialwrites/cost0newresources; next finalguard/artifact/close docs.
+
+
+
+**04.10 — production backup VERIFIED:** deploy37227539229 completed all prepublication browser matrices19:22UTC; rollback artifact11312347553 expires18.10.2026 19:22UTC; existing hashedassets retained. Uploaded192b40d verified actualIAB; final postproduction guard started19:22:37UTC stillrunning. No rollback triggered sofar. Costs existingActions/PUT,no newresources. Next completeguard, saveQAartifact,commitfinaldocs.
+
+
+
+**04.10 — live demo-off transition HYPOTHESIS resolved in source, pending tests:** actualdemooff briefly retained prior exampleforecast while real GET loaded; wallet0disabledaction and backend guards unchanged,no writes. Real settled data VERIFIED30/6/30,allCoins/votes0,forecast#1/1,wallet0actiondisabled. Added result contextKey(game/demo) so oldcontext cannot mount calculator/transactionUI whileloading; samecontext30srefresh retains data. Added delayed-catalogue regression in studioQA. No production revisionyet; restore userdemoviaUI aftercheck; finalbuild/test then guarded followup publication required. Costs0newresources/source rollback.
+
+
+
+**04.10 — transition regression attempt1/diagnostic2 failed locally, fixed:** context-mismatch could briefly mount empty SupportStudio before hookloading update, causing empty selectedid when same-context cached result arrived. Delayed fixture test exposed real issue, no production newrevision/no financialwrites. Added servers.length mountguard; finaltest/build nowrequired. 192b40d deploySUCCESS/CI SUCCESS, QAartifact11312323802 expires18.10 19:34:58UTC,backup11312347553. Userdemorestored viaactualADMINUI; native darkviewport retained. Costs0newresources,source revert/productionbackup rollback. Next corrected regression/full36 and guardedfollowup.
+
+
+
+**04.10 — followup transition guard VERIFIED local:** final source resultcontextkey +nonempty mountguard; build/typecheck70/100/90/reconcile0 PASS,studio first5sizes×3games×2themes PASS and844×390 finalcorrected testPASS. Test clock advances16s beyond15srawcache thenholds real catalogue GET; demo forecast/action absent before release, returns afteractualdata; noPOST. Prior final36 rerun failed test expectation because shared rawcache resolves immediately (test itself nowexpirescache); initial regression genuinelycaught empty mount andfixed. Same-context refreshing retains previous data, mode/game switch hides old result. 192b40d guarded deploySUCCESS/CI SUCCESS; backup11312347553/QA11312323802 retained. No DB/private/DNS/payment writes. Next commit/push tinyguard followup with fullpublication checks, then docs closure.
 

@@ -18,7 +18,9 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 export default function RatingPage() {
  const demo=useVisualDemo(),{game:world}=useWorldNavigation(),[params]=useSearchParams(),[gameId,setGameId]=useState('all')
  const selected=world?.id??gameId
- const {data:servers=[],loading,error,reload}=useAsync(()=>discoveryServers({gameId:selected==='all'?undefined:selected},demo),[selected,demo],true)
+ const contextKey=`${selected}-${demo}`
+ const {data:result,loading,error,reload}=useAsync(async()=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo)}),[selected,demo],true)
+ const servers=result?.contextKey===contextKey?result.servers:[]
  useEffect(()=>{const timer=window.setInterval(()=>{if(document.visibilityState==='visible')reload()},30000);return()=>clearInterval(timer)},[reload])
  const supported=()=>{invalidateDiscoveryCache();reload()}
  useSeo({title:'Рейтинг серверов',path:'/rating',description:'Все серверы: поддержка за Coins, ближайшие открытия и голоса игроков. Прогноз позиции при поддержке.'})
@@ -33,7 +35,7 @@ export default function RatingPage() {
     <RankPanel title="Скоро открытие" hint="Ближайшая дата сначала" icon={<WorldIcon name="opening"/>}><div className="gs-rating-list" tabIndex={0} role="region" aria-label="Все ближайшие открытия">{openings.length?openings.map(s=><ServerRow key={s.id} server={s} compact showGame={!world}/>):<ShelfNote title="Ближайших открытий нет" text="Здесь появятся проекты с объявленной датой запуска."/>}</div></RankPanel>
     <RankPanel title="Выбор игроков" hint={`Голоса игроков · ${people.length} серверов`} icon={<WorldIcon name="vote"/>}><div className="gs-rating-list" tabIndex={0} role="region" aria-label="Все серверы по голосам">{people.length?people.map((s,i)=><ServerRow key={s.id} server={s} rank={i+1} metric="votes" compact showGame={!world}/>):<ShelfNote title="Серверов пока нет" text="Проекты появятся после публикации в каталоге."/>}</div></RankPanel>
    </div>
-   <SupportStudio key={`${selected}-${demo}-${params.get('server')??''}`} servers={servers} demo={demo} initialServer={params.get('server')} onSupported={supported}/>
+   {servers.length>0&&<SupportStudio key={`${selected}-${demo}-${params.get('server')??''}`} servers={servers} demo={demo} initialServer={params.get('server')} onSupported={supported}/>}
   </>}
  </Container></div>
 }

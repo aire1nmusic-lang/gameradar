@@ -73,7 +73,19 @@ async function setup(width, height, mode, path = '/') {
   return { page, context, release, recover: () => { failing = false } }
 }
 async function ready(page) {
-  await page.waitForFunction(() => !document.querySelector('.gs-loader') && !document.documentElement.classList.contains('gs-boot-pending'), null, { timeout: 15000 })
+  try {
+    await page.waitForFunction(() => !document.querySelector('.gs-loader') && !document.documentElement.classList.contains('gs-boot-pending'), null, { timeout: 15000 })
+  } catch (error) {
+    console.log('BOOT DIAGNOSTIC', await page.evaluate(() => ({
+      classes: document.documentElement.className,
+      error: document.querySelector('[role="alert"]')?.textContent,
+      root: document.querySelector('#root')?.textContent?.slice(0,800),
+      games: localStorage.getItem('gs.games.v1')?.slice(0,500),
+      images: [...document.querySelectorAll('[data-boot-visual]')].map(i => ({ src: i.currentSrc || i.src, width: i.getBoundingClientRect().width, complete: i.complete, natural: i.naturalWidth })),
+    })))
+    await page.screenshot({ path: 'output/loader-qa/boot-failure.png' })
+    throw error
+  }
   assert.equal(await page.evaluate(() => document.documentElement.classList.contains('gs-loader-visible')), false)
   assert.ok(await page.locator('#root').innerText())
 }

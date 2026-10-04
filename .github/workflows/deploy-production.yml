@@ -37,7 +37,7 @@ jobs:
   deploy:
     if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     environment: production
 
     steps:
@@ -74,6 +74,7 @@ jobs:
 
       - name: Private core tests
         run: npm run test:private
+          node --experimental-strip-types tests/support-projection.mjs
 
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- "${PUBLIC_API_ORIGIN}"
@@ -113,6 +114,7 @@ jobs:
           node --experimental-strip-types tests/discovery-scoring.mjs
           node tests/discovery-browser.mjs
           node tests/visual-control-browser.mjs
+          node tests/support-studio-browser.mjs
 
       - name: Backup current production HTML and service files
         env:
@@ -196,6 +198,7 @@ jobs:
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
           CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
+          STUDIO_QA_BASE_URL=https://gamescout.online node tests/support-studio-browser.mjs
 
       - name: Roll back public HTML if verification failed
         if: steps.verify_live.outcome == 'failure'
@@ -224,5 +227,6 @@ jobs:
             output/account-review-qa
             output/discovery-qa
             output/control-qa
+            output/studio-qa
           retention-days: 14
           if-no-files-found: ignore

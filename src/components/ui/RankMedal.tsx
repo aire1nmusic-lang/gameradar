@@ -11,13 +11,13 @@ export function RankMedal({ rank, className }: { rank: number; className?: strin
   const medal = MEDAL[rank]
   return (
     <span
+      aria-label={`Место ${rank}`}
       className={cn(
-        'num grid h-8 w-7 shrink-0 place-items-center font-display text-[12px] font-bold',
+        'gs-rank-medal num grid h-8 w-7 shrink-0 place-items-center font-display text-[12px] font-bold',
         !medal && 'text-ink-400',
         className,
       )}
       style={{
-        clipPath: 'polygon(50% 0, 92% 18%, 84% 73%, 50% 100%, 16% 73%, 8% 18%)',
         background: medal?.bg ?? 'linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.035))',
         color: medal?.text,
         boxShadow: medal ? `inset 0 1px 0 rgba(255,255,255,.35), 0 5px 12px -7px ${medal.ring}` : 'inset 0 0 0 1px rgba(255,255,255,.10)',

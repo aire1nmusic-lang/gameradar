@@ -135,7 +135,9 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
             <div className={`gs-world-ranks ${openings.length?'gs-has-openings':'gs-no-openings'} mt-4 grid gap-5 lg:grid-cols-3 lg:gap-3`}>
               <RankPanel
                 plainMobile
-                title="Топ поддержка"
+                title="Лидеры поддержки"
+                hint="Поддержка за Coins"
+                icon={<WorldIcon name="coins"/>}
                 to={`/rating?game=${game.id}&all=support`}
               >
                 {topSupport.length > 0
@@ -146,6 +148,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               <RankPanel
                 plainMobile
                 title="Скоро открытие"
+                icon={<WorldIcon name="opening"/>}
                 to={`/openings?game=${game.id}`}
               >
                 {openings.length > 0
@@ -156,6 +159,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               <RankPanel
                 plainMobile
                 title="Топ онлайн"
+                icon={<WorldIcon name="online"/>}
                 to={`/catalog?game=${game.id}&sort=online`}
               >
                 {topOnline.length > 0
@@ -177,7 +181,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               Разместите проект бесплатно и подключите проверку онлайна.
             </p>
           </div>
-          <ThemedButton to="/owners" icon={<WorldIcon name="plus" size={14} />}>
+          <ThemedButton to="/owners" icon={<WorldIcon name="owner" size={14} />}>
             Узнать больше
           </ThemedButton>
         </div>

@@ -1243,3 +1243,41 @@ html[data-color-mode] .gs-site-footer {
 .gs-login-method { max-width:100%; }
 .gs-login-method > svg { flex-shrink:0; }
 .gs-login-method > span { min-width:0; overflow-wrap:anywhere; }
+
+.gs-rating-list { max-height:620px; overflow-y:auto; scrollbar-width:thin; padding-right:4px; display:flex; flex-direction:column; gap:8px; overscroll-behavior-y:contain; }
+.gs-rating-list:focus-visible { outline:2px solid var(--color-signal-400); outline-offset:3px; }
+.gs-rating-full > .gs-panel { align-self:start; }
+.gs-support-studio { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.8fr); gap:20px; align-items:start; }
+.gs-support-preview { position:sticky; top:20px; min-width:0; }
+.gs-support-select,.gs-support-amount { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--gt-border,var(--color-ink-600)); border-radius:10px; background:var(--gt-surface,var(--color-ink-900)); color:var(--gt-text,var(--color-ink-50)); font:inherit; }
+.gs-amount-preset { min-width:44px; min-height:44px; border:1px solid var(--gt-border,var(--color-ink-600)); border-radius:10px; padding:8px 12px; }
+.gs-amount-preset[aria-pressed='true'] { color:var(--gt-primary,var(--color-signal-300)); border-color:currentColor; background:var(--gt-primary-soft,rgba(120,160,100,.1)); }
+.gs-position-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.gs-position-summary span { display:block; font-size:12px; color:var(--gt-text-muted,var(--color-ink-300)); }
+.gs-position-summary strong { display:block; font-size:26px; }
+.gs-position-next { color:var(--gt-primary,var(--color-signal-300)); animation:gs-position-arrive .35s ease-out; }
+.gs-projection-list { position:relative; display:flex; flex-direction:column; gap:8px; padding-right:14px; }
+.gs-projection-row { display:flex; min-width:0; align-items:center; gap:8px; min-height:64px; padding:8px; border:1px solid var(--gt-border,var(--color-ink-700)); border-radius:10px; }
+.gs-projection-target { background:var(--gt-primary-soft,rgba(60,180,120,.12)); border-color:var(--gt-primary,var(--color-signal-400)); }
+.gs-position-track { position:absolute; right:3px; top:12px; bottom:12px; width:2px; background:var(--gt-border,var(--color-ink-700)); }
+.gs-position-track span { position:absolute; left:-4px; width:10px; height:10px; border-radius:50%; background:var(--gt-primary,var(--color-signal-400)); transform:translateY(-50%); transition:top .35s ease; }
+.gs-support-login { color:var(--gt-primary,var(--color-signal-300)); font-weight:600; }
+@keyframes gs-position-arrive { from {opacity:.45;transform:translateY(6px)} to {opacity:1;transform:translateY(0)} }
+@media(max-width:767px) { .gs-support-studio { grid-template-columns:minmax(0,1fr); gap:14px; } .gs-support-preview { position:static; order:-1; } .gs-rating-list { max-height:440px; } }
+@media(prefers-reduced-motion:reduce) { .gs-position-next { animation:none; } .gs-position-track span { transition:none; } }
+
+.gs-support-studio { grid-template-areas:"form preview" "checkout preview"; }
+.gs-support-form { grid-area:form; }
+.gs-support-checkout { grid-area:checkout; min-width:0; }
+.gs-support-preview { grid-area:preview; }
+.gs-rank-medal { clip-path:polygon(50% 0,92% 18%,84% 73%,50% 100%,16% 73%,8% 18%); }
+[data-pattern='voxel'] .gs-rank-medal { clip-path:polygon(0 0,100% 0,100% 75%,75% 75%,75% 100%,25% 100%,25% 75%,0 75%); }
+[data-pattern='neon'] .gs-rank-medal { clip-path:polygon(18% 0,100% 0,100% 82%,82% 100%,0 100%,0 18%); }
+@media(max-width:767px) { .gs-support-studio { grid-template-areas:"form" "preview" "checkout"; } .gs-support-preview { order:initial; } }
+
+#support button, #support a { min-height:44px; }
+#support label:has(input[type='checkbox']) { min-height:44px; }
+.gs-support-action { background:var(--gt-btn-bg); color:var(--gt-btn-color); border:1px solid var(--gt-btn-border); box-shadow:var(--gt-btn-shadow); }
+html[data-color-mode='light'] .gs-position-next,
+html[data-color-mode='light'] .gs-amount-preset[aria-pressed='true'],
+html[data-color-mode='light'] .gs-support-login { color:color-mix(in srgb,var(--gt-primary,#80612b) 45%,#182531); }

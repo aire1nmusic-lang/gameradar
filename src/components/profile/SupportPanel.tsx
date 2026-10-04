@@ -10,11 +10,12 @@ type Wallet={balance:number;nominalRub:number}
 type TestPaymentConfig={available:boolean;testOnly:boolean;realSalesEnabled:boolean}
 type TestOrder={checkout:{action:string;method:'POST';fields:Record<string,string>}|null}
 
-export function SupportPanel({server}:{server:GameServer}) {
+export function SupportPanel({server,amount,onSupported}:{server:GameServer;amount?:number;onSupported?:()=>void}) {
   const auth=useAuth()
   const [summary,setSummary]=useState<Summary>(),[wallet,setWallet]=useState<Wallet>()
   const [testPayment,setTestPayment]=useState(false)
-  const [coins,setCoins]=useState(1),[anonymous,setAnonymous]=useState(true)
+  const [localCoins,setCoins]=useState(1),[anonymous,setAnonymous]=useState(true)
+  const coins=amount??localCoins
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true)
   const supportKey=useRef(crypto.randomUUID()),creditKey=useRef(crypto.randomUUID()),paymentKey=useRef(crypto.randomUUID())
   const local=['127.0.0.1','localhost'].includes(window.location.hostname)
@@ -44,6 +45,7 @@ export function SupportPanel({server}:{server:GameServer}) {
       await apiRequest('/support',{method:'POST',headers:{'Idempotency-Key':supportKey.current},body:JSON.stringify({serverId:server.id,coins,anonymous})})
       supportKey.current=crypto.randomUUID()
       await refresh()
+      onSupported?.()
     } catch(e) {setError(e instanceof Error?e.message:'Не удалось поддержать сервер')}
     finally {setBusy(false)}
   }
@@ -77,7 +79,7 @@ export function SupportPanel({server}:{server:GameServer}) {
     <h2 className="text-[18px]">Поддержка</h2>
     {loading&&!summary&&<p role="status" className="text-[13px] text-ink-400">Загружаем данные Поддержки…</p>}
     {summary&&<p className="text-[15px]">Поддержка: <strong>{summary.coins}</strong> · {summary.participants} {plural(summary.participants, ['участник', 'участника', 'участников'])}</p>}
-    <details className="text-[13px] text-ink-400"><summary className="cursor-pointer select-none">Что такое поддержка</summary><p className="mt-1.5">Отдельная сортировка за GS Coins. Карточки одинаковые; поддержка не влияет на Народный рейтинг. Номинал: 1 Coin = 50 ₽.</p></details>
+    <details className="text-[13px] text-ink-400"><summary className="cursor-pointer select-none">Что такое поддержка</summary><p className="mt-1.5">Отдельная сортировка за GS Coins. Карточки одинаковые; поддержка не влияет на рейтинг по голосам. Номинал: 1 Coin = 50 ₽.</p></details>
     {summary?.recent.length ? <div className="space-y-1 border-t border-white/7 pt-3">
       <h3 className="text-[13px] text-ink-300">Последние поддержавшие</h3>
       {summary.recent.map((item,index)=><div key={`${item.created_at}-${index}`} className="flex justify-between gap-3 text-[13px]">
@@ -87,12 +89,12 @@ export function SupportPanel({server}:{server:GameServer}) {
     {!auth.user ? <Button to="/account">Войти для поддержки</Button> : !auth.user.emailVerified ?
       <Button to="/account">Подтвердить email</Button> : <div className="space-y-3 border-t border-white/7 pt-3">
       <p className="text-[13px]">Ваш баланс: <strong>{wallet?.balance ?? '…'} GS Coins</strong></p>
-      <label className="flex items-center gap-2 text-[13px]">Coins
+      {amount===undefined&&<label className="flex items-center gap-2 text-[13px]">Coins
         <input type="number" min={1} max={10000} step={1} value={coins} onChange={event=>setCoins(Number(event.target.value))}
           className="w-24 rounded-md border border-white/15 bg-ink-900 px-2 py-1 text-ink-50" />
-      </label>
+      </label>}
       <label className="flex items-center gap-2 text-[13px]"><input type="checkbox" checked={anonymous} onChange={event=>setAnonymous(event.target.checked)} />Показывать меня анонимно</label>
-      <Button disabled={busy||wallet===undefined||wallet.balance<coins} onClick={()=>void support()}>{busy?'Обрабатываем…':'Поддержать сервер'}</Button>
+      <Button className="gs-support-action min-h-11" disabled={busy||wallet===undefined||wallet.balance<coins||!Number.isSafeInteger(coins)||coins<1||coins>10000} onClick={()=>void support()}>{busy?'Обрабатываем…':`Поддержать за ${coins} Coins`}</Button>
       {testPayment&&<div className="rounded-md border border-white/10 bg-white/[0.025] p-3 text-[12px] text-ink-400">
         Robokassa: только тестовая оплата без списания денег. {coins} Coins — {coins*50} ₽ по номиналу, без скидок.
         <Button variant="outline" className="mt-2" disabled={busy} onClick={()=>void buyTestCoins()}>Открыть тестовую оплату</Button>

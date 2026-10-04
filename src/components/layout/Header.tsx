@@ -25,6 +25,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const {pathname}=useLocation()
   const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
+  const worldArt=['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const accountLabel=auth.user?.displayName || 'Аккаунт'
   const accountClassBase='hidden h-11 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
@@ -33,7 +34,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const mobileAccountClassBase='grid h-11 w-11 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
   const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
-    <header className={`gs-site-header ${overArt?'gs-header-over-art':''} ${bare?'gs-hall-header':''} absolute inset-x-0 top-0 z-50`}>
+    <header className={`gs-site-header ${overArt?'gs-header-over-art':''} ${bare?'gs-hall-header':''} ${worldArt?'gs-header-world-art':''} absolute inset-x-0 top-0 z-50`}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
         <Logo className={!bare?'max-xl:[&_.gs-wordmark]:hidden':undefined} />
         {!bare&&<div className="lg:hidden"><GamesMenu /></div>}

@@ -492,3 +492,15 @@ html[data-color-mode='light']:not(.gs-boot-pending) #root { background:#f4eee5; 
 @media(max-width:767px), (max-width:1023px) and (max-height:500px) {
   .gs-preview-overflow { display:none; }
 }
+
+/* Bright world artwork needs dark controls, without a background strip. */
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art nav a,
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art button,
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art a,
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art kbd { color:#182531 !important; text-shadow:none; }
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art nav a,
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art button,
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art a:not([aria-label='GameScout — на главную']) { background:rgb(255 252 245 / .68); border-color:rgb(56 48 32 / .22); }
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art svg { filter:none; }
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art .gs-wordmark { filter:none; }
+html[data-color-mode='light'] .gs-site-header.gs-header-world-art .gs-wordmark__game { color:#182531; }

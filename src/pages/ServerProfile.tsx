@@ -48,7 +48,6 @@ import { ObservedHistoryChart } from '@/components/charts/ObservedHistoryChart'
 import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
-import { SupportPanel } from '@/components/profile/SupportPanel'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest } from '@/repositories/http/client'
 import { ClaimModal } from '@/components/profile/ClaimModal'
@@ -358,7 +357,7 @@ function Profile({ server: source }: { server: GameServer }) {
           <div className="min-w-0 space-y-4 sm:space-y-6">
             <OnlineSection server={server} />
             <div className="lg:hidden"><VotePanel server={server} /></div>
-            {privateCore && <SupportPanel server={server} />}
+            {privateCore && <Button to={`/rating?game=${server.gameId}&server=${encodeURIComponent(server.id)}#support-studio`} className="min-h-11">Поддержка и прогноз позиции →</Button>}
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
             {server.demo && <ServerMedia server={server} />}
             <InfoSection server={server} />

@@ -63,6 +63,7 @@ async function publicCards(query: ServerQuery): Promise<GameServer[]> {
   return items
 }
 
+export function invalidateDiscoveryCache(){ discoveryCache.clear() }
 const discoveryCache=new Map<string,{at:number;result:Promise<GameServer[]>}>()
 export function discoveryServers(query:ServerQuery={},demo=false):Promise<GameServer[]>{
  const key=JSON.stringify(query),cached=discoveryCache.get(key)

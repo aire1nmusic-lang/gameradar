@@ -24,7 +24,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Private core tests
-        run: npm run test:private
+        run: |
+          npm run test:private
+          node --experimental-strip-types tests/support-projection.mjs
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- https://gamescout.online/
       - name: Bundle gate

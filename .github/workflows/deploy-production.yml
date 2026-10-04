@@ -101,6 +101,14 @@ jobs:
       - name: Bundle gate
         run: npm run test:bundle
 
+      - name: Install browser QA runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+
+      - name: Loader browser matrix before publication
+        run: node tests/loader-browser.mjs
+
       - name: Backup current production HTML and service files
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
@@ -179,6 +187,7 @@ jobs:
           }
           console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
+          LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
 
       - name: Roll back public HTML if verification failed
         if: steps.verify_live.outcome == 'failure'
@@ -196,3 +205,12 @@ jobs:
         run: |
           echo "::error::Production verification failed and rollback was attempted."
           exit 1
+
+      - name: Save loader QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loader-browser-qa-${{ github.sha }}
+          path: output/loader-qa
+          retention-days: 14
+          if-no-files-found: ignore

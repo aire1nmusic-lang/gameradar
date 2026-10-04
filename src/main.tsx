@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from 'react'
+import { StrictMode, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { initializeRepositories } from '@/repositories'
@@ -15,49 +15,14 @@ applyColorMode(readColorMode())
 const rootElement = document.getElementById('root')!
 const bootShell = rootElement.innerHTML
 
-const sleep = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
-
-async function waitForCriticalHomeVisual() {
-  if (window.location.pathname !== '/') return
-  const src = window.matchMedia('(max-width: 1023px)').matches
-    ? '/media/hub/nave-m-720.webp'
-    : '/media/hub/nave-1920.webp'
-
-  await new Promise<void>(resolve => {
-    const image = new Image()
-    let done = false
-    const finish = () => {
-      if (done) return
-      done = true
-      resolve()
-    }
-    image.onload = finish
-    image.onerror = finish
-    image.src = src
-    if (image.complete) finish()
-    window.setTimeout(finish, 8000)
-  })
-}
-
-async function finishBoot(active: () => boolean) {
+// Boot only waits for the catalog structure. Fonts and scenery load independently.
+function finishBoot() {
   const html = document.documentElement
-  const shownAt = Number(html.dataset.gsLoaderShownAt || 0)
-  const timerId = Number(html.dataset.gsLoaderTimer || 0)
-
-  if (!shownAt) {
-    if (timerId) window.clearTimeout(timerId)
-    if (active()) html.classList.remove('gs-loader-visible', 'gs-loader-leaving')
-    return
-  }
-
-  const minimumVisibleMs = 700
-  const remaining = Math.max(0, minimumVisibleMs - (performance.now() - shownAt))
-  if (remaining) await sleep(remaining)
-  if (!active()) return
-
-  html.classList.add('gs-loader-leaving')
-  await sleep(220)
-  if (active()) html.classList.remove('gs-loader-visible', 'gs-loader-leaving')
+  window.clearTimeout(Number(html.dataset.gsLoaderTimer || 0))
+  delete html.dataset.gsLoaderTimer
+  delete html.dataset.gsLoaderShownAt
+  html.classList.remove('gs-loader-visible', 'gs-loader-leaving')
+  document.querySelector('.gs-loader')?.remove()
 }
 
 function Bootstrap() {
@@ -67,17 +32,10 @@ function Bootstrap() {
 
   useEffect(() => {
     let active = true
-    const isActive = () => active
 
     setError('')
 
-    Promise.all([
-      initializeRepositories(),
-      document.fonts?.ready,
-      waitForCriticalHomeVisual(),
-    ]).then(async () => {
-      if (!active) return
-      await finishBoot(isActive)
+    initializeRepositories().then(() => {
       if (active) setReady(true)
     }).catch(errorValue => {
       if (!active) return
@@ -92,6 +50,11 @@ function Bootstrap() {
       active = false
     }
   }, [attempt])
+
+  // Remove the sibling overlay in the same commit that mounts the actual app.
+  useLayoutEffect(() => {
+    if (ready) finishBoot()
+  }, [ready])
 
   useEffect(() => {
     if (!ready) return

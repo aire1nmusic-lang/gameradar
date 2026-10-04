@@ -47,7 +47,7 @@
         visibility: visible;
         pointer-events: auto;
       }
-      .gs-loader-leaving .gs-loader { opacity: 0; }
+      
 
       .gs-box {
         position: relative;
@@ -176,7 +176,7 @@
       imagesizes="100vw" media="(max-width: 1023px)" fetchpriority="high" />
   </head>
   <body>
-    <div id="root">
+    <div id="root"></div>
       <div class="gs-loader" aria-busy="true" aria-label="GameScout загружается">
         <span class="gs-firefly f1"></span><span class="gs-firefly f2"></span>
         <span class="gs-firefly f3"></span><span class="gs-firefly f4"></span>
@@ -200,7 +200,6 @@
           <div class="gs-status">Подготавливаем миры<span class="gs-status-dot">.</span><span class="gs-status-dot">.</span><span class="gs-status-dot">.</span></div>
         </div>
       </div>
-    </div>
 
     <script>
       (() => {
@@ -209,7 +208,7 @@
           if (!document.querySelector(".gs-loader")) return;
           html.classList.add("gs-loader-visible");
           html.dataset.gsLoaderShownAt = String(performance.now());
-        }, 300);
+        }, 1500);
         html.dataset.gsLoaderTimer = String(timer);
       })();
     </script>

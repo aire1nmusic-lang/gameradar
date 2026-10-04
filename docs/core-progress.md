@@ -13,6 +13,8 @@
 
 ## Состояние сейчас
 
+**04.10 — loader: source prepared / production pending.** Скрыт первые 1500мс; убраны ожидания document.fonts.ready, отдельной загрузки фона и минимум700мс. Loader вынесен из React root: prerender больше не удаляет его; готовность каталога + commit приложения снимают экран через useLayoutEffect. Ошибка/retry сохранены. Автодеплой дополнен Chromium matrix320/390/844×390/768/1024/1440/1920: fast/slow, blocked fonts/images, retry, nested route; до публикации и после неё, rollback при live failure. Файлы index.html, src/main.tsx, scripts/prerender-public.mjs, tests/loader-browser.mjs, workflow. Локального git checkout нет (git status: not a repository; clone proxy требует credentials), browser binary отсутствует; фактические build/browser/production результаты подтвердить Actions, не считать подготовку приемкой. Стоимость: новых сервисов0, GitHub Actions minutes; откат revert source/guarded static backup. Следом дождаться workflow и записать фактическую матрицу.
+
 
 **03.10 — скины миров (Claude), source + local VERIFIED:** три мира получили собственный вид без новых картинок. Lineage 2: гравированные заглавные Cormorant SC, золотые уголки на панелях; Minecraft: Pixelify Sans, тёмное дерево с фаской как у блока; GTA RP: Oswald курсивом, неоновые рамки. Шрифты самохостятся через @fontsource (OFL, латиница и кириллица, без Google Fonts), подключены в src/theme/worldFonts.ts. Оформление панелей и строк задаётся в index.css по data-pattern (stone, voxel, neon), поэтому подходит и для хроник. Для картинок от владельца оставлено место: public/media/skins/<мир>/ (список в reports/art-pack-worlds.md). Проверено: tsc, npm run build, build:catalog 70/70, bundle gate, предпросмотр 375 и ПК. Откат: revert коммита.
 
@@ -803,3 +805,8 @@ VERIFIED: code b6b051a отправлен в main; tree clean после source 
 
 **01.10 — VERIFIED production:** мелкое повторное GameScout над слоганом убрано; header logo сохранён. WorldHall.tsx. Build/typecheck70/0 mismatch; existing bucket3PUT, live IAB показывает слоган/описание/3 карточки без малой надписи. JS index-GI8vKEJV.js SHA6c0a7080d21f357c31a3b781f68d4aced198f51044275e3cb16f6ed30904b913; CSS index-CS0VOJNg.css SHA88d98683d91af03f02977e8fea596ee141ae51192ddffdc04a789b801f32c5c7. Screenshot ignored output/hall-clean-headline-live.jpg; rollback output/rollback-site-index-before-hero-label-removal.html, old assets retained. Новых ресурсов0; backend/DNS/данные без изменений. Следом остаются core blockers из сводки.
 
+
+
+### 04.10.2026 — loader delayed boot
+
+**04.10 — loader: source prepared / production pending.** Скрыт первые 1500мс; убраны ожидания document.fonts.ready, отдельной загрузки фона и минимум700мс. Loader вынесен из React root: prerender больше не удаляет его; готовность каталога + commit приложения снимают экран через useLayoutEffect. Ошибка/retry сохранены. Автодеплой дополнен Chromium matrix320/390/844×390/768/1024/1440/1920: fast/slow, blocked fonts/images, retry, nested route; до публикации и после неё, rollback при live failure. Файлы index.html, src/main.tsx, scripts/prerender-public.mjs, tests/loader-browser.mjs, workflow. Локального git checkout нет (git status: not a repository; clone proxy требует credentials), browser binary отсутствует; фактические build/browser/production результаты подтвердить Actions, не считать подготовку приемкой. Стоимость: новых сервисов0, GitHub Actions minutes; откат revert source/guarded static backup. Следом дождаться workflow и записать фактическую матрицу.

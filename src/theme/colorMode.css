@@ -422,3 +422,18 @@ html[data-world='lineage2'][data-color-mode='light'] .gs-site-footer {
   background: linear-gradient(180deg, #eee6da, #e8decf) !important;
   border-color: rgb(111 80 37 / .12) !important;
 }
+
+/* Light home: illuminate the continuous hall, while the bare header stays clear.
+   Translucent shading never ends in an opaque cream band over the photograph. */
+html[data-color-mode='light'] .gs-home-hall .gs-hall-drift {
+  filter: brightness(1.22) saturate(.92);
+}
+html[data-color-mode='light'] .gs-hall-shade-top {
+  background-image: linear-gradient(to bottom, rgb(244 238 229 / .18), transparent);
+}
+html[data-color-mode='light'] .gs-hall-shade-bottom {
+  background-image: linear-gradient(to top, rgb(244 238 229 / .28), rgb(244 238 229 / .12), transparent);
+}
+html[data-color-mode='light'] .gs-hall-shade-mobile {
+  background-image: linear-gradient(to bottom, rgb(244 238 229 / .20), rgb(244 238 229 / .12) 50%, rgb(244 238 229 / .28));
+}

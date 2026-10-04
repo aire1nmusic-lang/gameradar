@@ -38,8 +38,8 @@
       .gs-loader-visible .gs-loader { opacity: 1; visibility: visible; pointer-events: auto; }
       .gs-box { text-align: center; }
       .gs-loader-visible .gs-box { animation: gs-show .8s ease; }
-      .gs-logo { width: 110px; margin: auto; filter: drop-shadow(0 0 25px rgba(52,230,245,.18)); }
-      .gs-logo svg { width: 100%; height: auto; display: inline; vertical-align: baseline; }
+      .gs-boot-logo { width: 110px; margin: auto; filter: drop-shadow(0 0 25px rgba(52,230,245,.18)); }
+      .gs-boot-logo svg { width: 100%; height: auto; display: inline; vertical-align: baseline; }
       .gs-name { margin-top: 18px; font-size: 48px; font-weight: 800; letter-spacing: .02em; }
       .gs-game { color: #e9edf2; }
       .gs-scout { background: linear-gradient(90deg,#34e6f5,#8b5cf6,#34e6f5); background-size: 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: gs-shine 5s linear infinite; }
@@ -56,9 +56,9 @@
       @keyframes gs-blink { 50% { opacity: .2; } }
       @keyframes gs-float { 50% { transform: translateY(-20px); opacity: .6; } }
       @media (max-width: 600px) {
-        .gs-logo { width: 65px; } .gs-name { font-size: 32px; } .gs-status { font-size: 9px; }
+        .gs-boot-logo { width: 65px; } .gs-name { font-size: 32px; } .gs-status { font-size: 9px; }
       }
-      @media (min-width: 1200px) { .gs-logo { width: 150px; } .gs-name { font-size: 68px; } }
+      @media (min-width: 1200px) { .gs-boot-logo { width: 150px; } .gs-name { font-size: 68px; } }
       @media (prefers-reduced-motion: reduce) {
         .gs-loader-visible .gs-box, .gs-scout, .gs-status-dot, .gs-firefly { animation: none; }
       }
@@ -97,7 +97,7 @@
       <div class="gs-loader" role="status" aria-live="polite" aria-busy="true" aria-label="GameScout загружается">
         <span class="gs-firefly f1"></span><span class="gs-firefly f2"></span><span class="gs-firefly f3"></span>
         <div class="gs-box">
-          <div class="gs-logo">
+          <div class="gs-boot-logo">
           <svg class="gs-mark" viewBox="284 317.5 729.5 431.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path fill="#e9edf2" d="M787.5 321.5 L485 321.5 L288 519 L503 734 L503 611.5 L404 513 L515 402 L707 402 Z M606 486 L473.5 486 L553.5 566 L590 566 L590 582.5 L527 645.5 L527 745 L696 576 Z" />
             <path fill="#34e6f5" d="M990 397.5 L767 397.5 L664 500.5 L750.5 587 L907 587 L859 635 L713.5 635 L625.5 723.5 L879.5 723.5 L1009.5 593.5 L923 507 L766 507 L799.5 473.5 L914 473.5 Z" />

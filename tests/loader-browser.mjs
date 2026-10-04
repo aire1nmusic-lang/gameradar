@@ -116,7 +116,7 @@ try {
     await slow.page.locator('.gs-box').evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)))
     assert.equal(await slow.page.locator('.gs-firefly').count(), 3, 'Original attachment has exactly three lights')
     assert.deepEqual(await slow.page.locator('.gs-mark path').evaluateAll(paths => paths.map(path => path.getAttribute('fill'))), ['#e9edf2', '#34e6f5'])
-    assert.equal(await slow.page.locator('.gs-logo').evaluate(el => el.getBoundingClientRect().width), width <= 600 ? 65 : width >= 1200 ? 150 : 110)
+    assert.equal(await slow.page.locator('.gs-boot-logo').evaluate(el => el.getBoundingClientRect().width), width <= 600 ? 65 : width >= 1200 ? 150 : 110)
     assert.equal(await slow.page.locator('.gs-name').evaluate(el => getComputedStyle(el).fontSize), width <= 600 ? '32px' : width >= 1200 ? '68px' : '48px')
     assert.equal(await slow.page.locator('.gs-loader').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(7, 9, 13)')
     await slow.page.waitForFunction(() => getComputedStyle(document.querySelector('.gs-loader')).opacity === '1')

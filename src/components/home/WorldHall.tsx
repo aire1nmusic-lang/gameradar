@@ -112,7 +112,7 @@ export function WorldHall() {
           style={{ transform: flightId ? 'scale(1.07)' : 'none', transition: 'transform 1300ms cubic-bezier(0.5, 0, 0.2, 1)' }}
         >
           <div className="absolute -inset-5 transition-transform duration-700 ease-out" style={{ transform: 'translate3d(var(--gs-px, 0px), var(--gs-py, 0px), 0)' }}>
-            <img src="/media/hub/nave-1920.webp" srcSet={NAVE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
+            <img data-boot-visual src="/media/hub/nave-1920.webp" srcSet={NAVE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
           </div>
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-ink-950/75 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-ink-950 via-ink-950/60 to-transparent" />
@@ -146,7 +146,7 @@ export function WorldHall() {
       {/* ── phones and tablets ───────────────────────────────────────── */}
       <div className="relative flex min-h-[100svh] flex-col justify-start lg:hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
-          <img src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
+          <img data-boot-visual src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/30 via-ink-950/35 to-ink-950" />
         </div>
         <div className="gs-hall-phone-content pt-24 pb-6">
@@ -238,6 +238,8 @@ function WorldCard({
             >
               <div data-card-image className="relative aspect-[2/3] overflow-hidden rounded-[14px]">
                 <img
+                  data-boot-visual
+                  loading="eager"
                   src={cardSrc(game.id, 480)}
                   srcSet={cardSrcSet(game.id)}
                   sizes={compact ? '62vw' : '(min-width: 1024px) 480px, 62vw'}

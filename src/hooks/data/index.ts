@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { repo } from '@/repositories'
+import { GAMES } from '@/data/games'
 import type { AdSlot, GameServer, RankedServer, ServerQuery } from '@/models'
 import {
   adForSlot,
@@ -34,7 +35,9 @@ export type { AsyncState } from './useAsync'
 const key = (value: unknown) => JSON.stringify(value ?? null)
 
 export function useGames() {
-  return useAsync(() => repo.games.list(), [])
+  const state = useAsync(() => repo.games.list(), [])
+  // Bootstrap already hydrated this public structure; background refresh must not empty the hall.
+  return { ...state, data: state.data ?? (GAMES.length ? GAMES : undefined) }
 }
 
 export function useGameBySlug(slug: string | undefined) {

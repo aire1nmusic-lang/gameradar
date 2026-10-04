@@ -43,15 +43,25 @@ async function setup(width, height, mode, path = '/') {
   })
   let release
   const gate = new Promise(r => { release = r })
-  let failing = mode === 'error'
+  let failing = mode === 'error' || mode === 'image-error'
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jrP8AAAAASUVORK5CYII=', 'base64')
+  if (mode === 'cached') await page.addInitScript(games => {
+    localStorage.setItem('gs.games.v1', JSON.stringify({ at: Date.now(), games: JSON.parse(games) }))
+  }, games)
   await page.route('**/*', async route => {
     const url = new URL(route.request().url())
     if (url.pathname === '/api/v1/games') {
-      if (mode === 'slow') await gate
-      if (failing) return route.fulfill({ status: 503, json: { error: { message: 'Test unavailable' } } })
+      if (mode === 'slow' || mode === 'cached') await gate
+      if (mode === 'error' && failing) return route.fulfill({ status: 503, json: { error: { message: 'Test unavailable' } } })
       return route.fulfill({ status: 200, contentType: 'application/json', body: games })
     }
-    // Block scenery/fonts entirely: neither may prevent startup.
+    if (url.pathname.startsWith('/media/hub/')) {
+      if (mode === 'real-images') return route.continue()
+      if (mode === 'visual-slow') await gate
+      if (mode === 'image-error' && failing) return route.abort()
+      return route.fulfill({ status: 200, contentType: 'image/png', body: pixel })
+    }
+    // Optional fonts never hold boot. Critical images have a separate gate.
     if (/\.(?:webp|png|jpe?g|woff2?)(?:$)/.test(url.pathname) || /fonts\.(?:googleapis|gstatic)\.com/.test(url.hostname)) return route.abort()
     if (url.pathname.startsWith('/api/')) {
       return route.fulfill({ status: 200, json: url.pathname.includes('/auth/') ? { user: null } : url.pathname.includes('/servers') ? { items: [], total: 0 } : [] })
@@ -63,7 +73,7 @@ async function setup(width, height, mode, path = '/') {
   return { page, context, release, recover: () => { failing = false } }
 }
 async function ready(page) {
-  await page.waitForFunction(() => !document.querySelector('.gs-loader') && !document.querySelector('#root .seo-snapshot'), { timeout: 15000 })
+  await page.waitForFunction(() => !document.querySelector('.gs-loader') && !document.documentElement.classList.contains('gs-boot-pending'), null, { timeout: 15000 })
   assert.equal(await page.evaluate(() => document.documentElement.classList.contains('gs-loader-visible')), false)
   assert.ok(await page.locator('#root').innerText())
 }
@@ -74,8 +84,11 @@ try {
     assert.equal(await fast.page.evaluate(() => window.__loaderShown), false, 'Fast boot must not flash loader')
     await fast.context.close()
 
-    const slow = await setup(width, height, 'slow')
+    const slow = await setup(width, height, 'visual-slow')
     await slow.page.waitForFunction(() => document.documentElement.classList.contains('gs-loader-visible'))
+    await slow.page.waitForFunction(() => getComputedStyle(document.querySelector('.gs-loader')).opacity === '1')
+    assert.equal(await slow.page.locator('#root').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'Incomplete hall stays hidden')
+    assert.equal(await slow.page.locator('.gs-loader').getByText('Подготавливаем миры', { exact: false }).count(), 1)
     const rect = await slow.page.locator('.gs-box').boundingBox()
     assert.ok(rect && rect.x >= 0 && rect.y >= 0 && rect.x + rect.width <= width && rect.y + rect.height <= height, 'Loader fits viewport')
     assert.equal(await slow.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'No horizontal overflow')
@@ -84,9 +97,29 @@ try {
     slow.release()
     await ready(slow.page)
     assert.ok(Date.now() - releasedAt < 650, 'No artificial minimum display time')
+    assert.equal(await slow.page.evaluate(() => [...document.querySelectorAll('[data-boot-visual]')].filter(i => i.getBoundingClientRect().width > 0 && i.complete && i.naturalWidth > 0).length), 4, 'Reveal contains background and all three cards')
     await slow.context.close()
-    console.log('PASS fast/slow, blocked fonts/background, viewport ' + width + 'x' + height)
+    const actual = await setup(width, height, 'real-images')
+    await ready(actual.page)
+    assert.equal(await actual.page.evaluate(() => [...document.querySelectorAll('[data-boot-visual]')].filter(i => i.getBoundingClientRect().width > 0 && i.complete && i.naturalWidth > 1).length), 4, 'Real responsive assets must load')
+    await actual.page.screenshot({ path: 'output/loader-qa/hall-ready-' + width + 'x' + height + '.png' })
+    await actual.context.close()
+    console.log('PASS fast/slow images, hidden incomplete hall, decoded background + 3 cards, viewport ' + width + 'x' + height)
   }
+  const cached = await setup(390,844,'cached')
+  await ready(cached.page)
+  assert.equal(await cached.page.evaluate(() => window.__loaderShown), false, 'Cached games render cards while refresh remains pending')
+  cached.release()
+  await cached.context.close()
+  console.log('PASS cached games with delayed background API refresh')
+  const broken = await setup(390,844,'image-error')
+  await broken.page.getByRole('button', { name: 'Повторить', exact: true }).waitFor()
+  assert.equal(await broken.page.locator('#root').evaluate(el => getComputedStyle(el).visibility), 'hidden')
+  broken.recover()
+  await broken.page.getByRole('button', { name: 'Повторить', exact: true }).click()
+  await ready(broken.page)
+  await broken.context.close()
+  console.log('PASS image failure keeps prepared loader, reload retry recovers')
   const failure = await setup(390,844,'error')
   await failure.page.getByRole('button', { name: 'Повторить', exact: true }).waitFor()
   failure.recover()

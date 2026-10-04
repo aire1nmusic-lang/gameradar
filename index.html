@@ -23,6 +23,7 @@
     <style>
       html, body, #root { margin: 0; min-height: 100%; background: #08090d; }
       body { overflow-x: hidden; }
+      .gs-boot-pending #root { visibility: hidden; }
 
       .gs-loader {
         position: fixed;
@@ -204,6 +205,7 @@
     <script>
       (() => {
         const html = document.documentElement;
+        html.classList.add("gs-boot-pending");
         const timer = window.setTimeout(() => {
           if (!document.querySelector(".gs-loader")) return;
           html.classList.add("gs-loader-visible");

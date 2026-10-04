@@ -24,15 +24,8 @@ html[data-color-mode='light'] body {
 }
 
 
-html[data-color-mode='light'] .gs-mobile-nav {
-  background: rgb(250 246 238 / .96) !important;
-  border-color: rgb(92 70 38 / .13) !important;
-  box-shadow: 0 -8px 28px -24px rgb(75 54 28 / .45);
-}
-html[data-color-mode='light'] .gs-site-footer {
-  background: #eee6da !important;
-  border-color: rgb(92 70 38 / .12) !important;
-}
+
+
 html[data-color-mode='light'] .gs-theme-toggle {
   background: rgb(255 251 244 / .72) !important;
   border-color: rgb(127 97 48 / .20) !important;
@@ -371,11 +364,7 @@ html[data-color-mode='light'] .gs-provider-icon--discord { background: rgb(88 10
    Utility routes keep the selected world, so the header/tab bar do not visually
    jump back to the neutral platform between L2 pages. */
 
-html[data-world='lineage2'][data-color-mode='dark'] .gs-mobile-nav {
-  background: rgb(8 7 10 / .96) !important;
-  border-color: rgb(216 178 92 / .14) !important;
-  box-shadow: 0 -10px 32px -28px rgb(216 178 92 / .34);
-}
+
 html[data-world='lineage2'] .gs-theme-toggle {
   border-color: rgb(216 178 92 / .18);
 }
@@ -405,15 +394,8 @@ html[data-world='lineage2'][data-color-mode='light'] .gs-mobile-nav a[aria-curre
   shape-rendering: geometricPrecision;
 }
 
-html[data-world='lineage2'][data-color-mode='dark'] .gs-site-footer {
-  background:
-    linear-gradient(180deg, rgb(9 8 11 / .98), rgb(5 5 8 / .99)) !important;
-  border-color: rgb(216 178 92 / .12) !important;
-}
-html[data-world='lineage2'][data-color-mode='light'] .gs-site-footer {
-  background: linear-gradient(180deg, #eee6da, #e8decf) !important;
-  border-color: rgb(111 80 37 / .12) !important;
-}
+
+
 
 /* Light home: illuminate the continuous hall, while the bare header stays clear.
    Translucent shading never ends in an opaque cream band over the photograph. */

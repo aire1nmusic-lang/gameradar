@@ -1147,10 +1147,7 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
     color: #26333f !important;
   }
 
-  html[data-world-mode='light'] .gs-mobile-nav {
-    background: rgb(255 255 255 / .95) !important;
-    border-color: rgb(31 45 58 / .10) !important;
-  }
+  
   html[data-world-mode='light'] .gs-mobile-nav .text-ink-50 { color: #101820 !important; }
   html[data-world-mode='light'] .gs-mobile-nav .text-ink-400 { color: #75818c !important; }
   html[data-world-mode='light'] .gs-mobile-nav .bg-signal-400 { background: #B08D3C !important; }
@@ -1168,4 +1165,24 @@ html[data-color-mode] .gs-site-header {
 .gs-page-main .gs-account-entry { padding-top: 84px; }
 @media (max-width: 639px) {
   .gs-page-main .gs-account-entry { padding-top: 66px; }
+}
+
+/* The bottom controls float over the page, matching the clear header. */
+html[data-color-mode] .gs-mobile-nav,
+html[data-color-mode] .gs-site-footer {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.gs-account-layout {
+  background: url('/media/hub/nave-1920.webp') center / cover;
+}
+.gs-account-layout .gs-world-utility > div { background: transparent !important; }
+.gs-account-layout .gs-page-main .gs-account-entry {
+  min-height: 100svh;
+  min-height: 100dvh;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  align-items: flex-start;
 }

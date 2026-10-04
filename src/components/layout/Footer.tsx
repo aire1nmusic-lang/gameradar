@@ -41,7 +41,7 @@ export function Footer() {
     ],
   }:column):COLUMNS
   return (
-    <footer className="gs-site-footer mt-6 border-t border-white/6 bg-ink-1000/60 pb-20 lg:mt-10 lg:pb-0">
+    <footer className="gs-site-footer relative mt-6 pb-20 lg:mt-10 lg:pb-0">
       <Container className={compactPrivate?'py-3 lg:py-12':'py-3 lg:py-12'}>
         <div className="hidden gap-6 lg:grid lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10">
           <div>

@@ -174,6 +174,14 @@ try {
         await inner.page.waitForFunction(mode => document.documentElement.dataset.colorMode === mode, theme)
         const chrome = await inner.page.locator('.gs-site-header').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, shadow: getComputedStyle(el).boxShadow, border: getComputedStyle(el).borderBottomWidth, blur: getComputedStyle(el).backdropFilter }))
         assert.deepEqual(chrome, { background: 'rgba(0, 0, 0, 0)', shadow: 'none', border: '0px', blur: 'none' }, 'Header has no painted strip on ' + path + '/' + theme)
+        const footerChrome = await inner.page.locator('.gs-site-footer').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow }))
+        assert.deepEqual(footerChrome, { background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none' }, 'Footer has no painted band')
+        if (width < 768) {
+          const bottomChrome = await inner.page.locator('.gs-mobile-nav').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow, blur: getComputedStyle(el).backdropFilter }))
+          assert.deepEqual(bottomChrome, { background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none', blur: 'none' }, 'Bottom navigation has no painted strip')
+          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 4)
+        }
+        if (path === '/account') assert.ok((await inner.page.locator('.gs-account-entry').boundingBox()).height >= height, 'Account scenery reaches viewport bottom with no empty theme-colored gap')
         const headerRect = await inner.page.locator('.gs-site-header').boundingBox()
         assert.equal(headerRect.y, 0)
         const heading = inner.page.locator('main h1').first()
@@ -183,7 +191,7 @@ try {
           assert.equal((await art.boundingBox()).y, 0, 'Page artwork starts behind header on ' + path)
         }
         assert.equal(await inner.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Inner page has no horizontal overflow on ' + path)
-        if (path === '/account' || path === '/lineage-2' || width === 390 || width === 1440) await inner.page.screenshot({ path: 'output/loader-qa/inner-' + path.slice(1) + '-' + theme + '-' + width + 'x' + height + '.png' })
+        if (path === '/account' || path === '/lineage-2' || width === 390 || width === 1440) await inner.page.screenshot({ path: 'output/loader-qa/inner-' + path.slice(1) + '-' + theme + '-' + width + 'x' + height + '.jpg', type: 'jpeg', quality: 82 })
       }
       await inner.context.close()
       console.log('PASS clear header dark/light, artwork under header, content bounds ' + path + ' ' + width + 'x' + height)

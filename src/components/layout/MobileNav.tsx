@@ -22,7 +22,7 @@ export function MobileNav() {
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
   return (
-    <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.08] bg-ink-950/95 backdrop-blur-md md:hidden">
+    <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 md:hidden">
       <div className="mx-auto grid h-[58px] max-w-lg grid-cols-4 items-stretch">
         {ITEMS.map((item) => (
           <NavItem

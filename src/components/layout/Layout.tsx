@@ -36,7 +36,7 @@ export function Layout() {
   return (
     <PortalProvider>
       <WorldNavigationProvider>
-        <div className="relative flex min-h-screen flex-col">
+        <div className={location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col"}>
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>

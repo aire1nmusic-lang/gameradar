@@ -17,6 +17,15 @@
 
 ## Состояние сейчас
 
+**04.10 — label consistency local beforefinalupload:** catalogdescription/privatevotepanel/ownerFAQ stillusedoldНародный naming andFAQsaidCoinsnotinrating. UpdatedtoВыбор игроков andexplicitCoinsaffectonlyЛидеры поддержки,nevervotes/online. Textonly3files; no financiallogic/DB change. Include inlatestguardedfollowup beforepublication; previous192b40dverifiedbackupavailable. Costs0newresources/source rollback. Next build/bundle/tests thenpush supersedingprepublication2712545.
+
+
+**04.10 — icon brief VERIFIED local artifact:** docs/world-icon-brief.md defines priorityplaces1/2/3,Coins,votes,online/opening,owner-rights/statistics/settings; L2heraldic/MCpixel/GTAneon,20–48pxSVG,44pxtouch,contrast/reducedmotion and truthfulstatusmeaning. ExistingSVGforms shippedin192b40d; newrasterartnotgenerated. Noexternalwrites/resources0,rollbackdoc/source. Next finalguardandcommitbriefwithprogress.
+
+
+**04.10 — followup2712545 dispatched VERIFIED Git:** commit2712545cd3560c864171d2c19372d1203be5f3c2 pushedmain; deploy37229393388/CI37229393397 inprogress, primary192b40d productionSUCCESS. Followup onlycontextisolation/empty mountguard anddelayed regression/docs, no money/data/DNS changes. NativeuserIAB demorestored/darkforecast open. Costs existingActions/backupPUT0newresources,rollbackworkflowprevious192b40d. Next waitfullguard/currentbuild, actualdemooff/ontransition,finaldocs.
+
+
 **04.10 — followup transition guard VERIFIED local:** final source resultcontextkey +nonempty mountguard; build/typecheck70/100/90/reconcile0 PASS,studio first5sizes×3games×2themes PASS and844×390 finalcorrected testPASS. Test clock advances16s beyond15srawcache thenholds real catalogue GET; demo forecast/action absent before release, returns afteractualdata; noPOST. Prior final36 rerun failed test expectation because shared rawcache resolves immediately (test itself nowexpirescache); initial regression genuinelycaught empty mount andfixed. Same-context refreshing retains previous data, mode/game switch hides old result. 192b40d guarded deploySUCCESS/CI SUCCESS; backup11312347553/QA11312323802 retained. No DB/private/DNS/payment writes. Next commit/push tinyguard followup with fullpublication checks, then docs closure.
 
 
@@ -1177,4 +1186,16 @@ Main e7da49a published and all postdeploy gates passed, first timing-only failed
 
 
 **04.10 — followup transition guard VERIFIED local:** final source resultcontextkey +nonempty mountguard; build/typecheck70/100/90/reconcile0 PASS,studio first5sizes×3games×2themes PASS and844×390 finalcorrected testPASS. Test clock advances16s beyond15srawcache thenholds real catalogue GET; demo forecast/action absent before release, returns afteractualdata; noPOST. Prior final36 rerun failed test expectation because shared rawcache resolves immediately (test itself nowexpirescache); initial regression genuinelycaught empty mount andfixed. Same-context refreshing retains previous data, mode/game switch hides old result. 192b40d guarded deploySUCCESS/CI SUCCESS; backup11312347553/QA11312323802 retained. No DB/private/DNS/payment writes. Next commit/push tinyguard followup with fullpublication checks, then docs closure.
+
+
+
+**04.10 — followup2712545 dispatched VERIFIED Git:** commit2712545cd3560c864171d2c19372d1203be5f3c2 pushedmain; deploy37229393388/CI37229393397 inprogress, primary192b40d productionSUCCESS. Followup onlycontextisolation/empty mountguard anddelayed regression/docs, no money/data/DNS changes. NativeuserIAB demorestored/darkforecast open. Costs existingActions/backupPUT0newresources,rollbackworkflowprevious192b40d. Next waitfullguard/currentbuild, actualdemooff/ontransition,finaldocs.
+
+
+
+**04.10 — icon brief VERIFIED local artifact:** docs/world-icon-brief.md defines priorityplaces1/2/3,Coins,votes,online/opening,owner-rights/statistics/settings; L2heraldic/MCpixel/GTAneon,20–48pxSVG,44pxtouch,contrast/reducedmotion and truthfulstatusmeaning. ExistingSVGforms shippedin192b40d; newrasterartnotgenerated. Noexternalwrites/resources0,rollbackdoc/source. Next finalguardandcommitbriefwithprogress.
+
+
+
+**04.10 — label consistency local beforefinalupload:** catalogdescription/privatevotepanel/ownerFAQ stillusedoldНародный naming andFAQsaidCoinsnotinrating. UpdatedtoВыбор игроков andexplicitCoinsaffectonlyЛидеры поддержки,nevervotes/online. Textonly3files; no financiallogic/DB change. Include inlatestguardedfollowup beforepublication; previous192b40dverifiedbackupavailable. Costs0newresources/source rollback. Next build/bundle/tests thenpush supersedingprepublication2712545.
 

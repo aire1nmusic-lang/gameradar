@@ -200,7 +200,7 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
-        {sort === 'recommended' && <p className="mb-4 text-sm text-ink-300">Общий топ: голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. Народный рейтинг считается отдельно.</p>}
+        {sort === 'recommended' && <p className="mb-4 text-sm text-ink-300">Общий топ: голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. «Выбор игроков» считается отдельно по голосам.</p>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading ? (

@@ -1236,3 +1236,10 @@ html[data-color-mode] .gs-site-footer {
 }
 .gs-account-manager .gs-admin-hero { min-height:0; }
 .gs-account-wallet > summary { padding:12px 16px; border-radius:12px; background:var(--color-ink-900); color:var(--color-ink-50); }
+
+/* Keep actual profile text inside both grid and flex account layouts. */
+.gs-account-sidebar, .gs-account-workspace { min-width:0; max-width:100%; }
+.gs-account-sidebar { width:100%; }
+.gs-login-method { max-width:100%; }
+.gs-login-method > svg { flex-shrink:0; }
+.gs-login-method > span { min-width:0; overflow-wrap:anywhere; }

@@ -30,7 +30,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden'
   const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
-    <header className={bare ? 'gs-site-header absolute inset-x-0 top-0 z-50' : 'gs-site-header sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md'}>
+    <header className={bare ? 'gs-site-header gs-hall-header absolute inset-x-0 top-0 z-50' : 'gs-site-header sticky top-0 z-50 border-b border-white/[0.07] bg-ink-950/95 backdrop-blur-md'}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
         <Logo className={!bare?'max-md:[&_.gs-wordmark]:hidden':undefined} />
         {!bare&&<div className="md:hidden"><GamesMenu /></div>}

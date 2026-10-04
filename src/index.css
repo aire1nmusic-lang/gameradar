@@ -1140,13 +1140,13 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   .gs-world-light .gs-row .text-ink-500,
   .gs-world-light .gs-row .text-ink-600 { color: var(--gt-text-faint) !important; }
 
-  html[data-world-mode='light'] .gs-site-header {
+  html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) {
     background: rgb(255 255 255 / .92) !important;
     border-color: rgb(31 45 58 / .10) !important;
   }
-  html[data-world-mode='light'] .gs-site-header .text-ink-200,
-  html[data-world-mode='light'] .gs-site-header .text-ink-100,
-  html[data-world-mode='light'] .gs-site-header .text-ink-50 {
+  html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-200,
+  html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-100,
+  html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-50 {
     color: #26333f !important;
   }
 

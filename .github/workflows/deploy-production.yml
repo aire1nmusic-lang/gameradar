@@ -35,8 +35,6 @@ env:
 
 jobs:
   deploy:
-    # Owner-approved autonomous frontend release path: source pushes deploy only
-    # after the same test/build/backup gates used by the manual workflow.
     if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -67,7 +65,7 @@ jobs:
         run: |
           aws --version
           if ! aws s3api list-objects-v2             --bucket "$YC_BUCKET"             --max-keys 1             --endpoint-url "$YC_S3_ENDPOINT"             >/dev/null; then
-            echo "::error::Yandex key is valid but has no list/read access to $YC_BUCKET. Assign storage.uploader to this service account on the bucket itself."
+            echo "::error::Yandex key is valid but has no list/read access to $YC_BUCKET."
             exit 1
           fi
           aws s3api head-object             --bucket "$YC_BUCKET"             --key index.html             --endpoint-url "$YC_S3_ENDPOINT"             >/dev/null
@@ -79,6 +77,25 @@ jobs:
 
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- "${PUBLIC_API_ORIGIN}"
+
+      - name: Stamp production build version
+        run: |
+          node <<'NODE'
+          const {readdir,readFile,writeFile}=require('node:fs/promises')
+          const {join}=require('node:path')
+          async function walk(dir){
+            for(const entry of await readdir(dir,{withFileTypes:true})){
+              const path=join(dir,entry.name)
+              if(entry.isDirectory()) await walk(path)
+              else if(entry.isFile() && entry.name.endsWith('.html')){
+                const source=await readFile(path,'utf8')
+                if(source.includes('__GS_BUILD__')) await writeFile(path,source.replaceAll('__GS_BUILD__',process.env.GITHUB_SHA))
+              }
+            }
+          }
+          await walk('dist')
+          await writeFile('dist/build-version.json',JSON.stringify({build:process.env.GITHUB_SHA}))
+          NODE
 
       - name: Bundle gate
         run: npm run test:bundle
@@ -111,7 +128,7 @@ jobs:
         run: |
           aws s3 sync dist/assets/ "s3://$YC_BUCKET/assets/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "public,max-age=31536000,immutable"             --only-show-errors
 
-      - name: Upload HTML, robots, sitemap and other public files
+      - name: Upload HTML and mutable public files without stale caching
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -119,9 +136,11 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: |
           aws s3 sync dist/ "s3://$YC_BUCKET/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
-        # Deliberately no --delete: old hashed assets stay available for rollback.
+          # Force index metadata on every deploy even if object heuristics consider it unchanged.
+          aws s3 cp dist/index.html "s3://$YC_BUCKET/index.html"             --endpoint-url "$YC_S3_ENDPOINT"             --content-type "text/html; charset=utf-8"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
+        # Old hashed assets intentionally stay available for rollback.
 
-      - name: Verify production
+      - name: Verify production freshness, cache policy and SEO
         id: verify_live
         continue-on-error: true
         env:
@@ -130,7 +149,29 @@ jobs:
           npm run test:seo
           node <<'NODE'
           const origin='https://gamescout.online'
-          const html=await (await fetch(origin+'/',{signal:AbortSignal.timeout(15000)})).text()
+          const expected=process.env.GITHUB_SHA
+          let response,html
+          for(let attempt=1;attempt<=6;attempt++){
+            response=await fetch(origin+'/',{signal:AbortSignal.timeout(15000)})
+            html=await response.text()
+            const build=html.match(/<meta name="gs-build" content="([^"]+)"/)?.[1]
+            if(response.ok && build===expected) break
+            if(attempt===6) throw new Error(`Live HTML is not current build: expected ${expected}, got ${build||'missing'}`)
+            await new Promise(r=>setTimeout(r,2000))
+          }
+
+          const cacheControl=response.headers.get('cache-control')||''
+          if(!/(no-cache|no-store)/i.test(cacheControl)) {
+            throw new Error(`HTML cache-control is unsafe: ${cacheControl||'missing'}`)
+          }
+          const cfStatus=(response.headers.get('cf-cache-status')||'').toUpperCase()
+          if(cfStatus==='HIT') throw new Error('Cloudflare served index.html from stale edge cache (CF-Cache-Status: HIT)')
+
+          const versionResponse=await fetch(origin+`/build-version.json?t=${Date.now()}`,{cache:'no-store',signal:AbortSignal.timeout(15000)})
+          if(!versionResponse.ok) throw new Error(`build-version.json: HTTP ${versionResponse.status}`)
+          const version=await versionResponse.json()
+          if(version.build!==expected) throw new Error(`Version marker mismatch: expected ${expected}, got ${version.build}`)
+
           const refs=[...new Set([...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))]
           if(!refs.length) throw new Error('No built JS/CSS asset references found on live home page')
           for(const path of refs){
@@ -139,7 +180,7 @@ jobs:
             const body=await r.arrayBuffer()
             if(!body.byteLength) throw new Error(`${path}: empty response`)
           }
-          console.log(`Live asset check passed: ${refs.length} files`)
+          console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
 
       - name: Roll back public HTML if verification failed

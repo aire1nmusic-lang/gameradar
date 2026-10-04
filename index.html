@@ -1,32 +1,218 @@
 <!doctype html>
 <html lang="ru" class="dark">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#08090D" />
-<title>GameScout — навигатор по игровым серверам</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@112.5,800&display=swap" rel="stylesheet" />
-<style>
-html,body,#root{margin:0;min-height:100%;background:#08090d}
-.gs-loader{height:100vh;display:flex;align-items:center;justify-content:center;background:#08090d;color:#fff;overflow:hidden;font-family:Arial,sans-serif}
-.gs-box{display:flex;flex-direction:column;align-items:center;position:relative;animation:gsIn .8s cubic-bezier(.2,.8,.2,1)}
-@keyframes gsIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-.gs-logo{width:56px;filter:drop-shadow(0 0 10px rgba(52,230,245,.15))}
-.gs-name{margin-top:12px;font-family:Saira,Arial;font-size:28px;font-weight:800;letter-spacing:.02em}
-.gs-game{color:#f8fafc}.gs-scout{background:linear-gradient(90deg,#34e6f5,#8b5cf6,#34e6f5);background-size:220%;animation:shine 5s linear infinite;-webkit-background-clip:text;color:transparent}
-@keyframes shine{to{background-position:220%}}
-.gs-text{margin-top:22px;color:#98a2b3;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
-.fire{position:absolute;width:4px;height:4px;border-radius:50%;background:#34e6f5;opacity:.2;filter:blur(1px);animation:fire 9s infinite}
-.f1{transform:translate(-95px,-55px)}.f2{transform:translate(90px,-35px);animation-delay:2s}.f3{transform:translate(-80px,60px);animation-delay:4s}.f4{transform:translate(100px,55px);animation-delay:1s}
-@keyframes fire{50%{opacity:.45;translate:8px -18px}}
-@media(min-width:768px){.gs-logo{width:90px}.gs-name{font-size:44px}.gs-text{font-size:12px}}
-@media(min-width:1440px){.gs-logo{width:120px}.gs-name{font-size:60px}}
-</style>
-</head>
-<body>
-<div id="root"><div class="gs-loader" aria-busy="true"><span class="fire f1"></span><span class="fire f2"></span><span class="fire f3"></span><span class="fire f4"></span><div class="gs-box"><svg class="gs-logo" viewBox="284 317.5 729.5 431.5"><path fill="#dfe4ea" d="M787.5 321.5L485 321.5 288 519 503 734 503 611.5 404 513 515 402 707 402Z M606 486 473.5 486 553.5 566 590 566 590 582.5 527 645.5 527 745 696 576Z"/><path fill="#34e6f5" d="M990 397.5L767 397.5 664 500.5 750.5 587 907 587 859 635 713.5 635 625.5 723.5 879.5 723.5 1009.5 593.5 923 507 766 507 799.5 473.5 914 473.5Z"/></svg><div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div><div class="gs-text">Подготавливаем миры...</div></div></div></div>
-<script type="module" src="/src/main.tsx"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#08090D" />
+    <meta name="gs-build" content="__GS_BUILD__" />
+    <title>GameScout — навигатор по игровым серверам</title>
+    <meta
+      name="description"
+      content="GameScout — независимый навигатор по игровым серверам: проверенный онлайн, рейтинги, открытия и рост проектов."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&family=Saira:wdth,wght@112.5,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <style>
+      html, body, #root { margin: 0; min-height: 100%; background: #08090d; }
+      body { overflow-x: hidden; }
+
+      .gs-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #08090d;
+        color: #fff;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .22s ease;
+      }
+      .gs-loader-visible .gs-loader {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+      .gs-loader-leaving .gs-loader { opacity: 0; }
+
+      .gs-box {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: gs-enter .8s cubic-bezier(.22,.9,.25,1) both;
+      }
+      @keyframes gs-enter {
+        from { opacity: 0; transform: translateY(16px) scale(.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      .gs-mark {
+        width: 52px;
+        height: auto;
+        filter: drop-shadow(0 0 10px rgba(52,230,245,.16));
+      }
+      .gs-name {
+        margin-top: 12px;
+        font-family: Saira, "Inter Tight", system-ui, sans-serif;
+        font-size: 27px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: .02em;
+      }
+      .gs-game { color: #f8fafc; }
+      .gs-scout {
+        background: linear-gradient(90deg,#34e6f5 0%,#8b5cf6 55%,#34e6f5 100%);
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: gs-flow 6s linear infinite;
+      }
+      @keyframes gs-flow { to { background-position: 220% 0; } }
+
+      .gs-status {
+        margin-top: 20px;
+        color: #98a2b3;
+        font-size: 9px;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+      }
+      .gs-status-dot {
+        display: inline-block;
+        width: 4px;
+        opacity: .25;
+        animation: gs-dot 1.4s infinite;
+      }
+      .gs-status-dot:nth-child(2) { animation-delay: .2s; }
+      .gs-status-dot:nth-child(3) { animation-delay: .4s; }
+      @keyframes gs-dot { 50% { opacity: 1; } }
+
+      .gs-firefly {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        opacity: .18;
+        background: radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(52,230,245,.72) 35%,rgba(52,230,245,0) 74%);
+        filter: blur(.25px);
+        animation: gs-drift 8s ease-in-out infinite;
+      }
+      .gs-firefly.f1 { margin-left: -78px; margin-top: -66px; animation-duration: 7.4s; }
+      .gs-firefly.f2 { margin-left: 72px; margin-top: -52px; animation-duration: 8.8s; animation-delay: -1.2s; }
+      .gs-firefly.f3 { margin-left: -88px; margin-top: 42px; animation-duration: 9.2s; animation-delay: -2.4s; }
+      .gs-firefly.f4 { margin-left: 82px; margin-top: 46px; animation-duration: 7.8s; animation-delay: -3.1s; }
+      .gs-firefly.f5 { margin-left: -22px; margin-top: -94px; animation-duration: 9.6s; animation-delay: -1.8s; }
+      .gs-firefly.f6 { margin-left: 18px; margin-top: 78px; animation-duration: 8.2s; animation-delay: -2.7s; }
+      @keyframes gs-drift {
+        0%   { transform: translate3d(0,0,0) scale(.92); opacity: .14; }
+        25%  { transform: translate3d(7px,-12px,0) scale(1); opacity: .38; }
+        50%  { transform: translate3d(-5px,-20px,0) scale(1.06); opacity: .28; }
+        75%  { transform: translate3d(8px,-8px,0) scale(.98); opacity: .34; }
+        100% { transform: translate3d(0,0,0) scale(.92); opacity: .14; }
+      }
+
+      .gs-error {
+        position: fixed;
+        z-index: 10000;
+        left: 20px;
+        right: 20px;
+        top: calc(50% + 90px);
+        text-align: center;
+        color: #aab3c2;
+        font: 13px Inter, system-ui, sans-serif;
+      }
+      .gs-error button {
+        margin-top: 12px;
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 9px;
+        background: #f2f3f7;
+        color: #08090d;
+        font: 600 13px Inter, system-ui, sans-serif;
+      }
+
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .gs-mark { width: 78px; }
+        .gs-name { margin-top: 15px; font-size: 38px; }
+        .gs-status { margin-top: 26px; font-size: 11px; }
+      }
+      @media (min-width: 1024px) and (max-width: 1439px) {
+        .gs-mark { width: 110px; }
+        .gs-name { margin-top: 18px; font-size: 52px; }
+        .gs-status { margin-top: 30px; font-size: 12px; }
+      }
+      @media (min-width: 1440px) {
+        .gs-mark { width: 135px; }
+        .gs-name { margin-top: 20px; font-size: 64px; }
+        .gs-status { margin-top: 34px; font-size: 13px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .gs-box, .gs-scout, .gs-status-dot, .gs-firefly { animation: none; }
+      }
+    </style>
+
+    <link rel="preload" as="image" href="/media/hub/nave-1920.webp"
+      imagesrcset="/media/hub/nave-1280.webp 1280w, /media/hub/nave-1920.webp 1920w, /media/hub/nave-2560.webp 2560w, /media/hub/nave-3840.webp 3840w"
+      imagesizes="100vw" media="(min-width: 1024px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/media/hub/nave-m-720.webp"
+      imagesrcset="/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w"
+      imagesizes="100vw" media="(max-width: 1023px)" fetchpriority="high" />
+  </head>
+  <body>
+    <div id="root">
+      <div class="gs-loader" aria-busy="true" aria-label="GameScout загружается">
+        <span class="gs-firefly f1"></span><span class="gs-firefly f2"></span>
+        <span class="gs-firefly f3"></span><span class="gs-firefly f4"></span>
+        <span class="gs-firefly f5"></span><span class="gs-firefly f6"></span>
+        <div class="gs-box">
+          <svg class="gs-mark" viewBox="284 317.5 729.5 431.5" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="boot-g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#f8fafc" />
+                <stop offset="1" stop-color="#94a3b8" />
+              </linearGradient>
+              <linearGradient id="boot-s" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#34e6f5" />
+                <stop offset="1" stop-color="#7c3aed" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#boot-g)" d="M787.5 321.5 L485 321.5 L288 519 L503 734 L503 611.5 L404 513 L515 402 L707 402 Z M606 486 L473.5 486 L553.5 566 L590 566 L590 582.5 L527 645.5 L527 745 L696 576 Z" />
+            <path fill="url(#boot-s)" d="M990 397.5 L767 397.5 L664 500.5 L750.5 587 L907 587 L859 635 L713.5 635 L625.5 723.5 L879.5 723.5 L1009.5 593.5 L923 507 L766 507 L799.5 473.5 L914 473.5 Z" />
+          </svg>
+          <div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div>
+          <div class="gs-status">Подготавливаем миры<span class="gs-status-dot">.</span><span class="gs-status-dot">.</span><span class="gs-status-dot">.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const html = document.documentElement;
+        const timer = window.setTimeout(() => {
+          if (!document.querySelector(".gs-loader")) return;
+          html.classList.add("gs-loader-visible");
+          html.dataset.gsLoaderShownAt = String(performance.now());
+        }, 300);
+        html.dataset.gsLoaderTimer = String(timer);
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

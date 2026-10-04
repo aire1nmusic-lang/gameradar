@@ -5,7 +5,6 @@ import { Footer } from './Footer'
 import { MobileNav } from './MobileNav'
 import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
-import { LoadingScreen } from './LoadingScreen'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
 import { WorldNavigationProvider } from '@/hooks/useWorldNavigation'
@@ -14,38 +13,8 @@ import { WorldPageScope } from '@/components/world/WorldPageScope'
 export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
   const location = useLocation()
   const hall = location.pathname === '/'
-
-  useEffect(() => {
-    let cancelled = false
-
-    const finish = async () => {
-      try {
-        if (document.fonts?.ready) await document.fonts.ready
-      } catch {
-        // Font loading failure should not block the app.
-      }
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!cancelled) setLoading(false)
-        })
-      })
-    }
-
-    if (document.readyState === 'complete') {
-      finish()
-    } else {
-      window.addEventListener('load', finish, { once: true })
-    }
-
-    return () => {
-      cancelled = true
-      window.removeEventListener('load', finish)
-    }
-  }, [])
 
   useEffect(() => {
     if (!location.hash) window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
@@ -68,7 +37,6 @@ export function Layout() {
     <PortalProvider>
       <WorldNavigationProvider>
         <div className="relative flex min-h-screen flex-col">
-          {loading && <LoadingScreen />}
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className="relative flex-1">
@@ -89,8 +57,14 @@ function BackgroundField() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div className="absolute inset-0 bg-ink-950" />
-      <div className="absolute -top-[22rem] left-1/2 h-[46rem] w-[78rem] -translate-x-1/2 animate-drift rounded-full opacity-[0.16] blur-[120px]" style={{ background: 'radial-gradient(closest-side, var(--color-signal-500), transparent 70%)' }} />
-      <div className="absolute top-[28rem] -left-40 h-[34rem] w-[34rem] rounded-full opacity-[0.10] blur-[130px]" style={{ background: 'radial-gradient(closest-side, var(--color-promo-500), transparent 70%)' }} />
+      <div
+        className="absolute -top-[22rem] left-1/2 h-[46rem] w-[78rem] -translate-x-1/2 animate-drift rounded-full opacity-[0.16] blur-[120px]"
+        style={{ background: 'radial-gradient(closest-side, var(--color-signal-500), transparent 70%)' }}
+      />
+      <div
+        className="absolute top-[28rem] -left-40 h-[34rem] w-[34rem] rounded-full opacity-[0.10] blur-[130px]"
+        style={{ background: 'radial-gradient(closest-side, var(--color-promo-500), transparent 70%)' }}
+      />
       <div className="absolute inset-0 texture-grid opacity-[0.35] [mask-image:radial-gradient(ellipse_at_top,black,transparent_65%)]" />
     </div>
   )

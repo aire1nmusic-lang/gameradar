@@ -44,7 +44,7 @@ async function setup(width, height, mode, path = '/') {
   let release
   const gate = new Promise(r => { release = r })
   let failing = mode === 'error' || mode === 'image-error'
-  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jrP8AAAAASUVORK5CYII=', 'base64')
+  const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQkdMAAACkAFt2Ll/jAAAAAElFTkSuQmCC', 'base64')
   if (mode === 'cached') await page.addInitScript(games => {
     localStorage.setItem('gs.games.v1', JSON.stringify({ at: Date.now(), games: JSON.parse(games) }))
   }, games)

@@ -206,6 +206,7 @@
       (() => {
         const html = document.documentElement;
         html.classList.add("gs-boot-pending");
+        document.getElementById("root")?.setAttribute("aria-busy", "true");
         const timer = window.setTimeout(() => {
           if (!document.querySelector(".gs-loader")) return;
           html.classList.add("gs-loader-visible");

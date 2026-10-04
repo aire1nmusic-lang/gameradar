@@ -24,6 +24,7 @@ function finishBoot() {
   delete html.dataset.gsLoaderTimer
   delete html.dataset.gsLoaderShownAt
   html.classList.remove('gs-loader-visible', 'gs-loader-leaving', 'gs-boot-pending')
+  rootElement.removeAttribute('aria-busy')
   document.querySelector('.gs-loader')?.remove()
 }
 

@@ -1140,10 +1140,7 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   .gs-world-light .gs-row .text-ink-500,
   .gs-world-light .gs-row .text-ink-600 { color: var(--gt-text-faint) !important; }
 
-  html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) {
-    background: rgb(255 255 255 / .92) !important;
-    border-color: rgb(31 45 58 / .10) !important;
-  }
+  
   html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-200,
   html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-100,
   html[data-world-mode='light'] .gs-site-header:not(.gs-hall-header) .text-ink-50 {
@@ -1157,4 +1154,18 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   html[data-world-mode='light'] .gs-mobile-nav .text-ink-50 { color: #101820 !important; }
   html[data-world-mode='light'] .gs-mobile-nav .text-ink-400 { color: #75818c !important; }
   html[data-world-mode='light'] .gs-mobile-nav .bg-signal-400 { background: #B08D3C !important; }
+}
+
+/* All pages share the unpainted header used by the hall.
+   Artwork extends behind it while content keeps room for the controls. */
+html[data-color-mode] .gs-site-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.gs-page-main .gs-account-entry { padding-top: 84px; }
+@media (max-width: 639px) {
+  .gs-page-main .gs-account-entry { padding-top: 66px; }
 }

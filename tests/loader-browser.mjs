@@ -64,15 +64,16 @@ async function setup(width, height, mode, path = '/') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: games })
     }
     if (url.pathname.startsWith('/media/hub/')) {
-      if (mode === 'real-images') return route.continue()
+      if (mode === 'real-images' || mode === 'inner-pages') return route.continue()
       if (mode === 'visual-slow') await gate
       if (mode === 'image-error' && failing) return route.abort()
       return route.fulfill({ status: 200, contentType: 'image/svg+xml', body: pixel })
     }
+    if (mode === 'inner-pages' && url.pathname.startsWith('/media/')) return route.continue()
     // Optional fonts never hold boot. Critical images have a separate gate.
     if (/\.(?:webp|png|jpe?g|woff2?)(?:$)/.test(url.pathname) || /fonts\.(?:googleapis|gstatic)\.com/.test(url.hostname)) return route.abort()
     if (url.pathname.startsWith('/api/')) {
-      return route.fulfill({ status: 200, json: url.pathname.includes('/auth/') ? { user: null } : url.pathname.includes('/servers') ? { items: [], total: 0 } : [] })
+      return route.fulfill({ status: 200, json: url.pathname.includes('/auth/') ? { user: null, privateCore: true, providers: ['google', 'discord'], registrationOpen: false } : url.pathname.includes('/servers') ? { items: [], total: 0 } : [] })
     }
     if (route.request().method() !== 'GET') return route.abort()
     return route.continue()
@@ -160,6 +161,33 @@ try {
     assert.deepEqual(await actual.page.locator('section [aria-hidden] .bg-gradient-to-b, section [aria-hidden] .bg-gradient-to-t').evaluateAll(els => els.map(el => getComputedStyle(el).backgroundImage)), shades, 'Dark home shading restores after toggling back')
     await actual.context.close()
     console.log('PASS fast/slow images, hidden incomplete hall, decoded background + 3 cards, viewport ' + width + 'x' + height)
+  }
+  // Anonymous read-only inner pages: header artwork and content must not overlap.
+  for (const [width, height] of matrix) {
+    for (const path of ['/account', '/lineage-2', '/minecraft', '/gta-rp', '/catalog']) {
+      const inner = await setup(width, height, 'inner-pages', path)
+      await ready(inner.page)
+      if (path === '/account') await inner.page.locator('.gs-account-entry').waitFor()
+      await inner.page.locator('main img').evaluateAll(images => Promise.all(images.filter(img => img.getBoundingClientRect().width > 0).map(img => img.decode().catch(() => {}))))
+      for (const theme of ['dark', 'light']) {
+        if (theme === 'light') await inner.page.getByRole('button', { name: 'Включить светлую тему', exact: true }).click()
+        await inner.page.waitForFunction(mode => document.documentElement.dataset.colorMode === mode, theme)
+        const chrome = await inner.page.locator('.gs-site-header').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, shadow: getComputedStyle(el).boxShadow, border: getComputedStyle(el).borderBottomWidth, blur: getComputedStyle(el).backdropFilter }))
+        assert.deepEqual(chrome, { background: 'rgba(0, 0, 0, 0)', shadow: 'none', border: '0px', blur: 'none' }, 'Header has no painted strip on ' + path + '/' + theme)
+        const headerRect = await inner.page.locator('.gs-site-header').boundingBox()
+        assert.equal(headerRect.y, 0)
+        const heading = inner.page.locator('main h1').first()
+        if (await heading.count()) assert.ok((await heading.boundingBox()).y >= headerRect.height, 'Heading clears header on ' + path)
+        if (path === '/account' || ['/lineage-2', '/minecraft', '/gta-rp'].includes(path)) {
+          const art = inner.page.locator(path === '/account' ? '.gs-account-entry' : '.gs-hero').first()
+          assert.equal((await art.boundingBox()).y, 0, 'Page artwork starts behind header on ' + path)
+        }
+        assert.equal(await inner.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Inner page has no horizontal overflow on ' + path)
+        if (path === '/account' || path === '/lineage-2' || width === 390 || width === 1440) await inner.page.screenshot({ path: 'output/loader-qa/inner-' + path.slice(1) + '-' + theme + '-' + width + 'x' + height + '.png' })
+      }
+      await inner.context.close()
+      console.log('PASS clear header dark/light, artwork under header, content bounds ' + path + ' ' + width + 'x' + height)
+    }
   }
   const cached = await setup(390,844,'cached')
   await ready(cached.page)

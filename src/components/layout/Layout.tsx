@@ -39,7 +39,7 @@ export function Layout() {
         <div className="relative flex min-h-screen flex-col">
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
-          <main className="relative flex-1">
+          <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <WorldPageScope><Outlet /></WorldPageScope>
           </main>
           {!hall && !location.pathname.startsWith('/admin') && <Footer />}

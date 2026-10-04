@@ -23,11 +23,7 @@ html[data-color-mode='light'] body {
   color: #202127;
 }
 
-html[data-color-mode='light'] .gs-site-header:not(.gs-hall-header) {
-  background: rgb(250 246 238 / .94) !important;
-  border-color: rgb(92 70 38 / .13) !important;
-  box-shadow: 0 8px 28px -24px rgb(75 54 28 / .5);
-}
+
 html[data-color-mode='light'] .gs-mobile-nav {
   background: rgb(250 246 238 / .96) !important;
   border-color: rgb(92 70 38 / .13) !important;
@@ -374,11 +370,7 @@ html[data-color-mode='light'] .gs-provider-icon--discord { background: rgb(88 10
 /* World chrome: the shell itself is part of the constructor.
    Utility routes keep the selected world, so the header/tab bar do not visually
    jump back to the neutral platform between L2 pages. */
-html[data-world='lineage2'][data-color-mode='dark'] .gs-site-header:not(.gs-hall-header) {
-  background: rgb(8 7 10 / .96) !important;
-  border-color: rgb(216 178 92 / .14) !important;
-  box-shadow: 0 10px 32px -28px rgb(216 178 92 / .40);
-}
+
 html[data-world='lineage2'][data-color-mode='dark'] .gs-mobile-nav {
   background: rgb(8 7 10 / .96) !important;
   border-color: rgb(216 178 92 / .14) !important;

@@ -49,7 +49,7 @@ export function GameHero({
   }
 
   return (
-    <section className={cn('gs-hero relative overflow-hidden', !art && 'gt-hero')}>
+    <section className={cn('gs-hero relative -mt-[60px] overflow-hidden', !art && 'gt-hero')}>
       {art ? (
         <WorldArtSurface art={art} scrim="poster" sizes="100vw" priority width={2560} />
       ) : (
@@ -64,7 +64,7 @@ export function GameHero({
       {/* the left third of every master is quiet; this keeps text legible there on any crop */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-full sm:w-2/3" style={{ background: `linear-gradient(to right, color-mix(in oklab, ${theme.colors.bg} 78%, transparent), transparent)` }} />
 
-      <Container className="relative flex min-h-[inherit] flex-col justify-end pt-4 pb-6 sm:pb-8 lg:pb-9">
+      <Container className="relative flex min-h-[inherit] flex-col justify-end pt-[76px] pb-6 sm:pb-8 lg:pb-9">
         <nav className="mb-3 flex items-center gap-1.5 text-[12px]" style={{ color: theme.colors.textFaint }} aria-label="Хлебные крошки">
           <Link to="/" className="transition-colors hover:text-[var(--gt-text)]">
             Зал миров

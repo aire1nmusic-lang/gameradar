@@ -86,7 +86,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   const app = new Hono()
   const cookie = (name,value,seconds) => `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local?'':'; Secure'}`
   const sessionHash = c => digest(cookieValue(c,'gs_private_session'))
-  const queryUser = async c => (await db.query(`SELECT u.*,s.created_at AS authenticated_at FROM gs_sessions s
+  const queryUser = async c => (await db.query(`SELECT u.*,s.created_at AS authenticated_at,s.login_method FROM gs_sessions s
     JOIN gs_users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.banned_at IS NULL`,[sessionHash(c)])).rows[0]
   const requireUser = async (c,verified=false) => {
     const user = await queryUser(c)
@@ -113,15 +113,15 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       UNION SELECT rp.permission FROM gs_user_roles ur JOIN gs_role_permissions rp ON rp.role=ur.role WHERE ur.user_id=$1`,[user.id])).rows.map(x=>x.permission)
     const assigned=(await db.query('SELECT role FROM gs_user_roles WHERE user_id=$1 ORDER BY role',[user.id])).rows.map(x=>x.role)
     const owns=(await db.query('SELECT 1 FROM gs_server_registry WHERE owner_id=$1 LIMIT 1',[user.id])).rows.length>0
-    return { id:user.id,email:user.email,displayName:user.display_name,provider:'EMAIL',emailVerified:!!user.email_verified_at,
+    return { id:user.id,email:user.email,displayName:user.display_name,provider:'EMAIL',loginMethod:user.login_method??null,emailVerified:!!user.email_verified_at,
       hasPassword:!!user.password_hash,roles:['PLAYER',...(owns?['OWNER']:[]),...assigned],permissions,createdAt:user.created_at,
       identities:identities.map(x=>({provider:x.provider,linkedAt:x.created_at})) }
   }
-  async function startSession(c,tx,userId) {
+  async function startSession(c,tx,userId,loginMethod='email') {
     const raw=token()
     // Rotate the incoming session even when switching accounts.
     await tx.query('DELETE FROM gs_sessions WHERE token_hash=$1',[sessionHash(c)])
-    await tx.query("INSERT INTO gs_sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[digest(raw),userId])
+    await tx.query("INSERT INTO gs_sessions(token_hash,user_id,expires_at,login_method) VALUES($1,$2,now()+interval '7 days',$3)",[digest(raw),userId,loginMethod])
     return raw
   }
   async function json(c) {
@@ -320,7 +320,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       if (user.banned_at) fail(403,'banned','Аккаунт заблокирован')
       if (!identity) await tx.query('INSERT INTO gs_identities(provider,subject,user_id) VALUES($1,$2,$3)',[provider,profile.id,userId])
       await audit(tx,userId,row.link_session_hash?'identity.linked':'identity.login',provider)
-      return row.link_session_hash?null:await startSession(c,tx,userId)
+      return row.link_session_hash?null:await startSession(c,tx,userId,provider)
     })
     if (result) c.header('Set-Cookie',cookie('gs_private_session',result,604800),{append:true})
     return c.redirect(row.next_path)

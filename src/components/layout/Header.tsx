@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -21,6 +21,8 @@ const NAV = [
 /** `bare`: over the hall of worlds — transparent, only the logo and the account. */
 export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
+  const {pathname}=useLocation()
+  const overArt=bare||pathname==='/account'||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
   const accountLabel=auth.user?.displayName || 'Аккаунт'
@@ -30,7 +32,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
   const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
-    <header className={bare ? 'gs-site-header gs-hall-header absolute inset-x-0 top-0 z-50' : 'gs-site-header absolute inset-x-0 top-0 z-50'}>
+    <header className={`gs-site-header ${overArt?'gs-header-over-art':''} ${bare?'gs-hall-header':''} absolute inset-x-0 top-0 z-50`}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
         <Logo className={!bare?'max-xl:[&_.gs-wordmark]:hidden':undefined} />
         {!bare&&<div className="xl:hidden"><GamesMenu /></div>}
@@ -95,6 +97,9 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
         >
           <WorldIcon name="profile" size={21} />
         </button>}
+        {!!auth.user?.permissions?.length&&<Link to={scoped('/admin')} aria-label="Админский кабинет" title="Админский кабинет" className="gs-header-admin inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-2 text-sm font-semibold xl:px-3">
+          <WorldIcon name="admin" size={20}/><span className="hidden xl:inline">Админка</span>
+        </Link>}
       </Container>
     </header>
   )

@@ -22,7 +22,7 @@ import { cleanupTransientData } from '../private-api/retention.mjs'
 
 const origin='http://127.0.0.1:5173', password='correct horse battery staple'
 const config={origin,environment:'development',mailEnabled:true,mailKey:'a'.repeat(64),rateKey:'b'.repeat(64),
-  oauth:{GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test',YANDEX_CLIENT_ID:'test',YANDEX_CLIENT_SECRET:'test',VK_CLIENT_ID:'test'}}
+  oauth:{GOOGLE_CLIENT_ID:'test',GOOGLE_CLIENT_SECRET:'test',YANDEX_CLIENT_ID:'test',YANDEX_CLIENT_SECRET:'test',VK_CLIENT_ID:'test',DISCORD_CLIENT_ID:'test',DISCORD_CLIENT_SECRET:'test'}}
 test('emergency mode pauses user writes without locking out reads or trusting anonymous admin access',async t=>{
   const h=await harness(t,{config:{emergencyMode:true}})
   const paused=await h.request('/claims',{serverId:'test',evidence:'A write must not happen'})
@@ -246,16 +246,21 @@ async function oauth(h,provider,subject,cookie='',link=false) {
 }
 test('Google/VK/Yandex callbacks use subject; same email never merges; link is session-bound and single use',async t=>{
   const h=await harness(t), emailUser=await h.register()
-  for(const p of ['google','vk','yandex']) {
+  assert.equal((await h.request('/auth/me',undefined,emailUser.cookie)).body.user.loginMethod,'email')
+  for(const p of ['google','vk','yandex','discord']) {
     const o=await oauth(h,p,`subject-${p}`)
     assert.equal(o.result.status,302,JSON.stringify(o.result.body))
     const me=(await h.request('/auth/me',undefined,o.result.cookie)).body.user
+    assert.equal(me.loginMethod,p);
     assert.notEqual(me.id,emailUser.user.id);assert.equal(me.email,null);assert.equal(me.emailVerified,false)
     assert.equal((await h.request(o.callback,undefined,o.browser)).status,400)
     assert.equal((await h.request('/claims',{serverId:'test',evidence:'I own this game server'},o.result.cookie)).status,403)
   }
   const linked=await oauth(h,'google','new-subject',emailUser.cookie,true)
   assert.equal(linked.result.status,302)
+  assert.equal((await h.request('/auth/me',undefined,emailUser.cookie)).body.user.loginMethod,'email', 'Linking does not change active session source')
+  await h.db.query('UPDATE gs_sessions SET login_method=NULL WHERE user_id=$1',[emailUser.user.id])
+  assert.equal((await h.request('/auth/me',undefined,emailUser.cookie)).body.user.loginMethod,null,'Legacy session method stays unknown even with Google linked')
   const login=await oauth(h,'google','new-subject')
   assert.equal((await h.request('/auth/me',undefined,login.result.cookie)).body.user.id,emailUser.user.id)
   assert.equal((await oauth(h,'google','subject-google',emailUser.cookie,true)).result.status,409)

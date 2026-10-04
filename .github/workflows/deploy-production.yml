@@ -107,7 +107,9 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Loader browser matrix before publication
-        run: node tests/loader-browser.mjs
+        run: |
+          node tests/loader-browser.mjs
+          node tests/account-browser.mjs
 
       - name: Backup current production HTML and service files
         env:
@@ -188,6 +190,7 @@ jobs:
           console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
           LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
+          ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
 
       - name: Roll back public HTML if verification failed
         if: steps.verify_live.outcome == 'failure'
@@ -211,6 +214,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: loader-browser-qa-${{ github.sha }}
-          path: output/loader-qa
+          path: |
+            output/loader-qa
+            output/account-review-qa
           retention-days: 14
           if-no-files-found: ignore

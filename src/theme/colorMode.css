@@ -411,3 +411,64 @@ html[data-color-mode='light'] .gs-hall-shade-bottom {
 html[data-color-mode='light'] .gs-hall-shade-mobile {
   background-image: linear-gradient(to bottom, rgb(244 238 229 / .20), rgb(244 238 229 / .12) 50%, rgb(244 238 229 / .28));
 }
+
+/* Account review: real desktop workspace, readable cards and clear floating chrome. */
+.gs-account-page { max-width:1120px; color:#f3f4f8; font-size:14px; }
+.gs-account-page h1,.gs-account-page h2,.gs-account-page h3 { font-family:var(--font-sans); }
+.gs-account-page .gs-account-hero h1 { font-size:34px; }
+.gs-account-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
+.gs-account-grid > * { min-width:0; }
+.gs-account-page [class*='opacity-'] { opacity:1; }
+.gs-account-page p:not([role]),.gs-account-page .gs-login-method { color:#cdd3df; }
+.gs-account-page .gs-account-status { color:#a0f0cb; }
+.gs-account-page .gs-account-servers > h2 { color:#fff; text-shadow:0 1px 3px #000,0 0 8px #000; }
+.gs-account-page .gs-account-exit { border-top:1px solid rgb(255 255 255 / .25); }
+.gs-account-page .gs-account-exit button { background:#161822; color:#e6e9f0; }
+.gs-login-method svg { width:18px; height:18px; flex-shrink:0; }
+.gs-account-page .gs-coins-card h2 { font-size:16px; }
+.gs-account-page .gs-coins-card > div > div:first-child { flex-wrap:wrap; }
+html[data-color-mode='light'] .gs-account-page { color:#202431; }
+html[data-color-mode='light'] .gs-account-page p:not([role]),html[data-color-mode='light'] .gs-account-page .gs-login-method { color:#494f5c; }
+html[data-color-mode='light'] .gs-account-page .gs-account-status { color:#12613f; }
+html[data-color-mode='light'] .gs-account-page .gs-account-exit button { background:#f9f4eb; color:#303441; border-color:#9c8e79; }
+.gs-site-header nav a,.gs-site-header button,.gs-site-header a,.gs-site-header kbd { color:#fff !important; font-weight:600; text-shadow:0 1px 3px #000,0 0 8px rgb(0 0 0 / .85); }
+.gs-site-header .gs-wordmark { color:#fff !important; filter:drop-shadow(0 1px 2px #000); }
+.gs-site-header svg { filter:drop-shadow(0 1px 2px rgb(0 0 0 / .85)); }
+html[data-color-mode='light'] .gs-site-header .gs-theme-toggle { color:#202431 !important; text-shadow:none; }
+.gs-site-header .gs-header-admin { color:#ffe3a3 !important; }
+.gs-site-footer { color:#edf0f6; text-shadow:0 1px 3px #000,0 0 8px #000; }
+.gs-site-footer p,.gs-site-footer h4,.gs-site-footer a,.gs-site-footer span { color:#edf0f6 !important; }
+.gs-site-footer h4 { font-weight:700; }
+.gs-site-footer a { font-weight:500; }
+.gs-account-layout .gs-page-main .gs-account-entry { align-items:center; min-height:100dvh; padding-top:80px; padding-bottom:40px; }
+.gs-account-layout .gs-account-entry .gs-account-glass { background:rgb(23 26 35 / .82); border:1px solid rgb(255 255 255 / .35); }
+html[data-color-mode='light'] .gs-account-layout .gs-account-entry .gs-account-glass { background:rgb(252 247 238 / .94); color:#232735; }
+html[data-color-mode='light'] .gs-account-entry .gs-account-glass label,
+html[data-color-mode='light'] .gs-account-entry .gs-account-glass a,
+html[data-color-mode='light'] .gs-account-entry .gs-account-glass p,
+html[data-color-mode='light'] .gs-account-entry .gs-account-glass button:not(.gs-account-submit),
+html[data-color-mode='light'] .gs-account-entry .gs-account-glass .gs-account-actions > div { color:#373d4b; }
+html[data-color-mode='light'] .gs-account-entry .gs-account-input { background:rgb(255 255 255 / .8); border-color:#aaa293; color:#232735; }
+html[data-color-mode='light'] .gs-account-entry .gs-account-input::placeholder { color:#646976; }
+@media(min-width:768px) { .gs-account-grid { grid-template-columns:minmax(280px,.85fr) minmax(0,1.35fr); } }
+@media(min-width:1024px) { .gs-account-page { padding-inline:32px; } .gs-account-grid { gap:28px; } }
+@media(max-width:767px) { .gs-account-grid { gap:20px; } .gs-account-page .gs-account-hero { min-height:130px; } .gs-account-page .gs-account-hero h1 { font-size:28px; } }
+@media(max-width:639px) { .gs-account-layout .gs-page-main .gs-account-entry { padding-top:72px; padding-bottom:90px; min-height:100dvh; } }
+@media(max-height:600px) { .gs-account-layout .gs-page-main .gs-account-entry { align-items:flex-start; } }
+
+html[data-color-mode='light'] .gs-site-header:not(.gs-header-over-art) nav a,
+html[data-color-mode='light'] .gs-site-header:not(.gs-header-over-art) button,
+html[data-color-mode='light'] .gs-site-header:not(.gs-header-over-art) a,
+html[data-color-mode='light'] .gs-site-header:not(.gs-header-over-art) kbd { color:#262c38 !important; text-shadow:0 1px 2px rgb(255 255 255 / .8); }
+html[data-color-mode='light'] .gs-site-header:not(.gs-header-over-art) svg { filter:none; }
+html[data-color-mode='light'] .gs-site-footer:not(.gs-private-footer) p,
+html[data-color-mode='light'] .gs-site-footer:not(.gs-private-footer) h4,
+html[data-color-mode='light'] .gs-site-footer:not(.gs-private-footer) a,
+html[data-color-mode='light'] .gs-site-footer:not(.gs-private-footer) span { color:#343c4a !important; text-shadow:0 1px 2px rgb(255 255 255 / .8); }
+
+.gs-site-header .gs-wordmark span { text-shadow:none; }
+.gs-site-header .surface-raised a,.gs-site-header .surface-raised button { color:var(--color-ink-100) !important; text-shadow:none; }
+.gs-account-layout { background-attachment:scroll; }
+.gs-account-layout .gs-account-entry > div[aria-hidden] { display:none; }
+
+html[data-color-mode='light'] .gs-account-entry .gs-provider-button { background:rgb(255 255 255 / .65); border-color:#b8afa1; }

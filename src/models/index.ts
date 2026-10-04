@@ -241,6 +241,7 @@ export interface User {
   displayName: string
   avatarUrl?: string
   provider: AuthProvider
+  loginMethod?: 'email' | 'google' | 'discord' | 'vk' | 'yandex' | null
   roles: UserRole[]
   permissions?: string[]
   createdAt: string

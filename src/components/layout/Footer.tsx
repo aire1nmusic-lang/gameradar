@@ -40,6 +40,11 @@ export function Footer() {
       {label:'Мои серверы',to:'/account'},
     ],
   }:column):COLUMNS
+  if(compactPrivate)return <footer className="gs-site-footer gs-private-footer relative pb-24 md:pb-5">
+    <Container className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-4 text-sm">
+      <Link to="/terms">Условия</Link><Link to="/privacy">Приватность</Link><Link to="/copyright">Правообладателям</Link><span>© 2026 GameScout</span>
+    </Container>
+  </footer>
   return (
     <footer className="gs-site-footer relative mt-6 pb-20 lg:mt-10 lg:pb-0">
       <Container className={compactPrivate?'py-3 lg:py-12':'py-3 lg:py-12'}>

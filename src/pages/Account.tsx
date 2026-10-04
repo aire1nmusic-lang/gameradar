@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Mail } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
@@ -18,7 +19,7 @@ type SummaryEdit = {id:string;summary:string;status:string;reason?:string;create
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
 type Monitor = {configured?:false;enabled?:boolean;held?:boolean;host?:string|null;port?:number|null;api_url?:string|null;updated_at?:string}
 const factLabels:Record<string,string>={version:'Версия',rates:'Рейты',modes:'Режимы',region:'Регион',country:'Страна',openedAt:'Дата открытия',site:'Сайт',discord:'Discord',telegram:'Telegram'}
-type Profile = {email?:string;emailVerified?:boolean;permissions?:string[];roles?:string[]}
+type Profile = {email?:string;emailVerified?:boolean;permissions?:string[];roles?:string[];loginMethod?:string|null}
 const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Яндекс',discord:'Discord'}
 
 export default function Account() {
@@ -29,10 +30,9 @@ export default function Account() {
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState('')
   const [message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const [linkToken,setLinkToken]=useState(''),[purpose,setPurpose]=useState('')
-  const [claims,setClaims]=useState<Claim[]>([]),[owned,setOwned]=useState<Owned[]>([]),[queue,setQueue]=useState<Claim[]>([])
+  const [claims,setClaims]=useState<Claim[]>([]),[owned,setOwned]=useState<Owned[]>([])
   const [serverId,setServerId]=useState(()=>new URLSearchParams(location.search).get('claim')??'')
-  const [evidence,setEvidence]=useState(''),[reasons,setReasons]=useState<Record<string,string>>({})
-  const [observedCodes,setObservedCodes]=useState<Record<string,string>>({})
+  const [evidence,setEvidence]=useState('')
   useEffect(()=>{
     const consumeLink=()=>{
       const params=new URLSearchParams(location.hash.slice(1))
@@ -50,7 +50,7 @@ export default function Account() {
     await auth.refresh()
     const [c,s]=await Promise.all([apiRequest<Claim[]>('/owners/me/claims'),apiRequest<Owned[]>('/owners/me/servers')])
     setClaims(c);setOwned(s)
-    if(profile?.roles?.includes('ADMIN')) setQueue(await apiRequest<Claim[]>('/admin/claims'))
+
   }
   useEffect(()=>{ if(auth.privateCore&&auth.user) void reload().catch(e=>setError(e.message)) },[auth.privateCore,auth.user?.id])
   async function run(action:()=>Promise<unknown>,success:string) {
@@ -72,16 +72,15 @@ export default function Account() {
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}/>
-  const isAdmin=!!profile?.permissions?.length
   const playerStatus=profile?.roles?.includes('OWNER')?'Игрок и владелец':'Игрок'
   const copyEmail=()=>{if(profile?.email&&navigator.clipboard)void navigator.clipboard.writeText(profile.email)}
 
-  return <main className="gs-account-page gs-account-premium mx-auto w-full max-w-2xl space-y-6 px-4 py-6 sm:py-8">
+  return <main className="gs-account-page gs-account-premium mx-auto w-full space-y-6 px-4 py-6 sm:py-8">
     <section className="gs-account-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
       <div className="relative z-10 max-w-[420px]">
         <p className="gs-account-kicker text-[12px] font-semibold uppercase tracking-[0.16em]">Аккаунт</p>
         <h1 className="mt-1 text-[32px] font-bold leading-[1.05] sm:text-[38px]">GameScout</h1>
-        <p className="mt-3 max-w-sm text-[13px] leading-relaxed opacity-70 sm:text-[14px]">Профиль, подключённые сервисы и игровая активность в одном месте.</p>
+        <p className="mt-3 max-w-sm text-[14px] leading-relaxed">Профиль, поддержка проектов и управление своими серверами.</p>
       </div>
     </section>
 
@@ -97,6 +96,8 @@ export default function Account() {
       },purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
     </section>}
 
+    <div className="gs-account-grid">
+    <aside className="gs-account-sidebar space-y-5" aria-label="Профиль и Coins">
     <section className="gs-account-card rounded-[22px] border p-4 sm:p-5">
       <div className="flex min-w-0 items-center gap-4">
         <span className="gs-account-avatar grid h-16 w-16 shrink-0 place-items-center rounded-full border">
@@ -112,6 +113,10 @@ export default function Account() {
             {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg hover:bg-current/5"><WorldIcon name="copy" size={13}/></button>}
           </div>
           {profile?.email&&<div className="mt-1 flex items-center gap-1.5 text-[11px] opacity-65">{profile.emailVerified?<><WorldIcon name="shield" size={13} className="text-signal-400"/> Email подтверждён</>:<>Email требует подтверждения</>}</div>}
+          <div className="gs-login-method mt-3 inline-flex items-center gap-2 text-[13px]">
+            {profile?.loginMethod==='google'?<GoogleBrandIcon/>:profile?.loginMethod==='discord'?<DiscordBrandIcon/>:profile?.loginMethod==='email'?<Mail size={18}/>:<WorldIcon name="profile" size={18}/>}
+            <span>{profile?.loginMethod==='email'?'Вход по почте':profile?.loginMethod?`Вход через ${providerLabels[profile.loginMethod]??profile.loginMethod}`:'Способ входа не сохранён'}</span>
+          </div>
         </div>
       </div>
       {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="mt-4 flex gap-2">
@@ -120,26 +125,9 @@ export default function Account() {
       </form>}
     </section>
 
-    {!!auth.providers.length&&<section>
-      <h2 className="mb-3 flex items-center justify-between text-[16px] font-semibold"><span>Подключение аккаунтов</span><WorldIcon name="chevronRight" size={17} className="opacity-55"/></h2>
-      <div className="grid grid-cols-2 gap-3">
-        {auth.providers.map(p=><button key={p} type="button" onClick={()=>location.assign(`/api/v1/auth/${p}?link=1&next=${encodeURIComponent(scoped('/account'))}`)} className="gs-provider-tile group flex min-h-[82px] items-center gap-3 rounded-[18px] border p-3 text-left transition-transform active:scale-[.985]">
-          <span className={"gs-provider-icon gs-provider-icon--"+p+" grid h-11 w-11 shrink-0 place-items-center rounded-full border text-[18px] font-bold"}>{p==='google'?<GoogleBrandIcon/>:p==='discord'?<DiscordBrandIcon/>:providerLabels[p]?.slice(0,1)??p.slice(0,1).toUpperCase()}</span>
-          <span className="min-w-0"><strong className="block truncate text-[14px]">{providerLabels[p]??p}</strong><span className="mt-0.5 block text-[11px] opacity-60">Подключить</span></span>
-        </button>)}
-      </div>
-    </section>}
-
-    <section>
-      <h2 className="mb-3 text-[16px] font-semibold">Действия с аккаунтом</h2>
-      <div className="grid grid-cols-2 gap-3">
-        <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action flex h-14 items-center justify-center gap-2 rounded-[16px] border text-[13px] font-medium disabled:opacity-50"><WorldIcon name="logout" size={17}/>Выйти</button>
-        {isAdmin?<Button to={scoped('/admin')} className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<WorldIcon name="admin" size={17}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Админский кабинет</Button>
-          :<Button to={scoped('/catalog')} className="gs-admin-action h-14 rounded-[16px] border px-3 text-[13px]" icon={<WorldIcon name="search" size={17}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Найти сервер</Button>}
-      </div>
-    </section>
-
     <AccountCoins key={auth.user.id}/>
+    </aside>
+    <div className="gs-account-workspace space-y-5">
 
     <section className="gs-account-servers space-y-3">
       <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><WorldIcon name="chevronRight" size={18} className="opacity-55"/></h2>
@@ -164,15 +152,12 @@ export default function Account() {
       </details>
     </section>
 
-    {profile?.roles?.includes('ADMIN')&&<section className="gs-account-card space-y-4 rounded-[22px] border p-5"><h2 className="text-[17px] font-semibold">Администратор: заявки Claim</h2>
-      <Button onClick={()=>run(reload,'Очередь обновлена.')} disabled={busy}>Обновить</Button>
-      {!queue.length&&<p className="text-[12px] opacity-60">Нет заявок на проверку.</p>}
-      {queue.map(c=><div key={c.id} className="surface space-y-3 p-4"><p>{c.name??c.server_id}</p><p className="whitespace-pre-wrap break-words">{c.evidence}</p>
-        <Field label="Результат проверки и основание решения"><Textarea minLength={10} maxLength={1000} value={reasons[c.id]??''} onChange={e=>setReasons({...reasons,[c.id]:e.target.value})}/></Field>
-        <Field label="Код, лично проверенный на официальном ресурсе (для ручного способа)"><Input value={observedCodes[c.id]??''} onChange={e=>setObservedCodes({...observedCodes,[c.id]:e.target.value})}/></Field>
-        <div className="flex gap-2">{['VERIFIED','REJECTED'].map(status=><Button key={status} disabled={busy||(reasons[c.id]??'').length<10} onClick={()=>run(async()=>{await apiSend(`/admin/claims/${c.id}/resolve`,{status,reason:reasons[c.id],observedToken:observedCodes[c.id]});await reload()},'Решение сохранено в журнале.')}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
-      </div>)}
-    </section>}
+
+    </div>
+    </div>
+    <div className="gs-account-exit flex justify-end pt-5">
+      <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action inline-flex min-h-11 items-center gap-2 rounded-xl border px-5 text-sm disabled:opacity-50"><WorldIcon name="logout" size={17}/>Выйти из аккаунта</button>
+    </div>
   </main>
 }
 

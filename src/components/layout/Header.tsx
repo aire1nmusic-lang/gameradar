@@ -24,18 +24,18 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
   const accountLabel=auth.user?.displayName || 'Аккаунт'
-  const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] md:inline-flex'
+  const accountClassBase='hidden h-10 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
   // Over the hall the account button is a pane of glass like the cards.
   const accountClass=bare?accountClassBase+' gs-glass border-white/20 text-white':accountClassBase
-  const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 md:hidden'
+  const mobileAccountClassBase='grid h-10 w-10 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
   const mobileAccountClass=bare?mobileAccountClassBase+' gs-glass ml-auto text-white':mobileAccountClassBase
   return (
     <header className={bare ? 'gs-site-header gs-hall-header absolute inset-x-0 top-0 z-50' : 'gs-site-header absolute inset-x-0 top-0 z-50'}>
       <Container className="flex h-[60px] items-center gap-2 md:gap-4">
-        <Logo className={!bare?'max-md:[&_.gs-wordmark]:hidden':undefined} />
-        {!bare&&<div className="md:hidden"><GamesMenu /></div>}
+        <Logo className={!bare?'max-xl:[&_.gs-wordmark]:hidden':undefined} />
+        {!bare&&<div className="xl:hidden"><GamesMenu /></div>}
 
-        {!bare && <nav className="ml-1 hidden items-center gap-0.5 md:flex">
+        {!bare && <nav className="ml-1 hidden items-center gap-0.5 xl:flex">
           <GamesMenu />
           {NAV.map((item) => (
             <NavLink

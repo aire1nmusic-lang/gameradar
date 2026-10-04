@@ -11,22 +11,23 @@
 <style>
 html,body,#root{margin:0;min-height:100%;background:#08090d}
 .gs-loader{height:100vh;display:flex;align-items:center;justify-content:center;background:#08090d;color:#fff;overflow:hidden;font-family:Arial,sans-serif}
-.gs-box{display:flex;flex-direction:column;align-items:center;animation:gs-in .8s ease both;position:relative}
-.gs-logo{width:72px;filter:drop-shadow(0 0 14px rgba(52,230,245,.18))}
-.gs-name{margin-top:14px;font-family:Saira,Arial;font-size:34px;font-weight:800;letter-spacing:.02em}
-.gs-game{color:#f8fafc}.gs-scout{color:#34e6f5}
-.gs-text{margin-top:24px;color:#98a2b3;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
-.gs-dot{display:inline-block;animation:dot 1.5s infinite;opacity:.25}.gs-dot:nth-child(2){animation-delay:.2s}.gs-dot:nth-child(3){animation-delay:.4s}
-@keyframes dot{50%{opacity:1}}
-.fire{position:absolute;width:5px;height:5px;border-radius:50%;background:#34e6f5;opacity:.25;filter:blur(1px);animation:float 8s infinite}
+.gs-box{display:flex;flex-direction:column;align-items:center;animation:gsIn .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes gsIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.gs-logo{width:58px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(52,230,245,.18))}
+@keyframes float{50%{transform:translateY(-4px)}}
+.gs-name{margin-top:12px;font-family:Saira,Arial;font-size:28px;font-weight:800;letter-spacing:.02em}
+.gs-game{color:#f8fafc}.gs-scout{background:linear-gradient(90deg,#34e6f5,#8b5cf6,#34e6f5);background-size:200%;animation:shine 5s linear infinite;-webkit-background-clip:text;color:transparent}
+@keyframes shine{to{background-position:200%}}
+.gs-text{margin-top:22px;color:#98a2b3;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.fire{position:absolute;width:5px;height:5px;border-radius:50%;background:#34e6f5;opacity:.22;filter:blur(1px);animation:fire 8s infinite}
 .f1{transform:translate(-90px,-70px)}.f2{transform:translate(90px,-40px);animation-delay:2s}.f3{transform:translate(-110px,60px);animation-delay:4s}.f4{transform:translate(120px,70px);animation-delay:1s}
-@keyframes float{50%{opacity:.5;translate:0 -20px}}
-@media(min-width:768px){.gs-logo{width:110px}.gs-name{font-size:54px}.gs-text{font-size:13px}}
-@media(max-width:767px){.gs-logo{width:58px}.gs-name{font-size:28px}}
+@keyframes fire{50%{opacity:.5;translate:0 -20px}}
+@media(min-width:768px){.gs-logo{width:105px}.gs-name{font-size:52px}.gs-text{font-size:13px}}
+@media(min-width:1440px){.gs-logo{width:130px}.gs-name{font-size:64px}}
 </style>
 </head>
 <body>
-<div id="root"><div class="gs-loader" aria-busy="true"><span class="fire f1"></span><span class="fire f2"></span><span class="fire f3"></span><span class="fire f4"></span><div class="gs-box"><svg class="gs-logo" viewBox="284 317.5 729.5 431.5"><path fill="#dfe4ea" d="M787.5 321.5L485 321.5 288 519 503 734 503 611.5 404 513 515 402 707 402Z M606 486 473.5 486 553.5 566 590 566 590 582.5 527 645.5 527 745 696 576Z"/><path fill="#34e6f5" d="M990 397.5 767 397.5 664 500.5 750.5 587 907 587 859 635 713.5 635 625.5 723.5 879.5 723.5 1009.5 593.5 923 507 766 507 799.5 473.5 914 473.5Z"/></svg><div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div><div class="gs-text">Подготавливаем миры<span class="gs-dot">.</span><span class="gs-dot">.</span><span class="gs-dot">.</span></div></div></div></div>
+<div id="root"><div class="gs-loader" aria-busy="true"><span class="fire f1"></span><span class="fire f2"></span><span class="fire f3"></span><span class="fire f4"></span><div class="gs-box"><svg class="gs-logo" viewBox="284 317.5 729.5 431.5"><path fill="#dfe4ea" d="M787.5 321.5L485 321.5 288 519 503 734 503 611.5 404 513 515 402 707 402Z M606 486 473.5 486 553.5 566 590 566 590 582.5 527 645.5 527 745 696 576Z"/><path fill="#34e6f5" d="M990 397.5L767 397.5 664 500.5 750.5 587 907 587 859 635 713.5 635 625.5 723.5 879.5 723.5 1009.5 593.5 923 507 766 507 799.5 473.5 914 473.5Z"/></svg><div class="gs-name"><span class="gs-game">Game</span><span class="gs-scout">Scout</span></div><div class="gs-text">Подготавливаем миры...</div></div></div></div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

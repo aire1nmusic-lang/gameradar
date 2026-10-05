@@ -83,7 +83,7 @@ export function ServerRow({
       to={`/server/${server.slug}`}
       title={tooltip}
       className={cn(
-        'gs-row group relative flex min-h-[76px] items-center gap-2.5 rounded-xl border bg-white/[0.035] px-2.5 py-2.5 transition-colors duration-150 hover:bg-white/[0.07] sm:gap-3 sm:px-3 lg:min-h-[58px] lg:py-2',
+        'gs-row gs-row-line group relative flex min-h-[54px] items-center gap-2 rounded-lg border bg-white/[0.025] px-2 py-1.5 transition-colors duration-150 hover:bg-white/[0.07]',
         medal ? '' : 'border-white/[0.09] hover:border-white/20',
         className,
       )}
@@ -91,16 +91,16 @@ export function ServerRow({
     >
       {rank !== undefined && <RankMedal rank={rank} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
-      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="h-12 w-12 lg:h-10 lg:w-10" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-[15px] leading-5 font-semibold text-ink-50">{server.name}</span>
+          <span className="truncate text-[14px] leading-[18px] font-semibold text-ink-50">{server.name}</span>
           {!compact && known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
             <span className="hidden shrink-0 sm:inline-flex"><TrendChip value={change24h} /></span>
           )}
         </div>
-        <div className="mt-0.5 flex min-w-0 items-center text-[12px] leading-4 text-ink-400">
+        <div className="mt-0.5 flex min-w-0 items-center text-[11px] leading-[14px] text-ink-400">
           <span className="truncate">{identity.join(' · ')}</span>
         </div>
       </div>
@@ -108,23 +108,23 @@ export function ServerRow({
       <div className="shrink-0 text-right">
         {metric === 'support' ? (
           <>
-            <div className="num text-[16px] leading-5 font-semibold text-ink-50">{support}</div>
-            <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">
+            <div className="num text-[14px] leading-[18px] font-semibold text-ink-50">{support}</div>
+            <div className="mt-0.5 text-[10px] leading-[14px] text-ink-500">
               {server.support?.participants ?? 0} {plural(server.support?.participants ?? 0, ['участник', 'участника', 'участников'])}
             </div>
           </>
         ) : metric === 'votes' ? (
           <>
-            <div className="num text-[16px] leading-5 font-semibold text-ink-50">{server.votes}</div>
-            <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">голосов</div>
+            <div className="num text-[14px] leading-[18px] font-semibold text-ink-50">{server.votes}</div>
+            <div className="mt-0.5 text-[10px] leading-[14px] text-ink-500">голосов</div>
           </>        ) : launching ? (
           <>
-            <div className="num text-[14px] leading-5 font-semibold whitespace-nowrap text-promo-200">{formatCountdown(server.launch!.at)}</div>
-            <div className="mt-0.5 text-[10.5px] leading-4 text-ink-500">{shortDate(server.launch!.at)}</div>
+            <div className="num text-[12px] leading-[18px] font-semibold whitespace-nowrap text-promo-200">{formatCountdown(server.launch!.at)}</div>
+            <div className="mt-0.5 text-[10px] leading-[14px] text-ink-500">{shortDate(server.launch!.at)}</div>
           </>
         ) : (
           <>
-            <div className={cn('num text-[16px] leading-5 font-semibold tabular-nums', status === OnlineStatus.Offline ? 'text-ink-500' : measured ? 'text-ink-50' : 'text-ink-500')}>
+            <div className={cn('num text-[14px] leading-[18px] font-semibold tabular-nums', status === OnlineStatus.Offline ? 'text-ink-500' : measured ? 'text-ink-50' : 'text-ink-500')}>
               {measured ? formatPlayers(server.online) : '—'}
             </div>
             <div className="mt-0.5 flex items-center justify-end gap-1 text-[10.5px] leading-4">

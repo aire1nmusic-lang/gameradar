@@ -57,6 +57,7 @@ export default function Catalog() {
   const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [searchOpen,setSearchOpen]=useState(Boolean(params.get('q')))
 
   const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
   const { data: page, loading, error, reload } = useAsync(
@@ -123,17 +124,17 @@ export default function Catalog() {
   const chips = buildChips(uiFilters, next=>setFilters(world?{...next,games:[world.id]}:next))
 
   return (
-    <div className="pb-16">
+    <div className="gs-catalog-page pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="text-[26px] leading-tight sm:text-[30px]">Каталог серверов{world?` ${world.shortName}`:''}</h1>
+          <h1 className="text-[26px] leading-tight sm:text-[30px]">Серверы{world?` · ${world.shortName}`:''}</h1>
           <span className="num text-[13px] text-ink-400">
             {loading&&!page?'Загружаем серверы…':error?(page?'Предыдущие результаты · обновление недоступно':'Данные недоступны'):
               `${formatNumber(total)} ${plural(total, ['сервер', 'сервера', 'серверов'])}`}
           </span>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22">
+        <div className={(searchOpen?'gs-catalog-search is-open ':'gs-catalog-search ')+"mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22"}>
           <WorldIcon name="search" size={17} className="shrink-0 text-ink-400" />
           <input
             value={filters.query}
@@ -150,8 +151,9 @@ export default function Catalog() {
       </Container>
 
       {/* the toolbar follows the list: filters, active chips, sort, view */}
-      <div className="sticky top-[60px] z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
+      <div className="gs-catalog-toolbar sticky top-[60px] z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
         <Container className="flex items-center gap-2">
+          <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name="search" size={17}/></button>
           <button
             onClick={() => setFiltersOpen(true)}
             className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
@@ -200,7 +202,7 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
-        {sort === 'recommended' && <p className="mb-4 text-sm text-ink-300">Общий топ: голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. «Выбор игроков» считается отдельно по голосам.</p>}
+        {sort === 'recommended' && <details className="gs-ranking-explanation"><summary>Как считается общий топ</summary><p>Голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. «Выбор игроков» считается отдельно по голосам.</p></details>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading ? (

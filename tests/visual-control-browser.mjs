@@ -21,8 +21,7 @@ await route.fulfill({json})});
  await page.goto(base+'/account?game=lineage2');await page.getByRole('button',{name:'Включить демо',exact:true}).waitFor()
  const mode=await page.evaluate(()=>document.documentElement.dataset.colorMode);if(mode!==theme)await page.getByRole('button',{name:theme==='light'?'Включить светлую тему':'Включить тёмную тему',exact:true}).click()
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
- if(w<1024){await page.locator('.gs-admin-select select').selectOption('users');await page.locator('.gs-admin-select select').selectOption('overview')}
- else{await page.locator('.gs-admin-groups').getByRole('button',{name:'Сообщество',exact:true}).click();await page.locator('.gs-admin-subtabs').getByRole('button',{name:'Пользователи',exact:true}).click();await page.locator('.gs-admin-groups').getByRole('button',{name:'Обзор',exact:true}).click();await page.locator('.gs-admin-subtabs').getByRole('button',{name:'Обзор',exact:true}).click()}
+ await page.locator('.gs-admin-groups').getByRole('button',{name:'Сообщество',exact:true}).click();await page.locator('.gs-admin-subtabs').getByRole('button',{name:'Пользователи',exact:true}).click();await page.locator('.gs-admin-groups').getByRole('button',{name:'Обзор',exact:true}).click();await page.locator('.gs-admin-subtabs').getByRole('button',{name:'Обзор',exact:true}).click();assert.equal(await page.locator('.gs-admin-select').count(),0);assert.equal(await page.getByRole('link',{name:'Избранные серверы',exact:true}).count(),0);assert.equal(await page.getByRole('link',{name:'Поддержка проектов',exact:true}).count(),0)
  await page.screenshot({path:`output/control-qa/admin-${theme}-${w}.png`,fullPage:true})
  await page.getByRole('button',{name:'Включить демо',exact:true}).click();await page.locator('.gs-demo-banner').waitFor()
  for(const path of ['/lineage-2','/rating?game=lineage2','/catalog?game=lineage2']){

@@ -504,3 +504,5 @@ html[data-color-mode='light'] .gs-site-header.gs-header-world-art a:not([aria-la
 html[data-color-mode='light'] .gs-site-header.gs-header-world-art svg { filter:none; }
 html[data-color-mode='light'] .gs-site-header.gs-header-world-art .gs-wordmark { filter:none; }
 html[data-color-mode='light'] .gs-site-header.gs-header-world-art .gs-wordmark__game { color:#182531; }
+
+.gs-world-utility .gs-rating-page h1,.gs-world-utility .gs-catalog-page h1,.gs-world-utility .gs-openings-page h1 { font-family:var(--font-sans); }

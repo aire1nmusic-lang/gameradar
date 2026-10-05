@@ -6,14 +6,14 @@ export const MEDAL: Record<number, { bg: string; ring: string; text: string }> =
   3: { bg: 'linear-gradient(160deg,#e8b68f 0%,#b96f3f 58%,#6f3d25 100%)', ring: 'rgba(205,132,83,.42)', text: '#26150c' },
 }
 
-/** Compact heraldic rank mark: reads like a game ranking, not a casino coin. */
+/** Small numbered rank badge; color supplements the readable number. */
 export function RankMedal({ rank, className }: { rank: number; className?: string }) {
   const medal = MEDAL[rank]
   return (
     <span
       aria-label={`Место ${rank}`}
       className={cn(
-        'gs-rank-medal num grid h-8 w-7 shrink-0 place-items-center font-display text-[12px] font-bold',
+        'gs-rank-medal num grid h-8 w-7 shrink-0 place-items-center font-sans text-[12px] font-bold',
         !medal && 'text-ink-400',
         className,
       )}

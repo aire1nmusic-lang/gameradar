@@ -42,7 +42,7 @@ export default function Openings() {
   }, [filtered])
 
   return (
-    <div className="pb-16">
+    <div className="gs-openings-page pb-16">
       <Container className="pt-6 lg:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -63,7 +63,7 @@ export default function Openings() {
           />
         </div>
 
-        <div className="mt-10 space-y-8">
+        <div className="mt-4 space-y-5">
           {groups.length === 0 ? (
             <EmptyState title="В этом диапазоне открытий нет" description="Попробуйте расширить период или посмотрите недавно добавленные серверы." action="Смотреть каталог" actionTo={game?`/catalog?game=${game.id}&sort=new`:'/catalog?sort=new'} />
           ) : (

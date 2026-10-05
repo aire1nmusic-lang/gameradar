@@ -129,8 +129,8 @@ export default function Account() {
       </form>}
     </section>
 
-    <Button to={scoped('/favorites')} icon={<WorldIcon name="favorite" size={16}/>}>Избранные серверы</Button>
-    <Button to={scoped('/rating')+'#support-studio'} icon={<WorldIcon name="coins" size={16}/>} className="min-h-11">Поддержка проектов</Button>
+    {!isAdmin&&<Button to={scoped('/favorites')} icon={<WorldIcon name="favorite" size={16}/>}>Избранные серверы</Button>}
+    {!isAdmin&&<Button to={scoped('/rating')+'#support-studio'} icon={<WorldIcon name="coins" size={16}/>} className="min-h-11">Поддержка проектов</Button>}
     <details className="gs-account-wallet" open={!canManage}><summary>Мои Coins</summary><AccountCoins key={auth.user.id}/></details>
     </aside>
     <div className="gs-account-workspace space-y-5">

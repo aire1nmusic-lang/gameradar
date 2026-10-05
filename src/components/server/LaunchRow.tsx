@@ -21,14 +21,14 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'group flex min-h-[64px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[60px] sm:gap-4 sm:px-4',
+        'gs-row-line group flex min-h-[54px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[54px] sm:gap-4 sm:px-4',
         className,
       )}
     >
-      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" className="gs-row-avatar" />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[15px] font-semibold text-ink-50">{server.name}</div>
-        <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-400">
+        <div className="truncate text-[14px] font-semibold text-ink-50">{server.name}</div>
+        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: game.accent }} />
           <span className="truncate">{sub.join(' · ')}</span>
         </div>

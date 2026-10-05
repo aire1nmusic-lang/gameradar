@@ -28,7 +28,7 @@ for(const theme of ['dark','light'])for(const game of ['lineage2','minecraft','g
  assert.equal(await page.locator('.gs-rating-columns > .gs-panel').nth(1).locator('a[href^="/server/"]').count(),1)
  assert.equal(await page.locator('.gs-rating-columns > .gs-panel').nth(2).locator('a[href^="/server/"]').count(),4)
  await page.getByLabel('Количество Coins',{exact:true}).fill('10');await page.waitForFunction(()=>document.querySelector('.gs-position-next')?.textContent==='#2–3')
- await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).isEnabled(),true)
+ await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('#support')?.textContent.includes('25 GS Coins'));assert.equal(await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).isEnabled(),true)
  await page.getByLabel('Количество Coins',{exact:true}).fill('50');await page.waitForFunction(()=>document.querySelector('.gs-position-next')?.textContent==='#1');assert.equal(await page.getByRole('button',{name:'Поддержать за 50 Coins',exact:true}).isEnabled(),false)
  await page.getByLabel('Количество Coins',{exact:true}).fill('0');assert.equal(await page.locator('.gs-position-next').count(),0);assert.equal(await page.getByRole('button',{name:'Поддержать за 0 Coins',exact:true}).isEnabled(),false)
  await page.getByLabel('Количество Coins',{exact:true}).fill('25');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)

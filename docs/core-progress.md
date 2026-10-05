@@ -17,6 +17,15 @@
 
 ## Состояние сейчас
 
+**05.10 — wallet-loading regression fix VERIFIED local.** studio36all3worlds/6sizes/dark-light PASS afterwaitfor actual25GSCoins fixture beforeenabledassert; amount0/50disabledguards,modal/Esc/focusreturn/reduced-motion/noPOST/demo-transition retained. UI477c694 unchanged; failure1 waspreupload raceintest,currentlive d0c39b2. Next test/docs commit andworkflow_dispatch DEPLOY latestmain (testonlypushdoesnottriggerUIdeployment). Costs existingActions/no resources,rollbackpreviousstaticbackup.
+
+
+**05.10 — deployment attempt1 failed BEFORE production writes, VERIFIED diagnosis.** 477c694 CI37267757387 SUCCESS; deploy37267757309 failedprepublication onlystudio1440 enabled-buttonassert (tests/support-studio-browser.mjs31): wallet GET hadnotresolvedyet,action correctlydisabled whilebalancepending. Loader/account70/discovery144/control12 andstudiofirst4sizes PASS onLinuxCI. No backup/upload reached,currentproduction remainsd0c39b2,no rollbacknecessary. CorrectedQA towait visiblefixturebalance25 beforeenabledassert (guardunchanged),not weakenbalancecheck. No realPOST/DNS/DB;costexistingActions,no resources. Next focused1440regression/fullstudio36,committest/docs anddispatchcurrentmain guardedpublication.
+
+
+**05.10 — 477c694 dispatched VERIFIED Git.** Source477c694b51228c308b82a72c5648312455dd069a pushedmain; deploy37267757309 andCI37267757387 inprogress. Candidate localmatrices passed; currentproductionlastverifiedd0c39b2. Newcompact UXincludesnative supportdialog,phonecategoryswitch/normalpagescroll,allsizecollapsedsearch/shared54pxrows,smallnumberbadges,ADMINquicknav/hiddenplayerlinks. No DB/private/DNS/realpayments changes. Costs existingActions/bucketPUT0newresources; rollbackworkflowbackup/previousd0c39b2. Next guardeddeploy/freshness/actualIABtest andfinaldocs.
+
+
 **05.10 — compact publication candidate VERIFIED local.** Final build/typecheck/bundle/projection PASS70cards/100HTML/90SEO/reconcile0. Full discovery144 PASS3games×6sizes×2themes; studio36 PASS native modal/Escape/focus-return/tie-range/balance/GET-only/reduced-motion/demo-transition; account70 PASS4roles×7sizes×2themes+proof; control12 PASS quickgroup navigation/no native selector/ADMIN player-links hidden/guest-demo isolation. Final lastcosmeticbuildretested discovery1024all3worlds+studio390both themes (24+6views),PASS. Screenshots reviewed phonecatalog/rating/admin anddesktoplightmodal. Matrix320×568,390×844,768×1024,1024×768,1440×900,844×390,extraaccount1920×1080; Chromium emulation,not physicaldevices. No production/DB/private/DNS/financialwrites inthisslice; newresources0,rollbacksource/staticbackup. Next commit/push guardeddeployment,currentbuild andreal authenticated UX verification.
 
 
@@ -1226,4 +1235,16 @@ Main e7da49a published and all postdeploy gates passed, first timing-only failed
 
 
 **05.10 — compact publication candidate VERIFIED local.** Final build/typecheck/bundle/projection PASS70cards/100HTML/90SEO/reconcile0. Full discovery144 PASS3games×6sizes×2themes; studio36 PASS native modal/Escape/focus-return/tie-range/balance/GET-only/reduced-motion/demo-transition; account70 PASS4roles×7sizes×2themes+proof; control12 PASS quickgroup navigation/no native selector/ADMIN player-links hidden/guest-demo isolation. Final lastcosmeticbuildretested discovery1024all3worlds+studio390both themes (24+6views),PASS. Screenshots reviewed phonecatalog/rating/admin anddesktoplightmodal. Matrix320×568,390×844,768×1024,1024×768,1440×900,844×390,extraaccount1920×1080; Chromium emulation,not physicaldevices. No production/DB/private/DNS/financialwrites inthisslice; newresources0,rollbacksource/staticbackup. Next commit/push guardeddeployment,currentbuild andreal authenticated UX verification.
+
+
+
+**05.10 — 477c694 dispatched VERIFIED Git.** Source477c694b51228c308b82a72c5648312455dd069a pushedmain; deploy37267757309 andCI37267757387 inprogress. Candidate localmatrices passed; currentproductionlastverifiedd0c39b2. Newcompact UXincludesnative supportdialog,phonecategoryswitch/normalpagescroll,allsizecollapsedsearch/shared54pxrows,smallnumberbadges,ADMINquicknav/hiddenplayerlinks. No DB/private/DNS/realpayments changes. Costs existingActions/bucketPUT0newresources; rollbackworkflowbackup/previousd0c39b2. Next guardeddeploy/freshness/actualIABtest andfinaldocs.
+
+
+
+**05.10 — deployment attempt1 failed BEFORE production writes, VERIFIED diagnosis.** 477c694 CI37267757387 SUCCESS; deploy37267757309 failedprepublication onlystudio1440 enabled-buttonassert (tests/support-studio-browser.mjs31): wallet GET hadnotresolvedyet,action correctlydisabled whilebalancepending. Loader/account70/discovery144/control12 andstudiofirst4sizes PASS onLinuxCI. No backup/upload reached,currentproduction remainsd0c39b2,no rollbacknecessary. CorrectedQA towait visiblefixturebalance25 beforeenabledassert (guardunchanged),not weakenbalancecheck. No realPOST/DNS/DB;costexistingActions,no resources. Next focused1440regression/fullstudio36,committest/docs anddispatchcurrentmain guardedpublication.
+
+
+
+**05.10 — wallet-loading regression fix VERIFIED local.** studio36all3worlds/6sizes/dark-light PASS afterwaitfor actual25GSCoins fixture beforeenabledassert; amount0/50disabledguards,modal/Esc/focusreturn/reduced-motion/noPOST/demo-transition retained. UI477c694 unchanged; failure1 waspreupload raceintest,currentlive d0c39b2. Next test/docs commit andworkflow_dispatch DEPLOY latestmain (testonlypushdoesnottriggerUIdeployment). Costs existingActions/no resources,rollbackpreviousstaticbackup.
 

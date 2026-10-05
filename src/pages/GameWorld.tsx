@@ -7,6 +7,7 @@ import { resolveWorld } from '@/data/themes'
 import { chronicleOfVersion } from '@/data/games'
 import { useAsync } from '@/hooks/data'
 import { discoveryServers } from '@/services/catalogService'
+import { peopleOrder, supportOrder } from '@/services/supportProjection'
 import { hasFreshOnline } from '@/services/discoveryRanking'
 import { Container } from '@/components/layout/Container'
 import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
@@ -38,7 +39,7 @@ export default function GameWorld() {
   if (!world.game) return <NotFound />
   if (chronicleSlug && !world.chronicle) return <Navigate to={`/${world.game.slug}`} replace />
 
-  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative', isLineage2 ? 'gs-mobile-world' : '', colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
+  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative gs-discovery-world', isLineage2 ? 'gs-mobile-world' : '', colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
   return (
     <ThemeScope theme={activeTheme} as="div" className={scopeClass}>
       <WorldBody
@@ -75,16 +76,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     () => servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()).sort((a, b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at)),
     [servers],
   )
-  const rest = useMemo(() => {
-    const open = new Set(openings.map((server) => server.slug))
-    return servers.filter((server) => !open.has(server.slug))
-  }, [servers, openings])
-  const topOnline = useMemo(() => rest.filter(known).sort((a, b) => b.online.current - a.online.current), [rest])
-  const topSupport = useMemo(
-    () => servers.filter((server) => (server.support?.coins ?? 0) > 0)
-      .sort((a, b) => (b.support?.coins ?? 0) - (a.support?.coins ?? 0) || b.votes - a.votes),
-    [servers],
-  )
+  const topPeople = useMemo(() => [...servers].sort(peopleOrder), [servers])
+  const topSupport = useMemo(() => servers.filter(server => (server.support?.coins ?? 0) > 0).sort(supportOrder), [servers])
   const counts = useMemo(() => {
     const result: Record<string, { servers: number; online: number }> = {}
     for (const server of servers) {
@@ -118,7 +111,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           </div>
         ) : (
           <details className="gs-chronicle-disclosure mt-3">
-            <summary>Хроники и режимы</summary>
+            <summary><span className="gs-chronicle-symbol"><WorldIcon name="chronicles" size={22}/></span><span className="gs-chronicle-label">{game.id === 'lineage2' ? 'Выбрать хроники' : game.id === 'gtarp' ? 'Выбрать платформу' : 'Выбрать режим'}<small>{game.id === 'lineage2' ? 'Interlude, High Five, Essence и другие' : 'Серверы по вашим предпочтениям'}</small></span><span className="gs-chronicle-chevron"><WorldIcon name="chevronRight" size={18}/></span></summary>
             <ChronicleTiles game={game} chronicles={game.chronicles} counts={counts} />
           </details>
         )}
@@ -134,7 +127,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
           <>
             <div className={`gs-world-ranks ${openings.length?'gs-has-openings':'gs-no-openings'} mt-4 grid gap-5 lg:grid-cols-3 lg:gap-3`}>
               <RankPanel
-                plainMobile
+                className="gs-shelf-support"
                 title="Лидеры поддержки"
                 hint="Поддержка за Coins"
                 icon={<WorldIcon name="coins"/>}
@@ -146,8 +139,9 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               </RankPanel>
 
               <RankPanel
-                plainMobile
+                className="gs-shelf-opening"
                 title="Скоро открытие"
+                hint="Ближайшие запуски"
                 icon={<WorldIcon name="opening"/>}
                 to={`/openings?game=${game.id}`}
               >
@@ -157,14 +151,15 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
               </RankPanel>
 
               <RankPanel
-                plainMobile
-                title="Топ онлайн"
-                icon={<WorldIcon name="online"/>}
-                to={`/catalog?game=${game.id}&sort=online`}
+                className="gs-shelf-people"
+                title="Выбор игроков"
+                hint="Поддержка голосами"
+                icon={<WorldIcon name="ballot"/>}
+                to={`/rating?game=${game.id}&all=people`}
               >
-                {topOnline.length > 0
-                  ? topOnline.slice(0, 15).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} compact className={index >= 5 ? 'gs-preview-overflow' : undefined} />)
-                  : <ShelfNote title="Живого онлайна пока нет" text="Число игроков появится, когда мы получим свежие данные." />}
+                {topPeople.length > 0
+                  ? topPeople.slice(0, 15).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="votes" compact className={index >= 5 ? 'gs-preview-overflow' : undefined} />)
+                  : <ShelfNote title="Серверов пока нет" text="Здесь появятся проекты и голоса игроков." />}
               </RankPanel>
             </div>
 

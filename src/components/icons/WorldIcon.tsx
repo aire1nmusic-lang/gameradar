@@ -6,6 +6,7 @@ export type WorldIconName =
   | 'sun' | 'moon' | 'catalog' | 'support' | 'opening' | 'online'
   | 'filter' | 'list' | 'grid' | 'owner' | 'admin' | 'users'
   | 'claim' | 'vote' | 'payment' | 'coins' | 'chevronRight'
+  | 'chronicles' | 'ballot'
   | 'logout' | 'shield' | 'copy' | 'plus' | 'close'
 
 type Props = Omit<SVGProps<SVGSVGElement>, 'name'> & {
@@ -87,9 +88,18 @@ const PATHS: Record<WorldIconName, ReactNode> = {
     <path d="m8.2 12.3 2.4 2.4 5.2-5.2"/>
   </>,
   opening: <>
-    <path d="M7.2 5.1 12 2.8l4.8 2.3v5.1c0 3.2-1.8 5.7-4.8 7-3-1.3-4.8-3.8-4.8-7z"/>
-    <path d="M12 7v5M9.8 9.5H14.2"/>
-    <path d="M8.6 20h6.8"/>
+    <rect x="4" y="5" width="16" height="16" rx="3" fill="currentColor" fillOpacity=".12"/>
+    <path d="M8 3v4M16 3v4M4 10h16"/>
+    <path d="m10 13 5 3-5 3z" fill="currentColor" strokeWidth="1"/>
+  </>,
+  chronicles: <>
+    <path d="M12 6C8 3.5 5 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-2-1-5-1.5-9 1Z" fill="currentColor" fillOpacity=".12"/>
+    <path d="M12 6v14M6 8l3 1M6 12l3 1M15 9l3-1M15 13l3-1"/>
+  </>,
+  ballot: <>
+    <path d="m6 11-3 4v6h18v-6l-3-4M3 15h18M9 18h6"/>
+    <path d="m7 6 7-4 4 7-7 4Z" fill="currentColor" fillOpacity=".18"/>
+    <path d="m10 7 2 1 2-3"/>
   </>,
   online: <>
     <path d="M4.5 17.8c2.2-3.8 4.8-5.7 7.5-5.7s5.3 1.9 7.5 5.7"/>

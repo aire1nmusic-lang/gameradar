@@ -18,7 +18,8 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 export default function RatingPage() {
  const demo=useVisualDemo(),{game:world}=useWorldNavigation(),[params]=useSearchParams(),[gameId,setGameId]=useState('all')
  const location=useLocation(),dialog=useRef<HTMLDialogElement>(null)
- const [supportOpen,setSupportOpen]=useState(location.hash==='#support-studio'),[category,setCategory]=useState('support')
+ const [supportOpen,setSupportOpen]=useState(location.hash==='#support-studio'),[category,setCategory]=useState(params.get('all')==='people'?'people':'support')
+ useEffect(()=>{setCategory(params.get('all')==='people'?'people':'support')},[params])
  const selected=world?.id??gameId
  const contextKey=`${selected}-${demo}`
  const {data:result,loading,error,reload}=useAsync(async()=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo)}),[selected,demo],true)

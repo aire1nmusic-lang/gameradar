@@ -1355,3 +1355,48 @@ html:has(.gs-support-dialog[open]) { overflow:hidden; }
 @media(max-width:767px) { .gs-support-dialog .gs-projection-list { max-height:220px; overflow-y:auto; } }
 
 .gs-support-dialog .gs-support-studio { scroll-margin-top:70px; }
+
+/* Discovery shelves: clear controls, small colourful symbols, no engraved frame. */
+.gs-discovery-world .gs-chronicle-disclosure > summary {
+  list-style: none; gap: 12px; min-height: 58px; padding: 8px 12px;
+  border: 1px solid var(--gt-border); border-radius: 12px;
+  background: var(--gt-surface); color: var(--gt-text);
+  box-shadow: 0 3px 12px rgb(0 0 0 / .05);
+}
+.gs-discovery-world .gs-chronicle-disclosure > summary::-webkit-details-marker { display: none; }
+.gs-discovery-world .gs-chronicle-disclosure > summary:hover,
+.gs-discovery-world .gs-chronicle-disclosure[open] > summary { border-color: var(--gt-primary); }
+.gs-discovery-world .gs-chronicle-disclosure > summary:focus-visible { outline: 2px solid var(--gt-primary); outline-offset: 3px; }
+.gs-chronicle-symbol { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 10px; color: var(--gt-primary); background: var(--gt-primary-soft); }
+.gs-chronicle-label { min-width: 0; font-size: 14px; line-height: 20px; }
+.gs-chronicle-label small { display: block; font-size: 11px; font-weight: 400; line-height: 16px; color: var(--gt-text-muted); }
+.gs-chronicle-chevron { margin-left: auto; transform: rotate(90deg); flex: none; }
+.gs-chronicle-disclosure[open] .gs-chronicle-chevron { transform: rotate(-90deg); }
+.gs-discovery-world .gs-world-ranks .gs-panel {
+  --shelf-accent: var(--gt-primary); padding: 10px; border-radius: 14px;
+  background: var(--gt-surface); border: 1px solid var(--gt-border);
+  box-shadow: none; min-height: 0;
+}
+.gs-discovery-world .gs-world-ranks .gs-panel::before { display: none; }
+.gs-discovery-world .gs-world-ranks .gs-panel-title {
+  font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 700;
+  text-transform: none; letter-spacing: -.01em; text-shadow: none; font-style: normal;
+}
+.gs-discovery-world .gs-world-ranks .gs-shelf-opening { --shelf-accent: #a995ef; }
+.gs-discovery-world .gs-world-ranks .gs-shelf-people { --shelf-accent: #82adf3; }
+.gs-discovery-world.gs-world-light .gs-world-ranks .gs-shelf-opening { --shelf-accent: #7151b7; }
+.gs-discovery-world.gs-world-light .gs-world-ranks .gs-shelf-people { --shelf-accent: #315fa8; }
+.gs-discovery-world .gs-world-ranks .gs-shelf-icon {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: color-mix(in srgb, var(--shelf-accent) 16%, transparent) !important;
+  color: var(--shelf-accent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shelf-accent) 20%, transparent);
+}
+.gs-discovery-world .gs-world-ranks .gs-row-line {
+  background: color-mix(in srgb, var(--gt-text) 3%, var(--gt-surface));
+  border: 1px solid var(--gt-border); border-radius: 9px; box-shadow: none;
+}
+.gs-discovery-world .gs-world-ranks .gs-row-line:hover {
+  border-color: var(--shelf-accent); background: color-mix(in srgb, var(--shelf-accent) 8%, var(--gt-surface));
+}
+.gs-discovery-world .gs-world-ranks .gs-row-line:focus-visible { outline: 2px solid var(--shelf-accent); outline-offset: 2px; }

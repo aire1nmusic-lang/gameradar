@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**Aether — LIVE, финальные gates пока PENDING:** production build `de4a34874b7c42d41e8a597ade6fa28760b26a92` загружен workflow `37538065517`. Все pre-publication suites SUCCESS: loader/account/discovery/Aether/control/studio; backup сохранен. Независимый HTTP GET подтверждает текущий build и no-cache/no-store на L2/Interlude/High Five/Essence; настоящий публичный API дает 30 L2 серверов. Post-publication suite еще идет: срез пока НЕ VERIFIED PRODUCTION. Дополнительный scratch Chrome не прошел 3 попытки из-за proxy transport/certificate/timeout; отдельная no-mock browser acceptance этим окружением не подтверждена. Штатный live-browser gate GitHub выполняется; не смешивать fixture browser QA и реальный API HTTP. Никаких backend/DNS/payment изменений; новых ресурсов0. При провале live gate штатный rollback.
+
+
 **Aether publication attempt 2:** run `37536771000` stopped before backup/upload after loader/account/scoring/discovery matrices all PASSED. Aether test raced React commit after URL change (`aria-current` null before render); it now waits for selected chronicle link before asserting. All assertions retained. Deployment preflight suites separated into named steps for visibility. CI `37536770993` and Loader QA `37536771098` SUCCESS. Production still old build; publication attempt 3 pending full preflight/live gates. Backend untouched; 0 new resources.
 
 

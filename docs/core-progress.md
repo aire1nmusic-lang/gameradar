@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**Aether publication attempt 2:** run `37536771000` stopped before backup/upload after loader/account/scoring/discovery matrices all PASSED. Aether test raced React commit after URL change (`aria-current` null before render); it now waits for selected chronicle link before asserting. All assertions retained. Deployment preflight suites separated into named steps for visibility. CI `37536770993` and Loader QA `37536771098` SUCCESS. Production still old build; publication attempt 3 pending full preflight/live gates. Backend untouched; 0 new resources.
+
+
 **Aether publication retry:** UI commit `08365b6` принят в main; CI run `37535892951` SUCCESS. Первая публикация (run `37535892622`) остановилась ДО backup/upload: старый loader test ожидал сплошную нижнюю подложку и 5 пунктов на L2. На production осталась прежняя сборка. Тест уточнен только для согласованного L2: прозрачный фон, тематический градиент с прозрачным краем, 4 пункта; остальные маршруты сохраняют прежние проверки. Проверка artwork учитывает новый `.l2a .scene`. Локально inner-page matrix 390/1440 dark/light подтверждает отсутствие полос и overlap. Повторный полный deployment pipeline обязателен; публикация пока НЕ подтверждена. Backend/DNS/payment не изменены.
 
 

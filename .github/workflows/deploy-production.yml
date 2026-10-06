@@ -107,15 +107,25 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
-      - name: Responsive browser matrix before publication
+      - name: Loader matrix before publication
+        run: node tests/loader-browser.mjs
+
+      - name: Account matrix before publication
+        run: node tests/account-browser.mjs
+
+      - name: Discovery matrix before publication
         run: |
-          node tests/loader-browser.mjs
-          node tests/account-browser.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
           node tests/discovery-browser.mjs
-          node tests/aether-browser.mjs
-          node tests/visual-control-browser.mjs
-          node tests/support-studio-browser.mjs
+
+      - name: Aether matrix before publication
+        run: node tests/aether-browser.mjs
+
+      - name: Visual controls before publication
+        run: node tests/visual-control-browser.mjs
+
+      - name: Support studio before publication
+        run: node tests/support-studio-browser.mjs
 
       - name: Backup current production HTML and service files
         env:

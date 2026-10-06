@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**Aether publication retry:** UI commit `08365b6` принят в main; CI run `37535892951` SUCCESS. Первая публикация (run `37535892622`) остановилась ДО backup/upload: старый loader test ожидал сплошную нижнюю подложку и 5 пунктов на L2. На production осталась прежняя сборка. Тест уточнен только для согласованного L2: прозрачный фон, тематический градиент с прозрачным краем, 4 пункта; остальные маршруты сохраняют прежние проверки. Проверка artwork учитывает новый `.l2a .scene`. Локально inner-page matrix 390/1440 dark/light подтверждает отсутствие полос и overlap. Повторный полный deployment pipeline обязателен; публикация пока НЕ подтверждена. Backend/DNS/payment не изменены.
+
+
 **07.10 — IN PROGRESS: владелец утвердил Aether HTML и разрешил production-публикацию.** Исходный main `0660a3e7ce355370b7c241b629232aeb2915c87a` читается через GitHub; работа в отдельном scratch checkout, локальные файлы владельца не затронуты. Перенесены L2/хроники: `LineageDiscovery.tsx`, scoped CSS, выбор ветки в GameWorld и scope в Layout; используется существующий discovery read model, сортировки supportOrder/peopleOrder, реальные даты/источники, favorites. Прототипные цифры не перенесены. Typecheck/build VERIFIED; Обычный build в частичном checkout требовал отсутствующий import; переключено на штатный build:catalog из live API. Создана локальная public-папка, media для preview восстановлены из утвержденного HTML (эти бинарные файлы не публикуются). Backend/DNS/платежи/миграции не меняются. Цена новых ресурсов 0; откат — revert UI commit либо backup HTML штатного deploy workflow. Браузерная локальная матрица VERIFIED; production до workflow/live проверки не считается опубликованным срезом.
 
 

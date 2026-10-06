@@ -178,8 +178,14 @@ try {
         assert.deepEqual(footerChrome, { background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none' }, 'Footer has no painted band')
         if (width < 768) {
           const bottomChrome = await inner.page.locator('.gs-mobile-nav').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow, blur: getComputedStyle(el).backdropFilter }))
-          assert.deepEqual(bottomChrome, { background: theme === 'light' ? 'rgba(251, 247, 238, 0.97)' : 'rgba(13, 16, 24, 0.97)', border: '0px', shadow: 'none', blur: 'none' }, 'Bottom controls have a readable surface over scrolling content')
-          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 5)
+          assert.deepEqual(bottomChrome, { background: path === '/lineage-2' ? 'rgba(0, 0, 0, 0)' : theme === 'light' ? 'rgba(251, 247, 238, 0.97)' : 'rgba(13, 16, 24, 0.97)', border: '0px', shadow: 'none', blur: 'none' }, 'Bottom controls have a readable surface over scrolling content')
+          if (path === '/lineage-2') {
+            const gradient = await inner.page.locator('.gs-mobile-nav').evaluate(el => getComputedStyle(el).backgroundImage)
+            assert.ok(gradient.startsWith('linear-gradient('), 'L2 bottom controls retain a readable gradient')
+            assert.ok(gradient.includes(theme === 'light' ? 'rgb(215, 220, 224)' : 'rgb(10, 16, 24)'), 'L2 gradient matches theme')
+            assert.ok(gradient.includes('rgba(0, 0, 0, 0)'), 'L2 gradient fades into page without a strip')
+          }
+          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), path === '/lineage-2' ? 4 : 5)
         }
         if (path === '/account') assert.ok((await inner.page.locator('.gs-account-entry').boundingBox()).height >= height, 'Account scenery reaches viewport bottom with no empty theme-colored gap')
         const headerRect = await inner.page.locator('.gs-site-header').boundingBox()
@@ -187,7 +193,7 @@ try {
         const heading = inner.page.locator('main h1').first()
         if (await heading.count()) assert.ok((await heading.boundingBox()).y >= headerRect.height, 'Heading clears header on ' + path)
         if (path === '/account' || ['/lineage-2', '/minecraft', '/gta-rp'].includes(path)) {
-          const art = inner.page.locator(path === '/account' ? '.gs-account-entry' : '.gs-hero').first()
+          const art = inner.page.locator(path === '/account' ? '.gs-account-entry' : path === '/lineage-2' ? '.l2a .scene' : '.gs-hero').first()
           assert.equal((await art.boundingBox()).y, 0, 'Page artwork starts behind header on ' + path)
         }
         assert.equal(await inner.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Inner page has no horizontal overflow on ' + path)

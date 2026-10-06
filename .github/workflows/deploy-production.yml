@@ -107,7 +107,7 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
-      - name: Loader browser matrix before publication
+      - name: Responsive browser matrix before publication
         run: |
           node tests/loader-browser.mjs
           node tests/account-browser.mjs

@@ -25,15 +25,15 @@ await route.fulfill({json})});
  await page.screenshot({path:`output/control-qa/admin-${theme}-${w}.png`,fullPage:true})
  await page.getByRole('button',{name:'Включить демо',exact:true}).click();await page.locator('.gs-demo-banner').waitFor()
  for(const path of ['/lineage-2','/rating?game=lineage2','/catalog?game=lineage2']){
- await page.goto(base+path);await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"]'))
+ await page.goto(base+path);await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"],.l2a .server img[src^="data:image/svg+xml"]'))
  assert.equal(await page.locator('.gs-demo-banner').count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
  await page.screenshot({path:`output/control-qa/demo-${path.startsWith('/lineage')?'world':path.startsWith('/rating')?'rating':'catalog'}-${theme}-${w}.png`,fullPage:true})
  }
  await page.locator('.gs-demo-banner').getByRole('button',{name:'Выключить',exact:true}).click();assert.equal(await page.locator('.gs-demo-banner').count(),0)
- if(w<1024){const nav=page.locator('.gs-mobile-nav');for(const label of ['Главная','Серверы','Рейтинг','Открытия','Профиль'])assert.equal(await nav.getByRole('link',{name:label,exact:true}).isVisible(),true)}
+ if(w<1024){const nav=page.locator('.gs-mobile-nav');for(const label of (new URL(page.url()).pathname.startsWith('/lineage-2')?['Главная','Серверы','Избранное','Профиль']:['Главная','Серверы','Рейтинг','Открытия','Профиль']))assert.equal(await nav.getByRole('link',{name:label,exact:true}).isVisible(),true)}
  report.push({w,h,theme,adminGroups:true,demo:true,overflow:false})
  }
- await context.addInitScript(()=>localStorage.setItem('gs.visual-demo','1'));admin=false;await page.goto(base+'/lineage-2');await page.locator('.gs-row').first().waitFor();assert.equal(await page.locator('.gs-demo-banner').count(),0);assert.equal(await page.locator('.gs-row img[src^="data:image/svg+xml"]').count(),0);
+ await context.addInitScript(()=>localStorage.setItem('gs.visual-demo','1'));admin=false;await page.goto(base+'/lineage-2');await page.locator('.gs-row,.l2a .server').first().waitFor();assert.equal(await page.locator('.gs-demo-banner').count(),0);assert.equal(await page.locator('.gs-row img[src^="data:image/svg+xml"],.l2a .server img[src^="data:image/svg+xml"]').count(),0);
  await context.close();console.log(`PASS control/demo ${w}x${h} dark/light`)
  }await writeFile('output/control-qa/report.json',JSON.stringify(report,null,2))
 }finally{await browser.close();if(server)await new Promise(r=>server.close(r))}

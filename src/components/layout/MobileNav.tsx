@@ -22,14 +22,16 @@ export function MobileNav() {
   const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
+  const lineageWorld = /^\/lineage-2(?:\/|$)/.test(location.pathname)
+  const items = lineageWorld ? [ITEMS[0], ITEMS[1], { to: '/favorites', label: 'Избранное', icon: 'favorite' as WorldIconName, end: false }, ITEMS[4]] : ITEMS
   return (
     <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 lg:hidden">
-      <div className="mx-auto grid h-[58px] max-w-2xl grid-cols-5 items-stretch">
-        {ITEMS.map((item) => (
+      <div className={`mx-auto grid h-[58px] max-w-2xl ${lineageWorld ? "grid-cols-4" : "grid-cols-5"} items-stretch`}>
+        {items.map((item) => (
           <NavItem
             key={item.to}
             {...item}
-            to={item.to==='/'&&game ? `/${game.slug}` : ['/catalog','/rating','/openings','/account'].includes(item.to) ? scoped(item.to) : item.to}
+            to={item.to==='/'&&game ? `/${game.slug}` : ['/catalog','/rating','/openings','/account','/favorites'].includes(item.to) ? scoped(item.to) : item.to}
             badge={item.to === '/favorites' ? favorites.length : 0}
           />
         ))}
@@ -43,6 +45,7 @@ function NavItem({ to, label, icon, end, badge }: { to: string; label: string; i
     <NavLink
       to={to}
       end={end}
+      aria-label={label}
       className={({ isActive }) =>
         cn('relative flex flex-col items-center justify-center gap-1 text-[10.5px] transition-colors duration-150', isActive ? 'text-ink-50' : 'text-ink-400')
       }
@@ -64,3 +67,4 @@ function NavItem({ to, label, icon, end, badge }: { to: string; label: string; i
     </NavLink>
   )
 }
+

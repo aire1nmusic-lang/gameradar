@@ -1,3 +1,4 @@
+import { LineageDiscovery } from '@/components/world/LineageDiscovery'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { useMemo } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
@@ -39,7 +40,7 @@ export default function GameWorld() {
   if (!world.game) return <NotFound />
   if (chronicleSlug && !world.chronicle) return <Navigate to={`/${world.game.slug}`} replace />
 
-  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative gs-discovery-world', isLineage2 ? 'gs-mobile-world' : '', colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
+  const scopeClass = [fromPortal ? 'gs-world-enter' : '', 'relative gs-discovery-world', isLineage2 ? 'gs-lineage-aether' : '', colorMode === 'light' ? 'gs-world-light' : ''].filter(Boolean).join(' ')
   return (
     <ThemeScope theme={activeTheme} as="div" className={scopeClass}>
       <WorldBody
@@ -91,6 +92,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   }, [servers])
 
   if (!game) return null
+  if (game.id === 'lineage2') return <LineageDiscovery game={game} chronicle={chronicle} servers={servers} loading={loading} error={error} reload={reload} demo={demo} />
+
   const playersOnline = servers.reduce((sum, server) => sum + (known(server) ? server.online.current : 0), 0)
   return (
     <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>

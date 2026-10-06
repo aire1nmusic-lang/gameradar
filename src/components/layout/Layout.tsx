@@ -1,3 +1,4 @@
+import { useAppearance } from '@/theme/appearance'
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { VisualDemoBanner } from './VisualDemoBanner'
@@ -15,6 +16,8 @@ export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const location = useLocation()
+  const { colorMode } = useAppearance()
+  const aether = /^\/lineage-2(?:\/|$)/.test(location.pathname)
   const hall = location.pathname === '/'
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export function Layout() {
   return (
     <PortalProvider>
       <WorldNavigationProvider>
-        <div className={location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col"}>
+        <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>

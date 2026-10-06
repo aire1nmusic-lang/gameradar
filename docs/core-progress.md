@@ -3,7 +3,7 @@
 
 
 
-**Обновлено: 05.10.2026. Ядро НЕ готово к приемке.** Этот файл — первая точка входа для любого ИИ или разработчика. Сначала читать **«Состояние сейчас»**, **«Следующие действия»**, **«Блокеры»** и только затем исторический журнал ниже. Объем и критерии приемки: [roadmap](roadmap-2026-09-27.md); архитектура и исходный аудит: [Reality Check](core-reality-check.md). Старые записи ниже описывают состояние *на дату их написания* и не отменяют актуальную сводку.
+**Обновлено: 07.10.2026. Ядро НЕ готово к приемке.** Этот файл — первая точка входа для любого ИИ или разработчика. Сначала читать **«Состояние сейчас»**, **«Следующие действия»**, **«Блокеры»** и только затем исторический журнал ниже. Объем и критерии приемки: [roadmap](roadmap-2026-09-27.md); архитектура и исходный аудит: [Reality Check](core-reality-check.md). Старые записи ниже описывают состояние *на дату их написания* и не отменяют актуальную сводку.
 
 ## Правило ведения файла — обязательно для каждого следующего исполнителя
 
@@ -15,6 +15,9 @@
 6. Не переключать production DNS, реальные платежи и необратимые миграции без отдельного согласования результата и отката. Если автоматическая проверка разрешений отклонила действие, не обходить ее другим способом: записать отказ, продолжить независимую работу и запросить точное разрешение.
 
 ## Состояние сейчас
+
+**07.10 — IN PROGRESS: владелец утвердил Aether HTML и разрешил production-публикацию.** Исходный main `0660a3e7ce355370b7c241b629232aeb2915c87a` читается через GitHub; работа в отдельном scratch checkout, локальные файлы владельца не затронуты. Перенесены L2/хроники: `LineageDiscovery.tsx`, scoped CSS, выбор ветки в GameWorld и scope в Layout; используется существующий discovery read model, сортировки supportOrder/peopleOrder, реальные даты/источники, favorites. Прототипные цифры не перенесены. Typecheck/build VERIFIED; Обычный build в частичном checkout требовал отсутствующий import; переключено на штатный build:catalog из live API. Создана локальная public-папка, media для preview восстановлены из утвержденного HTML (эти бинарные файлы не публикуются). Backend/DNS/платежи/миграции не меняются. Цена новых ресурсов 0; откат — revert UI commit либо backup HTML штатного deploy workflow. Браузерная локальная матрица VERIFIED; production до workflow/live проверки не считается опубликованным срезом.
+
 
 **05.10 — VERIFIED PRODUCTION: заметные хроники и голосование на главной опубликованы, новый срез закрыт.**
 
@@ -1355,3 +1358,16 @@ VERIFIED IAB: демоON восстановлено через ADMIN UI,тёмн
 - **Настоящая IAB L2 VERIFIED:**12размер/тема случаев, раскрытые/закрытые5хроник без горизонтального переполнения,54pxстроки. «Все»390→rating?all=people/activepeople/30серверов; Interlude→правильнаястраницахроник. DemoOFF показывает реальные0голосов/пустуюCoinsподдержку. Никакихfinancial/vote/admin POST. ИсходныеdemoON/dark/native961×1244 восстановлены,оставлена/lineage-2 с закрытымихрониками.
 - Скриншотыignored:output/live-world-chronicles-390-light.png и live-world-refresh-1440-dark.png. QAartifact11334315770 expires19.10.2026 08:42:55UTC,backup11333049329 expires19.10 08:30:25UTC. Откат не понадобился; source revertcb7fcc6 и восстановлениеHTMLизbackup,hashedassets сохранены. Новых ресурсов0,расходы существующиеActions/ObjectStorage;DNS/БД/секреты/платёжныенастройки не менялись.
 - Следующий шаг: оценка владельцем визуала/отдельный этап картинок; обновлены docs/world-icon-brief.md и docs/discovery-ranking.md. Ядро НЕ принято, ранее описанные private/provider/legal blockers этимUIсрезом не закрыты. Следующая запись о7ee336a — предыдущий опубликованный срез.
+
+
+## 07.10.2026 — утвержденный Aether, интеграция
+- VERIFIED: изучены текущий AGENTS/roadmap/journal и deployment workflow с backup и автоматическим rollback. Checkout исходного main собран через GitHub, npm ci и baseline typecheck PASS.
+- Реализованы L2 discovery, compact chronicle rail, glass art continuity, current real aggregates, unknown/loading/error/empty states, favorites, scoped desktop/tablet/mobile, четыре mobile destinations только для L2 world.
+- Публикация не запущена. Следующий шаг: build:catalog, браузерная матрица и обновление устаревших утверждений QA для утвержденного rail; затем атомарный commit и deployment.
+
+## 07.10.2026 — Aether, до публикации
+- VERIFIED LOCAL: typecheck/Vite/prerender100; live public snapshot70cards; SEO90routes; reconciliation0; bundle gate no fixtures.
+- VERIFIED LOCAL browser Chromium131/headless: 320×568,375×812,390×844,430×932,768×1024,1024×1366,1024×768,1366×768,1440×900,1920×1080,844×390; обе темы. Поиск, избранное/сохранение, раскрытие5/15→все, chronicle navigation, empty/error/retry, overflow и отсутствие JS errors PASS. Только GET; физические устройства не проверены. Screenshots/report в ignored output/aether-qa.
+- Устранены наблюдавшиеся конфликты старых stone/light классов; новые панели/строки изолированы, нижняя навигация без сплошной цветной подложки, L2 mobile: Главная/Серверы/Избранное/Профиль. Avatar использует действующую нейтральную эмблему/реальный logoUrl, больших серверных картинок нет.
+- QA assertions для старого disclosure заменены для L2 на approved chronicle rail; остальные игры сохраняют disclosure. Новый tests/aether-browser.mjs включен в production workflow до upload и после live deployment, screenshots включены в артефакт.
+- Публикация: следующий атомарный UI commit main, штатный workflow с существующим bucket/backup/rollback. Дополнительные расходы/новые ресурсы0, backend/DNS/ledger/secrets не изменены. При проблеме revert UI commit либо штатное восстановление backup. Ядро этим срезом не принимается.

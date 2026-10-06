@@ -113,6 +113,7 @@ jobs:
           node tests/account-browser.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
           node tests/discovery-browser.mjs
+          node tests/aether-browser.mjs
           node tests/visual-control-browser.mjs
           node tests/support-studio-browser.mjs
 
@@ -197,6 +198,7 @@ jobs:
           LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
+          AETHER_QA_BASE_URL=https://gamescout.online node tests/aether-browser.mjs
           CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
           STUDIO_QA_BASE_URL=https://gamescout.online node tests/support-studio-browser.mjs
 
@@ -226,7 +228,9 @@ jobs:
             output/loader-qa
             output/account-review-qa
             output/discovery-qa
+            output/aether-qa
             output/control-qa
             output/studio-qa
           retention-days: 14
           if-no-files-found: ignore
+

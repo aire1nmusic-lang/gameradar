@@ -53,6 +53,7 @@ export function Button({
 }: ButtonProps) {
   const classes = cn(
     'inline-flex items-center justify-center whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-200 active:scale-[0.985] disabled:opacity-45 disabled:pointer-events-none select-none',
+    `gs-button gs-button-${variant}`,
     VARIANTS[variant],
     SIZES[size],
     full && 'w-full',

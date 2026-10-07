@@ -188,6 +188,42 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const user=await queryUser(c)
     return c.json({user:user?await dto(user):null,providers:enabledProviders(oauthEnv),emailLogin:!!config.mailEnabled,registrationOpen:registrationOpen(),privateCore:true,devAuthEnabled:false})
   })
+  const favoriteList = async userId => ({favorites:(await db.query(`SELECT r.slug FROM gs_favorites f JOIN gs_server_registry r ON r.server_id=f.server_id WHERE f.user_id=$1 ORDER BY f.created_at DESC,r.slug`,[userId])).rows.map(r=>r.slug)})
+  app.get('/api/v1/me/favorites',async c=>{const user=await requireUser(c);return c.json(await favoriteList(user.id))})
+  app.post('/api/v1/me/favorites',async c=>{
+    const user=await requireUser(c),body=await json(c),slug=textOf(body.slug,1,120)
+    if(typeof body.saved!=='boolean')fail(400,'invalid_input','Нужно состояние избранного')
+    await limit(c,'favorites',user.id,100)
+    await db.transaction(async tx=>{
+      await tx.query('SELECT id FROM gs_users WHERE id=$1 FOR UPDATE',[user.id])
+      const server=(await tx.query('SELECT server_id FROM gs_server_registry WHERE slug=$1',[slug])).rows[0]
+      if(!server)fail(404,'server_missing','Сервер не найден')
+      if(body.saved) {
+        const count=(await tx.query('SELECT count(*)::integer n FROM gs_favorites WHERE user_id=$1',[user.id])).rows[0].n
+        const exists=(await tx.query('SELECT 1 FROM gs_favorites WHERE user_id=$1 AND server_id=$2',[user.id,server.server_id])).rows.length
+        if(count>=200&&!exists)fail(400,'favorites_limit','В избранном может быть до 200 серверов')
+        await tx.query('INSERT INTO gs_favorites(user_id,server_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[user.id,server.server_id])
+      } else await tx.query('DELETE FROM gs_favorites WHERE user_id=$1 AND server_id=$2',[user.id,server.server_id])
+    })
+    return c.json(await favoriteList(user.id))
+  })
+  app.post('/api/v1/me/favorites/import',async c=>{
+    const user=await requireUser(c),body=await json(c)
+    if(!Array.isArray(body.slugs)||body.slugs.length>200||body.slugs.some(s=>typeof s!=='string'||s.length<1||s.length>120))fail(400,'invalid_input','Неверный список избранного')
+    await limit(c,'favorites-import',user.id,10)
+    await db.transaction(async tx=>{
+      await tx.query('SELECT id FROM gs_users WHERE id=$1 FOR UPDATE',[user.id])
+      // Merge, never replace: another device may already have saved newer preferences.
+      const rows=(await tx.query('SELECT server_id FROM gs_server_registry WHERE slug=ANY($1::text[])',[body.slugs])).rows
+      const count=(await tx.query('SELECT count(*)::integer n FROM gs_favorites WHERE user_id=$1',[user.id])).rows[0].n
+      const added=(await tx.query('SELECT server_id FROM gs_favorites WHERE user_id=$1',[user.id])).rows.map(r=>r.server_id)
+      const fresh=rows.filter(r=>!added.includes(r.server_id))
+      if(count+fresh.length>200)fail(400,'favorites_limit','В избранном может быть до 200 серверов')
+      for(const row of fresh)await tx.query('INSERT INTO gs_favorites(user_id,server_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[user.id,row.server_id])
+    })
+    return c.json(await favoriteList(user.id))
+  })
+  app.post('/api/v1/me/favorites/clear',async c=>{const user=await requireUser(c);await limit(c,'favorites',user.id,100);await db.query('DELETE FROM gs_favorites WHERE user_id=$1',[user.id]);return c.json({favorites:[]})})
   app.post('/api/v1/auth/register',async c=>{
     if (!registrationOpen()) closedRegistration()
     if (!config.mailEnabled) fail(503,'mail_disabled','Почта ещё не подключена')

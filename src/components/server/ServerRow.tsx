@@ -89,7 +89,7 @@ export function ServerRow({
       )}
       style={medal ? { borderColor: medal.ring, background: `linear-gradient(90deg, ${medal.ring.replace(/[\d.]+\)$/, '.10)')}, rgba(255,255,255,.03) 55%)` } : undefined}
     >
-      {rank !== undefined && <RankMedal rank={rank} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
+      {rank !== undefined && <RankMedal rank={rank} neutral={(metric==='votes'&&server.votes===0)||(metric==='support'&&support===0)} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />
 
@@ -186,6 +186,7 @@ function RowFavorite({ slug }: { slug: string }) {
   return (
     <button
       type="button"
+      aria-pressed={active}
       aria-label={active ? 'Убрать из избранного' : 'В избранное'}
       onClick={(event) => {
         event.preventDefault()
@@ -193,8 +194,8 @@ function RowFavorite({ slug }: { slug: string }) {
         toggle(slug)
       }}
       className={cn(
-        'gs-row-favorite relative z-[2] hidden h-8 w-8 shrink-0 place-items-center rounded-md transition-colors sm:grid',
-        active ? 'text-danger-400' : 'text-ink-600 hover:bg-white/6 hover:text-ink-200',
+        'gs-row-favorite relative z-[2] grid h-11 w-8 shrink-0 place-items-center rounded-md transition-colors',
+        active ? 'is-selected text-danger-400' : 'text-ink-600 hover:bg-white/6 hover:text-ink-200',
       )}
     >
       <Heart size={15} fill={active ? 'currentColor' : 'none'} />

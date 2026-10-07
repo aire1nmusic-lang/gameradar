@@ -23,6 +23,7 @@ export function Sheet({
   children,
   footer,
   maxHeight = '86vh',
+  className,
 }: {
   open: boolean
   onClose: () => void
@@ -30,13 +31,14 @@ export function Sheet({
   children: ReactNode
   footer?: ReactNode
   maxHeight?: string
+  className?: string
 }) {
   useLockBodyScroll(open)
   useEscape(open, onClose)
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] lg:hidden" role="dialog" aria-modal="true" aria-label={title}>
+    <div className={cn("gs-sheet fixed inset-0 z-[90]",className)} role="dialog" aria-modal="true" aria-label={title}>
       <button
         aria-label="Закрыть"
         onClick={onClose}

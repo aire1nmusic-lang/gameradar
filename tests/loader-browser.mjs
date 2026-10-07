@@ -185,7 +185,7 @@ try {
             assert.ok(gradient.includes(theme === 'light' ? 'rgb(215, 220, 224)' : 'rgb(10, 16, 24)'), 'L2 gradient matches theme')
             assert.ok(gradient.includes('rgba(0, 0, 0, 0)'), 'L2 gradient fades into page without a strip')
           }
-          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), path === '/lineage-2' ? 4 : 5)
+          assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 5)
         }
         if (path === '/account') assert.ok((await inner.page.locator('.gs-account-entry').boundingBox()).height >= height, 'Account scenery reaches viewport bottom with no empty theme-colored gap')
         const headerRect = await inner.page.locator('.gs-site-header').boundingBox()

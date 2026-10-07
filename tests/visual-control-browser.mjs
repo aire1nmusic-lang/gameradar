@@ -27,10 +27,16 @@ await route.fulfill({json})});
  for(const path of ['/lineage-2','/rating?game=lineage2','/catalog?game=lineage2']){
  await page.goto(base+path);await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"],.l2a .server img[src^="data:image/svg+xml"]'))
  assert.equal(await page.locator('.gs-demo-banner').count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
+ if(path.startsWith('/catalog')){
+  const rows=page.locator('.gs-catalog-page .gs-row');assert.equal(await rows.count(),10)
+  for(const name of ['Поддержка','Голоса','Общий топ']){await page.getByRole('button',{name:'Сортировка',exact:true}).click();await page.getByRole('option',{name,exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-page .gs-row .gs-rank-number').length===10)}
+  await page.getByRole('button',{name:'Сортировка',exact:true}).click();await page.screenshot({path:`output/control-qa/sort-${theme}-${w}.png`});await page.keyboard.press('Escape');assert.equal(await page.getByRole('listbox').count(),0)
+  if(w<1024){await page.getByRole('button',{name:'Фильтры',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Фильтры',exact:true});await sheet.waitFor();assert.equal(await sheet.getByText('Только проверенный онлайн',{exact:true}).count(),0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`output/control-qa/filters-${theme}-${w}.png`});await page.keyboard.press('Escape');await sheet.waitFor({state:'hidden'})}
+ }
  await page.screenshot({path:`output/control-qa/demo-${path.startsWith('/lineage')?'world':path.startsWith('/rating')?'rating':'catalog'}-${theme}-${w}.png`,fullPage:true})
  }
  await page.locator('.gs-demo-banner').getByRole('button',{name:'Выключить',exact:true}).click();assert.equal(await page.locator('.gs-demo-banner').count(),0)
- if(w<1024){const nav=page.locator('.gs-mobile-nav');for(const label of ['Главная','Серверы','Избранное','Профиль'])assert.equal(await nav.getByRole('link',{name:label,exact:true}).isVisible(),true)}
+ if(w<1024){const nav=page.locator('.gs-mobile-nav');for(const label of ['Главная','Серверы','Избранное','Рейтинг','Открытия'])assert.equal(await nav.getByRole('link',{name:label,exact:true}).isVisible(),true)}
  report.push({w,h,theme,adminGroups:true,demo:true,overflow:false})
  }
  await context.addInitScript(()=>localStorage.setItem('gs.visual-demo','1'));admin=false;await page.goto(base+'/lineage-2');await page.locator('.gs-row,.l2a .server').first().waitFor();assert.equal(await page.locator('.gs-demo-banner').count(),0);assert.equal(await page.locator('.gs-row img[src^="data:image/svg+xml"],.l2a .server img[src^="data:image/svg+xml"]').count(),0);

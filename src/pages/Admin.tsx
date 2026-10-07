@@ -90,12 +90,12 @@ export default function Admin({embedded=false}:{embedded?:boolean}) {
     <section className="gs-admin-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
       <div className="relative z-10 max-w-[620px]">
         <p className="gs-admin-kicker text-[11px] font-semibold uppercase tracking-[0.18em]">GameScout Control</p>
-        <h1 className="mt-1 text-[22px] font-semibold leading-tight">Управление</h1>
+        <h1 className="mt-1 flex items-center gap-2 text-[22px] font-semibold leading-tight"><WorldIcon name="admin" size={22}/>Управление</h1>
 
       </div>
     </section>
     <nav aria-label="Разделы админки" className="gs-admin-navigation">
- <div className="gs-admin-desktop-nav gs-admin-quick-nav"><div className="gs-admin-groups">{groups.filter(group=>allowed.some(tab=>group.ids.includes(tab.id))).map(group=><button key={group.label} type="button" aria-pressed={group.ids.includes(active.id)} onClick={()=>setSelected(allowed.find(tab=>group.ids.includes(tab.id))!.id)}>{group.label}</button>)}</div>
+ <div className="gs-admin-desktop-nav gs-admin-quick-nav"><div className="gs-admin-groups">{groups.filter(group=>allowed.some(tab=>group.ids.includes(tab.id))).map(group=><button key={group.label} type="button" aria-pressed={group.ids.includes(active.id)} onClick={()=>setSelected(allowed.find(tab=>group.ids.includes(tab.id))!.id)}><WorldIcon name={({Обзор:'admin',Серверы:'servers',Сообщество:'users',Экономика:'coins',Проверки:'shield'} as Record<string,WorldIconName>)[group.label]} size={17}/>{group.label}</button>)}</div>
  <div className="gs-admin-subtabs">{allowed.filter(tab=>groups.find(group=>group.ids.includes(active.id))?.ids.includes(tab.id)).map(tab=><button key={tab.id} type="button" className={'gs-admin-tab '+(active.id===tab.id?'is-active':'')} aria-current={active.id===tab.id?'page':undefined} onClick={()=>setSelected(tab.id)}>{tab.label}</button>)}</div></div>
  </nav>
     {auth.user.roles?.includes('ADMIN')&&<section className="gs-demo-control"><div><strong>Проверка визуала</strong><p>Примерные голоса, поддержка и аватарки. Реальные рейтинги и баланс не меняются.</p></div><button type="button" aria-pressed={demo} onClick={()=>setVisualDemo(!demo)}>{demo?'Выключить демо':'Включить демо'}</button></section>}

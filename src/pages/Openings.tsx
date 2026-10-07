@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { plural } from '@/lib/format'
 import { useOpenings } from '@/hooks/data'
@@ -18,6 +19,7 @@ export default function Openings() {
   const {game}=useWorldNavigation()
   useSeo({ title: 'Открытия серверов', path: '/openings', description: 'Ближайшие открытия игровых серверов: дата, время и хроника.' })
   const [window, setWindow] = useState<Window>('all')
+  const [visible,setVisible]=useState(10)
   const { data: all = [] } = useOpenings(game?.id, 40)
 
   const filtered = useMemo(() => {
@@ -33,13 +35,13 @@ export default function Openings() {
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>()
-    for (const server of filtered) {
+    for (const server of filtered.slice(0,visible)) {
       const date = new Date(server.launch?.at ?? Date.now())
       const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
       map.set(key, [...(map.get(key) ?? []), server])
     }
     return Array.from(map.entries())
-  }, [filtered])
+  }, [filtered,visible])
 
   return (
     <div className="gs-openings-page pb-16">
@@ -54,7 +56,7 @@ export default function Openings() {
           </div>
           <Segmented
             value={window}
-            onChange={setWindow}
+            onChange={value=>{setWindow(value);setVisible(10)}}
             options={[
               { value: 'today', label: 'Сегодня' },
               { value: 'week', label: 'На неделе' },
@@ -91,6 +93,7 @@ export default function Openings() {
             })
           )}
         </div>
+        {visible<filtered.length&&<div className="mt-5 flex justify-center"><Button onClick={()=>setVisible(v=>v+10)}>Показать ещё {Math.min(10,filtered.length-visible)}</Button></div>}
       </Container>
     </div>
   )

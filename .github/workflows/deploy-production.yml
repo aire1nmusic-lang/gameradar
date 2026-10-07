@@ -115,6 +115,9 @@ jobs:
       - name: L2 utility navigation and zero support before publication
         run: node tests/l2-journey-browser.mjs
 
+      - name: Private favorites across two devices before publication
+        run: node tests/favorites-browser.mjs
+
       - name: Loader matrix before publication
         run: node tests/loader-browser.mjs
 
@@ -210,6 +213,7 @@ jobs:
           }
           console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
+          FAVORITES_QA_BASE_URL=https://gamescout.online node tests/favorites-browser.mjs
           LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
@@ -248,6 +252,7 @@ jobs:
             output/l2-journey-qa
             output/control-qa
             output/studio-qa
+            output/favorites-qa
           retention-days: 14
           if-no-files-found: ignore
 

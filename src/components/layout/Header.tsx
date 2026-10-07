@@ -70,6 +70,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
           <kbd className="hidden rounded border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-ink-500 lg:block">⌘K</kbd>
         </button>}
 
+        {!bare && <button type="button" className="gs-header-search" aria-label="Поиск" onClick={onSearch}><WorldIcon name="search" size={18}/></button>}
         <button
           type="button"
           onClick={toggleColorMode}

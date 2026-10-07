@@ -12,7 +12,7 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 export default function Favorites() {
   const {game,scoped}=useWorldNavigation()
   useSeo({ title: 'Избранное', noindex: true })
-  const { favorites, clear } = useFavorites()
+  const { favorites, clear, sync, error:syncError, retry } = useFavorites()
   const { data: all = [] } = useServers({ gameId:game?.id,limit: 500 })
   const servers = favorites.map((slug) => all.find((server) => server.slug === slug)).filter(Boolean) as typeof all
   const totalOnline = servers.reduce((sum, server) => sum + server.online.current, 0)
@@ -41,6 +41,8 @@ export default function Favorites() {
         </div>
 
         <div className="mt-6">
+          {sync==='loading'&&<p role="status" className="mb-3 text-xs">Синхронизация избранного…</p>}
+          {syncError&&<p role="status" className="mb-3 text-xs">{syncError} <button type="button" onClick={()=>void retry()}>Повторить</button></p>}
           {servers.length === 0 ? (
             <EmptyState
               icon={<WorldIcon name="favorite" size={22} />}

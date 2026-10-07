@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { CalendarClock, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCountdown, formatLaunch } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import type { GameServer } from '@/models'
+import { WorldIcon } from '@/components/icons/WorldIcon'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 
 /**
@@ -25,7 +26,7 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
         className,
       )}
     >
-      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" className="gs-row-avatar" />
+      <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar" />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[14px] font-semibold text-ink-50">{server.name}</div>
         <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
@@ -35,7 +36,7 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
       </div>
       <div className="shrink-0 text-right" title={formatLaunch(launch.at)}>
         <div className={cn('num inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums sm:text-[13px]', 'text-ink-100')}>
-          <CalendarClock size={13} className="hidden text-ink-500 sm:block" />
+          <WorldIcon name="opening" size={13} className="hidden text-ink-500 sm:block" />
           {formatCountdown(launch.at)}
         </div>
         <div className="mt-0.5 hidden text-[11px] text-ink-500 sm:block">{formatLaunch(launch.at)}</div>

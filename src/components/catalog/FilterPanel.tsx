@@ -1,3 +1,4 @@
+import { SelectMenu } from '@/components/ui/SelectMenu'
 import { useMemo } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -5,8 +6,7 @@ import { formatNumber } from '@/lib/format'
 import { GAMES } from '@/data/games'
 import type { CatalogFilters } from '@/services'
 import { useFacets, useServers } from '@/hooks/data'
-import { Checkbox, ChipToggle, RangeSlider, Select, Toggle } from '@/components/ui/controls'
-import { StatusBadge } from '@/components/trust/status'
+import { Checkbox, ChipToggle, RangeSlider, Toggle } from '@/components/ui/controls'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 function toggleValue(list: string[], value: string): string[] {
@@ -63,21 +63,7 @@ export function FilterPanel({
   const patch = (next: Partial<CatalogFilters>) => onChange({ ...filters, ...next })
 
   return (
-    <div>
-      <div className="rounded-xl border border-signal-500/18 bg-signal-500/[0.05] p-3.5">
-        <Toggle
-          checked={filters.verifiedOnly}
-          onChange={(verifiedOnly) => patch({ verifiedOnly })}
-          label={
-            <span className="flex items-center gap-2">
-              Только проверенный онлайн
-              <StatusBadge status="VERIFIED" size="sm" withDot={false} className="hidden sm:inline-flex" />
-            </span>
-          }
-          description="Серверы, онлайн которых GameScout проверяет самостоятельно"
-        />
-      </div>
-
+    <div className="gs-filter-panel">
       <div className="mt-2">
         {!world&&<Group title="Игра">
           <div className="-mx-2 space-y-0.5">
@@ -98,7 +84,7 @@ export function FilterPanel({
           </div>
         </Group>}
 
-        <Group title="Версия / хроники">
+        <Group title={world?.id==='lineage2'?'Хроники':'Версия'}>
           <div className="flex flex-wrap gap-2">
             {versions.map((version) => (
               <ChipToggle
@@ -112,7 +98,7 @@ export function FilterPanel({
           </div>
         </Group>
 
-        {(facets?.modes?.length ?? 0) > 0 && <Group title="Режим">
+        {world?.id!=='lineage2' && (facets?.modes?.length ?? 0) > 0 && <Group title="Режим">
           <div className="flex max-h-[184px] flex-wrap gap-2 overflow-y-auto pr-1">
             {(facets?.modes ?? []).map((mode) => (
               <ChipToggle
@@ -180,7 +166,7 @@ export function FilterPanel({
         </Group>
 
         <Group title="Дата открытия">
-          <Select
+          <SelectMenu
             value={filters.openedWithin}
             onChange={(value) => patch({ openedWithin: value as CatalogFilters['openedWithin'] })}
             options={[

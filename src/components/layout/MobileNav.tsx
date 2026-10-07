@@ -10,7 +10,7 @@ const ITEMS:{to:string;label:string;icon:WorldIconName;end:boolean}[] = [
   { to: '/catalog', label: 'Серверы', icon: 'servers', end: false },
   { to: '/rating', label: 'Рейтинг', icon: 'vote', end: false },
   { to: '/openings', label: 'Открытия', icon: 'opening', end: false },
-  { to: '/account', label: 'Профиль', icon: 'profile', end: false },
+  { to: '/favorites', label: 'Избранное', icon: 'favorite', end: false },
 ]
 
 /** Routes whose own bottom bar replaces the navigation (a server profile has one CTA bar). */
@@ -22,11 +22,10 @@ export function MobileNav() {
   const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
-  const lineageWorld = game?.id === 'lineage2'
-  const items = lineageWorld ? [ITEMS[0], ITEMS[1], { to: '/favorites', label: 'Избранное', icon: 'favorite' as WorldIconName, end: false }, ITEMS[4]] : ITEMS
+  const items = [ITEMS[0], ITEMS[1], ITEMS[4], ITEMS[2], ITEMS[3]]
   return (
     <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 lg:hidden">
-      <div className={`mx-auto grid h-[58px] max-w-2xl ${lineageWorld ? "grid-cols-4" : "grid-cols-5"} items-stretch`}>
+      <div className={`mx-auto grid h-[58px] max-w-2xl grid-cols-5 items-stretch`}>
         {items.map((item) => (
           <NavItem
             key={item.to}

@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict'
+import {createServer} from 'node:http'
+import {readFile,mkdir} from 'node:fs/promises'
+import {resolve,extname,sep} from 'node:path'
+import {chromium} from 'playwright'
+import {PGlite} from '@electric-sql/pglite'
+import {createApp} from '../private-api/app.mjs'
+import {migrate} from '../private-api/db.mjs'
+import {digest} from '../private-api/crypto.mjs'
+const root=resolve('dist'),origin='http://127.0.0.1:4188'
+const catalog=await(await fetch('https://gamescout.online/api/v1/servers?limit=100')).json(),games=await(await fetch('https://gamescout.online/api/v1/games')).json(),cards=catalog.items.filter(s=>s.gameId==='lineage2')
+const pg=new PGlite(),db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)};await migrate(db)
+for(const id of ['a','b']){await db.query('INSERT INTO gs_users(id,display_name,email_verified_at) VALUES($1,$2,now())',[id,'Test '+id]);await db.query("INSERT INTO gs_sessions(token_hash,user_id,expires_at,login_method) VALUES($1,$2,now()+interval '1 day','email')",[digest('favorite-token-'+id),id])}
+for(const s of cards)await db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[s.id,s.gameId,s.name,s.slug])
+const app=createApp({db,config:{origin,environment:'development',mailKey:'a'.repeat(64),rateKey:'b'.repeat(64)}})
+const server=createServer(async(req,res)=>{try{let path=resolve(root,'.'+new URL(req.url,origin).pathname);assert.ok(path.startsWith(root+sep));if(!extname(path))path+='/index.html';let body;try{body=await readFile(path)}catch{path=root+'/index.html';body=await readFile(path)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2'})[extname(path)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4188,'127.0.0.1',r));const base=process.env.FAVORITES_QA_BASE_URL||origin;const browser=await chromium.launch()
+let unavailable=false
+async function device(id,width=390){const context=await browser.newContext({viewport:{width,height:844}}),page=await context.newPage();await page.route('**/api/v1/**',async route=>{const request=route.request(),u=new URL(request.url()),path=u.pathname;assert.ok(request.method()==='GET'||path.startsWith('/api/v1/me/favorites'),'No financial/admin/vote writes');if(path==='/api/v1/auth/me'||path.startsWith('/api/v1/me/favorites')){if(unavailable&&path.startsWith('/api/v1/me/favorites'))return route.fulfill({status:503,json:{error:{message:'Unavailable'}}});const result=await app.request(origin+path,{method:request.method(),headers:{Origin:origin,'Content-Type':'application/json',Cookie:'gs_private_session=favorite-token-'+id},...(request.method()==='GET'?{}:{body:request.postData()})});return route.fulfill({status:result.status,body:await result.text(),contentType:'application/json'})}let json=[];if(path.endsWith('/games'))json=games;else if(path.endsWith('/servers'))json={items:cards,total:cards.length,limit:100,offset:0};await route.fulfill({json})});return {context,page}}
+try{
+ const a=await device('a'),b=await device('a',1440),other=await device('b')
+ await a.context.addInitScript(slug=>localStorage.setItem('gamescout:favorites',JSON.stringify([slug])),cards[0].slug)
+ await a.page.goto(base+'/favorites?game=lineage2');await a.page.locator('.gs-row').first().waitFor();await a.page.waitForFunction(()=>!document.body.textContent.includes('Синхронизация избранного…'));assert.equal(await a.page.locator('.gs-row').count(),1)
+ await b.page.goto(base+'/favorites?game=lineage2');await b.page.locator('.gs-row').first().waitFor();assert.equal(await b.page.locator('.gs-row').count(),1,'Old phone favorite imported into account')
+ await other.page.goto(base+'/favorites?game=lineage2');await other.page.getByText('Пока ничего не сохранено',{exact:true}).waitFor();assert.equal(await other.page.locator('.gs-row').count(),0,'Other account cannot see favorites')
+ await a.page.locator('.gs-row-favorite').first().click();await a.page.getByText('Пока ничего не сохранено',{exact:true}).waitFor();await b.page.reload();await b.page.getByText('Пока ничего не сохранено',{exact:true}).waitFor();assert.equal(await b.page.locator('.gs-row').count(),0,'Removal synchronized')
+ unavailable=true;await a.page.goto(base+'/catalog?game=lineage2');await a.page.locator('.gs-row').first().waitFor();await a.page.locator('.gs-row-favorite').first().click();await a.page.goto(base+'/favorites?game=lineage2');await a.page.locator('.gs-row').first().waitFor();assert.equal(await a.page.locator('.gs-row').count(),1,'Unavailable API keeps a local saved copy');await a.page.getByText('Избранное сохранено на этом устройстве. Синхронизация пока недоступна.',{exact:false}).waitFor()
+ unavailable=false;await a.page.getByRole('button',{name:'Повторить',exact:true}).click();await a.page.waitForFunction(()=>!document.body.textContent.includes('недоступна'));await b.page.reload();await b.page.locator('.gs-row').first().waitFor();assert.equal(await b.page.locator('.gs-row').count(),1,'Local changes after outage merged')
+ await mkdir('output/favorites-qa',{recursive:true});await a.page.screenshot({path:'output/favorites-qa/phone.png'});console.log('PASS real local PostgreSQL API: two device contexts, import, removal, isolation, outage recovery')
+}finally{await browser.close();await pg.close();await new Promise(r=>server.close(r))}

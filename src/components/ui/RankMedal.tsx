@@ -7,20 +7,22 @@ export const MEDAL: Record<number, { bg: string; ring: string; text: string }> =
 }
 
 /** Small numbered rank badge; color supplements the readable number. */
-export function RankMedal({ rank, className }: { rank: number; className?: string }) {
-  const medal = MEDAL[rank]
+export function RankMedal({ rank, className, neutral=false }: { rank: number; className?: string; neutral?: boolean }) {
+  const medal = neutral ? undefined : MEDAL[rank]
   return (
     <span
       aria-label={`Место ${rank}`}
       className={cn(
-        'gs-rank-medal num grid h-8 w-7 shrink-0 place-items-center font-sans text-[12px] font-bold',
+        'gs-rank-medal gs-rank-number num grid h-8 w-7 shrink-0 place-items-center font-sans text-[12px] font-bold',
         !medal && 'text-ink-400',
         className,
       )}
       style={{
-        background: medal?.bg ?? 'linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.035))',
-        color: medal?.text,
-        boxShadow: medal ? `inset 0 1px 0 rgba(255,255,255,.35), 0 5px 12px -7px ${medal.ring}` : 'inset 0 0 0 1px rgba(255,255,255,.10)',
+        background: 'transparent',
+        color: medal ? (rank===1?'var(--rank-gold,#d1ac65)':rank===2?'var(--rank-silver,#b6c6d4)':'var(--rank-bronze,#cb946f)') : undefined,
+        borderColor: medal?.ring,
+        boxShadow: 'none',
+
       }}
     >
       {rank}

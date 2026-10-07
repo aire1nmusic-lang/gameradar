@@ -1,3 +1,4 @@
+import { FavoritesSync } from '@/hooks/useFavorites'
 import { useAppearance } from '@/theme/appearance'
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
@@ -11,6 +12,7 @@ import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
 import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { WorldPageScope } from '@/components/world/WorldPageScope'
+import './review-refinement.css'
 
 export function Layout() {
   return <PortalProvider><WorldNavigationProvider><LayoutContent /></WorldNavigationProvider></PortalProvider>
@@ -44,7 +46,7 @@ function LayoutContent() {
 
   return (
         <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
-          <BackgroundField />
+          <FavoritesSync/><BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <VisualDemoBanner/><WorldPageScope><Outlet /></WorldPageScope>

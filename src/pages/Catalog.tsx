@@ -1,3 +1,5 @@
+import { RankMedal } from '@/components/ui/RankMedal'
+import { SelectMenu } from '@/components/ui/SelectMenu'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,7 +17,6 @@ import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
 import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
-import { Select } from '@/components/ui/controls'
 import { EmptyState, Notice } from '@/components/ui/feedback'
 import { ThemeScope } from '@/theme'
 import { themeForGame } from '@/data/themes'
@@ -24,7 +25,7 @@ import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
-const PAGE_SIZE = 24
+const PAGE_SIZE = 10
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 const COMPACT_SORT_LABELS: Record<SortKey, string> = {
@@ -138,7 +139,7 @@ export default function Catalog() {
         </div>
 
         <div className={(searchOpen?'gs-catalog-search is-open ':'gs-catalog-search ')+"mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22"}>
-          <WorldIcon name="search" size={17} className="shrink-0 text-ink-400" />
+
           <input
             value={filters.query}
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
@@ -156,7 +157,7 @@ export default function Catalog() {
       {/* the toolbar follows the list: filters, active chips, sort, view */}
       <div className="gs-catalog-toolbar sticky top-[60px] z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
         <Container className="flex items-center gap-2">
-          <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name="search" size={17}/></button>
+          <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name={searchOpen?'close':'search'} size={17}/></button>
           <button
             onClick={() => setFiltersOpen(true)}
             className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
@@ -186,7 +187,7 @@ export default function Catalog() {
             )}
           </div>
 
-          <Select
+          <SelectMenu
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
             options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: COMPACT_SORT_LABELS[option.key] }))}
@@ -245,14 +246,14 @@ export default function Catalog() {
                         <InlinePromo gameId={filters.games[0]} />
                       </ThemeScope>
                     )}
-                    <div className="relative">{sort === 'recommended' && index < 3 && <span className="absolute top-3 right-3 z-10 rounded-full bg-ink-950 px-2 py-1 text-xs text-signal-400">Общий топ {index + 1}</span>}<ServerCard server={server} /></div>
+                    <div className="relative">{['recommended','online','votes','support','growth','rating'].includes(sort) && <RankMedal rank={index+1} className="absolute top-3 right-3 z-10"/>}<ServerCard server={server} /></div>
                   </Fragment>
                 ))}
               </div>
             ) : (
               <div className="space-y-1.5">
                 {results.map((server, index) => (
-                  <ServerRow key={server.slug} server={server} rank={sort === 'recommended' && index < 3 ? index + 1 : undefined} />
+                  <ServerRow key={server.slug} server={server} rank={['recommended','online','votes','support','growth','rating'].includes(sort) ? index+1 : undefined} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} showGame={!world} />
                 ))}
               </div>
             )}
@@ -272,6 +273,7 @@ export default function Catalog() {
       </Container>
 
       <Sheet
+        className={world?.id==='lineage2'?'gs-l2-filter-sheet':undefined}
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         title="Фильтры"

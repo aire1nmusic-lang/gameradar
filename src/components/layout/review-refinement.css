@@ -1,3 +1,5 @@
+html[data-color-mode] .gs-l2-aether-layout{--aether-bg:#0a1018}
+html[data-color-mode=light] .gs-l2-aether-layout{--aether-bg:#d7dce0}
 /* Device review, 07 October: lightweight controls and consistent list geometry. */
 .gs-header-search{display:grid;place-items:center;width:44px;height:44px;margin-left:auto;color:var(--aether-muted,var(--color-ink-300));background:transparent;border:0;opacity:.78}
 .gs-header-search:hover,.gs-header-search:focus-visible{opacity:1}

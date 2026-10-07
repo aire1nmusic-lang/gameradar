@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**07.10 — fixture contract failure diagnosed; production unchanged.** Run37559759498 + focused37559759767: Aether11×2 including metric/favorite no-overlap PASS. Journey reached catalog/favorites/account/rating/openings320dark, then profile failed: fake copyright restrictions returned[] instead of required {restrictedLinks:[],restrictedMaterials:[]}. Corrected only fixture, real copyright controls unchanged. Added support-sorted catalog expansion/30s/membership checks to paid+allzero scenarios. Actual focused artifact11455724683 downloaded:390dark main and320dark catalog reviewed; compact hero, separated chronicles, themed catalog/four nav verified. Support copy explicitly includes all projects, avoids implying zero projects already contributed. Source/typecheck PASS; new deployment pending complete journey/gates. Cost0 new resources; rollbacknormal backup/revert.
+
+
 **07.10 — Aether22 VERIFIED; journey BLOCKED before publication.** Run37558663265 Aether11sizes×2themes, no chronicle overlap/text clipping, hero<220mobile, support5/all36, search/favorites/retry PASS. Journey timed out waiting first h1; scoped visible heading waits, per-route/page-error diagnostics and failure screenshot added, no assertion removed. Focused artifact11456415702 (7.1MB) downloaded; actual390dark screenshot reviewed: compact hero/chronicles verified, favorite icons intersected metrics/dates. Fixed reserved32px metric space + centered favorites; added explicit no-intersection assertion. Hidden br got explicit text space. Production unchanged (failed before backup/upload). Local typecheck PASS. New resources0, rollbacksource/UI backup. Next: diagnose journey if still failing, complete gates and inspect phone/catalog/account screenshots.
 
 

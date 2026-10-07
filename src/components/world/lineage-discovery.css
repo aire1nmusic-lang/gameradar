@@ -112,3 +112,10 @@ html[data-color-mode] .gs-l2-aether-layout :is(.gt-panel,.gt-card){background:li
 /* Keep favorite controls beside metrics, never over their numerals. */
 .gs-l2-aether-layout .l2a .server-right{padding-right:32px}
 .gs-l2-aether-layout .l2a .fav{top:50%;margin-top:-14px;opacity:1}
+
+/* Complete the L2 account palette, including wallet and owner-empty states. */
+html[data-color-mode] .gs-l2-aether-layout.gs-account-layout{background:var(--aether-bg,#0a1018)!important}
+html[data-color-mode='light'] .gs-l2-aether-layout.gs-account-layout{background:#d7dce0!important}
+html[data-color-mode] .gs-l2-aether-layout :is(.gs-coins-card,.gs-account-empty,.gs-account-claim){background:linear-gradient(125deg,#d6edff14,#f7f3e204 45%,#bfe5ff0b),var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:20px!important;box-shadow:inset 0 1px #fff2,0 14px 46px #030a1325!important;backdrop-filter:blur(22px);color:var(--aether-ink)!important}
+.gs-l2-aether-layout :is(.gs-account-kicker,.gs-coin-balance,.gs-account-empty-icon){color:var(--aether-gold)!important}
+.gs-l2-aether-layout .gs-coins-glow{background:radial-gradient(circle,#e1c89420,transparent 70%)!important}

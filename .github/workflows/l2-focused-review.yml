@@ -2,7 +2,7 @@ name: L2 focused visual review
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs']
+    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css']
   workflow_dispatch:
 permissions:
   contents: read

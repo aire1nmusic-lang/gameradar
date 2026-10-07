@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**07.10 — follow-up preflight adjustment:** session-local public server-ID order avoids repeating the prior zero list after reload (including two-zero edge case); no personal data added. L2 catalog support sort fetches all filtered projects before rotating and slicing, so page24 does not freeze the same zero subset. Discovery QA updated to required5 support preview, other shelves retain5mobile/15desktop. New Aether/journey gates moved before broad suites for early feedback; all prior gates retained. First run37558389979 has passed core/build/SEO/bundle and installing browser; production not yet changed. Local typecheck + shuffle invariants pass. Cost0 resources. Next: complete guarded run, artifacts and production check.
+
+
 **07.10 — L2 mobile/shell/rotation follow-up IN PROGRESS.** User screenshots exposed oversized mobile hero, overlapping chronicle links and old utility skin. Aether now follows WorldNavigation context across catalog/favorites/account/rating/openings/server/management; four mobile nav items consistent in L2. Mobile hero/search compact, chronicle links nonshrinking/scrollable. Support shows5 initially on every viewport and all on expansion; zero Coins shuffled on mount/30s, including full support rating; positive Coins keep canonical supportOrder. Financial/vote/backend calculations unchanged. Local typecheck/catalog build70cards/SEO90routes/reconcile0/bundle and zero shuffle invariants VERIFIED. Local Chrome install failed (truncated archive); browser acceptance uses existing GitHub pre/post gates, not claimed local. Added l2-journey regression320/390/768/1024/1440/844landscape × dark/light, route clicks, guest/player account, paid/allzero rotation via clock, complete list membership. Publication pending gates. Previous deploy37538065517 SUCCESS confirmed. New resources0; revert UI commit or deploy backup for rollback. Next: gated deployment + screenshots/status.
 
 

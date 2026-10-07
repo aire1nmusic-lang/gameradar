@@ -1,3 +1,4 @@
+import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -59,13 +60,15 @@ export default function Catalog() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchOpen,setSearchOpen]=useState(Boolean(params.get('q')))
 
-  const query = useMemo(() => toServerQuery(filters, sort, visible), [filters, sort, visible])
+  const rotateSupport = world?.id === 'lineage2' && sort === 'support'
+  const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
   const { data: page, loading, error, reload } = useAsync(
     () => demo ? searchServers(query,true) : privateCore && sort === 'votes' ? peopleSortedServers(query)
       : privateCore && sort === 'support' ? supportSortedServers(query)
         : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query),
     [JSON.stringify(query),privateCore,authLoading,demo], true)
-  const results = page?.items ?? []
+  const supportRows = useSupportRotation(page?.items ?? [], rotateSupport)
+  const results = rotateSupport ? supportRows.slice(0, visible) : page?.items ?? []
   const total = page?.total ?? 0
   // The selected world is context, not a removable filter. Showing it as an
   // active chip made the mobile toolbar look broken because clicking X simply

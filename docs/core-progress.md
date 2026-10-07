@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**07.10 — first preflight failed BEFORE publication, VERIFIED:** run37558389979 loader/account passed; discovery768 stopped5!=15 at old support expectation. b5b4530 already fixes that assertion without weakening other shelves and is in guarded run37558663265 (core checks running). No production writes or rollback. CI b5b4530 SUCCESS. Full artifact11455971934 is91.7MB, exceeds scratch download32MiB; added isolated focused review workflow to produce a small mobile/tablet/desktop screenshot artifact for actual visual inspection. It does not publish or touch backend. New resources0; normal Actions minutes only. Next: focused visual review and gated publication.
+
+
 **07.10 — follow-up preflight adjustment:** session-local public server-ID order avoids repeating the prior zero list after reload (including two-zero edge case); no personal data added. L2 catalog support sort fetches all filtered projects before rotating and slicing, so page24 does not freeze the same zero subset. Discovery QA updated to required5 support preview, other shelves retain5mobile/15desktop. New Aether/journey gates moved before broad suites for early feedback; all prior gates retained. First run37558389979 has passed core/build/SEO/bundle and installing browser; production not yet changed. Local typecheck + shuffle invariants pass. Cost0 resources. Next: complete guarded run, artifacts and production check.
 
 

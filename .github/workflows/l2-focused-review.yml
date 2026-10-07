@@ -1,0 +1,46 @@
+name: L2 focused visual review
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/l2-focused-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUBLIC_API_ORIGIN: https://gamescout.online/
+      PUBLIC_SITE_ORIGIN: https://gamescout.online
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:catalog -- https://gamescout.online
+      - name: Browser runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Aether and L2 journey checks
+        run: |
+          node tests/aether-browser.mjs
+          node tests/l2-journey-browser.mjs
+      - name: Save small visual review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: l2-focused-review
+          retention-days: 14
+          path: |
+            output/aether-qa/l2-dark-390x844.png
+            output/aether-qa/l2-light-390x844.png
+            output/aether-qa/l2-dark-768x1024.png
+            output/aether-qa/l2-light-1440x900.png
+            output/l2-journey-qa/catalog-390-dark.png
+            output/l2-journey-qa/account-390-light.png
+            output/l2-journey-qa/account-player-390.png
+            output/l2-journey-qa/report.json

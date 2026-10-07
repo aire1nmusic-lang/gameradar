@@ -126,7 +126,7 @@ jobs:
           node --experimental-strip-types tests/discovery-scoring.mjs
           node tests/discovery-browser.mjs
 
-      - name: Visual controls before publication
+      - name: Visual controls and consistent L2 navigation before publication
         run: node tests/visual-control-browser.mjs
 
       - name: Support studio before publication

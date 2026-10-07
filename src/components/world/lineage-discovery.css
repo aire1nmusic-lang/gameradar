@@ -108,3 +108,7 @@ html[data-color-mode] .gs-l2-aether-layout .gs-account-input{background:var(--ae
 html[data-color-mode] .gs-l2-aether-layout :is(.gt-panel,.gt-card){background:linear-gradient(125deg,#d6edff14,#f7f3e204 45%,#bfe5ff0b),var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:20px!important;box-shadow:inset 0 1px #fff2,0 14px 46px #030a1325!important;backdrop-filter:blur(22px);color:var(--aether-ink)!important}
 .gs-l2-aether-layout :is(.gt-panel,.gt-card)::before,.gs-l2-aether-layout :is(.gt-panel,.gt-card)::after{display:none!important}
 .gs-l2-aether-layout .gs-l2-utility h1:not(#l2-world-title){font-family:Georgia,serif;font-weight:400;letter-spacing:-.025em}
+
+/* Keep favorite controls beside metrics, never over their numerals. */
+.gs-l2-aether-layout .l2a .server-right{padding-right:32px}
+.gs-l2-aether-layout .l2a .fav{top:50%;margin-top:-14px;opacity:1}

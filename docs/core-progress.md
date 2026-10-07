@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**07.10 — Aether22 VERIFIED; journey BLOCKED before publication.** Run37558663265 Aether11sizes×2themes, no chronicle overlap/text clipping, hero<220mobile, support5/all36, search/favorites/retry PASS. Journey timed out waiting first h1; scoped visible heading waits, per-route/page-error diagnostics and failure screenshot added, no assertion removed. Focused artifact11456415702 (7.1MB) downloaded; actual390dark screenshot reviewed: compact hero/chronicles verified, favorite icons intersected metrics/dates. Fixed reserved32px metric space + centered favorites; added explicit no-intersection assertion. Hidden br got explicit text space. Production unchanged (failed before backup/upload). Local typecheck PASS. New resources0, rollbacksource/UI backup. Next: diagnose journey if still failing, complete gates and inspect phone/catalog/account screenshots.
+
+
 **07.10 — first preflight failed BEFORE publication, VERIFIED:** run37558389979 loader/account passed; discovery768 stopped5!=15 at old support expectation. b5b4530 already fixes that assertion without weakening other shelves and is in guarded run37558663265 (core checks running). No production writes or rollback. CI b5b4530 SUCCESS. Full artifact11455971934 is91.7MB, exceeds scratch download32MiB; added isolated focused review workflow to produce a small mobile/tablet/desktop screenshot artifact for actual visual inspection. It does not publish or touch backend. New resources0; normal Actions minutes only. Next: focused visual review and gated publication.
 
 

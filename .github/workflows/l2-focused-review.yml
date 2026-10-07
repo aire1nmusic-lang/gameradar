@@ -2,7 +2,7 @@ name: L2 focused visual review
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/l2-focused-review.yml']
+    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs']
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,3 +44,5 @@ jobs:
             output/l2-journey-qa/account-390-light.png
             output/l2-journey-qa/account-player-390.png
             output/l2-journey-qa/report.json
+            output/l2-journey-qa/failure.png
+            output/l2-journey-qa/catalog-320-dark.png

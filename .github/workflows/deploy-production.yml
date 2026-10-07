@@ -112,7 +112,7 @@ jobs:
           node --experimental-strip-types --test tests/zero-support.test.mjs
           node tests/aether-browser.mjs
 
-      - name: L2 journey and rotation before publication
+      - name: L2 utility navigation and zero support before publication
         run: node tests/l2-journey-browser.mjs
 
       - name: Loader matrix before publication

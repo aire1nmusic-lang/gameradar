@@ -16,6 +16,9 @@
 
 ## Состояние сейчас
 
+**07.10 — profile contract fixed; test navigation correction.** Focused37560211375 verified six utility routes320dark including profile with correct copyright fixture and no JS exception. Next harness click failed: profile intentionally hides MobileNav for its own CTA, but test tried clicking that hidden menu. Harness now returns to L2 home before testing its four bottom destinations; no UI controls/assertions removed. Focused review no longer duplicates Aether11×2 because main deploy already runs it before journey and again post-publication. Main/style/reordering source unchanged from185a78d. Production not updated. Next complete utility/rotation gates + baseline suites/publication. New resources0, normal Actions usage, source/backup rollback.
+
+
 **07.10 — fixture contract failure diagnosed; production unchanged.** Run37559759498 + focused37559759767: Aether11×2 including metric/favorite no-overlap PASS. Journey reached catalog/favorites/account/rating/openings320dark, then profile failed: fake copyright restrictions returned[] instead of required {restrictedLinks:[],restrictedMaterials:[]}. Corrected only fixture, real copyright controls unchanged. Added support-sorted catalog expansion/30s/membership checks to paid+allzero scenarios. Actual focused artifact11455724683 downloaded:390dark main and320dark catalog reviewed; compact hero, separated chronicles, themed catalog/four nav verified. Support copy explicitly includes all projects, avoids implying zero projects already contributed. Source/typecheck PASS; new deployment pending complete journey/gates. Cost0 new resources; rollbacknormal backup/revert.
 
 

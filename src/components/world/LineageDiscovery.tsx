@@ -8,7 +8,8 @@ import { chronicleOfVersion } from '@/data/games'
 import { artSrc, worldArt } from '@/data/themeMedia'
 import { formatCompact, formatNumber } from '@/lib/format'
 import { hasFreshOnline } from '@/services/discoveryRanking'
-import { peopleOrder, supportOrder } from '@/services/supportProjection'
+import { peopleOrder } from '@/services/supportProjection'
+import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import './lineage-discovery.css'
 
@@ -34,7 +35,9 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const upcoming = servers.filter(s => s.launch && Date.parse(s.launch.at) > Date.now())
   const visible = useMemo(() => servers.filter(s => (!onlySaved || has(s.slug)) && (!query.trim() ||
     `${s.name} ${s.version} ${s.rates ?? ''}`.toLocaleLowerCase('ru').includes(query.trim().toLocaleLowerCase('ru')))), [servers, query, onlySaved, has])
-  const support = [...visible].filter(s => (s.support?.coins ?? 0) > 0).sort(supportOrder)
+  const rotatingSupport = useSupportRotation(servers)
+  const visibleIds = new Set(visible.map(s => s.id))
+  const support = rotatingSupport.filter(s => visibleIds.has(s.id))
   const people = [...visible].sort(peopleOrder)
   const openings = visible.filter(s => s.launch && Date.parse(s.launch.at) > Date.now()).sort((a,b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at))
   const filtered = query.trim().length > 0 || onlySaved
@@ -47,7 +50,7 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
     return <section className={`panel glass gs-shelf-${key} ${key === 'opening' ? 'openings' : key === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${key}`}>
       <header className="panel-head"><div className="section-kicker">{kicker}</div><h2 id={`l2-${key}`}><Link to={ratingHref(key)}>{title}</Link></h2><p>{hint}</p></header>
       <div className="rows" aria-busy={loading}>
-        {loading && !servers.length ? <div className="empty" role="status">Загружаем серверы…</div> : error && !servers.length ? <div className="empty"><strong>Не удалось загрузить данные</strong><p>Проверь соединение и попробуй снова.</p><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div> : rows.length ? rows.map((server, index) => <Link key={server.id} to={`/server/${server.slug}`} className={`server ${!full && index >= 15 ? 'l2-overflow-all' : ''} ${!full && index >= 5 ? 'gs-preview-overflow' : ''}`}>
+        {loading && !servers.length ? <div className="empty" role="status">Загружаем серверы…</div> : error && !servers.length ? <div className="empty"><strong>Не удалось загрузить данные</strong><p>Проверь соединение и попробуй снова.</p><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div> : rows.length ? rows.map((server, index) => <Link key={server.id} to={`/server/${server.slug}`} className={`server ${!full && index >= (key === 'support' ? 5 : 15) ? 'l2-overflow-all' : ''} ${!full && index >= 5 ? 'gs-preview-overflow' : ''}`}>
           <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} gameId={game.id} size="sm" forceGameGlyph className="avatar" />
           <div className="server-copy"><span className="server-name">{server.name}</span><div className="server-meta">{chronicleOfVersion(game.id, server.version)?.label ?? server.version}{server.rates && ` · ×${String(server.rates).replace(/^[x×]/i, '')}`}{key === 'opening' && server.launch && <span> · {dateTime.format(new Date(server.launch.at))} МСК</span>}</div></div>
           <div className="server-right">{key === 'opening' && server.launch ? <time className="date" dateTime={server.launch.at} title={`${dateFull.format(new Date(server.launch.at))} МСК`}>{dateDay.format(new Date(server.launch.at))}<small>{dateMonth.format(new Date(server.launch.at))}</small></time> : <><strong>{formatNumber(key === 'support' ? server.support?.coins ?? 0 : server.votes)}</strong><small>{key === 'support' ? 'GS Coins' : 'голосов'}</small></>}</div>
@@ -56,7 +59,7 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
       </div>
       <footer className="panel-footer"><span>{key === 'support' ? 'Отдельно от голосов' : key === 'people' ? 'Органический рейтинг' : 'Время старта · МСК'}</span><div className="shelf-actions">{rows.length > 5 && <button type="button" className="l2-expand" aria-expanded={full} onClick={() => shelfToggle(key)}>{full ? 'Свернуть' : 'Показать ещё'}</button>}<Link to={ratingHref(key)} className="l2-all">{key === 'opening' ? 'Календарь' : 'Все'}<ArrowRight size={16}/></Link></div></footer>
       {key === 'people' && <div className="trust-note"><ShieldCheck size={13}/>Источник онлайна — сигнал доверия</div>}
-      {key === 'support' && <div className="trust-note support-note">Поддержка не повышает органический рейтинг</div>}
+      {key === 'support' && <div className="trust-note support-note">Coins определяют место; серверы с 0 меняются каждые 30 секунд. Поддержка не повышает органический рейтинг.</div>}
     </section>
   }
   return <div className={`l2a ${colorMode === 'light' ? 'light' : ''}`} style={art ? { '--art': `url("${artSrc(art, 2560)}")`, '--art-mobile': `url("${artSrc(art, 800)}")` } as CSSProperties : undefined}>

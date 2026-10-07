@@ -119,7 +119,10 @@ jobs:
           node tests/discovery-browser.mjs
 
       - name: Aether matrix before publication
-        run: node tests/aether-browser.mjs
+        run: |
+          node --experimental-strip-types --test tests/zero-support.test.mjs
+          node tests/aether-browser.mjs
+          node tests/l2-journey-browser.mjs
 
       - name: Visual controls before publication
         run: node tests/visual-control-browser.mjs
@@ -209,6 +212,7 @@ jobs:
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
           AETHER_QA_BASE_URL=https://gamescout.online node tests/aether-browser.mjs
+          L2_JOURNEY_QA_BASE_URL=https://gamescout.online node tests/l2-journey-browser.mjs
           CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
           STUDIO_QA_BASE_URL=https://gamescout.online node tests/support-studio-browser.mjs
 
@@ -239,8 +243,10 @@ jobs:
             output/account-review-qa
             output/discovery-qa
             output/aether-qa
+            output/l2-journey-qa
             output/control-qa
             output/studio-qa
           retention-days: 14
           if-no-files-found: ignore
+
 

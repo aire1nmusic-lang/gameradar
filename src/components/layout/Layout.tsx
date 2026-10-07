@@ -9,15 +9,20 @@ import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
-import { WorldNavigationProvider } from '@/hooks/useWorldNavigation'
+import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { WorldPageScope } from '@/components/world/WorldPageScope'
 
 export function Layout() {
+  return <PortalProvider><WorldNavigationProvider><LayoutContent /></WorldNavigationProvider></PortalProvider>
+}
+
+function LayoutContent() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const location = useLocation()
   const { colorMode } = useAppearance()
-  const aether = /^\/lineage-2(?:\/|$)/.test(location.pathname)
+  const { game } = useWorldNavigation()
+  const aether = game?.id === 'lineage2'
   const hall = location.pathname === '/'
 
   useEffect(() => {
@@ -38,8 +43,6 @@ export function Layout() {
   }, [])
 
   return (
-    <PortalProvider>
-      <WorldNavigationProvider>
         <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
           <BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
@@ -52,8 +55,6 @@ export function Layout() {
           <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
           <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
         </div>
-      </WorldNavigationProvider>
-    </PortalProvider>
   )
 }
 

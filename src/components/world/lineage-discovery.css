@@ -34,3 +34,77 @@ html[data-color-mode] .gs-l2-aether-layout .gs-mobile-nav{background:linear-grad
 html[data-color-mode='light'] .gs-l2-aether-layout .gs-mobile-nav{background:linear-gradient(0deg,#d7dce0 0%,#d7dce0a0 65%,transparent)!important}
 
 @media(max-width:600px){.l2a .scene:before{background-image:var(--art-mobile,var(--art))}}
+
+/* One Aether shell for the entire L2 journey, including utility routes. */
+html[data-color-mode] .gs-l2-aether-layout{isolation:isolate;--aether-ink:#f4f4ef;--aether-muted:#bcc6cb;--aether-line:#c0d1e329;--aether-pane:#16233085;--aether-field:#132131b0;--aether-gold:#e1c894}
+html[data-color-mode='light'] .gs-l2-aether-layout{--aether-ink:#202d39;--aether-muted:#465967;--aether-line:#2b435333;--aether-pane:#e3ecf0ac;--aether-field:#f3f7f9b0;--aether-gold:#70511d}
+.gs-l2-aether-layout::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#06101bd9,#0b152270 60%),linear-gradient(0deg,#0a1018b0,#0a101850),url('/media/worlds/lineage-2/master-2560.webp') 60% top/cover no-repeat}
+html[data-color-mode='light'] .gs-l2-aether-layout::before{background:linear-gradient(90deg,#dce5ecd9,#d8e2e877 65%),linear-gradient(0deg,#d7dce0aa,#e8f1f455),url('/media/worlds/lineage-2/master-2560.webp') 60% top/cover no-repeat}
+.gs-l2-aether-layout .gs-page-main,.gs-l2-aether-layout .gs-world-utility,.gs-l2-aether-layout .gs-world-utility>div{background:transparent!important;color:var(--aether-ink)!important}
+.gs-l2-aether-layout .gs-l2-utility{--gt-text:var(--aether-ink)!important;--gt-text-muted:var(--aether-muted)!important;--gt-text-faint:var(--aether-muted)!important;--gt-bg:transparent!important;--gt-surface:var(--aether-pane)!important;--gt-surface-raised:var(--aether-field)!important;--gt-border:var(--aether-line)!important;--gt-primary:var(--aether-gold)!important}
+.gs-l2-aether-layout .gs-l2-utility>div{--color-ink-950:transparent!important;--color-ink-900:var(--aether-pane)!important;--color-ink-850:var(--aether-pane)!important;--color-ink-800:var(--aether-field)!important;--color-ink-50:var(--aether-ink)!important;--color-ink-100:var(--aether-ink)!important;--color-ink-200:var(--aether-ink)!important;--color-ink-300:var(--aether-muted)!important;--color-ink-400:var(--aether-muted)!important;--color-ink-500:var(--aether-muted)!important;--color-signal-400:var(--aether-gold)!important}
+html[data-color-mode] .gs-l2-aether-layout :is(.gs-panel,.gs-account-glass,.gs-account-card,.gs-account-wallet>summary,.gs-account-hero,.gs-admin-hero){background:linear-gradient(125deg,#d6edff14,#f7f3e204 45%,#bfe5ff0b),var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:20px!important;box-shadow:inset 0 1px #fff2,0 14px 46px #030a1325!important;backdrop-filter:blur(22px) saturate(135%);color:var(--aether-ink)!important}
+.gs-l2-aether-layout .gs-panel::before,.gs-l2-aether-layout .gs-panel::after{display:none!important}
+.gs-l2-aether-layout .gs-panel-title{font:400 24px/1.2 Georgia,serif!important;color:var(--aether-ink)!important}
+html[data-color-mode] .gs-l2-aether-layout .gs-row{background:var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:12px!important;box-shadow:inset 0 1px #fff1!important;backdrop-filter:blur(14px);color:var(--aether-ink)!important}
+.gs-l2-aether-layout .gs-catalog-toolbar{background:var(--aether-pane)!important;border-color:var(--aether-line)!important;border-radius:14px;backdrop-filter:blur(22px)}
+.gs-l2-aether-layout :is(.gs-catalog-search,.gs-rating-tools,.gs-support-dialog,.gs-support-studio){background:var(--aether-pane)!important;border-color:var(--aether-line)!important;border-radius:16px;backdrop-filter:blur(22px);color:var(--aether-ink)!important}
+html[data-color-mode] .gs-l2-aether-layout .gs-account-entry{background:transparent!important}
+.gs-l2-aether-layout .gs-account-entry>div[aria-hidden]{display:none}
+.gs-l2-aether-layout .gs-account-body :is(p,label,a,button){color:var(--aether-muted)}
+.gs-l2-aether-layout .gs-account-body h1{font-family:Georgia,serif;color:var(--aether-ink)}
+html[data-color-mode] .gs-l2-aether-layout .gs-account-input{background:var(--aether-field)!important;border-color:var(--aether-line)!important;color:var(--aether-ink)!important}
+.gs-l2-aether-layout .gs-account-submit{background:linear-gradient(135deg,#ead7ae,#c2a976)!important;color:#19202a!important}
+.gs-l2-aether-layout .gs-mobile-nav{--color-ink-50:var(--aether-gold);--color-ink-400:var(--aether-muted)}
+/* Never squeeze chronicle labels into each other. The row scrolls inside its pane. */
+.gs-l2-aether-layout .l2a .chronicle-row{min-width:0}
+.gs-l2-aether-layout .l2a .chronicles{min-width:0;max-width:100%;margin-right:0;gap:8px;overflow-x:auto;overscroll-behavior-x:contain}
+.gs-l2-aether-layout .l2a .chron{flex:0 0 auto;min-width:max-content;gap:8px}
+.gs-l2-aether-layout .l2a .chron img{flex:0 0 27px}
+.gs-l2-aether-layout .l2a .chron span{white-space:nowrap}
+/* Support previews contain five rows on every device; expansion keeps all projects. */
+.gs-l2-aether-layout .l2a .support .rows{display:block}
+.gs-l2-aether-layout .l2a .support .server{grid-template-columns:36px minmax(0,1fr) auto;gap:10px;min-height:60px;padding:10px!important}
+.gs-l2-aether-layout .l2a .support .server-right{display:block;grid-column:auto;text-align:right;padding-top:0}
+.gs-l2-aether-layout .l2a .support .avatar{width:36px;height:36px}
+.gs-l2-aether-layout .l2a .support .server:first-child .server-name{font:600 15px/1.4 system-ui;letter-spacing:normal}
+.gs-l2-aether-layout .l2a .support .l2-overflow-all{display:none}
+.gs-l2-aether-layout .l2a .support .l2-expand{display:inline-flex}
+@media(max-width:767px),(max-width:1023px) and (max-height:500px){
+ .gs-l2-aether-layout .l2a .hero{min-height:0!important;align-items:flex-start}
+ .gs-l2-aether-layout .l2a .hero-copy{padding:14px 0 12px;width:100%}
+ .gs-l2-aether-layout .l2a .breadcrumb{margin-bottom:8px;font-size:11px}
+ .gs-l2-aether-layout .l2a .edition,.gs-l2-aether-layout .l2a .hero-note{display:none}
+ .gs-l2-aether-layout .l2a .hero h1{font-size:46px!important;line-height:1}
+ .gs-l2-aether-layout .l2a .hero p{font-size:12px;line-height:1.4;margin-top:7px;max-width:310px;min-height:0}
+ .gs-l2-aether-layout .l2a .hero p br{display:none}
+ .gs-l2-aether-layout .l2a .metrics{margin-top:10px}
+ .gs-l2-aether-layout .l2a .metric{padding:0 13px}
+ .gs-l2-aether-layout .l2a .metric:first-child{padding-left:0}
+ .gs-l2-aether-layout .l2a .metric strong{font-size:18px}
+ .gs-l2-aether-layout .l2a .metric small{font-size:10px;line-height:1.3}
+ .gs-l2-aether-layout .l2a .discovery{padding:9px;margin-bottom:10px;border-radius:16px}
+ .gs-l2-aether-layout .l2a .search-box{padding:2px 3px 2px 10px;gap:7px}
+ .gs-l2-aether-layout .l2a .search-box input{height:38px}
+ .gs-l2-aether-layout .l2a .find-btn{padding:8px 13px;min-height:38px}
+ .gs-l2-aether-layout .l2a .chronicle-row{margin-top:7px}
+ .gs-l2-aether-layout .l2a .chron{min-height:44px;font-size:12px;padding:5px 9px}
+ .gs-l2-aether-layout .l2a .catalog-toolbar{margin-bottom:9px;font-size:11px;gap:6px}
+ .gs-l2-aether-layout .l2a .panel-head{padding:15px 16px 12px;min-height:0}
+ .gs-l2-aether-layout .l2a .panel h2{font-size:25px}
+ .gs-l2-aether-layout .l2a .section-kicker{font-size:9px;margin-bottom:6px}
+ .gs-l2-aether-layout .l2a .panel-head p{font-size:11px;margin-top:5px}
+ .gs-l2-aether-layout .l2a .server{min-height:60px!important;padding:10px 8px;grid-template-columns:34px minmax(0,1fr) auto;gap:8px}
+ .gs-l2-aether-layout .l2a .avatar{width:34px;height:34px}
+ .gs-l2-aether-layout .l2a .server-name{font-size:14px}
+ .gs-l2-aether-layout .l2a .server-right{padding-top:0}
+ .gs-l2-aether-layout .l2a .panel-footer{margin:0 16px;padding:8px 0 10px}
+ .gs-l2-aether-layout .l2a .trust-note{padding:0 16px 12px;line-height:1.4}
+ .gs-l2-aether-layout .gs-account-body{padding:22px}
+ .gs-l2-aether-layout .gs-account-back{margin-bottom:16px}
+ .gs-l2-aether-layout::before{background-image:linear-gradient(90deg,#06101bd9,#0b152270 60%),linear-gradient(0deg,#0a1018b0,#0a101850),url('/media/worlds/lineage-2/master-800.webp')}
+ html[data-color-mode='light'] .gs-l2-aether-layout::before{background-image:linear-gradient(90deg,#dce5ecd9,#d8e2e877 65%),linear-gradient(0deg,#d7dce0aa,#e8f1f455),url('/media/worlds/lineage-2/master-800.webp')}
+}
+html[data-color-mode] .gs-l2-aether-layout :is(.gt-panel,.gt-card){background:linear-gradient(125deg,#d6edff14,#f7f3e204 45%,#bfe5ff0b),var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:20px!important;box-shadow:inset 0 1px #fff2,0 14px 46px #030a1325!important;backdrop-filter:blur(22px);color:var(--aether-ink)!important}
+.gs-l2-aether-layout :is(.gt-panel,.gt-card)::before,.gs-l2-aether-layout :is(.gt-panel,.gt-card)::after{display:none!important}
+.gs-l2-aether-layout .gs-l2-utility h1:not(#l2-world-title){font-family:Georgia,serif;font-weight:400;letter-spacing:-.025em}

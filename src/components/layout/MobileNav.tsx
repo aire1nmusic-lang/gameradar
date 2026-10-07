@@ -22,7 +22,7 @@ export function MobileNav() {
   const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
-  const lineageWorld = /^\/lineage-2(?:\/|$)/.test(location.pathname)
+  const lineageWorld = game?.id === 'lineage2'
   const items = lineageWorld ? [ITEMS[0], ITEMS[1], { to: '/favorites', label: 'Избранное', icon: 'favorite' as WorldIconName, end: false }, ITEMS[4]] : ITEMS
   return (
     <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 lg:hidden">

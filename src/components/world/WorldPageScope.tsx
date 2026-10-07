@@ -5,6 +5,7 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { useAppearance } from '@/theme/appearance'
 import { lightWorldTheme } from '@/theme/lightWorld'
 import { cn } from '@/lib/utils'
+import './lineage-discovery.css'
 
 function platformPalette(theme: ReturnType<typeof themeForGame>): CSSProperties {
   const c=theme.colors
@@ -42,7 +43,7 @@ export function WorldPageScope({children,className}:{children:ReactNode;classNam
   const base=themeForGame(game.id)
   const theme=colorMode==='light'?lightWorldTheme(base):base
 
-  return <ThemeScope theme={theme} as="div" className={cn('gs-world-utility',colorMode==='light'&&'gs-world-light')}>
+  return <ThemeScope theme={theme} as="div" className={cn('gs-world-utility',game.id==='lineage2'&&'gs-l2-utility',colorMode==='light'&&'gs-world-light')}>
     <div
       className={cn('min-h-[calc(100vh-60px)]',className)}
       style={{...platformPalette(theme),background:theme.colors.bg,color:theme.colors.text}}

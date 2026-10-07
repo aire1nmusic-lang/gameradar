@@ -4,7 +4,8 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { GAMES } from '@/data/games'
 import { useAsync } from '@/hooks/data'
 import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
-import { peopleOrder, supportOrder } from '@/services/supportProjection'
+import { peopleOrder } from '@/services/supportProjection'
+import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { Container } from '@/components/layout/Container'
 import { ChipToggle } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
@@ -30,7 +31,7 @@ export default function RatingPage() {
  useEffect(()=>{const timer=window.setInterval(()=>{if(document.visibilityState==='visible')reload()},30000);return()=>clearInterval(timer)},[reload])
  const supported=()=>{invalidateDiscoveryCache();reload()}
  useSeo({title:'Рейтинг серверов',path:'/rating',description:'Все серверы: поддержка за Coins, ближайшие открытия и голоса игроков. Прогноз позиции при поддержке.'})
- const support=[...servers].sort(supportOrder),people=[...servers].sort(peopleOrder),openings=servers.filter(s=>s.launch&&Date.parse(s.launch.at)>Date.now()).sort((a,b)=>Date.parse(a.launch!.at)-Date.parse(b.launch!.at)||a.id.localeCompare(b.id))
+ const support=useSupportRotation(servers,world?.id==='lineage2'),people=[...servers].sort(peopleOrder),openings=servers.filter(s=>s.launch&&Date.parse(s.launch.at)>Date.now()).sort((a,b)=>Date.parse(a.launch!.at)-Date.parse(b.launch!.at)||a.id.localeCompare(b.id))
  return <div className="gs-rating-page pb-16"><Container className="pt-6 lg:pt-8">
   <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинг{world?` · ${world.shortName}`:''}</h1>
   <div className="gs-rating-tools"><div className="gs-rating-switch" aria-label="Категория рейтинга">{[['support','Поддержка'],['opening','Открытия'],['people','Голоса']].map(([id,label])=><button key={id} type="button" aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}</div><button type="button" className="gs-support-launch" onClick={()=>setSupportOpen(true)}><WorldIcon name="coins" size={17}/>Поддержать сервер</button><details className="gs-rating-about"><summary>Как считается</summary><p>Все серверы, включая нулевые показатели. Coins учитываются в поддержке, голоса игроков — отдельно. Место может измениться.</p></details></div>

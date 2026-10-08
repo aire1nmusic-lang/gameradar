@@ -109,7 +109,7 @@ jobs:
 
       - name: Public-read recovery and L2 device review before publication
         run: |
-          node --test tests/l2-read-recovery.test.mjs
+          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs
           node tests/l2-review-browser.mjs
 
       - name: Aether matrix before publication

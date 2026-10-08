@@ -27,7 +27,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Read recovery and L2 device review
         run: |
-          node --test tests/l2-read-recovery.test.mjs
+          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs
           node tests/l2-review-browser.mjs
       - name: Compact screenshot contact sheets for visual review
         run: |

@@ -1,3 +1,7 @@
+## 08.10.2026 — Live catalog deadline blocked first glass release; guarded retry
+
+VERIFIED run37767139212 failed before publication at fresh public catalog build:15-second TimeoutError; no files uploaded and production unchanged. Focused37767139243/Loader37767139177 also stopped at catalog GET before browser tests, so no screenshot success claimed. Private suite passed. Changed only read-only release fetch to bounded30seconds plus one retry for network/502/503/504. Fresh page, count, pagination, canonical and reconciliation validations remain; no cached/missing-data fallback and no gate removed. Two meaningful unit tests PASS: transient recovery and permanent/invalid failures remain blocked. Added tests to existing preflight/focused checks. Desktop support action gets explicit intrinsic width to avoid grid stretching. No backend/DB/DNS/payment changes, new resources0; existing backup/rollback available. Next retry current-data build, responsive screenshot review, protected publication.
+
 ## 08.10.2026 — World glass and footer FAQ candidate
 
 VERIFIED prior release: guarded run37724225982 SUCCESS for8690deb9, all pre/postflight gates passed; old pending paragraph below superseded. New owner screenshots request warmer light surfaces without glare, correctly bounded rating controls, explanations in footer FAQ, and support/filter styling coordinated with the supplied account visual reference.

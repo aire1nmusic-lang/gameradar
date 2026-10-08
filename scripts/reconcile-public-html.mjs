@@ -53,7 +53,20 @@ export async function fetchPublishedCatalog(base, fetchImpl = fetch) {
   for (let offset = 0; ; offset += 100) {
     if (offset > 100000) throw new Error('Catalog exceeds API pagination limit')
     const url = new URL(`/api/v1/servers?limit=100&offset=${offset}`, origin)
-    const response = await fetchImpl(url, { signal: AbortSignal.timeout(15000), headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } })
+    let response
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        response = await fetchImpl(url, { signal: AbortSignal.timeout(30000), headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } })
+      } catch (error) {
+        if (attempt === 1) throw error
+        continue
+      }
+      if (attempt === 0 && [502,503,504].includes(response.status)) {
+        await response.body?.cancel().catch(() => {})
+        continue
+      }
+      break
+    }
     if (!response.ok) throw new Error(`Catalog API returned HTTP ${response.status} at offset ${offset}`)
     const page = await response.json()
     if (!Array.isArray(page.items) || !Number.isSafeInteger(page.total) || page.total < 0 || page.offset !== offset || page.limit !== 100) throw new Error(`Invalid catalog page at offset ${offset}`)

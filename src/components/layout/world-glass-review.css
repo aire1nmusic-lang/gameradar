@@ -59,7 +59,7 @@ html[data-color-mode] body .gs-l2-aether-layout .gs-rating-tools {
 .gs-l2-aether-layout .gs-rating-switch {min-width:0}
 .gs-l2-aether-layout .gs-rating-switch button {min-width:0;min-height:40px;padding:7px 5px;font:500 12px/1.3 var(--font-sans);border-color:var(--aether-line);background:var(--aether-field);color:var(--aether-muted)}
 .gs-l2-aether-layout .gs-rating-switch button[aria-pressed='true'] {background:color-mix(in srgb,var(--aether-gold) 10%,var(--aether-field));color:var(--aether-gold);border-color:color-mix(in srgb,var(--aether-gold) 55%,transparent)}
-.gs-l2-aether-layout .gs-support-launch {min-height:44px;padding:8px 13px;font-weight:500;color:var(--aether-gold);border-color:var(--aether-line);background:var(--aether-field);box-shadow:none}
+.gs-l2-aether-layout .gs-support-launch {justify-self:start;width:max-content;max-width:100%;min-height:44px;padding:8px 13px;font-weight:500;color:var(--aether-gold);border-color:var(--aether-line);background:var(--aether-field);box-shadow:none}
 .gs-l2-aether-layout .gs-support-launch:disabled {opacity:.5;cursor:not-allowed}
 
 /* One scroll surface and one frame for the studio; quieter panels inside. */

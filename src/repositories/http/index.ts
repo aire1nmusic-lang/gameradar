@@ -1,4 +1,4 @@
-import { fetchApiResponse } from './publicRead'
+import { fetchApiResponse, apiFailureMessage } from './publicRead'
 import type { Game, GameServer, OnlineSample, OwnerProject, Page, ServerClaim, RankedServer, ServerQuery, User, Vote, VoteIntegration } from '@/models'
 import type { Repositories } from '../types'
 import { cacheGames, hydrateGames } from '@/data/games'
@@ -16,9 +16,9 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
         credentials: 'same-origin', ...options,
         headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers },
       })
-    } catch { throw new Error('API недоступен. Проверьте, запущен ли локальный Worker.') }
+    } catch { throw new Error('Не удалось связаться с сервисом. Попробуйте немного позже.') }
     const body = await response.json().catch(() => null)
-    if (!response.ok) throw new HttpError(response.status, body?.error?.code ?? 'http_error', body?.error?.message ?? 'Не удалось выполнить запрос')
+    if (!response.ok) throw new HttpError(response.status, body?.error?.code ?? 'http_error', body?.error?.message ?? apiFailureMessage(response.status))
     if (!body && response.status !== 204) throw new Error('API вернул некорректный ответ')
     return body as T
   }
@@ -191,3 +191,4 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     ads: { forSlot: async () => undefined, products: async () => [] },
   }
 }
+

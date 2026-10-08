@@ -158,7 +158,7 @@ export interface ServerLinks {
 
 export interface GameServer {
   /** UI-only availability of optional live ranking joins; never sent in a write. */
-  rankingAvailability?: { votes: boolean; support: boolean }
+  rankingAvailability?: { votes: boolean; support: boolean; pending?: boolean }
   id: string
   slug: string
   name: string
@@ -446,3 +446,4 @@ export interface Page<T> {
   limit: number
   offset: number
 }
+

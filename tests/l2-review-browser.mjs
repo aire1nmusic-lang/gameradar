@@ -11,12 +11,12 @@ const base=live||'http://127.0.0.1:4189',games=await readPublicGames(),catalog=a
 const sample=catalog.items.find(s=>s.gameId==='lineage2'),rows=Array.from({length:30},(_,i)=>({...sample,id:`review-${i}`,slug:`review-${i}`,name:`Review ${i}`,votes:5+i,support:{coins:i<3?3-i:0,participants:1},launch:{at:new Date(Date.now()+3600000+i*86400000).toISOString()}}))
 const browser=await chromium.launch(),report=[];let active
 await mkdir('output/l2-review-qa',{recursive:true})
-async function intercept(page,missing='none'){
+async function intercept(page,missing='none',peopleGate){
  await page.route('**/api/v1/**',async route=>{assert.equal(route.request().method(),'GET','Review makes no writes');const u=new URL(route.request().url()),p=u.pathname;let json=[],status=200
  if(p.endsWith('/games'))json=games
  else if(p.endsWith('/auth/me'))json={privateCore:true,user:null,providers:[],registrationOpen:false}
  else if(p.endsWith('/servers')){const offset=Number(u.searchParams.get('offset')||0),limit=Number(u.searchParams.get('limit')||100);json={items:rows.slice(offset,offset+limit),total:rows.length,offset,limit}}
- else if(p.endsWith('/people-rating')){json=rows.map(s=>({server_id:s.id,votes:s.votes}));if(missing==='people'||missing==='both')status=503}
+ else if(p.endsWith('/people-rating')){if(peopleGate)await peopleGate;json=rows.map(s=>({server_id:s.id,votes:s.votes}));if(missing==='people'||missing==='both')status=503}
  else if(p.endsWith('/support/ranking')){json=rows.map(s=>({server_id:s.id,...s.support}));if(missing==='support'||missing==='both')status=503}
  await route.fulfill({json,status})})
 }
@@ -28,6 +28,17 @@ try{
   assert.equal(await page.locator('.l2a button').getByText('Избранное',{exact:true}).count(),0)
   assert.equal(await page.locator('.l2a .metrics').innerText().then(s=>s.includes('—')),false)
   for(const selector of ['.gs-header-search','[aria-label^="Аккаунт"]'])assert.equal(await page.locator('.gs-site-header '+selector).filter({visible:true}).first().evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)')
+  const support=page.locator('.l2a .support')
+  assert.equal(await support.locator('.server:visible').count(),10,'Ten rows on every device')
+  assert.equal(await support.locator('.gs-top-row').count(),3,'Distinct first three positions')
+  for(const row of await support.locator('.gs-top-row').all()){
+    await row.scrollIntoViewIfNeeded()
+    await row.locator('.gs-top-rank-art img').evaluate(async image=>{await image.decode()})
+    assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),'rgb(246, 243, 239)','Podium name contrast in both themes')
+    assert.notEqual(await row.locator('.gs-rank-podium').evaluate(e=>getComputedStyle(e).backgroundImage),'none','Visible medal surface')
+    const rect=await row.boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=w,'Podium remains in viewport')
+  }
+  await page.evaluate(()=>window.scrollTo(0,0))
   await page.screenshot({path:`output/l2-review-qa/home-${w}-${theme}.png`,fullPage:true})
   await page.locator('.chronicle-picker>summary').click();assert.ok((await page.locator('.chronicle-picker>summary').boundingBox()).height<=44)
   await page.waitForFunction(()=>[...document.querySelectorAll('.chronicle-picker img')].every(i=>i.complete&&i.naturalWidth>0));const images=await page.locator('.chronicle-picker img').evaluateAll(els=>els.map(e=>({width:e.getBoundingClientRect().width,loaded:e.complete&&e.naturalWidth>0})));assert.ok(images.length>=5);assert.ok(images.every(i=>i.width>=66&&i.loaded))
@@ -59,6 +70,14 @@ try{
   await page.goto(base+'/openings?game=lineage2');const timer=page.getByRole('timer').first();await timer.waitFor();const before=await timer.innerText();assert.match(before,/(?:\d+ д )?\d{2}:\d{2}:\d{2}/);await page.clock.fastForward(1100);assert.notEqual(await timer.innerText(),before);await page.screenshot({path:`output/l2-review-qa/openings-${w}-${theme}.png`,fullPage:true})
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);await context.close();report.push({w,h,theme,timer:true,controls:true});console.log('PASS L2 device review',w,h,theme)
  }
+ let releasePeople;const peopleGate=new Promise(resolve=>{releasePeople=resolve})
+ const slowContext=await browser.newContext({viewport:{width:390,height:844}}),slowPage=await slowContext.newPage();active=slowPage
+ await intercept(slowPage,'none',peopleGate)
+ await slowPage.goto(base+'/lineage-2')
+ await slowPage.locator('.l2a .support .server').first().waitFor({timeout:5000})
+ assert.equal(await slowPage.locator('.l2a .support .server:visible').count(),10,'Stalled ranking cannot block cards')
+ assert.equal(await slowPage.locator('.gs-ranking-availability').count(),0,'Pending enrichment is not an outage')
+ releasePeople();await slowContext.close();console.log('PASS catalog paints before stalled private ranking')
  for(const missing of ['people','support','both']){
   const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();active=page;await intercept(page,missing)
   await page.goto(base+'/lineage-2');await page.locator('.l2a .support .server').first().waitFor();assert.equal(await page.locator('.l2a .support .server').count(),30);await page.locator('.gs-ranking-availability').waitFor();assert.equal(await page.getByText('Не удалось загрузить данные',{exact:true}).count(),0)
@@ -67,3 +86,4 @@ try{
  }
  await writeFile('output/l2-review-qa/report.json',JSON.stringify(report,null,2))
 }catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url())}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}
+

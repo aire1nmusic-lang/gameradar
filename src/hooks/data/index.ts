@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { repo } from '@/repositories'
 import { GAMES } from '@/data/games'
-import type { AdSlot, GameServer, RankedServer, ServerQuery } from '@/models'
+import type { AdSlot, GameServer, Page, RankedServer, ServerQuery } from '@/models'
 import {
   adForSlot,
   boostForecast,
@@ -55,7 +55,7 @@ export function useServerPage(query: ServerQuery, keepPrevious = true) {
   const k = key(query)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stable = useMemo(() => query, [k])
-  return useAsync(() => searchServers(stable), [k], keepPrevious)
+  return useAsync<Page<GameServer>>(publish => searchServers(stable,false,publish), [k], keepPrevious)
 }
 
 export function useServer(slug: string | undefined) {
@@ -137,3 +137,4 @@ export function useOwnerAnalytics() {
 export function usePlatformStats() {
   return useAsync(() => platformStats(), [])
 }
+

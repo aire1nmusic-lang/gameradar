@@ -48,3 +48,49 @@ test('aggregate 503 does not hide cards or replace available catalog values with
     }
   }finally{globalThis.fetch=originalFetch;delete globalThis.catalogCards}
 })
+
+test('public cards publish before a stalled ranking, then update with actual scores', {timeout:3000}, async()=>{
+  let releasePeople
+  try{
+    catalog.invalidateDiscoveryCache()
+    globalThis.catalogCards=[{id:'fast',votes:7,support:{coins:4,participants:2}}]
+    globalThis.fetch=async url=>String(url).includes('people-rating')
+      ?new Promise(resolve=>{releasePeople=()=>resolve(new Response(JSON.stringify([{server_id:'fast',votes:9}])))})
+      :new Response(JSON.stringify([{server_id:'fast',coins:6,participants:3}]))
+    let publish,complete=false
+    const first=new Promise(resolve=>{publish=resolve})
+    const result=catalog.discoveryServers({},false,publish).then(rows=>{complete=true;return rows})
+    const snapshot=await first
+    assert.equal(complete,false,'Slow optional ranking cannot block public cards')
+    assert.equal(snapshot[0].id,'fast')
+    assert.equal(snapshot[0].votes,7,'Preserve available catalog values while loading')
+    assert.equal(snapshot[0].rankingAvailability.pending,true)
+    releasePeople()
+    const final=await result
+    assert.equal(final[0].votes,9)
+    assert.equal(final[0].support.coins,6)
+    assert.equal(final[0].rankingAvailability.pending,false)
+  }finally{releasePeople?.();globalThis.fetch=originalFetch;delete globalThis.catalogCards;catalog.invalidateDiscoveryCache()}
+})
+
+test('concurrent public reads share one request and independent bodies; private reads and writes stay fresh',async()=>{
+  try{
+    reads.invalidatePublicReads()
+    let calls=0,release
+    const response=()=>new Response(JSON.stringify({items:[{id:'public'}]}),{headers:{'content-type':'application/json'}})
+    globalThis.fetch=async()=>{calls++;return calls===1?new Promise(resolve=>{release=()=>resolve(response())}):response()}
+    const a=reads.fetchApiResponse('/api/v1/servers?limit=100',{}),b=reads.fetchApiResponse('/api/v1/servers?limit=100',{})
+    assert.equal(calls,1);release()
+    assert.deepEqual(await (await a).json(),await (await b).json())
+    assert.equal((await (await reads.fetchApiResponse('/api/v1/servers?limit=100',{})).json()).items[0].id,'public')
+    assert.equal(calls,1)
+    reads.invalidatePublicReads()
+    await reads.fetchApiResponse('/api/v1/servers?limit=100',{});assert.equal(calls,2)
+    for(const path of ['/api/v1/auth/me','/api/v1/coins/balance','/api/v1/servers']){
+      const init=path.endsWith('/servers')?{method:'POST'}:{}
+      await reads.fetchApiResponse(path,init);await reads.fetchApiResponse(path,init)
+    }
+    assert.equal(calls,8,'Never cache private state or mutations')
+  }finally{globalThis.fetch=originalFetch;reads.invalidatePublicReads()}
+})
+

@@ -1,3 +1,4 @@
+import type { Page, GameServer } from '@/models'
 import { RankMedal } from '@/components/ui/RankMedal'
 import { SelectMenu } from '@/components/ui/SelectMenu'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
@@ -63,10 +64,10 @@ export default function Catalog() {
 
   const rotateSupport = world?.id === 'lineage2' && sort === 'support'
   const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
-  const { data: page, loading, error, reload } = useAsync(
-    () => demo ? searchServers(query,true) : privateCore && sort === 'votes' ? peopleSortedServers(query)
-      : privateCore && sort === 'support' ? supportSortedServers(query)
-        : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query),
+  const { data: page, loading, error, reload } = useAsync<Page<GameServer>>(
+    publish => demo ? searchServers(query,true,publish) : privateCore && sort === 'votes' ? peopleSortedServers(query,publish)
+      : privateCore && sort === 'support' ? supportSortedServers(query,publish)
+        : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query,false,publish),
     [JSON.stringify(query),privateCore,authLoading,demo], true)
   const supportRows = useSupportRotation(page?.items ?? [], rotateSupport)
   const results = rotateSupport ? supportRows.slice(0, visible) : page?.items ?? []
@@ -206,7 +207,7 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
-        {results.some(s=>s.rankingAvailability && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинг временно недоступен</p>}
+        {results.some(s=>s.rankingAvailability && !s.rankingAvailability.pending && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинг временно недоступен</p>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading && !page ? (
@@ -323,3 +324,4 @@ function buildChips(filters: CatalogFilters, setFilters: (next: CatalogFilters) 
   if (filters.openedWithin !== 'any') chips.push({ key: 'opened', label: 'По дате открытия', remove: () => setFilters({ ...filters, openedWithin: 'any' }) })
   return chips
 }
+

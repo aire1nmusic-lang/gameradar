@@ -1,4 +1,4 @@
-import { fetchApiResponse } from './publicRead'
+import { fetchApiResponse, apiFailureMessage } from './publicRead'
 /** Minimal JSON client for /api/v1 — the same rules as the HTTP repositories. */
 export class ApiRequestError extends Error {
   constructor(
@@ -24,9 +24,10 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   }
   const body = await response.json().catch(() => null)
   if (!response.ok) {
-    throw new ApiRequestError(response.status, body?.error?.code ?? 'http_error', body?.error?.message ?? 'Не удалось выполнить запрос', body)
+    throw new ApiRequestError(response.status, body?.error?.code ?? 'http_error', body?.error?.message ?? apiFailureMessage(response.status), body)
   }
   return body as T
 }
 
 export const apiSend = <T>(path: string, input: unknown, method = 'POST') => apiRequest<T>(path, { method, body: JSON.stringify(input) })
+

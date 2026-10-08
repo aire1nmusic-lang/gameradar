@@ -29,6 +29,31 @@ jobs:
         run: |
           node --test tests/l2-read-recovery.test.mjs
           node tests/l2-review-browser.mjs
+      - name: Compact screenshot contact sheets for visual review
+        run: |
+          python -m pip install --quiet Pillow
+          python <<'PY'
+          from PIL import Image, ImageOps, ImageDraw
+          from pathlib import Path
+          import base64, io
+          root=Path('output/l2-review-qa')
+          groups=[
+            ['home-390-dark.png','home-390-light.png','chronicles-390-dark.png','chronicles-390-light.png'],
+            ['search-390-dark.png','search-390-light.png','filters-390-light.png','openings-390-dark.png'],
+          ]
+          for i,names in enumerate(groups):
+            sheet=Image.new('RGB',(1040,730),'#c6c8c7')
+            draw=ImageDraw.Draw(sheet)
+            for j,name in enumerate(names):
+              im=Image.open(root/name).convert('RGB')
+              im=im.crop((0,0,im.width,min(im.height,1050)))
+              im=ImageOps.contain(im,(260,700))
+              sheet.paste(im,(j*260,26));draw.text((j*260+5,7),name,fill='black')
+            buffer=io.BytesIO();sheet.save(buffer,'WEBP',quality=84,method=6)
+            print('QA_SHEET_'+str(i)+'_BEGIN')
+            print(base64.b64encode(buffer.getvalue()).decode())
+            print('QA_SHEET_'+str(i)+'_END')
+          PY
       - name: Visual controls and support studio
         run: |
           node tests/visual-control-browser.mjs

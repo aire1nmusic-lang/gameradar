@@ -1,3 +1,9 @@
+## 08.10.2026 — L2 visual verification and favorites QA synchronization
+
+VERIFIED focused runs37722720326 and37723260905: all12 responsive/theme cases, chronicle images, compact controls, one-second timers, optional ranking503 recovery, navigation, zero-Coins rotation and support studio passed. Actual mobile contact sheets reviewed via safe UTF-8 job logs because signed artifact download returned403; dark/light home, chronicles, search, filters and openings reviewed with no overlap.
+
+Deployment37722720329 passed all preflight gates and uploaded current91e9659 with correct cache/asset/SEO verification, then rolled back after the two-device favorite-removal assertion. Evidence: the test reloaded the second context while the first showed an optimistic empty state, before the POST persisted; its initial empty text also preceded account loading. The test now awaits successful removal response and the second context's GET plus completed synchronization before asserting empty. Assertions and isolated real PostgreSQL API remain; no private service/database changes and no gate removed. Publication pending retry.
+
 ## 08.10.2026 — L2 device feedback: resilient catalog and lighter controls
 
 VERIFIED live public probe: /servers?gameId=lineage2&limit=100 returned30 cards HTTP200 (8.0s from runner), support/ranking96 HTTP200 (7.4s), people-rating HTTP503 (18.2s). Root UI defect: Promise.all made optional aggregate failure reject the whole discovery/catalog. Public cards now survive failed/deadline-exceeded ranking joins, retain actual catalog values with a visible availability note; support forecast/action is disabled when its live aggregate is unavailable. Public GETs have bounded reads and one transient retry on games/servers; writes are never retried. No private API/DB/DNS/payment changes.

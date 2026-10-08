@@ -218,6 +218,7 @@ jobs:
           }
           console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
+          # The two-device check awaits persisted writes before reloading the second context.
           FAVORITES_QA_BASE_URL=https://gamescout.online node tests/favorites-browser.mjs
           LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
           ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs

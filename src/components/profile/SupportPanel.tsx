@@ -79,7 +79,6 @@ export function SupportPanel({server,amount,onSupported}:{server:GameServer;amou
     <h2 className="text-[18px]">Поддержка</h2>
     {loading&&!summary&&<p role="status" className="text-[13px] text-ink-400">Загружаем данные Поддержки…</p>}
     {summary&&<p className="text-[15px]">Поддержка: <strong>{summary.coins}</strong> · {summary.participants} {plural(summary.participants, ['участник', 'участника', 'участников'])}</p>}
-    <details className="text-[13px] text-ink-400"><summary className="cursor-pointer select-none">Что такое поддержка</summary><p className="mt-1.5">Отдельная сортировка за GS Coins. Карточки одинаковые; поддержка не влияет на рейтинг по голосам. Номинал: 1 Coin = 50 ₽.</p></details>
     {summary?.recent.length ? <div className="space-y-1 border-t border-white/7 pt-3">
       <h3 className="text-[13px] text-ink-300">Последние поддержавшие</h3>
       {summary.recent.map((item,index)=><div key={`${item.created_at}-${index}`} className="flex justify-between gap-3 text-[13px]">

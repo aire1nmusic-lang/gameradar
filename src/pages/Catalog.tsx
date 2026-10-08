@@ -206,8 +206,7 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
-        {results.some(s=>s.rankingAvailability && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинги временно обновляются. Показаны последние доступные данные каталога.</p>}
-        {sort === 'recommended' && <details className="gs-ranking-explanation"><summary>Как считается общий топ</summary><p>Голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. «Выбор игроков» считается отдельно по голосам.</p></details>}
+        {results.some(s=>s.rankingAvailability && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинг временно недоступен</p>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading && !page ? (

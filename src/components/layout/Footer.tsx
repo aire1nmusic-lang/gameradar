@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Container } from './Container'
 import { Logo } from './Logo'
+import { FooterFaq } from './FooterFaq'
 import { GAMES } from '@/data/games'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
@@ -29,7 +30,7 @@ const COLUMNS = [
 
 export function Footer() {
   const {pathname}=useLocation()
-  const compactPrivate=pathname==='/account'||pathname.startsWith('/admin')
+  const compactPrivate=pathname==='/'||pathname==='/account'||pathname.startsWith('/admin')
   const { privateCore, loading }=useAuth()
   const {game:world,loading:worldPending,scoped}=useWorldNavigation()
   const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
@@ -41,6 +42,7 @@ export function Footer() {
     ],
   }:column):COLUMNS
   if(compactPrivate)return <footer className="gs-site-footer gs-private-footer relative pb-24 md:pb-5">
+    <Container><FooterFaq /></Container>
     <Container className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-4 text-sm">
       <Link to="/terms">Условия</Link><Link to="/privacy">Приватность</Link><Link to="/copyright">Правообладателям</Link><span>© 2026 GameScout</span>
     </Container>
@@ -48,17 +50,10 @@ export function Footer() {
   return (
     <footer className="gs-site-footer relative mt-6 pb-20 lg:mt-10 lg:pb-0">
       <Container className={compactPrivate?'py-3 lg:py-12':'py-3 lg:py-12'}>
+        <FooterFaq />
         <div className="hidden gap-6 lg:grid lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10">
           <div>
             <Logo />
-            <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed text-ink-400">
-              Независимый навигатор по игровым серверам. Мы проверяем онлайн сами, чтобы вы выбирали по фактам, а не по
-              обещаниям.
-            </p>
-            <div className="mt-5 flex items-center gap-2 rounded-lg border border-white/7 bg-white/[0.02] px-3 py-2 text-[12px] text-ink-400">
-              <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-signal-400" />
-              У каждого онлайна указан источник и время проверки
-            </div>
           </div>
 
           <div>
@@ -96,11 +91,6 @@ export function Footer() {
         </div>
 
         <div className={`${compactPrivate?'lg:mt-12':'lg:mt-12'} flex flex-col gap-2 border-white/6 text-[11px] text-ink-500 lg:border-t lg:pt-6 lg:text-[12px] sm:flex-row sm:items-center sm:justify-between`}>
-          <p className="hidden max-w-2xl lg:block">
-            Карточки серверов собраны из открытых источников — у каждой указаны источник и дата сверки. Онлайн
-            со статусом VERIFIED измерен GameScout; остальные числа подписаны источником. Владелец может
-            подтвердить сервер и управлять карточкой.
-          </p>
           <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 sm:shrink-0">
             <Link to="/terms" className="transition-colors hover:text-ink-300">Условия</Link>
             <Link to="/privacy" className="transition-colors hover:text-ink-300">Приватность</Link>

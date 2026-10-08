@@ -62,7 +62,6 @@ export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?
       <div><div className="num font-display text-[44px] leading-none font-semibold text-ink-50">{votes===undefined?'…':votes}</div><div className="mt-1.5 text-[12.5px] text-ink-300">голосов игроков</div></div>
       <div><div className="num font-display text-[44px] leading-none font-semibold" style={{ color: position!==undefined&&position<=3 ? 'var(--gt-primary)' : undefined }}>{votes===undefined?'…':position===undefined?'—':'№'+position}</div><div className="mt-1.5 text-[12.5px] text-ink-300">{position===undefined?'позиция появится после первых голосов':'место в рейтинге'}</div></div>
     </div>
-    <details className="text-[13px] text-ink-400"><summary className="cursor-pointer select-none">Как считается рейтинг</summary><p className="mt-1.5">Рейтинг основан только на голосах подтверждённых аккаунтов. Регистрация и фильтры не доказывают уникальность человека. Поддержка за Coins на порядок здесь не влияет.</p></details>
     {eligibility&&<p className="text-[13px]">Правило: {eligibility.limit} {eligibility.limit===1?'голос':'голосов'} за {eligibility.windowHours} ч. · Использовано: {eligibility.used}</p>}
     {captchaRequired && (eligibility?.captchaSiteKey ?
       <TurnstileWidget key={widgetKey} siteKey={eligibility.captchaSiteKey} onToken={setCaptcha} /> :

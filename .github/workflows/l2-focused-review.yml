@@ -2,7 +2,7 @@ name: L2 focused visual review
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css']
+    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css', 'src/components/layout/world-glass-review.css', 'src/components/layout/FooterFaq.tsx']
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,7 +39,8 @@ jobs:
           root=Path('output/l2-review-qa')
           groups=[
             ['home-390-dark.png','home-390-light.png','chronicles-390-dark.png','chronicles-390-light.png'],
-            ['search-390-dark.png','search-390-light.png','filters-390-light.png','openings-390-dark.png'],
+            ['rating-390-dark.png','rating-390-light.png','filters-390-dark.png','filters-390-light.png'],
+            ['support-390-dark.png','support-390-light.png','support-end-390-light.png','faq-390-light.png'],
           ]
           for i,names in enumerate(groups):
             sheet=Image.new('RGB',(1040,730),'#c6c8c7')
@@ -86,5 +87,9 @@ jobs:
             output/l2-review-qa/search-390-light.png
             output/l2-review-qa/filters-390-light.png
             output/l2-review-qa/openings-390-dark.png
+            output/l2-review-qa/rating-390-light.png
+            output/l2-review-qa/support-390-dark.png
+            output/l2-review-qa/support-390-light.png
+            output/l2-review-qa/faq-390-light.png
             output/l2-review-qa/report.json
             output/l2-review-qa/failure.png

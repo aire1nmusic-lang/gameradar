@@ -13,6 +13,7 @@ import { PortalProvider } from '@/components/home/portal'
 import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { WorldPageScope } from '@/components/world/WorldPageScope'
 import './review-refinement.css'
+import './world-glass-review.css'
 
 export function Layout() {
   return <PortalProvider><WorldNavigationProvider><LayoutContent /></WorldNavigationProvider></PortalProvider>
@@ -51,7 +52,7 @@ function LayoutContent() {
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <VisualDemoBanner/><WorldPageScope><Outlet /></WorldPageScope>
           </main>
-          {!hall && !location.pathname.startsWith('/admin') && <Footer />}
+          {!location.pathname.startsWith('/admin') && <Footer />}
           {!hall && <MobileNav />}
           <DesignPanel />
           <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />

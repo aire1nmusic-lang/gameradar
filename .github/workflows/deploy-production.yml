@@ -13,7 +13,11 @@ on:
       - 'tsconfig*.json'
       - 'scripts/**'
       - '.github/workflows/deploy-production.yml'
-      - 'tests/loader-browser.mjs'
+      - 'tests/*browser.mjs'
+      - 'tests/l2-read-recovery.test.mjs'
+      - 'tests/public-catalog-read.test.mjs'
+      - 'tests/public-qa-data*'
+      - 'tests/browser-qa-runner.test.mjs'
   workflow_dispatch:
     inputs:
       confirm:

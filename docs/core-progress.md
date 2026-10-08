@@ -1,3 +1,7 @@
+## 08.10.2026 — Release on fixes to browser gates
+
+The protected production push filter now covers each browser suite and its public-read/runner fixtures, so an approved QA correction reaches the same complete release gates instead of leaving a previously failed checkout as the only production candidate. Upload ordering, all nine checks, production lock and rollback remain intact. Corrected favorite-hit review460d049 is running; actual production remains e33ae11 until a full successful release. Private-core access remains BLOCKED as recorded below.
+
 ## 08.10.2026 — Center favorite hit tests outside the fixed mobile navigation
 
 VERIFIED adb561e CI37818251980 SUCCESS. Focused37818251409 stopped at a new raw hit-test on320x568; release remains blocked before uploads. HYPOTHESIS: row.scrollIntoViewIfNeeded may leave the favorite underneath the fixed bottom navigation although the row is within the viewport. The new test scrolls the actual button to viewport center with instant behavior and advances the controlled clock32ms, then retains the elementFromPoint assertion with viewport/theme/target diagnostics. Actual production favorite clicks remain independently checked in Aether; no force click, removed gate or changed ranking. Private auth/me and people-rating remain503 and missing VM SSH secrets prevent service repair.

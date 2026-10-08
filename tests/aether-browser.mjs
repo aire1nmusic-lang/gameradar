@@ -1,3 +1,4 @@
+import {readPublicGames,readPublicCatalog} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {readFile,mkdir,writeFile} from 'node:fs/promises'
@@ -5,7 +6,7 @@ import {resolve,extname,sep} from 'node:path'
 import {chromium} from 'playwright'
 const live=process.env.AETHER_QA_BASE_URL,root=resolve('dist');let server
 if(!live){server=createServer(async(req,res)=>{try{let path=resolve(root,'.'+new URL(req.url,'http://local').pathname);assert.ok(path.startsWith(root+sep));if(!extname(path))path+='/index.html';let body;try{body=await readFile(path)}catch{path=root+'/index.html';body=await readFile(path)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml'})[extname(path)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4186,'127.0.0.1',r))}
-const base=live||'http://127.0.0.1:4186';const games=await(await fetch('https://gamescout.online/api/v1/games')).json();const catalog=await(await fetch('https://gamescout.online/api/v1/servers?limit=100')).json();const sample=catalog.items.find(s=>s.gameId==='lineage2');assert.ok(sample)
+const base=live||'http://127.0.0.1:4186';const games=await readPublicGames();const catalog=await readPublicCatalog();const sample=catalog.items.find(s=>s.gameId==='lineage2');assert.ok(sample)
 const game=games.find(g=>g.id==='lineage2');const fixture=Array.from({length:36},(_,i)=>({...sample,id:`qa-aether-${i}`,slug:`qa-aether-${i}`,name:`QA Aether ${String(i+1).padStart(2,'0')}`,votes:i<18?18-i:0,support:{coins:i<18?18-i:0,participants:1},online:{...sample.online,current:i<18?180-i:0,status:i<18?'VERIFIED':'PENDING',playersKnown:i<18,freshness:'fresh'},launch:i>=18?{at:new Date(Date.now()+(i-17)*86400000).toISOString()}:undefined}))
 const launch=()=>chromium.launch(process.env.GS_QA_CHROME?{executablePath:process.env.GS_QA_CHROME,args:['--no-sandbox','--single-process','--no-zygote','--in-process-gpu']}:{});let browser=await launch();const matrix=[[320,568],[375,812],[390,844],[430,932],[768,1024],[1024,1366],[1024,768],[1366,768],[1440,900],[1920,1080],[844,390]],report=[]
 await mkdir('output/aether-qa',{recursive:true})

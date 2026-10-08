@@ -1,3 +1,4 @@
+import {readPublicGames,readPublicCatalog} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {readFile,mkdir,writeFile} from 'node:fs/promises'
@@ -5,7 +6,7 @@ import {resolve,extname,sep} from 'node:path'
 import {chromium} from 'playwright'
 const live=process.env.L2_JOURNEY_QA_BASE_URL,root=resolve('dist');let server
 if(!live){server=createServer(async(req,res)=>{try{let p=resolve(root,'.'+new URL(req.url,'http://local').pathname);assert.ok(p.startsWith(root+sep));if(!extname(p))p+='/index.html';let body;try{body=await readFile(p)}catch{p=root+'/index.html';body=await readFile(p)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4187,'127.0.0.1',r))}
-const base=live||'http://127.0.0.1:4187',games=await(await fetch('https://gamescout.online/api/v1/games')).json(),catalog=await(await fetch('https://gamescout.online/api/v1/servers?limit=100')).json(),sample=catalog.items.find(s=>s.gameId==='lineage2')
+const base=live||'http://127.0.0.1:4187',games=await readPublicGames(),catalog=await readPublicCatalog(),sample=catalog.items.find(s=>s.gameId==='lineage2')
 const fixture=Array.from({length:30},(_,i)=>({...sample,id:`qa-journey-${i}`,slug:i===0?sample.slug:`qa-journey-${i}`,name:`Journey ${String(i).padStart(2,'0')}`,votes:30-i,support:{coins:i<3?3-i:0,participants:1},launch:i>23?{at:new Date(Date.now()+86400000*(i-22)).toISOString()}:undefined}))
 const browser=await chromium.launch(),report=[];let activePage;await mkdir('output/l2-journey-qa',{recursive:true})
 async function intercept(page,role='guest',zeros=false){await page.route('**/api/v1/**',async route=>{assert.equal(route.request().method(),'GET');const u=new URL(route.request().url()),p=u.pathname;const rows=zeros?fixture.map(s=>({...s,support:{coins:0,participants:0}})):fixture;let json=[]

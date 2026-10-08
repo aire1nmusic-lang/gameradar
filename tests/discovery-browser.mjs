@@ -1,3 +1,4 @@
+import {readPublicGames,readPublicCatalog} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {readFile,mkdir,writeFile} from 'node:fs/promises'
@@ -5,8 +6,8 @@ import {resolve,extname,sep} from 'node:path'
 import {chromium} from 'playwright'
 const live=process.env.DISCOVERY_QA_BASE_URL, root=resolve('dist');let server
 if(!live){server=createServer(async(req,res)=>{try{let p=resolve(root,'.'+new URL(req.url,'http://local').pathname);assert.ok(p.startsWith(root+sep));if(!extname(p))p+='/index.html';let body;try{body=await readFile(p)}catch{p=root+'/index.html';body=await readFile(p)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4182,'127.0.0.1',r))}
-const base=live||'http://127.0.0.1:4182', games=await(await fetch('https://gamescout.online/api/v1/games')).json()
-const catalog=await(await fetch('https://gamescout.online/api/v1/servers?limit=100')).json()
+const base=live||'http://127.0.0.1:4182', games=await readPublicGames()
+const catalog=await readPublicCatalog()
 const cards=['lineage2','minecraft','gtarp'].flatMap(gameId=>{const sample=catalog.items.find(s=>s.gameId===gameId);assert.ok(sample);return Array.from({length:36},(_,i)=>({...sample,id:`qa-${gameId}-${i}`,slug:`qa-${gameId}-${i}`,name:`QA ${gameId} ${String(i+1).padStart(2,'0')}`,votes:i<18?18-i:0,support:{coins:i<18?18-i:0,participants:1},online:{...sample.online,current:i<18?180-i:0,status:i<18?'VERIFIED':'PENDING',playersKnown:i<18,freshness:'fresh'},launch:i>=18?{at:new Date(Date.now()+(i-17)*86400000).toISOString()}:undefined}))})
 const browser=await chromium.launch(),matrix=[[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]],report=[]
 await mkdir('output/discovery-qa',{recursive:true})

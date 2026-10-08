@@ -1,3 +1,4 @@
+import {readPublicGames,readPublicCatalog} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import {createServer} from 'node:http'
 import {readFile,mkdir} from 'node:fs/promises'
@@ -8,7 +9,7 @@ import {createApp} from '../private-api/app.mjs'
 import {migrate} from '../private-api/db.mjs'
 import {digest} from '../private-api/crypto.mjs'
 const root=resolve('dist'),origin='http://127.0.0.1:4188'
-const catalog=await(await fetch('https://gamescout.online/api/v1/servers?limit=100')).json(),games=await(await fetch('https://gamescout.online/api/v1/games')).json(),cards=catalog.items.filter(s=>s.gameId==='lineage2')
+const catalog=await readPublicCatalog(),games=await readPublicGames(),cards=catalog.items.filter(s=>s.gameId==='lineage2')
 const pg=new PGlite(),db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)};await migrate(db)
 for(const id of ['a','b']){await db.query('INSERT INTO gs_users(id,display_name,email_verified_at) VALUES($1,$2,now())',[id,'Test '+id]);await db.query("INSERT INTO gs_sessions(token_hash,user_id,expires_at,login_method) VALUES($1,$2,now()+interval '1 day','email')",[digest('favorite-token-'+id),id])}
 for(const s of cards)await db.query('INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,$2,$3,$4)',[s.id,s.gameId,s.name,s.slug])

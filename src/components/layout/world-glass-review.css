@@ -95,7 +95,7 @@ html[data-color-mode] body .gs-l2-aether-layout .gs-support-dialog :is(.gs-suppo
 .gs-l2-aether-layout .gs-position-summary {padding:12px 14px;border:1px solid var(--aether-line);border-radius:14px;background:var(--aether-field)}
 .gs-l2-aether-layout .gs-position-summary strong {font-size:25px}
 .gs-l2-aether-layout .gs-position-summary span {font-size:11px}
-.gs-l2-aether-layout .gs-support-dialog .gs-projection-list {max-height:none;overflow:visible;padding-right:0;gap:6px}
+.gs-l2-aether-layout .gs-support-dialog .gs-projection-list {max-height:none;overflow:clip;padding-right:0;gap:6px}
 .gs-l2-aether-layout .gs-position-track {display:none}
 .gs-l2-aether-layout .gs-projection-row {border-color:var(--aether-line);background:var(--aether-field);border-radius:11px;min-height:52px}
 .gs-l2-aether-layout .gs-projection-target {border-color:var(--aether-gold);background:color-mix(in srgb,var(--aether-gold) 10%,var(--aether-field))}

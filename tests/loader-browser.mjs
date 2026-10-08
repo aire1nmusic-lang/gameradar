@@ -1,3 +1,4 @@
+import {readPublicGames} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { readFile, mkdir } from 'node:fs/promises'
@@ -6,10 +7,7 @@ import { chromium } from 'playwright'
 
 // Only anonymous public reads. Delays/errors are intercepted in this browser.
 const live = process.env.LOADER_BASE_URL
-const gamesResponse = await fetch('https://gamescout.online/api/v1/games', { signal: AbortSignal.timeout(15000) })
-assert.equal(gamesResponse.status, 200)
-const games = await gamesResponse.text()
-assert.ok(Array.isArray(JSON.parse(games)))
+const games = JSON.stringify(await readPublicGames())
 let server
 let base = live
 if (!base) {

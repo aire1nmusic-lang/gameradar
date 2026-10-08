@@ -1,3 +1,4 @@
+import {readPublicGames,readPublicCatalog} from './public-qa-data.mjs'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
@@ -6,7 +7,7 @@ import { chromium } from 'playwright'
 
 const live=process.env.REVIEW_QA_BASE_URL,root=resolve('dist');let server
 if(!live){server=createServer(async(req,res)=>{try{let p=resolve(root,'.'+new URL(req.url,'http://local').pathname);assert.ok(p.startsWith(root+sep));if(!extname(p))p+='/index.html';let body;try{body=await readFile(p)}catch{p=root+'/index.html';body=await readFile(p)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4189,'127.0.0.1',r))}
-const base=live||'http://127.0.0.1:4189',games=await fetch('https://gamescout.online/api/v1/games').then(r=>r.json()),catalog=await fetch('https://gamescout.online/api/v1/servers?limit=100').then(r=>r.json())
+const base=live||'http://127.0.0.1:4189',games=await readPublicGames(),catalog=await readPublicCatalog()
 const sample=catalog.items.find(s=>s.gameId==='lineage2'),rows=Array.from({length:30},(_,i)=>({...sample,id:`review-${i}`,slug:`review-${i}`,name:`Review ${i}`,votes:5+i,support:{coins:i<3?3-i:0,participants:1},launch:{at:new Date(Date.now()+3600000+i*86400000).toISOString()}}))
 const browser=await chromium.launch(),report=[];let active
 await mkdir('output/l2-review-qa',{recursive:true})
@@ -41,9 +42,18 @@ try{
   await page.screenshot({path:`output/l2-review-qa/rating-${w}-${theme}.png`,fullPage:true})
   await page.getByRole('button',{name:'Поддержать сервер',exact:true}).click();const studio=page.getByRole('dialog',{name:'Поддержать сервер',exact:true});await studio.waitFor()
   const box=await studio.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=w&&box.y>=0&&box.y+box.height<=h,'Studio fits viewport')
-  assert.equal(await studio.locator('.gs-projection-list').evaluate(e=>getComputedStyle(e).overflowY),'visible','Only dialog scrolls')
+  assert.equal(await studio.locator('.gs-projection-list').evaluate(e=>getComputedStyle(e).overflowY),'clip','Reordering clips to the list without a nested scrollbar')
   await studio.getByRole('button',{name:'25',exact:true}).click();assert.equal(await studio.getByLabel('Количество Coins',{exact:true}).inputValue(),'25');assert.equal(await studio.getByRole('button',{name:'25',exact:true}).getAttribute('aria-pressed'),'true')
   assert.equal(await studio.locator('details').count(),0,'Explanation moved out of studio')
+  assert.equal(await studio.locator('.gs-projection-row').evaluateAll(rows=>rows.flatMap(row=>row.getAnimations()).length),0,'Changing amount without reordering cannot animate dialog movement')
+  const regions=await studio.evaluate(dialog=>{const rect=s=>{const r=dialog.querySelector(s).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};return {form:rect('.gs-support-form'),preview:rect('.gs-support-preview'),summary:rect('.gs-position-summary'),list:rect('.gs-projection-list'),checkout:rect('.gs-support-checkout')}})
+  if(w<768){assert.ok(regions.preview.top>=regions.form.bottom-1,'Preview follows form');assert.ok(regions.checkout.top>=regions.preview.bottom-1,'Checkout follows preview')}
+  assert.ok(regions.list.top>=regions.summary.bottom-1,'Rows remain below summary')
+  await studio.locator('.gs-support-select').selectOption('review-29')
+  await studio.locator('.gs-projection-list').evaluate(async list=>{await Promise.all(list.getAnimations({subtree:true}).map(animation=>animation.finished.catch(()=>{})))})
+  const firstRow=await studio.locator('.gs-projection-row').first().boundingBox(),listBox=await studio.locator('.gs-projection-list').boundingBox();assert.ok(firstRow.y>=listBox.y-1,'Settled rows remain inside list')
+  await studio.evaluate(e=>e.scrollTop=0)
+
   await page.screenshot({path:`output/l2-review-qa/support-${w}-${theme}.png`});await studio.evaluate(e=>e.scrollTop=e.scrollHeight);await page.screenshot({path:`output/l2-review-qa/support-end-${w}-${theme}.png`});await page.keyboard.press('Escape')
   const faq=page.locator('.gs-footer-faq');assert.equal(await faq.getAttribute('open'),null);await faq.locator(':scope > summary').click();const question=faq.locator('.gs-faq-questions > details').first();await question.locator('summary').click();await question.locator('p').waitFor();assert.ok((await question.locator('p').innerText()).includes('одной трети'));await page.screenshot({path:`output/l2-review-qa/faq-${w}-${theme}.png`});await faq.locator(':scope > summary').click()
   await page.goto(base+'/openings?game=lineage2');const timer=page.getByRole('timer').first();await timer.waitFor();const before=await timer.innerText();assert.match(before,/(?:\d+ д )?\d{2}:\d{2}:\d{2}/);await page.clock.fastForward(1100);assert.notEqual(await timer.innerText(),before);await page.screenshot({path:`output/l2-review-qa/openings-${w}-${theme}.png`,fullPage:true})

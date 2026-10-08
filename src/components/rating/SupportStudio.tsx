@@ -15,13 +15,15 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
  const [amount,setAmount]=useState(10)
  const target=servers.find(s=>s.id===serverId)
  const projection=projectSupport(servers,serverId,amount)
- const auth=useAuth(),list=useRef<HTMLDivElement>(null),positions=useRef(new Map<string,number>())
+ const auth=useAuth(),list=useRef<HTMLDivElement>(null),positions=useRef(new Map<string,{top:number;index:number}>())
  useLayoutEffect(()=>{
-  const next=new Map<string,number>()
-  for(const row of Array.from(list.current?.querySelectorAll<HTMLElement>('[data-preview-id]')??[])){
-   const id=row.dataset.previewId!,top=row.getBoundingClientRect().top,old=positions.current.get(id)
-   if(old!==undefined&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&Math.abs(old-top)>1) row.animate([{transform:`translateY(${old-top}px)`},{transform:'translateY(0)'}],{duration:350,easing:'cubic-bezier(.2,.8,.2,1)'})
-   next.set(id,top)
+  const next=new Map<string,{top:number;index:number}>()
+  for(const [index,row] of Array.from(list.current?.querySelectorAll<HTMLElement>('[data-preview-id]')??[]).entries()){
+   row.getAnimations().forEach(animation=>animation.cancel())
+   // List-local coordinates ignore dialog centering, scrolling and form resizing.
+   const id=row.dataset.previewId!,top=row.offsetTop,old=positions.current.get(id)
+   if(old&&old.index!==index&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&Math.abs(old.top-top)>1) row.animate([{transform:`translateY(${old.top-top}px)`},{transform:'translateY(0)'}],{duration:350,easing:'cubic-bezier(.2,.8,.2,1)'})
+   next.set(id,{top,index})
   }
   positions.current=next
  },[serverId,amount,servers])

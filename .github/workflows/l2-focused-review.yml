@@ -63,6 +63,7 @@ jobs:
         run: node tests/l2-journey-browser.mjs
       - name: Save small visual review artifact
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: l2-focused-review

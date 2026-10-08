@@ -29,6 +29,7 @@ jobs:
       - run: node tests/loader-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: loader-qa-diagnostic
           path: output/loader-qa

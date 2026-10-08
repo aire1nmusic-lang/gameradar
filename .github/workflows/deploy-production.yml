@@ -114,7 +114,7 @@ jobs:
 
       - name: Read recovery, zero support, discovery scoring and runner invariants
         run: |
-          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs
+          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs
           node --experimental-strip-types --test tests/zero-support.test.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
 
@@ -129,16 +129,16 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: |
           mkdir -p "$RUNNER_TEMP/site-rollback"
-          aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --only-show-errors
+          aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --exclude "_deployment-backups/*"             --only-show-errors
           test -f "$RUNNER_TEMP/site-rollback/index.html"
 
-      - name: Save rollback artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-site-before-${{ github.sha }}
-          path: ${{ runner.temp }}/site-rollback
-          retention-days: 14
-          if-no-files-found: error
+      - name: Persist and verify durable rollback archive
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: node scripts/persist-release-backup.mjs
 
       - name: Upload versioned assets first
         env:
@@ -221,6 +221,7 @@ jobs:
 
       - name: Save loader QA screenshots
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: loader-browser-qa-${{ github.sha }}

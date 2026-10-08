@@ -22,7 +22,7 @@ export function MobileNav() {
   const {game,scoped}=useWorldNavigation()
   if (HIDDEN.some((pattern) => pattern.test(location.pathname))) return null
 
-  const items = [ITEMS[0], ITEMS[1], ITEMS[4], ITEMS[2], ITEMS[3]]
+  const items = [ITEMS[0], ITEMS[1], ITEMS[3], ITEMS[2], ITEMS[4]]
   return (
     <nav className="gs-mobile-nav safe-bottom fixed inset-x-0 bottom-0 z-50 lg:hidden">
       <div className={`mx-auto grid h-[58px] max-w-2xl grid-cols-5 items-stretch`}>

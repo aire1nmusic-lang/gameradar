@@ -1,4 +1,5 @@
-import type { Game, GameServer, OnlineSample, OwnerProject, Page, RankedServer, ServerClaim, ServerQuery, User, Vote, VoteIntegration } from '@/models'
+import { fetchApiResponse } from './publicRead'
+import type { Game, GameServer, OnlineSample, OwnerProject, Page, ServerClaim, RankedServer, ServerQuery, User, Vote, VoteIntegration } from '@/models'
 import type { Repositories } from '../types'
 import { cacheGames, hydrateGames } from '@/data/games'
 import { isLiveGame } from '@/data/liveGames'
@@ -11,7 +12,7 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
   async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let response: Response
     try {
-      response = await fetch(base + path, {
+      response = await fetchApiResponse(base + path, {
         credentials: 'same-origin', ...options,
         headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...options.headers },
       })

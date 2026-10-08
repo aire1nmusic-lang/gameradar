@@ -86,15 +86,26 @@ async function loadDiscoveryServers(query: ServerQuery = {}): Promise<GameServer
   const load = async (path: string) => {
     const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
     for (let offset = 0; ; offset += 100) {
-      const page = await apiRequest<typeof rows>(`${path}?limit=100&offset=${offset}`)
+      const page = await apiRequest<typeof rows>(`${path}?limit=100&offset=${offset}`, { signal: AbortSignal.timeout(8000) })
+      if (!Array.isArray(page)) throw new Error('Некорректный ответ рейтинга')
       rows.push(...page)
       if (page.length < 100) return rows
     }
   }
-  const [items, people, support] = await Promise.all([publicCards(query),load('/people-rating'),load('/support/ranking')])
+  // Rankings are optional enrichment. A failed/slow aggregate must not hide public cards.
+  const [items, peopleResult, supportResult] = await Promise.all([
+    publicCards(query), load('/people-rating').then(rows => ({ rows }), () => ({ rows: undefined })),
+    load('/support/ranking').then(rows => ({ rows }), () => ({ rows: undefined })),
+  ])
+  const people = peopleResult.rows ?? []
+  const support = supportResult.rows ?? []
   const votes = new Map(people.map(row => [row.server_id, row.votes ?? 0]))
   const coins = new Map(support.map(row => [row.server_id, row]))
-  return items.map(server => ({...server, votes: votes.get(server.id) ?? 0, support: {coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0}}))
+  return items.map(server => ({...server,
+    rankingAvailability: { votes: !!peopleResult.rows, support: !!supportResult.rows },
+    votes: peopleResult.rows ? votes.get(server.id) ?? 0 : server.votes,
+    support: supportResult.rows ? {coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0} : server.support,
+  }))
 }
 
 async function balancedSortedServers(query: ServerQuery): Promise<Page<GameServer>> {
@@ -112,18 +123,20 @@ async function privateAggregateSort(query: ServerQuery, path: string, field: 'vo
   const ranking = async () => {
     const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
     for (let offset=0; ; offset+=100) {
-      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number;participants?:number}>>(`${path}?limit=100&offset=${offset}`)
+      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number;participants?:number}>>(`${path}?limit=100&offset=${offset}`, {signal:AbortSignal.timeout(8000)})
+      if(!Array.isArray(page))throw new Error('Некорректный ответ рейтинга')
       rows.push(...page)
       if (page.length<100) return rows
     }
   }
   const [catalog, rankingRows]=await Promise.all([
-    repo.servers.query({...query,sort:'recommended',offset:0,limit:Number.MAX_SAFE_INTEGER}),ranking(),
+    repo.servers.query({...query,sort:'recommended',offset:0,limit:Number.MAX_SAFE_INTEGER}),ranking().catch(()=>undefined),
   ])
-  const score=new Map(rankingRows.map(row=>[row.server_id,row[field]??0]))
-  const support=new Map(rankingRows.map(row=>[row.server_id,{coins:row.coins??0,participants:row.participants??0}]))
-  const cards=field==='coins'?catalog.items.map(card=>({...card,support:support.get(card.id)??{coins:0,participants:0}})):catalog.items
-  const sorted=[...cards].sort((a,b)=>(score.get(b.id)??0)-(score.get(a.id)??0) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
+  const score=new Map((rankingRows??[]).map(row=>[row.server_id,row[field]??0]))
+  const support=new Map((rankingRows??[]).map(row=>[row.server_id,{coins:row.coins??0,participants:row.participants??0}]))
+  const cards=rankingRows?(field==='coins'?catalog.items.map(card=>({...card,support:support.get(card.id)??{coins:0,participants:0}})):catalog.items):catalog.items.map(card=>({...card,rankingAvailability:{votes:field!=='votes',support:field!=='coins'}}))
+  const value=(card:GameServer)=>rankingRows?(score.get(card.id)??0):field==='coins'?(card.support?.coins??0):card.votes
+  const sorted=[...cards].sort((a,b)=>value(b)-value(a) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
   const offset=query.offset??0,limit=query.limit??24
   return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
 }

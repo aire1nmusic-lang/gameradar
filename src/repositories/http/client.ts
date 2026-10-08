@@ -1,3 +1,4 @@
+import { fetchApiResponse } from './publicRead'
 /** Minimal JSON client for /api/v1 — the same rules as the HTTP repositories. */
 export class ApiRequestError extends Error {
   constructor(
@@ -13,7 +14,7 @@ export class ApiRequestError extends Error {
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch('/api/v1' + path, {
+    response = await fetchApiResponse('/api/v1' + path, {
       credentials: 'same-origin',
       ...init,
       headers: { ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...init.headers },

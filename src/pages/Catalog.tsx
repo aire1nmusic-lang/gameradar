@@ -160,7 +160,7 @@ export default function Catalog() {
           <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name={searchOpen?'close':'search'} size={17}/></button>
           <button
             onClick={() => setFiltersOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
+            className="gs-filter-trigger inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
           >
             <WorldIcon name="filter" size={14} />
             Фильтры
@@ -206,10 +206,11 @@ export default function Catalog() {
       </div>
 
       <Container className="mt-4">
+        {results.some(s=>s.rankingAvailability && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинги временно обновляются. Показаны последние доступные данные каталога.</p>}
         {sort === 'recommended' && <details className="gs-ranking-explanation"><summary>Как считается общий топ</summary><p>Голоса, поддержка и свежий онлайн — по ⅓. Значения нормализуются внутри игры; отсутствие данных даёт 0. «Выбор игроков» считается отдельно по голосам.</p></details>}
         {error ? (
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
-        ) : loading ? (
+        ) : loading && !page ? (
           view === 'grid' ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (

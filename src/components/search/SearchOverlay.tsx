@@ -47,10 +47,10 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   }
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label="Поиск серверов" className={`gs-search-overlay ${game?.id==='lineage2'?'gs-l2-filter-sheet':''} fixed inset-0 z-[100] flex items-start justify-center sm:pt-[12vh]`}>
+    <div role="dialog" aria-modal="true" aria-label="Поиск серверов" className={`gs-search-overlay ${game?.id==='lineage2'?'gs-l2-search-sheet':''} fixed inset-0 z-[100] flex items-start justify-center sm:pt-[12vh]`}>
       <button aria-label="Закрыть" onClick={onClose} className="absolute inset-0 animate-fade bg-ink-1000/80 backdrop-blur-[5px]" />
 
-      <div className="surface-raised relative flex h-full w-full animate-pop flex-col overflow-hidden sm:h-auto sm:max-h-[70vh] sm:w-[620px] sm:rounded-xl">
+      <div className="gs-search-surface surface-raised relative flex h-full w-full animate-pop flex-col overflow-hidden sm:h-auto sm:max-h-[70vh] sm:w-[620px] sm:rounded-xl">
         <div className="flex items-center gap-3 border-b border-white/7 px-4 py-3.5 sm:px-5">
           <Search size={18} className="shrink-0 text-ink-400" />
           <input

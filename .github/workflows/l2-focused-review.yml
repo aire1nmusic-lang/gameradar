@@ -25,6 +25,10 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
+      - name: Read recovery and L2 device review
+        run: |
+          node --test tests/l2-read-recovery.test.mjs
+          node tests/l2-review-browser.mjs
       - name: Visual controls and support studio
         run: |
           node tests/visual-control-browser.mjs
@@ -48,3 +52,14 @@ jobs:
             output/l2-journey-qa/report.json
             output/l2-journey-qa/failure.png
             output/l2-journey-qa/catalog-320-dark.png
+            output/l2-review-qa/home-390-dark.png
+            output/l2-review-qa/home-390-light.png
+            output/l2-review-qa/home-1440-dark.png
+            output/l2-review-qa/chronicles-390-dark.png
+            output/l2-review-qa/chronicles-390-light.png
+            output/l2-review-qa/search-390-dark.png
+            output/l2-review-qa/search-390-light.png
+            output/l2-review-qa/filters-390-light.png
+            output/l2-review-qa/openings-390-dark.png
+            output/l2-review-qa/report.json
+            output/l2-review-qa/failure.png

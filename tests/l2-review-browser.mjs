@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict'
+import { createServer } from 'node:http'
+import { readFile, mkdir, writeFile } from 'node:fs/promises'
+import { resolve, extname, sep } from 'node:path'
+import { chromium } from 'playwright'
+
+const live=process.env.REVIEW_QA_BASE_URL,root=resolve('dist');let server
+if(!live){server=createServer(async(req,res)=>{try{let p=resolve(root,'.'+new URL(req.url,'http://local').pathname);assert.ok(p.startsWith(root+sep));if(!extname(p))p+='/index.html';let body;try{body=await readFile(p)}catch{p=root+'/index.html';body=await readFile(p)}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream');res.end(body)}catch{res.writeHead(404).end()}});await new Promise(r=>server.listen(4189,'127.0.0.1',r))}
+const base=live||'http://127.0.0.1:4189',games=await fetch('https://gamescout.online/api/v1/games').then(r=>r.json()),catalog=await fetch('https://gamescout.online/api/v1/servers?limit=100').then(r=>r.json())
+const sample=catalog.items.find(s=>s.gameId==='lineage2'),rows=Array.from({length:30},(_,i)=>({...sample,id:`review-${i}`,slug:`review-${i}`,name:`Review ${i}`,votes:5+i,support:{coins:i<3?3-i:0,participants:1},launch:{at:new Date(Date.now()+3600000+i*86400000).toISOString()}}))
+const browser=await chromium.launch(),report=[];let active
+await mkdir('output/l2-review-qa',{recursive:true})
+async function intercept(page,missing='none'){
+ await page.route('**/api/v1/**',async route=>{assert.equal(route.request().method(),'GET','Review makes no writes');const u=new URL(route.request().url()),p=u.pathname;let json=[],status=200
+ if(p.endsWith('/games'))json=games
+ else if(p.endsWith('/auth/me'))json={privateCore:true,user:null,providers:[],registrationOpen:false}
+ else if(p.endsWith('/servers')){const offset=Number(u.searchParams.get('offset')||0),limit=Number(u.searchParams.get('limit')||100);json={items:rows.slice(offset,offset+limit),total:rows.length,offset,limit}}
+ else if(p.endsWith('/people-rating')){json=rows.map(s=>({server_id:s.id,votes:s.votes}));if(missing==='people'||missing==='both')status=503}
+ else if(p.endsWith('/support/ranking')){json=rows.map(s=>({server_id:s.id,...s.support}));if(missing==='support'||missing==='both')status=503}
+ await route.fulfill({json,status})})
+}
+try{
+ for(const[w,h]of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]])for(const theme of ['dark','light']){
+  const context=await browser.newContext({viewport:{width:w,height:h}}),page=await context.newPage();active=page;await intercept(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.clock.install();await page.goto(base+'/lineage-2');await page.locator('.l2a .server').first().waitFor()
+  if(await page.evaluate(()=>document.documentElement.dataset.colorMode)!==theme)await page.getByRole('button',{name:theme==='light'?'Включить светлую тему':'Включить тёмную тему',exact:true}).click()
+  assert.deepEqual(await page.locator('.gs-mobile-nav a').evaluateAll(els=>els.map(e=>e.getAttribute('aria-label'))),['Главная','Серверы','Открытия','Рейтинг','Избранное'])
+  assert.equal(await page.locator('.l2a button').getByText('Избранное',{exact:true}).count(),0)
+  assert.equal(await page.locator('.l2a .metrics').innerText().then(s=>s.includes('—')),false)
+  for(const selector of ['.gs-header-search','[aria-label^="Аккаунт"]'])assert.equal(await page.locator('.gs-site-header '+selector).filter({visible:true}).first().evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)')
+  await page.screenshot({path:`output/l2-review-qa/home-${w}-${theme}.png`,fullPage:true})
+  await page.locator('.chronicle-picker>summary').click();assert.ok((await page.locator('.chronicle-picker>summary').boundingBox()).height<=44)
+  await page.waitForFunction(()=>[...document.querySelectorAll('.chronicle-picker img')].every(i=>i.complete&&i.naturalWidth>0));const images=await page.locator('.chronicle-picker img').evaluateAll(els=>els.map(e=>({width:e.getBoundingClientRect().width,loaded:e.complete&&e.naturalWidth>0})));assert.ok(images.length>=5);assert.ok(images.every(i=>i.width>=66&&i.loaded))
+  await page.screenshot({path:`output/l2-review-qa/chronicles-${w}-${theme}.png`,fullPage:true})
+  await page.getByRole('button',{name:'Поиск',exact:true}).click();const search=page.getByRole('dialog',{name:'Поиск серверов'});await search.waitFor();assert.equal(await search.locator('input').evaluate(e=>getComputedStyle(e).color),theme==='light'?'rgb(38, 48, 57)':'rgb(243, 239, 229)');await page.screenshot({path:`output/l2-review-qa/search-${w}-${theme}.png`});await search.locator('input').press('Escape')
+  await page.goto(base+'/catalog?game=lineage2');await page.locator('.gs-catalog-page .gs-row').first().waitFor();assert.ok((await page.locator('.gs-filter-trigger').boundingBox()).height<=44)
+  await page.getByRole('button',{name:'Фильтры',exact:true}).click();await page.getByRole('dialog',{name:'Фильтры'}).waitFor();await page.screenshot({path:`output/l2-review-qa/filters-${w}-${theme}.png`});await page.keyboard.press('Escape')
+  await page.goto(base+'/openings?game=lineage2');const timer=page.getByRole('timer').first();await timer.waitFor();const before=await timer.innerText();assert.match(before,/(?:\d+ д )?\d{2}:\d{2}:\d{2}/);await page.clock.fastForward(1100);assert.notEqual(await timer.innerText(),before);await page.screenshot({path:`output/l2-review-qa/openings-${w}-${theme}.png`,fullPage:true})
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.deepEqual(errors,[]);await context.close();report.push({w,h,theme,timer:true,controls:true});console.log('PASS L2 device review',w,h,theme)
+ }
+ for(const missing of ['people','support','both']){
+  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();active=page;await intercept(page,missing)
+  await page.goto(base+'/lineage-2');await page.locator('.l2a .support .server').first().waitFor();assert.equal(await page.locator('.l2a .support .server').count(),30);await page.locator('.gs-ranking-availability').waitFor();assert.equal(await page.getByText('Не удалось загрузить данные',{exact:true}).count(),0)
+  await page.goto(base+'/catalog?game=lineage2');await page.locator('.gs-catalog-page .gs-row').first().waitFor();await page.locator('.gs-ranking-availability').waitFor()
+  await page.goto(base+'/rating?game=lineage2');await page.locator('.gs-rating-support a[href^="/server/"]').first().waitFor();assert.equal(await page.getByRole('button',{name:'Поддержать сервер',exact:true}).isEnabled(),missing==='people');await context.close();console.log('PASS live aggregate 503 keeps cards,',missing)
+ }
+ await writeFile('output/l2-review-qa/report.json',JSON.stringify(report,null,2))
+}catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url())}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}

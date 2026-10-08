@@ -107,6 +107,11 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
+      - name: Public-read recovery and L2 device review before publication
+        run: |
+          node --test tests/l2-read-recovery.test.mjs
+          node tests/l2-review-browser.mjs
+
       - name: Aether matrix before publication
         run: |
           node --experimental-strip-types --test tests/zero-support.test.mjs
@@ -219,6 +224,7 @@ jobs:
           DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
           AETHER_QA_BASE_URL=https://gamescout.online node tests/aether-browser.mjs
           L2_JOURNEY_QA_BASE_URL=https://gamescout.online node tests/l2-journey-browser.mjs
+          REVIEW_QA_BASE_URL=https://gamescout.online node tests/l2-review-browser.mjs
           CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
           STUDIO_QA_BASE_URL=https://gamescout.online node tests/support-studio-browser.mjs
 
@@ -249,6 +255,7 @@ jobs:
             output/account-review-qa
             output/discovery-qa
             output/aether-qa
+            output/l2-review-qa
             output/l2-journey-qa
             output/control-qa
             output/studio-qa

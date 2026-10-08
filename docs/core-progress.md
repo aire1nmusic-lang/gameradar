@@ -1,3 +1,7 @@
+## 08.10.2026 — Preserve podium height in the full rating
+
+VERIFIED protected adb561 preflight ran all9suites: Aether,journey,favorites,loader,account,controls,studio PASS, new raw favorite-hit test and discovery podium-height assertion FAIL before backup/upload. Aether confirms real favorite clicks fixed across11device sizes/dark+light. Discovery found L2 review-refinement .gs-row-line min-height56px!important overrode podium76px; increased podium selector specificity to retain76px on full rating/catalog while ordinary rows remain compact. Centered hit-test460d049 is still running. Next release retains all9pre/postflight suites. Private auth remains503/BLOCKED for missing VM SSH credentials.
+
 ## 08.10.2026 — Release on fixes to browser gates
 
 The protected production push filter now covers each browser suite and its public-read/runner fixtures, so an approved QA correction reaches the same complete release gates instead of leaving a previously failed checkout as the only production candidate. Upload ordering, all nine checks, production lock and rollback remain intact. Corrected favorite-hit review460d049 is running; actual production remains e33ae11 until a full successful release. Private-core access remains BLOCKED as recorded below.

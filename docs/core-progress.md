@@ -1,3 +1,7 @@
+## 08.10.2026 — Loader fix verified, protected release continues
+
+VERIFIED Loader37806237834 SUCCESS for e33ae11bd8481ae0f0e7fd9f1ff6e5abbf2c1ca5: fresh catalog build, all8viewport sizes320/390/844landscape/768/1024landscape/1024/1440/1920, fast/slow boot, real hall art, all5inner routes in both themes, persisted light theme, cached-read and error recovery. ReferenceError corrected without weakening the palette assertion. Source syntax PASS. Existing corrected UI focused37770463599 also SUCCESS with12responsive/theme cases and reviewed3contact sheets; saved owner review GameScout_Glass_Review.png. Protected production37806237997 still running preflight, production upload not yet claimed. Cost0 new resources; current rollback retained, private API/DB/DNS/payment unchanged. Next wait for remaining gates, verify actual live gs-build/cache/SEO and record final result.
+
 ## 08.10.2026 — Corrected loader QA scope; glass screenshots verified
 
 VERIFIED focused37770463599 attempt2 SUCCESS: fresh catalog/SEO build,12 responsive/theme cases, public read recovery, visual controls, SupportStudio and L2 journey. Reviewed all3actual contact sheets (home/chronicles, rating/filters, support/FAQ): warm light surfaces, bounded tools, single studio scroll and settled forecast rows. These screenshot fixtures use synthetic review rows; not proof of live transactions.

@@ -1,3 +1,7 @@
+## 08.10.2026 — Resume glass release: fresh catalog read recovered
+
+VERIFIED resumed owner request in a new Work thread. Read AGENTS.md, current progress, roadmap, committed UI and prior deployment job; no UI reimplementation or backend changes. Source6b5e96e remains the corrected glass/FAQ candidate. Anonymous live homepage HTTP200 in7.8s, gs-build8690deb9: previous UI still served. Reran focused37770463599 attempt2 (job113400921595): fresh catalog build SUCCESS, browser review in progress. Reran failed protected production37770463627; all original pre/postflight gates and rollback remain. Publication and corrected screenshot approval PENDING; do not claim live delivery. No new resources/costs, no private API/DB/DNS/payment edits. Existing HTML rollback artifact unchanged. Next inspect corrected contact sheets, resolve actual failures, then verify production build and cache headers.
+
 ## 08.10.2026 — BLOCKED: corrected glass release not published
 
 VERIFIED source6b5e96e40b7ef3aa114cbb9bf8ead46a1b96b524 saved on main. Deployment37770463627 FAILED at fresh public catalog build after two bounded30second timeout reads; backup/upload/postflight steps skipped. Focused37770463599 and Loader37770463683 likewise failed before build/browser; CI37770463545 private58tests PASS then same catalog build timeout. After repeated unsuccessful reads stopped retrying the unavailable endpoint. No production files changed: previous successful release8690deb remains the last verified production source. No authorization rejection or user action required.

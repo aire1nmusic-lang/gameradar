@@ -180,7 +180,7 @@ try {
           if (path === '/lineage-2') {
             const gradient = await inner.page.locator('.gs-mobile-nav').evaluate(el => getComputedStyle(el).backgroundImage)
             assert.ok(gradient.startsWith('linear-gradient('), 'L2 bottom controls retain a readable gradient')
-            const themeColor=await actual.page.locator('.gs-l2-aether-layout').evaluate(e=>{const p=document.createElement('i');p.style.color=getComputedStyle(e).getPropertyValue('--aether-bg');e.append(p);const color=getComputedStyle(p).color;p.remove();return color});assert.ok(gradient.includes(themeColor), 'L2 gradient matches active world palette')
+            const themeColor=await inner.page.locator('.gs-l2-aether-layout').evaluate(e=>{const p=document.createElement('i');p.style.color=getComputedStyle(e).getPropertyValue('--aether-bg');e.append(p);const color=getComputedStyle(p).color;p.remove();return color});assert.ok(gradient.includes(themeColor), 'L2 gradient matches active world palette')
             assert.ok(gradient.includes('rgba(0, 0, 0, 0)'), 'L2 gradient fades into page without a strip')
           }
           assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 5)

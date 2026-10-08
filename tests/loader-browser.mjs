@@ -179,7 +179,14 @@ try {
     for (const path of ['/account', '/lineage-2', '/minecraft', '/gta-rp', '/catalog']) {
       const inner = await setup(width, height, 'inner-pages', path)
       await ready(inner.page)
-      assert.deepEqual(inner.hubRequests, [], 'Inner routes never preload the home hall')
+      assert.equal(await inner.page.locator('link[rel="preload"][href^="/media/hub/"]').count(), 0, 'Inner routes never preload the home hall')
+      if (path === '/account') {
+        // The account deliberately uses the same scenery; its own background is not a home preload.
+        assert.ok(inner.hubRequests.length > 0, 'Account scenery stays present')
+        assert.deepEqual([...new Set(inner.hubRequests.map(url => new URL(url).pathname))], ['/media/hub/nave-1920.webp'], 'Account loads only its intentional scenery')
+      } else {
+        assert.deepEqual(inner.hubRequests, [], 'Unrelated inner pages never request home artwork')
+      }
       if (path === '/account') await inner.page.locator('.gs-account-entry').waitFor()
       await inner.page.locator('main img').evaluateAll(images => Promise.all(images.filter(img => !img.closest('details:not([open])') && img.getBoundingClientRect().width > 0).map(img => img.decode().catch(() => {}))))
       for (const theme of ['dark', 'light']) {

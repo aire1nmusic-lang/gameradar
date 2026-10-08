@@ -11,6 +11,7 @@ html[data-color-mode] body .gs-top-row {
   color:#f6f3ef!important;
 }
 .gs-top-row > :not(.gs-top-rank-art):not(.fav) { position:relative; z-index:1; }
+.gs-top-row > .fav { z-index:2; }
 .gs-top-rank-art { position:absolute; inset:0; z-index:0; pointer-events:none; }
 .gs-top-rank-art img { display:block; width:100%; height:100%; object-fit:cover; object-position:68% 48%; opacity:.72; }
 .gs-top-rank-art::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#10121be8 0%,#11131ac2 35%,#10121b33 65%,#10121bba 100%); }
@@ -38,5 +39,8 @@ html[data-color-mode] body .gs-rank-podium.gs-rank-3 { background:linear-gradien
   border:1px solid color-mix(in srgb,var(--top-accent) 65%,#262634)!important;
   border-radius:12px!important; background:#141522!important;
 }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row[data-rank] { background:#141522!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.text-ink-50) { color:#f6f3ef!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.text-ink-400,.text-ink-500) { color:#d1cdda!important; }
 :root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-name,.server-right strong) { color:#f6f3ef!important; }
 :root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-meta,.server-right small) { color:#d1cdda!important; }

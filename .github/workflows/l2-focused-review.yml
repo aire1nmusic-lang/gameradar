@@ -2,7 +2,7 @@ name: L2 focused visual review
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css', 'src/components/layout/world-glass-review.css', 'src/components/layout/FooterFaq.tsx']
+    paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css', 'src/components/layout/world-glass-review.css', 'src/components/layout/FooterFaq.tsx', 'src/components/ui/top-ranks.css', 'src/components/ui/RankMedal.tsx', 'src/components/ui/TopRankArt.tsx', 'public/media/ranks/**', 'tests/l2-review-browser.mjs']
   workflow_dispatch:
 permissions:
   contents: read

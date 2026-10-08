@@ -33,6 +33,7 @@ try{
   assert.equal(await support.locator('.gs-top-row').count(),3,'Distinct first three positions')
   for(const row of await support.locator('.gs-top-row').all()){
     await row.scrollIntoViewIfNeeded()
+    assert.equal(await row.locator('.fav').evaluate(button=>{const r=button.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit===button||button.contains(hit)}),true,'Favorite remains above metrics and artwork')
     await row.locator('.gs-top-rank-art img').evaluate(async image=>{await image.decode()})
     assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),'rgb(246, 243, 239)','Podium name contrast in both themes')
     assert.notEqual(await row.locator('.gs-rank-podium').evaluate(e=>getComputedStyle(e).backgroundImage),'none','Visible medal surface')

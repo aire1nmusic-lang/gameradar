@@ -33,6 +33,8 @@ const matrix = [[320,568],[390,844],[844,390],[768,1024],[1024,768],[1024,800],[
 async function setup(width, height, mode, path = '/') {
   const context = await browser.newContext({ viewport: { width, height } })
   const page = await context.newPage()
+  const hubRequests = []
+  page.on('request', request => { if (new URL(request.url()).pathname.startsWith('/media/hub/')) hubRequests.push(request.url()) })
   page.on('requestfailed', request => {
     if (request.url().includes('/media/hub/')) console.log('IMAGE REQUEST FAILED', request.url(), request.failure())
   })
@@ -77,7 +79,7 @@ async function setup(width, height, mode, path = '/') {
     return route.continue()
   })
   await page.goto(base + path, { waitUntil: 'domcontentloaded' })
-  return { page, context, release, recover: () => { failing = false } }
+  return { page, context, release, hubRequests, recover: () => { failing = false } }
 }
 async function ready(page) {
   try {
@@ -133,6 +135,8 @@ try {
     await slow.context.close()
     const actual = await setup(width, height, 'real-images')
     await ready(actual.page)
+    assert.equal(await actual.page.locator('[data-boot-visual]').count(), 4, 'Only the visible viewport branch mounts images')
+    assert.ok(new Set(actual.hubRequests).size <= 4, 'No hidden desktop/mobile artwork requests')
     assert.equal(await actual.page.evaluate(() => [...document.querySelectorAll('[data-boot-visual]')].filter(i => i.getBoundingClientRect().width > 0 && i.complete && i.naturalWidth > 1).length), 4, 'Real responsive assets must load')
     await actual.page.screenshot({ path: 'output/loader-qa/hall-ready-' + width + 'x' + height + '.png' })
     const shades = await actual.page.locator('section [aria-hidden] .bg-gradient-to-b, section [aria-hidden] .bg-gradient-to-t').evaluateAll(els => els.map(el => getComputedStyle(el).backgroundImage))
@@ -157,6 +161,16 @@ try {
     await actual.page.getByRole('button', { name: 'Включить тёмную тему', exact: true }).click()
     await actual.page.waitForFunction(() => document.documentElement.dataset.colorMode === 'dark')
     assert.deepEqual(await actual.page.locator('section [aria-hidden] .bg-gradient-to-b, section [aria-hidden] .bg-gradient-to-t').evaluateAll(els => els.map(el => getComputedStyle(el).backgroundImage)), shades, 'Dark home shading restores after toggling back')
+    if (width === 390) {
+      for (const viewport of [{width:1440,height:900},{width:390,height:844}]) {
+        await actual.page.setViewportSize(viewport)
+        await actual.page.waitForFunction(() => [...document.querySelectorAll('[data-boot-visual]')].filter(i => i.getBoundingClientRect().width > 0).length === 4)
+        await actual.page.locator('[data-boot-visual]').evaluateAll(images => Promise.all(images.map(image => image.decode())))
+        assert.equal(await actual.page.locator('[data-boot-visual]').count(), 4, 'Resizing replaces the viewport branch')
+        assert.equal(await actual.page.locator('.gs-mobile-worlds').count(), viewport.width < 1024 ? 1 : 0)
+      }
+      assert.equal(await actual.page.getByRole('button', {name:'Показать '+JSON.parse(games).find(game=>game.id==='lineage2').shortName,exact:true}).getAttribute('aria-pressed'), 'true', 'Selected world survives responsive changes')
+    }
     await actual.context.close()
     console.log('PASS fast/slow images, hidden incomplete hall, decoded background + 3 cards, viewport ' + width + 'x' + height)
   }
@@ -165,6 +179,7 @@ try {
     for (const path of ['/account', '/lineage-2', '/minecraft', '/gta-rp', '/catalog']) {
       const inner = await setup(width, height, 'inner-pages', path)
       await ready(inner.page)
+      assert.deepEqual(inner.hubRequests, [], 'Inner routes never preload the home hall')
       if (path === '/account') await inner.page.locator('.gs-account-entry').waitFor()
       await inner.page.locator('main img').evaluateAll(images => Promise.all(images.filter(img => !img.closest('details:not([open])') && img.getBoundingClientRect().width > 0).map(img => img.decode().catch(() => {}))))
       for (const theme of ['dark', 'light']) {

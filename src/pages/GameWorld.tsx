@@ -1,3 +1,4 @@
+import type { GameServer } from '@/models'
 import { LineageDiscovery } from '@/components/world/LineageDiscovery'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { useMemo } from 'react'
@@ -70,7 +71,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
       ]),
     ],
   })
-  const { data: servers = [], loading, error, reload } = useAsync(() => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo), [game?.id, chronicle?.id,demo], true)
+  const { data: servers = [], loading, error, reload } = useAsync<GameServer[]>(publish => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo,publish), [game?.id, chronicle?.id,demo], true)
 
   const known = hasFreshOnline
   const openings = useMemo(
@@ -137,7 +138,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 to={`/rating?game=${game.id}&all=support`}
               >
                 {topSupport.length > 0
-                  ? topSupport.slice(0, 15).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" compact className={index >= 5 ? 'gs-preview-overflow' : undefined} />)
+                  ? topSupport.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
                   : <ShelfNote title="Рейтинг пока формируется" text="Здесь появятся серверы, получившие поддержку за Coins." />}
               </RankPanel>
 
@@ -149,7 +150,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 to={`/openings?game=${game.id}`}
               >
                 {openings.length > 0
-                  ? openings.slice(0, 15).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 5 ? 'gs-preview-overflow' : undefined} />)
+                  ? openings.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
                   : <ShelfNote title="Ближайших открытий нет" text="Как только проект объявит дату старта, он появится здесь." />}
               </RankPanel>
 
@@ -161,7 +162,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
                 to={`/rating?game=${game.id}&all=people`}
               >
                 {topPeople.length > 0
-                  ? topPeople.slice(0, 15).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="votes" compact className={index >= 5 ? 'gs-preview-overflow' : undefined} />)
+                  ? topPeople.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="votes" compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
                   : <ShelfNote title="Серверов пока нет" text="Здесь появятся проекты и голоса игроков." />}
               </RankPanel>
             </div>
@@ -187,3 +188,4 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
     </div>
   )
 }
+

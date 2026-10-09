@@ -4,6 +4,7 @@ import { apiRequest } from '@/repositories/http/client'
 import type { CatalogFilters } from './filterState'
 import { visualDemo } from './visualDemo'
 import { balancedCatalog } from './discoveryRanking'
+import { invalidatePublicReads } from '@/repositories/http/publicRead'
 
 /**
  * Catalogue use-cases: searching, filtering and the discovery rails.
@@ -47,9 +48,9 @@ export function toServerQuery(filters: CatalogFilters, sort: SortKey, limit?: nu
   }
 }
 
-export function searchServers(query: ServerQuery, demo = false): Promise<Page<GameServer>> {
+export function searchServers(query: ServerQuery, demo = false, publish?: (page: Page<GameServer>) => void): Promise<Page<GameServer>> {
   if (demo) return demoSortedServers(query)
-  if (query.sort === 'recommended') return balancedSortedServers(query)
+  if (query.sort === 'recommended') return balancedSortedServers(query, publish)
   return repo.servers.query(query)
 }
 
@@ -63,13 +64,30 @@ async function publicCards(query: ServerQuery): Promise<GameServer[]> {
   return items
 }
 
-export function invalidateDiscoveryCache(){ discoveryCache.clear() }
-const discoveryCache=new Map<string,{at:number;result:Promise<GameServer[]>}>()
-export function discoveryServers(query:ServerQuery={},demo=false):Promise<GameServer[]>{
- const key=JSON.stringify(query),cached=discoveryCache.get(key)
- let result=cached&&Date.now()-cached.at<15000?cached.result:undefined
- if(!result){result=loadDiscoveryServers(query);discoveryCache.set(key,{at:Date.now(),result});result.catch(()=>discoveryCache.delete(key))}
- return demo?result.then(visualDemo):result
+type DiscoveryEntry = { at: number; result: Promise<GameServer[]>; snapshot?: GameServer[]; listeners: Set<(servers: GameServer[]) => void> }
+const discoveryCache = new Map<string, DiscoveryEntry>()
+export function invalidateDiscoveryCache() { discoveryCache.clear(); invalidatePublicReads() }
+export function discoveryServers(query: ServerQuery = {}, demo = false, publish?: (servers: GameServer[]) => void): Promise<GameServer[]> {
+  const key = JSON.stringify(query)
+  let entry = discoveryCache.get(key)
+  if (!entry || Date.now() - entry.at >= 15000) {
+    const listeners = new Set<(servers: GameServer[]) => void>()
+    const created: DiscoveryEntry = { at: Date.now(), listeners, result: Promise.resolve([]) }
+    created.result = loadDiscoveryServers(query, snapshot => {
+      created.snapshot = snapshot
+      for (const listener of listeners) listener(snapshot)
+    })
+    created.result.catch(() => { if (discoveryCache.get(key) === created) discoveryCache.delete(key) })
+    entry = created
+    discoveryCache.set(key, entry)
+  }
+  const listener = publish ? (servers: GameServer[]) => publish(demo ? visualDemo(servers) : servers) : undefined
+  if (listener) {
+    entry.listeners.add(listener)
+    if (entry.snapshot) listener(entry.snapshot)
+  }
+  const current = entry
+  return current.result.then(servers => demo ? visualDemo(servers) : servers).finally(() => { if (listener) current.listeners.delete(listener) })
 }
 async function demoSortedServers(query:ServerQuery):Promise<Page<GameServer>>{
  const universe=await discoveryServers({gameId:query.gameId,gameIds:query.gameIds},true)
@@ -82,53 +100,66 @@ async function demoSortedServers(query:ServerQuery):Promise<Page<GameServer>>{
  const offset=query.offset??0,limit=query.limit??24
  return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
 }
-async function loadDiscoveryServers(query: ServerQuery = {}): Promise<GameServer[]> {
-  const load = async (path: string) => {
-    const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
+async function loadDiscoveryServers(query: ServerQuery, publish: (servers: GameServer[]) => void): Promise<GameServer[]> {
+  type Row = { server_id: string; votes?: number; coins?: number; participants?: number }
+  const load = async (path: string): Promise<Row[]> => {
+    const rows: Row[] = []
     for (let offset = 0; ; offset += 100) {
-      const page = await apiRequest<typeof rows>(`${path}?limit=100&offset=${offset}`)
+      const page = await apiRequest<Row[]>(`${path}?limit=100&offset=${offset}`, { signal: AbortSignal.timeout(8000) })
+      if (!Array.isArray(page)) throw new Error('Некорректный ответ рейтинга')
       rows.push(...page)
       if (page.length < 100) return rows
     }
   }
-  const [items, people, support] = await Promise.all([publicCards(query),load('/people-rating'),load('/support/ranking')])
-  const votes = new Map(people.map(row => [row.server_id, row.votes ?? 0]))
-  const coins = new Map(support.map(row => [row.server_id, row]))
-  return items.map(server => ({...server, votes: votes.get(server.id) ?? 0, support: {coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0}}))
-}
-
-async function balancedSortedServers(query: ServerQuery): Promise<Page<GameServer>> {
-  const universe = await discoveryServers({gameId: query.gameId, gameIds: query.gameIds})
-  const order = new Map(balancedCatalog(universe).map((server, index) => [server.id, index]))
-  const filtered = await publicCards({...query, offset: 0, limit: undefined})
-  const enriched = new Map(universe.map(server => [server.id, server]))
-  const sorted = filtered.map(server => enriched.get(server.id) ?? server).sort((a,b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity))
-  const offset = query.offset ?? 0, limit = query.limit ?? 24
-  return {items: sorted.slice(offset, offset + limit), total: sorted.length, offset, limit}
-}
-
-/** Read-only join at the UI boundary: private vote counts order public cards. */
-async function privateAggregateSort(query: ServerQuery, path: string, field: 'votes' | 'coins'): Promise<Page<GameServer>> {
-  const ranking = async () => {
-    const rows: Array<{server_id:string;votes?:number;coins?:number;participants?:number}> = []
-    for (let offset=0; ; offset+=100) {
-      const page=await apiRequest<Array<{server_id:string;votes?:number;coins?:number;participants?:number}>>(`${path}?limit=100&offset=${offset}`)
-      rows.push(...page)
-      if (page.length<100) return rows
-    }
+  let items: GameServer[] | undefined
+  let people: Row[] | undefined, support: Row[] | undefined
+  let peoplePending = true, supportPending = true
+  const joined = (): GameServer[] => {
+    const votes = new Map((people ?? []).map(row => [row.server_id, row.votes ?? 0]))
+    const coins = new Map((support ?? []).map(row => [row.server_id, row]))
+    return (items ?? []).map(server => ({ ...server,
+      rankingAvailability: { votes: !!people, support: !!support, pending: peoplePending || supportPending },
+      votes: people ? votes.get(server.id) ?? 0 : server.votes,
+      support: support ? { coins: coins.get(server.id)?.coins ?? 0, participants: coins.get(server.id)?.participants ?? 0 } : server.support,
+    }))
   }
-  const [catalog, rankingRows]=await Promise.all([
-    repo.servers.query({...query,sort:'recommended',offset:0,limit:Number.MAX_SAFE_INTEGER}),ranking(),
+  const emit = () => { if (items) publish(joined()) }
+  // Start all reads together. Each useful answer updates the view independently.
+  await Promise.all([
+    publicCards(query).then(cards => { items = cards; emit() }),
+    load('/people-rating').then(rows => { people = rows }, () => {}).finally(() => { peoplePending = false; emit() }),
+    load('/support/ranking').then(rows => { support = rows }, () => {}).finally(() => { supportPending = false; emit() }),
   ])
-  const score=new Map(rankingRows.map(row=>[row.server_id,row[field]??0]))
-  const support=new Map(rankingRows.map(row=>[row.server_id,{coins:row.coins??0,participants:row.participants??0}]))
-  const cards=field==='coins'?catalog.items.map(card=>({...card,support:support.get(card.id)??{coins:0,participants:0}})):catalog.items
-  const sorted=[...cards].sort((a,b)=>(score.get(b.id)??0)-(score.get(a.id)??0) || a.name.localeCompare(b.name,'ru') || a.id.localeCompare(b.id))
-  const offset=query.offset??0,limit=query.limit??24
-  return {items:sorted.slice(offset,offset+limit),total:sorted.length,offset,limit}
+  return joined()
 }
-export const peopleSortedServers = (query: ServerQuery) => privateAggregateSort(query,'/people-rating','votes')
-export const supportSortedServers = (query: ServerQuery) => privateAggregateSort(query,'/support/ranking','coins')
+
+async function enrichedSortedServers(query: ServerQuery, order: (universe: GameServer[]) => Map<string, number>, publish?: (page: Page<GameServer>) => void): Promise<Page<GameServer>> {
+  let universe: GameServer[] | undefined, filtered: GameServer[] | undefined
+  const page = (): Page<GameServer> => {
+    const positions = order(universe ?? [])
+    const enriched = new Map((universe ?? []).map(server => [server.id, server]))
+    const sorted = (filtered ?? []).map(server => enriched.get(server.id) ?? server).sort((a, b) => (positions.get(a.id) ?? Infinity) - (positions.get(b.id) ?? Infinity))
+    const offset = query.offset ?? 0, limit = query.limit ?? 24
+    return { items: sorted.slice(offset, offset + limit), total: sorted.length, offset, limit }
+  }
+  const emit = () => { if (universe && filtered) publish?.(page()) }
+  await Promise.all([
+    discoveryServers({ gameId: query.gameId, gameIds: query.gameIds }, false, snapshot => { universe = snapshot; emit() }).then(cards => { universe = cards }),
+    publicCards({ ...query, offset: 0, limit: undefined }).then(cards => { filtered = cards; emit() }),
+  ])
+  return page()
+}
+function balancedSortedServers(query: ServerQuery, publish?: (page: Page<GameServer>) => void): Promise<Page<GameServer>> {
+  return enrichedSortedServers(query, universe => new Map(balancedCatalog(universe).map((server, index) => [server.id, index])), publish)
+}
+function privateAggregateSort(query: ServerQuery, field: 'votes' | 'coins', publish?: (page: Page<GameServer>) => void): Promise<Page<GameServer>> {
+  return enrichedSortedServers(query, universe => {
+    const value = (server: GameServer) => field === 'coins' ? server.support?.coins ?? 0 : server.votes
+    return new Map([...universe].sort((a, b) => value(b) - value(a) || a.name.localeCompare(b.name, 'ru') || a.id.localeCompare(b.id)).map((server, index) => [server.id, index]))
+  }, publish)
+}
+export const peopleSortedServers = (query: ServerQuery, publish?: (page: Page<GameServer>) => void) => privateAggregateSort(query, 'votes', publish)
+export const supportSortedServers = (query: ServerQuery, publish?: (page: Page<GameServer>) => void) => privateAggregateSort(query, 'coins', publish)
 
 export async function listServers(query: ServerQuery): Promise<GameServer[]> {
   const page = await repo.servers.query(query)
@@ -229,3 +260,4 @@ export const QUICK_SEARCHES = [
   { label: 'Lineage 2 High Five', to: '/lineage-2/high-five' },
   { label: 'Lineage 2 Interlude', to: '/lineage-2/interlude' },
 ]
+

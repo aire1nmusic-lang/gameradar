@@ -24,11 +24,11 @@ const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/nave-${w}.we
 const NAVE_PHONE_SRCSET = '/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w'
 
 /** Cards lean towards the pointer: each card reads the pointer relative to its own centre. */
-function useTilt() {
+function useTilt(enabled: boolean) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const node = ref.current
-    if (!node || reducedMotion() || !window.matchMedia('(pointer: fine)').matches) return
+    if (!enabled || !node || reducedMotion() || !window.matchMedia('(pointer: fine)').matches) return
     let frame = 0
     const move = (event: PointerEvent) => {
       cancelAnimationFrame(frame)
@@ -58,17 +58,24 @@ function useTilt() {
       node.removeEventListener('pointerleave', leave)
       cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [enabled])
   return ref
 }
 
 export function WorldHall() {
+  const [desktop, setDesktop] = useState(() => typeof window === 'undefined' || window.matchMedia('(min-width: 1024px)').matches)
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)')
+    const update = () => setDesktop(query.matches)
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
   const { data: games = [] } = useGames()
   const byId = Object.fromEntries(games.map((game) => [game.id, game])) as Record<string, Game | undefined>
   const worlds = WORLDS.map((id) => byId[id]).filter((game): game is Game => !!game)
   const [hover, setHover] = useState<string | null>(null)
   const { flightId, enter, preload } = usePortalFlight()
-  const tilt = useTilt()
+  const tilt = useTilt(desktop)
   const mobileRow=useRef<HTMLDivElement>(null),mobileIndex=useRef(1)
   const mobileWorlds=['minecraft','lineage2','gtarp'].map(id=>byId[id]).filter((game):game is Game=>!!game)
   const [selectedWorld,setSelectedWorld]=useState('lineage2')
@@ -83,7 +90,7 @@ export function WorldHall() {
     center()
     const observer=new ResizeObserver(center);observer.observe(row)
     return()=>observer.disconnect()
-  },[mobileWorlds.length])
+  },[mobileWorlds.length,desktop])
   const scrollWorlds=()=>{
     const row=mobileRow.current;if(!row?.clientWidth)return
     const center=row.scrollLeft+row.clientWidth/2
@@ -104,7 +111,7 @@ export function WorldHall() {
     <section className="gs-home-hall relative isolate overflow-hidden">
 
       {/* ── wide screens ─────────────────────────────────────────────── */}
-      <div ref={tilt} className="relative hidden h-[max(640px,100svh)] lg:block">
+      {desktop && <div ref={tilt} className="relative hidden h-[max(640px,100svh)] lg:block">
         {/* the hall: breathes, follows the pointer, sinks back when a card is chosen */}
         <div
           aria-hidden
@@ -141,10 +148,10 @@ export function WorldHall() {
           </div>
         </div>
 
-      </div>
+      </div>}
 
       {/* ── phones and tablets ───────────────────────────────────────── */}
-      <div className="relative flex min-h-[100svh] flex-col justify-start lg:hidden">
+      {!desktop && <div className="relative flex min-h-[100svh] flex-col justify-start lg:hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
           <img data-boot-visual src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="gs-hall-shade-mobile absolute inset-0 bg-gradient-to-b from-[#08090d]/30 via-[#08090d]/35 to-[#08090d]" />
@@ -161,7 +168,7 @@ export function WorldHall() {
           <div className="flex justify-center gap-1" aria-label="Выбор мира">{mobileWorlds.map((game,index)=><button key={game.id} type="button" aria-label={`Показать ${game.shortName}`} aria-pressed={selectedWorld===game.id} className="grid h-11 w-11 place-items-center" onClick={()=>{const row=mobileRow.current,card=row?.children[index] as HTMLElement|undefined;if(row&&card){mobileIndex.current=index;row.scrollTo({left:card.offsetLeft-row.offsetLeft-(row.clientWidth-card.clientWidth)/2,behavior:reducedMotion()?'auto':'smooth'})}}}><span className={cn('h-1.5 rounded-full transition-all',selectedWorld===game.id?'w-6 bg-white':'w-1.5 bg-white/35')}/></button>)}</div>
           <p className="text-center text-xs text-white/70">Листай, чтобы выбрать другой мир</p>
         </div>
-      </div>
+      </div>}
 
     </section>
   )
@@ -242,7 +249,7 @@ function WorldCard({
                   loading="eager"
                   src={cardSrc(game.id, 480)}
                   srcSet={cardSrcSet(game.id)}
-                  sizes={compact ? '62vw' : '(min-width: 1024px) 480px, 62vw'}
+                  sizes={compact ? 'min(62vw, 300px, 40svh)' : '480px'}
                   alt={`${game.name}`}
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
                   decoding="async"

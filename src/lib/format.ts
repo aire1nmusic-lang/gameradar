@@ -122,6 +122,18 @@ export function formatCountdown(iso: string, now = Date.now()): string {
   return `через ${hours} ч ${minutes} мин`
 }
 
+/** Compact live launch clock; never announces an opening before its timestamp. */
+export function formatLiveCountdown(iso: string, now = Date.now()): string {
+  const target = Date.parse(iso)
+  if (!Number.isFinite(target)) return 'Время не указано'
+  const seconds = Math.ceil((target - now) / 1000)
+  if (seconds <= 0) return 'Открыт'
+  const days = Math.floor(seconds / 86400)
+  const clock = [Math.floor(seconds % 86400 / 3600), Math.floor(seconds % 3600 / 60), seconds % 60]
+    .map(value => String(value).padStart(2, '0')).join(':')
+  return days ? `${days} д ${clock}` : clock
+}
+
 export function formatRelativeDays(iso: string, now = Date.now()): string {
   // Calendar days, not 24-hour blocks: "вчера" must mean the previous date.
   const day = (time: number) => { const d = new Date(time); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) }

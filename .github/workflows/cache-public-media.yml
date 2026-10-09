@@ -1,0 +1,38 @@
+name: Cache public artwork after successful release
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cache-public-media.yml'
+      - '.github/scripts/cache-public-media*'
+  workflow_run:
+    workflows: [Deploy production site]
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: production-site
+  cancel-in-progress: false
+env:
+  YC_BUCKET: gamescout-ru-site
+  YC_S3_ENDPOINT: https://storage.yandexcloud.net
+jobs:
+  cache:
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cache scope, byte metadata, permission preservation and failure guards
+        run: node --test .github/scripts/cache-public-media.test.mjs
+      - name: Cache image bytes while preserving object access and HTML freshness
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: node .github/scripts/cache-public-media.mjs

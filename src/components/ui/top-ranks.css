@@ -1,0 +1,47 @@
+/* One podium treatment for displayed positions; it never changes ranking data. */
+.gs-top-row[data-rank="1"] { --top-accent:#d7b46e; }
+.gs-top-row[data-rank="2"] { --top-accent:#b4c5dc; }
+.gs-top-row[data-rank="3"] { --top-accent:#cc9775; }
+html[data-color-mode] body .gs-top-row {
+  position:relative; isolation:isolate; overflow:hidden;
+  min-height:76px!important; margin:6px 0;
+  border:1px solid color-mix(in srgb,var(--top-accent) 65%,#262634)!important;
+  border-radius:12px!important; background:#141522!important;
+  box-shadow:0 3px 12px #05061118!important;
+  color:#f6f3ef!important;
+}
+.gs-top-row > :not(.gs-top-rank-art):not(.fav) { position:relative; z-index:1; }
+.gs-top-row > .fav { z-index:2; }
+html[data-color-mode] body .gs-row-line.gs-top-row[data-rank] { min-height:76px!important; }
+.gs-top-rank-art { position:absolute; inset:0; z-index:0; pointer-events:none; }
+.gs-top-rank-art img { display:block; width:100%; height:100%; object-fit:cover; object-position:68% 48%; opacity:.72; }
+.gs-top-rank-art::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#10121be8 0%,#11131ac2 35%,#10121b33 65%,#10121bba 100%); }
+html[data-color-mode] body .gs-top-row :is(.server-name,.text-ink-50,.server-right strong) { color:#f6f3ef!important; }
+html[data-color-mode] body .gs-top-row :is(.server-meta,.server-right small,.text-ink-400,.text-ink-500) { color:#d1cdda!important; }
+html[data-color-mode] body .gs-top-row :is(.fav,.gs-row-favorite) { color:#e1dbe9; }
+html[data-color-mode] body .gs-top-row :is(.fav.selected,.gs-row-favorite.is-selected) { color:#f39bbb!important; }
+html[data-color-mode] body .gs-rank-podium {
+  display:flex!important; flex-direction:column; align-items:center; justify-content:center;
+  width:28px!important; height:34px!important; border:1px solid #ffffff38!important;
+  border-radius:8px!important; font-size:15px!important; line-height:16px;
+}
+html[data-color-mode] body .gs-rank-podium svg { width:11px; height:11px; stroke-width:2; }
+html[data-color-mode] body .gs-rank-podium::before,
+html[data-color-mode] body .gs-rank-podium::after { display:none!important; }
+html[data-color-mode] body .gs-l2-aether-layout .l2a .gs-top-row { min-height:80px!important; }
+@media(max-width:360px) {
+  html[data-color-mode] body .gs-rank-podium { width:24px!important; height:32px!important; }
+}
+
+html[data-color-mode] body .gs-rank-podium.gs-rank-1 { background:linear-gradient(160deg,#f8dda0,#c99534 58%,#765019)!important; }
+html[data-color-mode] body .gs-rank-podium.gs-rank-2 { background:linear-gradient(160deg,#eef1f5,#a9b2bf 58%,#5f6876)!important; }
+html[data-color-mode] body .gs-rank-podium.gs-rank-3 { background:linear-gradient(160deg,#e8b68f,#b96f3f 58%,#6f3d25)!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .gs-top-row[data-rank] {
+  border:1px solid color-mix(in srgb,var(--top-accent) 65%,#262634)!important;
+  border-radius:12px!important; background:#141522!important;
+}
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row[data-rank] { background:#141522!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.text-ink-50) { color:#f6f3ef!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.text-ink-400,.text-ink-500) { color:#d1cdda!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-name,.server-right strong) { color:#f6f3ef!important; }
+:root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-meta,.server-right small) { color:#d1cdda!important; }

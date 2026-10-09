@@ -15,6 +15,8 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&family=Saira:wdth,wght@112.5,800&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
@@ -85,12 +87,18 @@
 
     </style>
 
-    <link rel="preload" as="image" href="/media/hub/nave-1920.webp"
-      imagesrcset="/media/hub/nave-1280.webp 1280w, /media/hub/nave-1920.webp 1920w, /media/hub/nave-2560.webp 2560w, /media/hub/nave-3840.webp 3840w"
-      imagesizes="100vw" media="(min-width: 1024px)" fetchpriority="high" />
-    <link rel="preload" as="image" href="/media/hub/nave-m-720.webp"
-      imagesrcset="/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w"
-      imagesizes="100vw" media="(max-width: 1023px)" fetchpriority="high" />
+    <script>
+      if (location.pathname === '/') {
+        for (const [href, srcset, media] of [
+          ['/media/hub/nave-1920.webp', '/media/hub/nave-1280.webp 1280w, /media/hub/nave-1920.webp 1920w, /media/hub/nave-2560.webp 2560w, /media/hub/nave-3840.webp 3840w', '(min-width: 1024px)'],
+          ['/media/hub/nave-m-720.webp', '/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w', '(max-width: 1023px)'],
+        ]) {
+          const preload = document.createElement('link');
+          for (const [name, value] of Object.entries({rel:'preload', as:'image', href, imagesrcset:srcset, imagesizes:'100vw', media, fetchpriority:'high'})) preload.setAttribute(name, value);
+          document.head.append(preload);
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

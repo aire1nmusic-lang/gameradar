@@ -10,13 +10,13 @@ export interface AsyncState<T> {
 /**
  * Minimal async binding for the service layer.
  *
- * Deliberately small: no cache, no dedupe. When the real API lands this is the
- * single place to swap in TanStack Query without touching a component.
+ * A factory may publish usable public data before optional enrichment finishes.
+ * Cache/deduplication belongs to the read service; private state is never cached here.
  *
  * Out-of-order responses are dropped, so fast filter typing can never paint a
  * stale result over a fresh one.
  */
-export function useAsync<T>(factory: () => Promise<T>, deps: unknown[], keepPrevious = false): AsyncState<T> {
+export function useAsync<T>(factory: (publish: (value: NoInfer<T>) => void) => Promise<T>, deps: unknown[], keepPrevious = false): AsyncState<T> {
   const [data, setData] = useState<T | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | undefined>(undefined)
@@ -35,7 +35,11 @@ export function useAsync<T>(factory: () => Promise<T>, deps: unknown[], keepPrev
     if (!keepPrevious) setData(undefined)
 
     factoryRef
-      .current()
+      .current((value) => {
+        if (!active || id !== requestId.current) return
+        setData(value)
+        setLoading(false)
+      })
       .then((value) => {
         if (!active || id !== requestId.current) return
         setData(value)
@@ -59,3 +63,4 @@ export function useAsync<T>(factory: () => Promise<T>, deps: unknown[], keepPrev
 
   return { data, loading, error, reload }
 }
+

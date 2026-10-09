@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCountdown, formatLaunch } from '@/lib/format'
+import { formatLaunch } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import type { GameServer } from '@/models'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { ServerLogo } from '@/components/ui/ServerLogo'
+import { LaunchCountdown } from './LaunchCountdown'
 
 /**
  * An announced opening as one row: what opens and when. (No reminder button until reminders really exist.)
@@ -37,7 +38,7 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
       <div className="shrink-0 text-right" title={formatLaunch(launch.at)}>
         <div className={cn('num inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums sm:text-[13px]', 'text-ink-100')}>
           <WorldIcon name="opening" size={13} className="hidden text-ink-500 sm:block" />
-          {formatCountdown(launch.at)}
+          <LaunchCountdown at={launch.at}/>
         </div>
         <div className="mt-0.5 hidden text-[11px] text-ink-500 sm:block">{formatLaunch(launch.at)}</div>
       </div>

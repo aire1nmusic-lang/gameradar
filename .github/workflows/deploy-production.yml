@@ -13,6 +13,11 @@ on:
       - 'tsconfig*.json'
       - 'scripts/**'
       - '.github/workflows/deploy-production.yml'
+      - 'tests/*browser.mjs'
+      - 'tests/l2-read-recovery.test.mjs'
+      - 'tests/public-catalog-read.test.mjs'
+      - 'tests/public-qa-data*'
+      - 'tests/browser-qa-runner.test.mjs'
   workflow_dispatch:
     inputs:
       confirm:
@@ -107,33 +112,14 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
-      - name: Aether matrix before publication
+      - name: Read recovery, zero support, discovery scoring and runner invariants
         run: |
+          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs
           node --experimental-strip-types --test tests/zero-support.test.mjs
-          node tests/aether-browser.mjs
-
-      - name: L2 utility navigation and zero support before publication
-        run: node tests/l2-journey-browser.mjs
-
-      - name: Private favorites across two devices before publication
-        run: node tests/favorites-browser.mjs
-
-      - name: Loader matrix before publication
-        run: node tests/loader-browser.mjs
-
-      - name: Account matrix before publication
-        run: node tests/account-browser.mjs
-
-      - name: Discovery matrix before publication
-        run: |
           node --experimental-strip-types tests/discovery-scoring.mjs
-          node tests/discovery-browser.mjs
 
-      - name: Visual controls and consistent L2 navigation before publication
-        run: node tests/visual-control-browser.mjs
-
-      - name: Support studio before publication
-        run: node tests/support-studio-browser.mjs
+      - name: All nine browser gates before publication (two at a time)
+        run: node scripts/run-browser-qa.mjs
 
       - name: Backup current production HTML and service files
         env:
@@ -143,16 +129,16 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: |
           mkdir -p "$RUNNER_TEMP/site-rollback"
-          aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --only-show-errors
+          aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --exclude "_deployment-backups/*"             --only-show-errors
           test -f "$RUNNER_TEMP/site-rollback/index.html"
 
-      - name: Save rollback artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-site-before-${{ github.sha }}
-          path: ${{ runner.temp }}/site-rollback
-          retention-days: 14
-          if-no-files-found: error
+      - name: Persist and verify durable rollback archive
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: node scripts/persist-release-backup.mjs
 
       - name: Upload versioned assets first
         env:
@@ -213,14 +199,8 @@ jobs:
           }
           console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
           NODE
-          FAVORITES_QA_BASE_URL=https://gamescout.online node tests/favorites-browser.mjs
-          LOADER_BASE_URL=https://gamescout.online node tests/loader-browser.mjs
-          ACCOUNT_QA_BASE_URL=https://gamescout.online node tests/account-browser.mjs
-          DISCOVERY_QA_BASE_URL=https://gamescout.online node tests/discovery-browser.mjs
-          AETHER_QA_BASE_URL=https://gamescout.online node tests/aether-browser.mjs
-          L2_JOURNEY_QA_BASE_URL=https://gamescout.online node tests/l2-journey-browser.mjs
-          CONTROL_QA_BASE_URL=https://gamescout.online node tests/visual-control-browser.mjs
-          STUDIO_QA_BASE_URL=https://gamescout.online node tests/support-studio-browser.mjs
+          # Each suite retains its own live target, isolation and acceptance assertions.
+          node scripts/run-browser-qa.mjs --live https://gamescout.online
 
       - name: Roll back public HTML if verification failed
         if: steps.verify_live.outcome == 'failure'
@@ -241,6 +221,7 @@ jobs:
 
       - name: Save loader QA screenshots
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: loader-browser-qa-${{ github.sha }}
@@ -249,11 +230,13 @@ jobs:
             output/account-review-qa
             output/discovery-qa
             output/aether-qa
+            output/l2-review-qa
             output/l2-journey-qa
             output/control-qa
             output/studio-qa
             output/favorites-qa
           retention-days: 14
           if-no-files-found: ignore
+
 
 

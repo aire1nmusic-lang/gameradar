@@ -1,0 +1,150 @@
+/* Shared world glass: artwork remains visible; controls carry their own contrast. */
+html[data-color-mode] body .gs-l2-aether-layout {
+  --aether-bg:#0d101b; --aether-ink:#f4f0ea; --aether-muted:#bfc0cf;
+  --aether-line:#a695c13d; --aether-pane:#131522d9; --aether-field:#181b2bd9;
+  --aether-gold:#ddbf84; --aether-shadow:#07071340;
+}
+html[data-color-mode='light'] body .gs-l2-aether-layout {
+  --aether-bg:#e7e0d5; --aether-ink:#2c2933; --aether-muted:#5d5764;
+  --aether-line:#6855753d; --aether-pane:#eee8deeb; --aether-field:#f4eee5e0;
+  --aether-gold:#765627; --aether-shadow:#33283f1c;
+  background:var(--aether-bg)!important;
+}
+.gs-l2-aether-layout .l2a,
+.gs-l2-aether-layout .l2a.light {
+  --bg:var(--aether-bg); --ink:var(--aether-ink); --muted:var(--aether-muted);
+  --line:var(--aether-line); --pane:var(--aether-pane); --field:var(--aether-field);
+  --gold:var(--aether-gold); --shadow:var(--aether-shadow);
+}
+html[data-color-mode='light'] body .gs-l2-aether-layout::before {
+  background:linear-gradient(90deg,#e9e1d5ad,#e9e1d542 65%),linear-gradient(0deg,#e7e0d548,transparent 60%),url('/media/worlds/lineage-2/master-v8-1536.webp') 60% top/cover no-repeat;
+}
+html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:before {opacity:1}
+html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:after {
+  background:linear-gradient(90deg,#e9e1d5ad,#e9e1d542 65%),linear-gradient(0deg,var(--bg),transparent 68%);
+}
+html[data-color-mode] body .gs-l2-aether-layout :is(.gs-panel,.gt-panel,.gt-card,.gs-account-card,.gs-account-glass,.gs-coins-card,.gs-account-empty,.gs-account-claim),
+html[data-color-mode] body .gs-l2-aether-layout .l2a :is(.panel,.owner) {
+  background:linear-gradient(125deg,#a18bc60c,transparent 45%,#ddbf8407),var(--aether-pane)!important;
+  border:1px solid var(--aether-line)!important;
+  box-shadow:0 10px 30px -20px var(--aether-shadow)!important;
+  backdrop-filter:blur(16px) saturate(105%); -webkit-backdrop-filter:blur(16px) saturate(105%);
+}
+html[data-color-mode] body .gs-l2-aether-layout .l2a .panel::before {display:none!important}
+html[data-color-mode] body .gs-l2-aether-layout :is(.gs-row,.gs-row-line) {
+  background:color-mix(in srgb,var(--aether-field) 88%,transparent)!important;
+  box-shadow:none!important; backdrop-filter:none;
+}
+html[data-color-mode] body .gs-l2-aether-layout .l2a .server {
+  background:transparent!important;box-shadow:none!important;
+}
+html[data-color-mode] body .gs-l2-aether-layout .l2a .server:hover {
+  background:color-mix(in srgb,var(--aether-gold) 5%,transparent)!important;
+}
+.gs-l2-aether-layout .l2a .panel-footer {justify-content:flex-end}
+.gs-l2-aether-layout .l2a .owner {gap:14px;padding:18px 20px!important;align-items:center}
+.gs-l2-aether-layout .l2a .owner h3 {font-size:clamp(20px,2.5vw,27px);line-height:1.2}
+html[data-color-mode] body .gs-l2-aether-layout .l2a .outline-btn {
+  background:color-mix(in srgb,var(--aether-gold) 9%,var(--aether-field))!important;
+  color:var(--aether-gold)!important;border:1px solid color-mix(in srgb,var(--aether-gold) 45%,transparent)!important;
+  box-shadow:none!important;text-shadow:none;min-height:44px;
+}
+.gs-ranking-availability {display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:8px 0;font-size:11px;color:var(--aether-muted,var(--color-ink-400))}
+
+/* No wrap/overflow inside the rating switch, even before data arrives. */
+html[data-color-mode] body .gs-l2-aether-layout .gs-rating-tools {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:0;margin-top:16px;background:none!important;border:0;backdrop-filter:none;
+}
+.gs-l2-aether-layout .gs-rating-switch {min-width:0}
+.gs-l2-aether-layout .gs-rating-switch button {min-width:0;min-height:40px;padding:7px 5px;font:500 12px/1.3 var(--font-sans);border-color:var(--aether-line);background:var(--aether-field);color:var(--aether-muted)}
+.gs-l2-aether-layout .gs-rating-switch button[aria-pressed='true'] {background:color-mix(in srgb,var(--aether-gold) 10%,var(--aether-field));color:var(--aether-gold);border-color:color-mix(in srgb,var(--aether-gold) 55%,transparent)}
+.gs-l2-aether-layout .gs-support-launch {justify-self:start;width:max-content;max-width:100%;min-height:44px;padding:8px 13px;font-weight:500;color:var(--aether-gold);border-color:var(--aether-line);background:var(--aether-field);box-shadow:none}
+.gs-l2-aether-layout .gs-support-launch:disabled {opacity:.5;cursor:not-allowed}
+
+/* One scroll surface and one frame for the studio; quieter panels inside. */
+html[data-color-mode] body .gs-l2-aether-layout .gs-support-dialog {
+  --gt-text:var(--aether-ink);--gt-text-muted:var(--aether-muted);--gt-primary:var(--aether-gold);
+  --gt-border:var(--aether-line);--gt-surface:var(--aether-field);--gt-bg:var(--aether-bg);
+  width:min(980px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;
+  border:1px solid color-mix(in srgb,var(--aether-line) 75%,var(--aether-gold));border-radius:22px;
+  background:var(--aether-pane)!important;box-shadow:0 24px 80px #08071150;scrollbar-width:thin;
+  backdrop-filter:blur(24px) saturate(110%);color:var(--aether-ink);
+}
+.gs-l2-aether-layout .gs-support-dialog::backdrop {background:#080a155c;backdrop-filter:blur(7px)}
+.gs-l2-aether-layout .gs-support-dialog-head {
+  top:0;margin:0;padding:14px 20px;min-height:72px;border-bottom:1px solid var(--aether-line);
+  background:var(--aether-pane);backdrop-filter:blur(24px);
+}
+.gs-l2-aether-layout .gs-support-dialog-head h2 {font:500 22px/1.2 Georgia,serif}
+.gs-l2-aether-layout .gs-support-dialog-head button {border:0;border-radius:50%;background:transparent;color:var(--aether-muted)}
+.gs-l2-aether-layout .gs-support-dialog-head button:hover {background:var(--aether-field)}
+html[data-color-mode] body .gs-l2-aether-layout .gs-support-studio {
+  padding:20px;gap:18px;background:none!important;border:0;backdrop-filter:none;
+}
+html[data-color-mode] body .gs-l2-aether-layout .gs-support-dialog :is(.gs-support-form,.gs-support-preview) {
+  background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;
+  padding:0!important;backdrop-filter:none!important;
+}
+.gs-l2-aether-layout .gs-support-form label:first-of-type {margin-top:0}
+.gs-l2-aether-layout :is(.gs-support-select,.gs-support-amount) {background:var(--aether-field);border-color:var(--aether-line);color:var(--aether-ink);border-radius:12px;min-height:44px}
+.gs-l2-aether-layout .gs-amount-preset {flex:1;min-width:40px;min-height:42px;padding:7px;border-color:var(--aether-line);background:var(--aether-field);color:var(--aether-muted);border-radius:10px;font-size:13px}
+.gs-l2-aether-layout .gs-amount-preset[aria-pressed='true'] {color:var(--aether-gold);background:color-mix(in srgb,var(--aether-gold) 12%,var(--aether-field));border-color:var(--aether-gold)}
+.gs-l2-aether-layout .gs-support-preview {position:static}
+.gs-l2-aether-layout .gs-support-preview h3 {font:500 15px/1.3 var(--font-sans)}
+.gs-l2-aether-layout .gs-position-summary {padding:12px 14px;border:1px solid var(--aether-line);border-radius:14px;background:var(--aether-field)}
+.gs-l2-aether-layout .gs-position-summary strong {font-size:25px}
+.gs-l2-aether-layout .gs-position-summary span {font-size:11px}
+.gs-l2-aether-layout .gs-support-dialog .gs-projection-list {max-height:none;overflow:clip;padding-right:0;gap:6px}
+.gs-l2-aether-layout .gs-position-track {display:none}
+.gs-l2-aether-layout .gs-projection-row {border-color:var(--aether-line);background:var(--aether-field);border-radius:11px;min-height:52px}
+.gs-l2-aether-layout .gs-projection-target {border-color:var(--aether-gold);background:color-mix(in srgb,var(--aether-gold) 10%,var(--aether-field))}
+.gs-l2-aether-layout .gs-support-checkout {padding-top:10px;border-top:1px solid var(--aether-line)}
+.gs-l2-aether-layout .gs-support-checkout > a {font-size:12px;min-height:36px;margin-top:0}
+.gs-l2-aether-layout .gs-support-checkout #support {background:transparent;border:0;padding:0;box-shadow:none}
+
+/* Filter portals explicitly inherit the same world palette in both themes. */
+.gs-l2-filter-sheet {--aether-bg:#111420;--aether-ink:#f4f0ea;--aether-muted:#bfc0cf;--aether-line:#a695c13d;--aether-field:#1c2030e0;--aether-gold:#ddbf84;--filter-glass:#131522ed}
+html[data-color-mode='light'] body .gs-l2-filter-sheet {--aether-bg:#eee8de;--aether-ink:#2c2933;--aether-muted:#5d5764;--aether-line:#6855753d;--aether-field:#f4eee5e0;--aether-gold:#765627;--filter-glass:#eee8deed}
+html[data-color-mode] body .gs-l2-filter-sheet > div {
+  background:linear-gradient(130deg,#a18bc608,transparent 65%),var(--filter-glass)!important;
+  box-shadow:0 14px 60px #08071140;backdrop-filter:blur(24px);border:1px solid var(--aether-line)!important;
+  border-radius:22px 22px 0 0;color:var(--aether-ink);
+}
+.gs-l2-filter-sheet > div > div:first-child {padding:12px 18px;border-color:var(--aether-line)}
+.gs-l2-filter-sheet > div > div:first-child h3 {font:500 22px/1.2 Georgia,serif}
+.gs-l2-filter-sheet > div > div:first-child > div {display:none}
+.gs-l2-filter-sheet .gs-filter-panel > div {margin-top:0}
+.gs-l2-filter-sheet .gs-filter-panel > div > div {padding:16px 0;border-color:var(--aether-line)}
+.gs-l2-filter-sheet .gs-filter-panel h4 {margin-bottom:10px;color:var(--aether-muted);font-size:11px;letter-spacing:.08em}
+.gs-l2-filter-sheet .gs-filter-panel button[aria-pressed] {min-height:40px;padding:8px 12px;background:var(--aether-field);border:1px solid var(--aether-line);border-radius:11px;color:var(--aether-muted);font-size:12px;font-weight:400;box-shadow:none}
+.gs-l2-filter-sheet .gs-filter-panel button[aria-pressed='true'] {border-color:var(--aether-gold);color:var(--aether-gold);background:color-mix(in srgb,var(--aether-gold) 9%,var(--aether-field))}
+.gs-l2-filter-sheet > div > div:last-child {background:var(--filter-glass);border-color:var(--aether-line)}
+html[data-color-mode] body .gs-l2-filter-sheet .gs-button-primary {background:color-mix(in srgb,var(--aether-gold) 13%,var(--aether-field))!important;color:var(--aether-ink)!important;border:1px solid var(--aether-line)!important;box-shadow:none!important}
+
+/* FAQ is optional and compact on every page, including the private footer. */
+.gs-footer-faq {margin:8px 0 22px;color:var(--aether-ink,var(--color-ink-100));text-shadow:none;border-top:1px solid var(--aether-line,var(--color-ink-700));border-bottom:1px solid var(--aether-line,var(--color-ink-700))}
+.gs-footer-faq summary {cursor:pointer;min-height:44px;display:flex;align-items:center;gap:10px;list-style:none;font:500 13px/1.4 var(--font-sans);padding:10px 0}
+.gs-footer-faq summary::-webkit-details-marker {display:none}
+.gs-footer-faq summary::after {content:'+';font-size:19px;margin-left:auto;font-weight:400;flex-shrink:0}
+.gs-footer-faq[open] > summary::after,.gs-faq-questions > details[open] > summary::after {content:'−'}
+.gs-footer-faq > summary span {color:var(--aether-muted,var(--color-ink-400))!important;font-size:12px}
+.gs-faq-questions {padding:4px 0 16px;display:grid;gap:0;max-width:960px}
+.gs-faq-questions > details {border-top:1px solid var(--aether-line,var(--color-ink-700))}
+.gs-faq-questions p {margin:0 0 12px;max-width:760px;font:400 13px/1.6 var(--font-sans);color:var(--aether-muted,var(--color-ink-400))!important;text-shadow:none!important}
+
+@media(max-width:1023px) {
+  html[data-color-mode] body .gs-l2-aether-layout .gs-rating-tools {grid-template-columns:minmax(0,1fr)}
+  .gs-l2-aether-layout .gs-rating-switch {width:100%;gap:6px;padding:4px;border:1px solid var(--aether-line);border-radius:13px;background:var(--aether-pane)}
+  .gs-l2-aether-layout .gs-rating-switch button {border-color:transparent;background:transparent}
+  .gs-l2-aether-layout .gs-support-launch {justify-self:start}
+}
+@media(max-width:767px) {
+  html[data-color-mode='light'] body .gs-l2-aether-layout::before {background-image:linear-gradient(90deg,#e9e1d5ad,#e9e1d542 65%),linear-gradient(0deg,#e7e0d548,transparent 60%),url('/media/worlds/lineage-2/master-v8-768.webp')}
+  .gs-l2-aether-layout .gs-support-dialog-head {padding:10px 14px;min-height:62px}
+  html[data-color-mode] body .gs-l2-aether-layout .gs-support-studio {padding:14px;gap:16px}
+  .gs-l2-aether-layout .gs-support-preview {padding-top:16px!important;border-top:1px solid var(--aether-line)!important}
+  .gs-l2-aether-layout .l2a .owner .outline-btn {margin-top:12px}
+}
+@media(min-width:1024px) {.gs-l2-filter-sheet > div {border-radius:22px!important}}
+@media(max-height:500px) {.gs-l2-filter-sheet > div {max-height:94dvh!important}.gs-l2-aether-layout .gs-support-dialog {max-height:calc(100dvh - 12px)}}

@@ -1,13 +1,15 @@
+import { LaunchCountdown } from './LaunchCountdown'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCountdown, formatPlayers, formatSeconds, plural } from '@/lib/format'
+import { formatPlayers, formatSeconds, plural } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { GameServer } from '@/models'
 import { OnlineStatus } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { RankMedal, MEDAL } from '@/components/ui/RankMedal'
+import { TopRankArt } from '@/components/ui/TopRankArt'
 import { TrendChip } from '@/components/ui/Badge'
 import { LiveDot, STATUS_META } from '@/components/trust/status'
 
@@ -73,7 +75,7 @@ export function ServerRow({
   const medal = rank !== undefined ? MEDAL[rank] : undefined
   const support = server.support?.coins ?? 0
   const tooltip = launching
-    ? `Открытие ${formatCountdown(server.launch!.at)}`
+    ? `Открытие $<LaunchCountdown at={server.launch!.at}/>`
     : stale
       ? `Данные устарели · обновлено ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`
       : `${meta.caption}${server.online.source ? ` · ${server.online.source}` : ''} · ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`
@@ -84,11 +86,13 @@ export function ServerRow({
       title={tooltip}
       className={cn(
         'gs-row gs-row-line group relative flex min-h-[54px] items-center gap-2 rounded-lg border bg-white/[0.025] px-2 py-1.5 transition-colors duration-150 hover:bg-white/[0.07]',
-        medal ? '' : 'border-white/[0.09] hover:border-white/20',
+        medal ? 'gs-top-row' : 'border-white/[0.09] hover:border-white/20',
         className,
       )}
-      style={medal ? { borderColor: medal.ring, background: `linear-gradient(90deg, ${medal.ring.replace(/[\d.]+\)$/, '.10)')}, rgba(255,255,255,.03) 55%)` } : undefined}
+      data-rank={rank}
+      style={medal ? { borderColor: medal.ring } : undefined}
     >
+      <TopRankArt rank={rank} gameId={server.gameId} />
       {rank !== undefined && <RankMedal rank={rank} neutral={(metric==='votes'&&server.votes===0)||(metric==='support'&&support===0)} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />
@@ -119,7 +123,7 @@ export function ServerRow({
             <div className="mt-0.5 text-[10px] leading-[14px] text-ink-500">голосов</div>
           </>        ) : launching ? (
           <>
-            <div className="num text-[12px] leading-[18px] font-semibold whitespace-nowrap text-promo-200">{formatCountdown(server.launch!.at)}</div>
+            <div className="num text-[12px] leading-[18px] font-semibold whitespace-nowrap text-promo-200"><LaunchCountdown at={server.launch!.at}/></div>
             <div className="mt-0.5 text-[10px] leading-[14px] text-ink-500">{shortDate(server.launch!.at)}</div>
           </>
         ) : (
@@ -167,7 +171,7 @@ export function ServerTile({ server, rank, showGame = false }: { server: GameSer
       </div>
       <div className="flex items-end justify-between gap-2">
         {launching ? (
-          <div className="num text-[15px] font-semibold whitespace-nowrap text-promo-200">{formatCountdown(server.launch!.at)}</div>
+          <div className="num text-[15px] font-semibold whitespace-nowrap text-promo-200"><LaunchCountdown at={server.launch!.at}/></div>
         ) : (
           <div className={cn('num text-[20px] leading-none font-semibold tabular-nums', measured ? 'text-ink-50' : 'text-ink-500')}>{measured ? formatPlayers(server.online) : '—'}</div>
         )}
@@ -237,3 +241,4 @@ export function ServerTiles({ servers, from = 1, ranked, showGame }: { servers: 
     </div>
   )
 }
+

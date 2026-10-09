@@ -12,8 +12,6 @@ import { peopleOrder } from '@/services/supportProjection'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { RankMedal } from '@/components/ui/RankMedal'
-import { TopRankArt } from '@/components/ui/TopRankArt'
-import { ServerLogo } from '@/components/ui/ServerLogo'
 import { LaunchCountdown } from '@/components/server/LaunchCountdown'
 import './lineage-discovery.css'
 
@@ -30,7 +28,6 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const { has, toggle } = useFavorites()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [expanded, setExpanded] = useState<Set<Shelf>>(() => new Set())
   const art = worldArt('hero', game.id, chronicle?.id)
   const statsReady = !loading && !error
   const known = servers.filter(hasFreshOnline)
@@ -44,24 +41,20 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const openings = visible.filter(s => s.launch && Date.parse(s.launch.at) > Date.now()).sort((a,b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at))
   const filtered = query.trim().length > 0
   const submit = (e: FormEvent) => { e.preventDefault(); document.getElementById('l2-catalog')?.scrollIntoView({ behavior: 'smooth' }) }
-  const shelfToggle = (key: Shelf) => setExpanded(previous => { const next = new Set(previous); next.has(key) ? next.delete(key) : next.add(key); return next })
   const allChronicles = [{ id: 'all', slug: '', label: 'Все' }, ...game.chronicles]
   const ratingHref = (key: Shelf) => key === 'opening' ? `/openings?game=${game.id}` : `/rating?game=${game.id}&all=${key === 'people' ? 'people' : 'support'}`
   const shelf = (key: Shelf, rows: GameServer[], title: string, kicker: string, emptyTitle: string, emptyText: string) => {
-    const full = expanded.has(key)
     return <section className={`panel glass gs-shelf-${key} ${key === 'opening' ? 'openings' : key === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${key}`}>
       <header className="panel-head"><div className="section-kicker">{kicker}</div><h2 id={`l2-${key}`}><Link to={ratingHref(key)}>{title}</Link></h2></header>
       <div className="rows" aria-busy={loading}>
-        {loading && !servers.length ? <div className="empty" role="status">Загружаем серверы…</div> : error && !servers.length ? <div className="empty"><strong>Не удалось загрузить данные</strong><p>Проверь соединение и попробуй снова.</p><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div> : rows.length ? rows.map((server, index) => <Link key={server.id} to={`/server/${server.slug}`} data-rank={key !== 'opening' ? index + 1 : undefined} className={`server ${key !== 'opening' ? 'is-ranked' : ''} ${key !== 'opening' && index < 3 ? 'gs-top-row' : ''} ${!full && index >= 10 ? 'l2-overflow-all' : ''}`}>
-          {key !== 'opening' && <TopRankArt rank={index + 1} gameId={game.id} />}
+        {loading && !servers.length ? <div className="empty" role="status">Загружаем серверы…</div> : error && !servers.length ? <div className="empty"><strong>Не удалось загрузить данные</strong><p>Проверь соединение и попробуй снова.</p><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div> : rows.length ? rows.map((server, index) => <Link key={server.id} to={`/server/${server.slug}`} data-rank={key !== 'opening' ? index + 1 : undefined} className={`server ${key !== 'opening' ? 'is-ranked' : ''} ${key !== 'opening' && index < 3 ? 'gs-top-row' : ''} ${index >= 5 ? 'l2-overflow-all' : ''}`}>
           {key !== 'opening' && <RankMedal rank={index+1} neutral={(key==='support'?server.support?.coins??0:server.votes)===0}/>}
-          <ServerLogo name={server.name} hue={server.hue} src={server.logoUrl} gameId={game.id} size="sm" forceGameGlyph className="avatar" />
           <div className="server-copy"><span className="server-name">{server.name}</span><div className="server-meta">{chronicleOfVersion(game.id, server.version)?.label ?? server.version}{server.rates && ` · ×${String(server.rates).replace(/^[x×]/i, '')}`}{key === 'opening' && server.launch && <span> · {dateTime.format(new Date(server.launch.at))} МСК</span>}</div></div>
           <div className="server-right">{key === 'opening' && server.launch ? <div className="date"><LaunchCountdown at={server.launch.at}/><small>{dateDay.format(new Date(server.launch.at))} {dateMonth.format(new Date(server.launch.at))}</small></div> : <><strong>{formatNumber(key === 'support' ? server.support?.coins ?? 0 : server.votes)}</strong><small>{key === 'support' ? 'GS Coins' : 'голосов'}</small></>}</div>
           <button type="button" className={`fav ${has(server.slug) ? 'selected' : ''}`} aria-pressed={has(server.slug)} aria-label={has(server.slug) ? `Убрать ${server.name} из избранного` : `${server.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(server.slug) }}><Heart size={15} fill={has(server.slug) ? 'currentColor' : 'none'} /></button>
         </Link>) : <div className="empty"><strong>{filtered ? 'Ничего не найдено' : emptyTitle}</strong><p>{filtered ? 'Попробуй другой запрос или сбрось фильтр.' : emptyText}</p></div>}
       </div>
-      <footer className="panel-footer"><div className="shelf-actions">{rows.length > 10 && <button type="button" className="l2-expand" aria-expanded={full} onClick={() => shelfToggle(key)}>{full ? 'Свернуть' : 'Показать ещё'}</button>}<Link to={ratingHref(key)} className="l2-all">{key === 'opening' ? 'Календарь' : 'Все'}<ArrowRight size={16}/></Link></div></footer>
+      <footer className="panel-footer"><div className="shelf-actions"><Link to={ratingHref(key)} className="l2-all">{key === 'opening' ? 'Календарь' : 'Все'}<ArrowRight size={16}/></Link></div></footer>
 
       
     </section>

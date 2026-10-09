@@ -119,3 +119,18 @@ html[data-color-mode='light'] .gs-l2-aether-layout.gs-account-layout{background:
 html[data-color-mode] .gs-l2-aether-layout :is(.gs-coins-card,.gs-account-empty,.gs-account-claim){background:linear-gradient(125deg,#d6edff14,#f7f3e204 45%,#bfe5ff0b),var(--aether-pane)!important;border:1px solid var(--aether-line)!important;border-radius:20px!important;box-shadow:inset 0 1px #fff2,0 14px 46px #030a1325!important;backdrop-filter:blur(22px);color:var(--aether-ink)!important}
 .gs-l2-aether-layout :is(.gs-account-kicker,.gs-coin-balance,.gs-account-empty-icon){color:var(--aether-gold)!important}
 .gs-l2-aether-layout .gs-coins-glow{background:radial-gradient(circle,#e1c89420,transparent 70%)!important}
+/* Shelves: five rows on every device; the full list lives behind "Все". Top three are marked by colour, not by scenery. */
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .server{display:grid!important;grid-template-columns:30px minmax(0,1fr) auto!important;gap:12px!important;align-items:center;min-height:62px!important;padding:10px 46px 10px 12px!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .openings .rows .server{grid-template-columns:minmax(0,1fr) auto!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .server-right{padding-right:0!important;padding-top:0!important;grid-column:auto!important;text-align:right}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .server-copy{min-width:0}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-rank-number{width:30px!important;height:30px!important;border-radius:50%!important;font-size:12.5px!important;gap:0}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-rank-number:not(.gs-rank-podium){background:color-mix(in srgb,var(--ink) 6%,transparent)!important;color:var(--muted)!important;border:0!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-rank-podium{border:0!important;box-shadow:inset 0 1px 0 #ffffff80,0 6px 16px -8px var(--top-accent)!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-rank-podium svg{display:none}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-top-row[data-rank]{min-height:64px!important;margin:3px 0!important;border-radius:14px!important;border:1px solid color-mix(in srgb,var(--top-accent) 28%,transparent)!important;box-shadow:inset 0 1px 0 #ffffff0d!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a:not(.light) .rows .gs-top-row[data-rank]{background:linear-gradient(100deg,color-mix(in srgb,var(--top-accent) 15%,transparent),color-mix(in srgb,var(--top-accent) 4%,transparent) 55%,transparent 100%)!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-top-row[data-rank] .server-name{font-weight:650}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-top-row[data-rank] + .server:not(.gs-top-row){margin-top:6px}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .fav{right:12px!important}
+:root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .server.l2-overflow-all{display:none!important}

@@ -29,7 +29,7 @@ try{
   assert.equal(await page.locator('.l2a .metrics').innerText().then(s=>s.includes('—')),false)
   for(const selector of ['.gs-header-search','[aria-label^="Аккаунт"]'])assert.equal(await page.locator('.gs-site-header '+selector).filter({visible:true}).first().evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)')
   const support=page.locator('.l2a .support')
-  assert.equal(await support.locator('.server:visible').count(),10,'Ten rows on every device')
+  assert.equal(await support.locator('.server:visible').count(),5,'Five rows on every device')
   assert.equal(await support.locator('.gs-top-row').count(),3,'Distinct first three positions')
   for(const row of await support.locator('.gs-top-row').all()){
     const favorite=row.locator('.fav')
@@ -37,7 +37,6 @@ try{
     await page.clock.runFor(32)
     const target=await favorite.evaluate(button=>{const r=button.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {clickable:hit===button||button.contains(hit),hit:hit?.outerHTML.slice(0,180),rect:{x:r.x,y:r.y,width:r.width,height:r.height}}})
     assert.equal(target.clickable,true,`Favorite remains above metrics and artwork: ${w}x${h}/${theme} ${JSON.stringify(target)}`)
-    await row.locator('.gs-top-rank-art img').evaluate(async image=>{await image.decode()})
     assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),'rgb(246, 243, 239)','Podium name contrast in both themes')
     assert.notEqual(await row.locator('.gs-rank-podium').evaluate(e=>getComputedStyle(e).backgroundImage),'none','Visible medal surface')
     const rect=await row.boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=w,'Podium remains in viewport')

@@ -57,12 +57,22 @@ export async function cacheMedia({bucket,endpoint,origin,run=execute,verify=fetc
     if(metadata(checked.Metadata)!==metadata(head.Metadata)) throw new Error('Custom metadata readback changed')
     changed++
   }
+  const publicHeaders=async url=>{
+    let response=await verify(url,{method:'HEAD',signal:AbortSignal.timeout(15000)})
+    // The existing public Yandex gateway accepts GET but rejects HEAD with 405.
+    if(response.status===405){
+      await response.body?.cancel()
+      response=await verify(url,{method:'GET',signal:AbortSignal.timeout(15000)})
+    }
+    await response.body?.cancel()
+    return response
+  }
   for(const key of ['media/hub/nave-m-1080.webp','media/hub/nave-1920.webp','media/ranks/gold-v1.webp','media/ranks/silver-v1.webp','media/ranks/bronze-v1.webp']) {
-    const response=await verify(origin+'/'+key,{method:'HEAD',signal:AbortSignal.timeout(15000)})
+    const response=await publicHeaders(origin+'/'+key)
     const policy=response.headers.get('cache-control')??''
     if(!response.ok||!cachePolicy(key).split(',').every(token=>policy.includes(token))||/no-store|no-cache/.test(policy)) throw new Error('Public image cache policy not effective: '+key)
   }
-  const html=await verify(origin+'/',{method:'HEAD',signal:AbortSignal.timeout(15000)})
+  const html=await publicHeaders(origin+'/')
   if(!html.ok||!/(?:no-cache|no-store)/i.test(html.headers.get('cache-control')??'')) throw new Error('HTML freshness policy changed unexpectedly')
   log('Verified public image caching; changed '+changed+' of '+keys.length+' images; HTML freshness preserved')
   return {changed,total:keys.length}

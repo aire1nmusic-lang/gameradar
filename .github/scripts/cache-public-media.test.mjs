@@ -58,3 +58,15 @@ test('permission drift after metadata copy is rejected before public cache claim
  await assert.rejects(cacheMedia({bucket:'site',endpoint:'https://storage.invalid',origin:'https://gamescout.online',run,verify:()=>{verified=true},log:()=>{}}),/permissions readback changed/)
  assert.equal(verified,false)
 })
+
+
+test('public gateway HEAD 405 falls back to GET and cancels image bodies',async()=>{
+ const methods=[],cancelled=[]
+ const run=async(_,a)=>({stdout:JSON.stringify(a[1]==='list-objects-v2'?{Contents:[{Key:'media/art.webp'}]}:{...head,CacheControl:cachePolicy('media/art.webp')})})
+ const verify=async(url,{method})=>{
+  methods.push(method)
+  return {status:method==='HEAD'?405:200,ok:method==='GET',body:{cancel:async()=>cancelled.push(method)},headers:new Headers({'cache-control':url.endsWith('/')?'no-cache, no-store':cachePolicy(new URL(url).pathname.slice(1))})}
+ }
+ const result=await cacheMedia({bucket:'site',endpoint:'https://storage.invalid',origin:'https://gamescout.online',run,verify,log:()=>{}})
+ assert.deepEqual(result,{changed:0,total:1});assert.deepEqual(methods,Array.from({length:6},()=>['HEAD','GET']).flat());assert.deepEqual(cancelled,methods)
+})

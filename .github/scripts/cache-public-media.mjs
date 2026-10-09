@@ -8,16 +8,23 @@ export function cachePolicy(key) {
   return /(?:[-.]v\d+|-[a-f0-9]{8,})\.(?:webp|avif|png|jpe?g|svg)$/i.test(key)
     ? 'public,max-age=31536000,immutable' : 'public,max-age=3600,stale-while-revalidate=86400'
 }
+export function aclIdentity(acl) {
+  if(!Array.isArray(acl?.Grants)||(!acl.Grants.length&&!acl.Owner?.ID)) throw new Error('Existing media permissions unavailable')
+  return JSON.stringify({owner:acl.Owner?.ID??null,grants:acl.Grants.map(g=>[g.Permission,g.Grantee?.Type,g.Grantee?.ID??g.Grantee?.URI??g.Grantee?.EmailAddress??null]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))})
+}
 export function mediaCopyArgs({bucket,key,head,acl}) {
   const policy=cachePolicy(key)
+  aclIdentity(acl)
   if (!policy) throw new Error('Only public media images can receive this cache policy')
-  const args=['s3api','copy-object','--bucket',bucket,'--key',key,'--copy-source',bucket+'/'+encodeURIComponent(key).replaceAll('%2F','/'),'--metadata-directive','REPLACE','--cache-control',policy]
-  for(const [field,flag] of Object.entries({ContentType:'--content-type',ContentEncoding:'--content-encoding',ContentLanguage:'--content-language',ContentDisposition:'--content-disposition',Expires:'--expires',WebsiteRedirectLocation:'--website-redirect-location'})) if(head[field]) args.push(flag,String(head[field]))
+  if(!head.ETag) throw new Error('Object content identity required')
+  const args=['s3api','copy-object','--bucket',bucket,'--key',key,'--copy-source',bucket+'/'+encodeURIComponent(key).replaceAll('%2F','/'),'--metadata-directive','REPLACE','--cache-control',policy,'--copy-source-if-match',head.ETag]
+  for(const [field,flag] of Object.entries({ContentType:'--content-type',ContentEncoding:'--content-encoding',ContentLanguage:'--content-language',ContentDisposition:'--content-disposition',Expires:'--expires',WebsiteRedirectLocation:'--website-redirect-location',StorageClass:'--storage-class',ServerSideEncryption:'--server-side-encryption',SSEKMSKeyId:'--ssekms-key-id'})) if(head[field]) args.push(flag,String(head[field]))
   if(Object.keys(head.Metadata??{}).length) args.push('--metadata',JSON.stringify(head.Metadata))
   // Keep exact existing permissions in the metadata copy, including owner access.
   const flags={FULL_CONTROL:'--grant-full-control',READ:'--grant-read',READ_ACP:'--grant-read-acp',WRITE_ACP:'--grant-write-acp'}
   const groups=new Map()
-  if(!acl.Grants?.length) throw new Error('Existing media permissions unavailable')
+  // A confirmed empty Yandex object ACL inherits bucket/IAM access.
+  // The default ACL of the new copy is also empty; verify this after copying.
   for(const grant of acl.Grants) {
     const flag=flags[grant.Permission]
     const names={CanonicalUser:['id','ID'],Group:['uri','URI'],AmazonCustomerByEmail:['emailAddress','EmailAddress']}
@@ -43,6 +50,11 @@ export async function cacheMedia({bucket,endpoint,origin,run=execute,verify=fetc
     await aws([...mediaCopyArgs({bucket,key,head,acl}),'--output','json'])
     const checked=await aws(['s3api','head-object','--bucket',bucket,'--key',key,'--output','json'])
     if(checked.CacheControl!==cachePolicy(key)||checked.ContentLength!==head.ContentLength||checked.ContentType!==head.ContentType) throw new Error('Media cache readback failed: '+key)
+    const afterAcl=await aws(['s3api','get-object-acl','--bucket',bucket,'--key',key,'--output','json'])
+    if(aclIdentity(afterAcl)!==aclIdentity(acl)) throw new Error('Media permissions readback changed: '+key)
+    for(const field of ['ContentEncoding','ContentLanguage','ContentDisposition','StorageClass','ServerSideEncryption','SSEKMSKeyId']) if(checked[field]!==head[field]) throw new Error('Media metadata readback changed: '+field)
+    const metadata=value=>JSON.stringify(Object.entries(value??{}).sort(([a],[b])=>a.localeCompare(b)))
+    if(metadata(checked.Metadata)!==metadata(head.Metadata)) throw new Error('Custom metadata readback changed')
     changed++
   }
   for(const key of ['media/hub/nave-m-1080.webp','media/hub/nave-1920.webp','media/ranks/gold-v1.webp','media/ranks/silver-v1.webp','media/ranks/bronze-v1.webp']) {

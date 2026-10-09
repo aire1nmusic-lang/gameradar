@@ -1,7 +1,7 @@
 import {test} from 'node:test'
 import assert from 'node:assert/strict'
 import {cachePolicy,mediaCopyArgs,cacheMedia} from './cache-public-media.mjs'
-const head={CacheControl:'no-cache, no-store',ContentLength:123,ContentType:'image/webp',ContentEncoding:'gzip',Metadata:{source:'original'}}
+const head={ETag:'"original-bytes"',CacheControl:'no-cache, no-store',ContentLength:123,ContentType:'image/webp',ContentEncoding:'gzip',Metadata:{source:'original'}}
 const acl={Grants:[{Permission:'FULL_CONTROL',Grantee:{Type:'CanonicalUser',ID:'owner'}},{Permission:'READ',Grantee:{Type:'Group',URI:'http://acs.amazonaws.com/groups/global/AllUsers'}}]}
 test('only media images are cached; unversioned art is bounded and versioned art immutable',()=>{
  assert.equal(cachePolicy('index.html'),null);assert.equal(cachePolicy('media/settings.json'),null)
@@ -37,4 +37,24 @@ test('missing permission data stops before a metadata write',async()=>{
  const run=async(command,args)=>{const action=args[1];if(action==='copy-object')copied=true;return {stdout:JSON.stringify(action==='list-objects-v2'?{Contents:[{Key:'media/art.webp'}]}:action==='head-object'?head:{})}}
  await assert.rejects(cacheMedia({bucket:'site',endpoint:'https://storage.invalid',origin:'https://gamescout.online',run,verify:()=>{throw Error('unexpected')},log:()=>{}}),/permissions unavailable/)
  assert.equal(copied,false)
+})
+
+
+test('confirmed empty Yandex ACL is preserved without granting access; unknown ACL still stops',async()=>{
+ const empty={Owner:{ID:'folder-owner'},Grants:[]};const args=mediaCopyArgs({bucket:'site',key:'media/art.webp',head,acl:empty})
+ assert.equal(args.some(a=>a.startsWith('--grant-')),false);assert.equal(args.includes('--acl'),false)
+ assert.equal(args[args.indexOf('--copy-source-if-match')+1],head.ETag)
+ assert.throws(()=>mediaCopyArgs({bucket:'site',key:'media/art.webp',head,acl:{Grants:[]}}),/permissions unavailable/)
+ assert.throws(()=>mediaCopyArgs({bucket:'site',key:'media/art.webp',head:{...head,ETag:undefined},acl:empty}),/content identity/)
+ let copied=false
+ const run=async(_,a)=>({stdout:JSON.stringify(a[1]==='list-objects-v2'?{Contents:[{Key:'media/art.webp'}]}:a[1]==='get-object-acl'?empty:a[1]==='copy-object'?(copied=true,{}):{...head,CacheControl:copied?cachePolicy('media/art.webp'):head.CacheControl})})
+ const verify=async url=>({ok:true,headers:new Headers({'cache-control':url.endsWith('/')?'no-cache, no-store':cachePolicy(new URL(url).pathname.slice(1))})})
+ assert.equal((await cacheMedia({bucket:'site',endpoint:'https://storage.invalid',origin:'https://gamescout.online',run,verify,log:()=>{}})).changed,1)
+})
+
+test('permission drift after metadata copy is rejected before public cache claims',async()=>{
+ let copied=false,verified=false
+ const run=async(_,a)=>({stdout:JSON.stringify(a[1]==='list-objects-v2'?{Contents:[{Key:'media/art.webp'}]}:a[1]==='get-object-acl'?{Owner:{ID:copied?'different':'original'},Grants:[]}:a[1]==='copy-object'?(copied=true,{}):{...head,CacheControl:copied?cachePolicy('media/art.webp'):head.CacheControl})})
+ await assert.rejects(cacheMedia({bucket:'site',endpoint:'https://storage.invalid',origin:'https://gamescout.online',run,verify:()=>{verified=true},log:()=>{}}),/permissions readback changed/)
+ assert.equal(verified,false)
 })

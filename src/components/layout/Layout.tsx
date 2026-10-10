@@ -6,6 +6,7 @@ import { VisualDemoBanner } from './VisualDemoBanner'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { MobileNav } from './MobileNav'
+import { LiveTicker } from './LiveTicker'
 import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
@@ -50,7 +51,7 @@ function LayoutContent() {
           <FavoritesSync/><BackgroundField />
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
-            <VisualDemoBanner/><WorldPageScope><Outlet /></WorldPageScope>
+            <VisualDemoBanner/>{!hall && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>
           </main>
           {!location.pathname.startsWith('/admin') && <Footer />}
           {!hall && <MobileNav />}

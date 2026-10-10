@@ -28,7 +28,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
   const worldArt=['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const accountLabel=auth.user?.displayName || 'Аккаунт'
-  const accountClassBase='hidden h-11 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
+  const accountClassBase='gs-account-btn hidden h-11 max-w-44 items-center gap-2 rounded-md border border-white/[0.09] px-3.5 text-[13.5px] text-ink-100 transition-colors hover:border-white/20 hover:bg-white/[0.05] lg:inline-flex'
   // Over the hall the account button is a pane of glass like the cards.
   const accountClass=bare?accountClassBase+' gs-glass border-white/20 text-white':accountClassBase
   const mobileAccountClassBase='grid h-11 w-11 place-items-center rounded-md text-ink-200 transition-colors hover:bg-white/6 hover:text-ink-50 lg:hidden'
@@ -47,7 +47,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
               to={item.to === '/' ? (game ? `/${game.slug}` : '/') : scoped(item.to)} end={item.to === '/'}
               className={({ isActive }) =>
                 cn(
-                  'inline-flex min-h-11 items-center rounded-md px-2 py-2 text-[13px] transition-colors duration-150',
+                  'gs-nav-link inline-flex min-h-11 items-center rounded-md px-2 py-2 text-[13px] transition-colors duration-150',
                   isActive ? 'bg-white/[0.07] text-ink-50' : 'text-ink-300 hover:bg-white/[0.05] hover:text-ink-50',
                 )
               }

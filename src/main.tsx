@@ -10,8 +10,11 @@ import App from './App'
 import './index.css'
 import '@/theme/colorMode.css'
 import '@/theme/readability.css'
+import '@/theme/lobby.css'
 import '@/theme/worldFonts'
 
+// Design preview branch: the lobby look is on for everything except the hall.
+document.documentElement.dataset.design = 'lobby'
 applyAppearance(readAppearance())
 applyColorMode(readColorMode())
 

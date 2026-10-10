@@ -114,10 +114,11 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
             <ChronicleNav game={game} chronicles={game.chronicles} />
           </div>
         ) : (
-          <details className="gs-chronicle-disclosure mt-3">
+          <><div className="gs-epoch-head mt-6"><span className="section-kicker">{game.id === 'lineage2' ? 'Хроники' : game.id === 'gtarp' ? 'Платформы' : 'Режимы'}</span><h2>{game.id === 'gtarp' ? 'Где начнётся твоя история' : 'Во что играем сегодня'}</h2></div>
+          <details className="gs-chronicle-disclosure mt-3" open>
             <summary><span className="gs-chronicle-symbol"><WorldIcon name="chronicles" size={22}/></span><span className="gs-chronicle-label">{game.id === 'lineage2' ? 'Выбрать хроники' : game.id === 'gtarp' ? 'Выбрать платформу' : 'Выбрать режим'}<small>{game.id === 'lineage2' ? 'Interlude, High Five, Essence и другие' : 'Серверы по вашим предпочтениям'}</small></span><span className="gs-chronicle-chevron"><WorldIcon name="chevronRight" size={18}/></span></summary>
             <ChronicleTiles game={game} chronicles={game.chronicles} counts={counts} />
-          </details>
+          </details></>
         )}
 
         {loading && servers.length === 0 ? (

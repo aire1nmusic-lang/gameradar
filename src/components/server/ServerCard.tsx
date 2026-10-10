@@ -54,7 +54,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'surface interactive group relative isolate flex h-full flex-col overflow-hidden rounded-xl p-4',
+        'gs-server-card surface interactive group relative isolate flex h-full flex-col overflow-hidden rounded-xl p-4',
         className,
       )}
     >
@@ -64,7 +64,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
         trust line — so no text ever loses contrast against bright artwork.
       */}
       {art && (
-        <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <span aria-hidden className="gs-server-card-art pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <ArtImage
             art={art}
             sizes="(min-width: 1280px) 400px, (min-width: 640px) 50vw, 100vw"

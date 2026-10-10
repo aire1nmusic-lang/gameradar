@@ -212,7 +212,7 @@ export default function Catalog() {
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading && !page ? (
           view === 'grid' ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <ServerCardSkeleton key={index} />
               ))}
@@ -239,7 +239,7 @@ export default function Catalog() {
         ) : (
           <>
             {view === 'grid' ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {results.map((server, index) => (
                   <Fragment key={server.slug}>
                     {index === 6 && (

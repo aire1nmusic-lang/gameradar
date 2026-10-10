@@ -18,7 +18,7 @@ html[data-color-mode='light'] {
 }
 
 /* ---------- Background: paper, no fixed artwork veil ---------- */
-html[data-color-mode='light'] body .gs-l2-aether-layout:not(#gs) { background:var(--gs-paper)!important; }
+html[data-color-mode='light'] body .gs-l2-aether-layout:not(#gs) { --aether-bg:#f3eee6; background:var(--gs-paper)!important; }
 html[data-color-mode='light'] body .gs-l2-aether-layout:not(#gs)::before { background:var(--gs-paper)!important; }
 /* World home keeps its hero art at full colour; it fades into the paper before the lists. */
 html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:not(#gs)::before {

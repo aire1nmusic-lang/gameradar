@@ -22,12 +22,12 @@ else if(path.endsWith('/support/ranking'))json=cards.map(s=>({server_id:s.id,coi
 else if(path.endsWith('/servers')){const items=cards.filter(s=>!url.searchParams.get('gameId')||s.gameId===url.searchParams.get('gameId'));json={items,total:items.length,offset:0,limit:100}}
 await route.fulfill({json})})
 for(const theme of ['dark','light'])for(const game of ['lineage2','minecraft','gtarp']){
- await page.goto(base+'/rating?game='+game+'&server='+game+'-2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-columns').waitFor();const mode=await page.evaluate(()=>document.documentElement.dataset.colorMode);if(mode!==theme)await page.getByRole('button',{name:theme==='light'?'Включить светлую тему':'Включить тёмную тему',exact:true}).click()
+ await page.goto(base+'/rating?game='+game+'&server='+game+'-2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-columns:not([role=status])').waitFor();const mode=await page.evaluate(()=>document.documentElement.dataset.colorMode);if(mode!==theme)await page.getByRole('button',{name:theme==='light'?'Включить светлую тему':'Включить тёмную тему',exact:true}).click()
  await page.getByRole('button',{name:'Поддержать сервер',exact:true}).click();await page.locator('.gs-support-studio').waitFor();assert.equal(await page.locator('.gs-support-dialog').evaluate(e=>e.matches(':modal')),true)
  // Rating shows support and votes only; openings live on their own page.
- assert.equal(await page.locator('.gs-rating-columns > .gs-panel').count(),2)
- assert.equal(await page.locator('.gs-rating-columns > .gs-panel').nth(0).locator('a[href^="/server/"]').count(),4)
- assert.equal(await page.locator('.gs-rating-columns > .gs-panel').nth(1).locator('a[href^="/server/"]').count(),4)
+ assert.equal(await page.locator('.gs-rating-columns:not([role=status]) > .gs-panel').count(),2)
+ assert.equal(await page.locator('.gs-rating-columns:not([role=status]) > .gs-panel').nth(0).locator('a[href^="/server/"]').count(),4)
+ assert.equal(await page.locator('.gs-rating-columns:not([role=status]) > .gs-panel').nth(1).locator('a[href^="/server/"]').count(),4)
  await page.getByLabel('Количество Coins',{exact:true}).fill('10');await page.waitForFunction(()=>document.querySelector('.gs-position-next')?.textContent==='#2–3')
  await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('#support')?.textContent.includes('25 GS Coins'));assert.equal(await page.getByRole('button',{name:'Поддержать за 10 Coins',exact:true}).isEnabled(),true)
  await page.getByLabel('Количество Coins',{exact:true}).fill('50');await page.waitForFunction(()=>document.querySelector('.gs-position-next')?.textContent==='#1');assert.equal(await page.getByRole('button',{name:'Поддержать за 50 Coins',exact:true}).isEnabled(),false)

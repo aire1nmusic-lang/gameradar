@@ -115,7 +115,7 @@ function LegacyOwners() {
   const { data: promos = [] } = useAsync(() => promoProducts(), [])
 
   return (
-    <div className="pb-16">
+    <div className="gs-owners-page pb-16">
       {/* hero */}
       <section className="relative overflow-hidden pt-12 pb-10 lg:pt-16">
         <Container>

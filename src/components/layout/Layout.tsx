@@ -7,6 +7,7 @@ import { Header } from './Header'
 import { Footer } from './Footer'
 import { MobileNav } from './MobileNav'
 import { LiveTicker } from './LiveTicker'
+import { artSrc, worldArt } from '@/data/themeMedia'
 import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
@@ -49,7 +50,7 @@ function LayoutContent() {
 
   return (
         <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
-          <FavoritesSync/><BackgroundField />
+          <FavoritesSync/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <VisualDemoBanner/>{!hall && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>
@@ -61,6 +62,13 @@ function LayoutContent() {
           <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
         </div>
   )
+}
+
+/** Inner pages of a world carry the world art at the top, like the world page itself. */
+function WorldBackdrop({ gameId }: { gameId: string }) {
+  const art = worldArt('hero', gameId)
+  if (!art) return null
+  return <div aria-hidden className="gs-world-backdrop" style={{ backgroundImage: `url("${artSrc(art, 1600)}")`, backgroundPosition: art.focus.desktop }} />
 }
 
 function BackgroundField() {

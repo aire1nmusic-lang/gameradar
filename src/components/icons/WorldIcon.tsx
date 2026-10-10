@@ -166,10 +166,8 @@ const PATHS: Record<WorldIconName, ReactNode> = {
   </>,
   plus: <>
     <path d="M12 5v14M5 12h14"/>
-    <path d="M8.2 4.1 12 2.5l3.8 1.6"/>
   </>,
   close: <>
     <path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>
-    <path d="M8.1 4.7 12 3l3.9 1.7"/>
   </>,
 }

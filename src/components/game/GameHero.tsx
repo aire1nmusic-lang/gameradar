@@ -89,7 +89,7 @@ export function GameHero({
         </p>
 
         <div
-          className="mt-4 flex max-w-lg items-center gap-2 rounded-xl border p-1.5 pl-3.5"
+          className="gs-world-search mt-4 flex max-w-lg items-center gap-2 rounded-xl border p-1.5 pl-3.5"
           style={{ borderColor: theme.colors.borderStrong, background: `color-mix(in oklab, ${theme.colors.bgDeep} 82%, transparent)` }}
         >
           <WorldIcon name="search" size={17} className="shrink-0" style={{ color: theme.colors.textFaint }} />

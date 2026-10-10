@@ -401,7 +401,7 @@ function Profile({ server: source }: { server: GameServer }) {
       </Container>
 
       {/* the one bottom bar on a phone: the navigation steps aside for it */}
-      {(playableAddress || site) && <div className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
+      {(playableAddress || site) && <div className="gs-profile-cta-bar safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="num truncate text-[17px] leading-tight font-semibold text-ink-50">

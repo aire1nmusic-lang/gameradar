@@ -218,3 +218,81 @@ html[data-design="lobby"][data-color-mode="dark"] body :is(.gs-search-surface,.g
 @media (prefers-reduced-motion:reduce) {
   html[data-design="lobby"] :is(.gs-live-track,.gs-live-tag::before) { animation:none!important; }
 }
+
+/* ---------- One width for header, LIVE strip, content and footer on every page ---------- */
+html[data-design="lobby"] { --lb-gutter:40px; --lb-wrap:min(1440px,calc(100% - 2 * var(--lb-gutter))); }
+@media (max-width:1023px) { html[data-design="lobby"] { --lb-gutter:28px; } }
+@media (max-width:640px) { html[data-design="lobby"] { --lb-gutter:16px; } }
+html[data-design="lobby"] body :is(.gs-container,.l2a .wrap,.gs-account-page):not(.gs-container .gs-container):not(#lb),
+html[data-design="lobby"] body :is(.gs-l2-aether-layout .gs-site-header > div,.gs-l2-aether-layout .gs-site-footer > div):not(#lb) {
+  width:var(--lb-wrap)!important; max-width:none!important; padding-inline:0!important; margin-inline:auto!important;
+}
+html[data-design="lobby"] .gs-live { padding-inline:calc((100% - var(--lb-wrap)) / 2)!important; }
+
+/* ---------- One picture per page: no shared artwork behind inner pages ---------- */
+html[data-design="lobby"] body .gs-l2-aether-layout:not(#lb)::before { background:none!important; background-image:none!important; }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-l2-aether-layout:not(#lb) { background:transparent!important; }
+
+/* ---------- One search per page: hide the header search where the page has its own ---------- */
+html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
+html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
+
+/* ---------- Account chip in the header: compact, not a lime slab ---------- */
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn {
+  background:var(--lb-panel-2)!important; color:var(--lb-text)!important; border:1px solid color-mix(in srgb,var(--lb-lime) 40%,var(--lb-line))!important;
+  border-radius:999px!important; padding:0 14px 0 6px!important; gap:9px!important; font-weight:700; box-shadow:none!important; max-width:200px;
+}
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn > svg {
+  width:30px!important; height:30px!important; padding:7px; border-radius:50%; background:var(--lb-lime); color:var(--lb-lime-ink); box-sizing:border-box;
+}
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn:hover { border-color:var(--lb-lime)!important; filter:none; }
+
+/* ---------- Support dialog ---------- */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-support-dialog:not(#lb) { background:var(--lb-bg)!important; border:1px solid var(--lb-line-2)!important; border-radius:24px!important; }
+html[data-design="lobby"] body .gs-support-dialog:not(#lb) :is(.gs-support-form,.gs-support-preview) {
+  padding:18px!important; border-radius:18px!important; border:1px solid var(--lb-line)!important;
+  background:linear-gradient(180deg,var(--lb-panel-2),var(--lb-panel))!important; box-shadow:none!important; overflow:visible!important;
+}
+html[data-design="lobby"] body .gs-support-dialog:not(#lb) :is(.gs-support-form,.gs-support-preview)::after { display:none!important; }
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) h2 { font:800 21px/1.2 var(--lb-display)!important; font-stretch:112.5%; letter-spacing:-.01em; }
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) button {
+  width:44px; height:44px; display:grid; place-items:center; border-radius:12px!important; border:1px solid var(--lb-line-2)!important; background:var(--lb-panel-2)!important; color:var(--lb-text)!important; box-shadow:none!important;
+}
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) button:hover { border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; }
+html[data-design="lobby"] body .gs-amount-preset[aria-pressed="true"]:not(#lb) { color:var(--lb-lime-ink)!important; background:var(--lb-lime)!important; border-color:var(--lb-lime)!important; }
+html[data-design="lobby"] body .gs-support-dialog .gs-support-checkout:not(#lb) > .surface { padding:18px!important; border-radius:18px!important; }
+html[data-design="lobby"] body .gs-support-dialog .gs-support-checkout:not(#lb) > .surface :is(h2,h3) { font:800 16px/1.3 var(--lb-display)!important; font-stretch:112.5%; }
+/* Fewer captions around the L2 search: the tiles and shelves already say it. */
+html[data-design="lobby"] body .l2a:not(#lb) :is(.hero-note,.filter-summary) { display:none!important; }
+html[data-design="lobby"] body .l2a .search-row:not(#lb) { display:grid!important; grid-template-columns:minmax(0,1fr)!important; }
+html[data-design="lobby"] body .l2a .catalog-toolbar:not(#lb) > span[role="status"] { display:none; }
+html[data-design="lobby"] body .gt-btn--primary:not(#lb) { background:var(--lb-lime)!important; color:var(--lb-lime-ink)!important; border-color:var(--lb-lime)!important; box-shadow:0 0 0 1px rgb(255 255 255 / .2) inset,0 12px 30px -12px var(--lb-lime)!important; text-shadow:none!important; }
+html[data-design="lobby"] body .gt-btn--primary:not(#lb):hover { filter:brightness(1.06); }
+html[data-design="lobby"] body .gt-btn--outline:not(#lb):hover { border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; }
+
+/* ---------- One interface type: the world face stays only on the world's own title ---------- */
+html[data-design="lobby"] body :is(h1,h2,.gt-display):not(.gs-hero-title):not(#l2-world-title):not(.gs-home-hall *):not(.gs-wordmark *):not(#lb) {
+  font-family:var(--lb-display)!important; font-weight:800!important; font-stretch:112.5%; letter-spacing:-.015em!important;
+  font-variant:normal!important; font-variant-caps:normal!important; text-transform:none;
+}
+html[data-design="lobby"] body :is(h3,h4):not(.gs-home-hall *):not(#lb) {
+  font-family:var(--font-sans)!important; font-variant:normal!important; font-variant-caps:normal!important; letter-spacing:-.005em!important;
+}
+/* Eyebrow-style h2 (server page plaques) stay small uppercase labels. */
+html[data-design="lobby"] body .gs-server-profile .surface:not(#lb) > h2,
+html[data-design="lobby"] body .gs-server-profile:not(#lb) .gs-profile-eyebrow { font:800 11.5px/1.2 var(--font-sans)!important; letter-spacing:.16em!important; text-transform:uppercase!important; }
+
+/* ---------- Admin tabs: active state in the action colour ---------- */
+html[data-design="lobby"] body .gs-admin-groups button[aria-pressed="true"]:not(#lb),
+html[data-design="lobby"] body .gs-admin-tab.is-active:not(#lb) {
+  background:color-mix(in srgb,var(--lb-lime) 14%,transparent)!important; border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; box-shadow:none!important;
+}
+
+/* ---------- Tap targets ≥ 40px ---------- */
+html[data-design="lobby"] body :is(nav[aria-label="Хлебные крошки"] a,.l2a .breadcrumb a):not(#lb) { display:inline-flex; align-items:center; min-height:40px; }
+html[data-design="lobby"] body :is(.gs-fav-btn,.gs-view-btn):not(#lb) { width:40px!important; height:40px!important; }
+html[data-design="lobby"] body .gs-seg-btn:not(#lb) { min-height:40px; }
+html[data-design="lobby"] body .gs-seg-btn.is-active:not(#lb) { background:color-mix(in srgb,var(--lb-lime) 14%,transparent)!important; color:var(--lb-lime)!important; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lb-lime) 55%,transparent)!important; }
+html[data-design="lobby"] body .gs-profile-cta-bar:not(#lb) { padding-inline:calc((100% - var(--lb-wrap)) / 2)!important; }
+html[data-design="lobby"] body .gs-server-profile:not(#lb) :is(nav a,a.inline-flex) { min-height:40px; display:inline-flex; align-items:center; }
+html[data-design="lobby"] body .gs-support-checkout:not(#lb) > a { margin-right:18px; }

@@ -27,7 +27,7 @@ export function FavoriteButton({ slug, className }: { slug: string; className?: 
         toggle(slug)
       }}
       className={cn(
-        'grid h-8 w-8 place-items-center rounded-md border border-transparent text-ink-500 transition-all duration-200 hover:border-white/10 hover:bg-white/6 hover:text-ink-100',
+        'gs-fav-btn grid h-8 w-8 place-items-center rounded-md border border-transparent text-ink-500 transition-all duration-200 hover:border-white/10 hover:bg-white/6 hover:text-ink-100',
         active && 'text-danger-400 hover:text-danger-300',
         className,
       )}
@@ -87,7 +87,7 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
 
 
       <div className="flex items-start gap-3">
-        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} kind={server.chronicleId} src={server.logoUrl} size="md" />
+        <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} kind={server.chronicleId} src={server.logoUrl} size="md" forceGameGlyph />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className="truncate text-[16px] leading-6 font-semibold text-ink-50 transition-colors group-hover:text-white">
@@ -113,8 +113,9 @@ export function ServerCard({ server, className }: { server: GameServer; classNam
           <div className="flex items-baseline gap-1.5">
             <span
               className={cn(
-                'num font-display text-[26px] leading-none font-semibold tracking-tight',
-                status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50',
+                'num font-display leading-none font-semibold tracking-tight',
+                measured ? 'text-[26px]' : 'text-[15px] text-ink-400',
+                measured && (status === 'OFFLINE' ? 'text-ink-500' : 'text-ink-50'),
               )}
             >
               {measured ? formatPlayers(server.online) : 'Онлайн не указан'}

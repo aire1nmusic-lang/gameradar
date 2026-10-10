@@ -30,7 +30,8 @@ export function Segmented<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              'rounded-[6px] font-medium transition-all duration-200',
+              'gs-seg-btn rounded-[6px] font-medium transition-all duration-200',
+              active && 'is-active',
               size === 'sm' ? 'px-2.5 py-1 text-[12px]' : 'px-3 py-1.5 text-[13px]',
               active
                 ? 'bg-white/10 text-ink-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'

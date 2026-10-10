@@ -302,7 +302,7 @@ function ViewButton({ active, onClick, label, children }: { active: boolean; onC
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      className={cn('grid h-8 w-8 place-items-center rounded-[5px] transition-colors', active ? 'bg-white/10 text-ink-50' : 'text-ink-400 hover:text-ink-100')}
+      className={cn('gs-view-btn grid h-8 w-8 place-items-center rounded-[5px] transition-colors', active ? 'bg-white/10 text-ink-50' : 'text-ink-400 hover:text-ink-100')}
     >
       {children}
     </button>

@@ -60,7 +60,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
 
         {!bare && <button
           onClick={onSearch}
-          className="group ml-auto hidden h-11 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[180px] xl:w-[240px]"
+          className="gs-header-searchbar group ml-auto hidden h-11 w-[150px] items-center gap-2.5 overflow-hidden rounded-lg border border-white/[0.09] bg-white/[0.04] pr-2 pl-3 text-[13.5px] whitespace-nowrap text-ink-400 transition-colors hover:border-white/18 hover:bg-white/[0.06] hover:text-ink-100 md:flex lg:w-[180px] xl:w-[240px]"
         >
           <WorldIcon name="search" size={16} className="shrink-0" />
           <span className="min-w-0 flex-1 truncate text-left">

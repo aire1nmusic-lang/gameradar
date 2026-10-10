@@ -11,7 +11,7 @@ export function Container({
   id?: string
 }) {
   return (
-    <div id={id} className={cn('mx-auto w-full max-w-[1288px] px-5 sm:px-7 lg:px-10', className)}>
+    <div id={id} className={cn('gs-container mx-auto w-full max-w-[1288px] px-5 sm:px-7 lg:px-10', className)}>
       {children}
     </div>
   )

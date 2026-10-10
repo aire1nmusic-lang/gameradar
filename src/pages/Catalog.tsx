@@ -26,7 +26,8 @@ import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
-const PAGE_SIZE = 10
+// Design preview: the whole world list at once (API maximum 100; largest world has 54 servers).
+const PAGE_SIZE = 100
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 const COMPACT_SORT_LABELS: Record<SortKey, string> = {

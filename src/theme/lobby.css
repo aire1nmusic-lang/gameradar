@@ -321,6 +321,130 @@ html[data-design="lobby"] body .l2a .owner:not(#lb) h3 { font:800 clamp(20px,2.4
 
 /* ---------- «Поддержать сервер»: the one gold call to action ---------- */
 @keyframes lb-shine { 0%,62% { transform:translateX(-120%) skewX(-18deg); } 100% { transform:translateX(220%) skewX(-18deg); } }
+html[data-design="lobby"] body .gs-profile-support:not(#lb) { border-radius:18px!important; border:1px solid color-mix(in srgb,var(--lb-legend) 45%,transparent)!important; box-shadow:0 14px 34px -22px var(--lb-legend)!important; }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-server-profile .surface:not(#lb) { background:linear-gradient(180deg,var(--lb-panel-2),var(--lb-panel))!important; }
+html[data-design="lobby"] body .gs-vote-panel:not(#lb) { border-radius:22px!important; }
+html[data-design="lobby"] body .gs-vote-panel:not(#lb) { box-shadow:0 0 0 1px color-mix(in srgb,var(--lb-legend) 45%,transparent),0 24px 60px -30px var(--lb-legend)!important; }
+
+/* ---------- Footer & mobile nav ---------- */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-mobile-nav:not(#lb) { background:rgb(14 16 18 / .94)!important; border-top:1px solid var(--lb-line)!important; -webkit-backdrop-filter:blur(14px)!important; backdrop-filter:blur(14px)!important; }
+html[data-design="lobby"] body .gs-mobile-nav a[aria-current="page"]:not(#lb) { color:var(--lb-lime)!important; }
+
+/* ---------- Dialogs ---------- */
+html[data-design="lobby"][data-color-mode="dark"] body :is(.gs-search-surface,.gs-sheet > :not(:first-child)):not(#lb) { background:var(--lb-panel)!important; border:1px solid var(--lb-line-2)!important; }
+
+@media (max-width:767px) {
+  html[data-design="lobby"] .gs-live { min-height:40px; padding-inline:16px; }
+  html[data-design="lobby"] body :is(.l2a .chronicles,.gs-chronicle-tiles):not(#lb) { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
+  html[data-design="lobby"] body :is(.l2a .chronicles .chron,.gs-chronicle-tile):not(#lb) { min-height:96px!important; }
+  html[data-design="lobby"] body .gs-rank-podium:not(#lb) { font-size:26px!important; }
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-design="lobby"] :is(.gs-live-track,.gs-live-tag::before) { animation:none!important; }
+}
+
+/* ---------- One width for header, LIVE strip, content and footer on every page ---------- */
+html[data-design="lobby"] { --lb-gutter:40px; --lb-wrap:min(1440px,calc(100% - 2 * var(--lb-gutter))); }
+@media (max-width:1023px) { html[data-design="lobby"] { --lb-gutter:28px; } }
+@media (max-width:640px) { html[data-design="lobby"] { --lb-gutter:16px; } }
+html[data-design="lobby"] body :is(.gs-container,.l2a .wrap,.gs-account-page):not(.gs-container .gs-container):not(#lb),
+html[data-design="lobby"] body :is(.gs-l2-aether-layout .gs-site-header > div,.gs-l2-aether-layout .gs-site-footer > div):not(#lb) {
+  width:var(--lb-wrap)!important; max-width:none!important; padding-inline:0!important; margin-inline:auto!important;
+}
+html[data-design="lobby"] .gs-live { padding-inline:calc((100% - var(--lb-wrap)) / 2)!important; }
+
+/* ---------- One picture per page: no shared artwork behind inner pages ---------- */
+html[data-design="lobby"] body .gs-l2-aether-layout:not(#lb)::before { background:none!important; background-image:none!important; }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-l2-aether-layout:not(#lb) { background:transparent!important; }
+
+/* ---------- One search per page: hide the header search where the page has its own ---------- */
+html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
+html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
+
+/* ---------- Account chip in the header: compact, not a lime slab ---------- */
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn {
+  background:var(--lb-panel-2)!important; color:var(--lb-text)!important; border:1px solid color-mix(in srgb,var(--lb-lime) 40%,var(--lb-line))!important;
+  border-radius:999px!important; padding:0 14px 0 6px!important; gap:9px!important; font-weight:700; box-shadow:none!important; max-width:200px;
+}
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn > svg {
+  width:30px!important; height:30px!important; padding:7px; border-radius:50%; background:var(--lb-lime); color:var(--lb-lime-ink); box-sizing:border-box;
+}
+html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn:hover { border-color:var(--lb-lime)!important; filter:none; }
+
+/* ---------- Support dialog ---------- */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-support-dialog:not(#lb) { background:var(--lb-bg)!important; border:1px solid var(--lb-line-2)!important; border-radius:24px!important; }
+html[data-design="lobby"] body .gs-support-dialog:not(#lb) :is(.gs-support-form,.gs-support-preview) {
+  padding:18px!important; border-radius:18px!important; border:1px solid var(--lb-line)!important;
+  background:linear-gradient(180deg,var(--lb-panel-2),var(--lb-panel))!important; box-shadow:none!important; overflow:visible!important;
+}
+html[data-design="lobby"] body .gs-support-dialog:not(#lb) :is(.gs-support-form,.gs-support-preview)::after { display:none!important; }
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) h2 { font:800 21px/1.2 var(--lb-display)!important; font-stretch:112.5%; letter-spacing:-.01em; }
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) button {
+  width:44px; height:44px; display:grid; place-items:center; border-radius:12px!important; border:1px solid var(--lb-line-2)!important; background:var(--lb-panel-2)!important; color:var(--lb-text)!important; box-shadow:none!important;
+}
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb) button:hover { border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; }
+html[data-design="lobby"] body .gs-amount-preset[aria-pressed="true"]:not(#lb) { color:var(--lb-lime-ink)!important; background:var(--lb-lime)!important; border-color:var(--lb-lime)!important; }
+html[data-design="lobby"] body .gs-support-dialog .gs-support-checkout:not(#lb) > .surface { padding:18px!important; border-radius:18px!important; }
+html[data-design="lobby"] body .gs-support-dialog .gs-support-checkout:not(#lb) > .surface :is(h2,h3) { font:800 16px/1.3 var(--lb-display)!important; font-stretch:112.5%; }
+/* Fewer captions around the L2 search: the tiles and shelves already say it. */
+html[data-design="lobby"] body .l2a:not(#lb) :is(.hero-note,.filter-summary) { display:none!important; }
+html[data-design="lobby"] body .l2a .search-row:not(#lb) { display:grid!important; grid-template-columns:minmax(0,1fr)!important; }
+html[data-design="lobby"] body .l2a .catalog-toolbar:not(#lb) > span[role="status"] { display:none; }
+html[data-design="lobby"] body .gt-btn--primary:not(#lb) { background:var(--lb-lime)!important; color:var(--lb-lime-ink)!important; border-color:var(--lb-lime)!important; box-shadow:0 0 0 1px rgb(255 255 255 / .2) inset,0 12px 30px -12px var(--lb-lime)!important; text-shadow:none!important; }
+html[data-design="lobby"] body .gt-btn--primary:not(#lb):hover { filter:brightness(1.06); }
+html[data-design="lobby"] body .gt-btn--outline:not(#lb):hover { border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; }
+
+/* ---------- One interface type: the world face stays only on the world's own title ---------- */
+html[data-design="lobby"] body :is(h1,h2,.gt-display):not(.gs-hero-title):not(#l2-world-title):not(.gs-home-hall *):not(.gs-wordmark *):not(#lb) {
+  font-family:var(--lb-display)!important; font-weight:800!important; font-stretch:112.5%; letter-spacing:-.015em!important;
+  font-variant:normal!important; font-variant-caps:normal!important; text-transform:none;
+}
+html[data-design="lobby"] body :is(h3,h4):not(.gs-home-hall *):not(#lb) {
+  font-family:var(--font-sans)!important; font-variant:normal!important; font-variant-caps:normal!important; letter-spacing:-.005em!important;
+}
+/* Eyebrow-style h2 (server page plaques) stay small uppercase labels. */
+html[data-design="lobby"] body .gs-server-profile .surface:not(#lb) > h2,
+html[data-design="lobby"] body .gs-server-profile:not(#lb) .gs-profile-eyebrow { font:800 11.5px/1.2 var(--font-sans)!important; letter-spacing:.16em!important; text-transform:uppercase!important; }
+
+/* ---------- Admin tabs: active state in the action colour ---------- */
+html[data-design="lobby"] body .gs-admin-groups button[aria-pressed="true"]:not(#lb),
+html[data-design="lobby"] body .gs-admin-tab.is-active:not(#lb) {
+  background:color-mix(in srgb,var(--lb-lime) 14%,transparent)!important; border-color:var(--lb-lime)!important; color:var(--lb-lime)!important; box-shadow:none!important;
+}
+
+/* ---------- Tap targets ≥ 40px ---------- */
+html[data-design="lobby"] body :is(nav[aria-label="Хлебные крошки"] a,.l2a .breadcrumb a):not(#lb) { display:inline-flex; align-items:center; min-height:40px; }
+html[data-design="lobby"] body :is(.gs-fav-btn,.gs-view-btn):not(#lb) { width:40px!important; height:40px!important; }
+html[data-design="lobby"] body .gs-seg-btn:not(#lb) { min-height:40px; }
+html[data-design="lobby"] body .gs-seg-btn.is-active:not(#lb) { background:color-mix(in srgb,var(--lb-lime) 14%,transparent)!important; color:var(--lb-lime)!important; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lb-lime) 55%,transparent)!important; }
+html[data-design="lobby"] body .gs-profile-cta-bar:not(#lb) { padding-inline:calc((100% - var(--lb-wrap)) / 2)!important; }
+html[data-design="lobby"] body .gs-server-profile:not(#lb) :is(nav a,a.inline-flex) { min-height:40px; display:inline-flex; align-items:center; }
+html[data-design="lobby"] body .gs-support-checkout:not(#lb) > a { margin-right:18px; }
+
+/* ---------- World title faces (the only place the world type is used) ---------- */
+html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb) { font-family:'Pixelify Sans','Courier New',monospace!important; font-weight:600!important; letter-spacing:0!important; }
+html[data-design="lobby"] body .l2a--gtarp .hero h1:not(#lb) { font-family:'Oswald','Arial Narrow',sans-serif!important; font-weight:700!important; text-transform:uppercase; letter-spacing:.01em!important; }
+
+/* ---------- Artwork inside the 1–3 plaques ---------- */
+.gs-podium-art { display:none; }
+html[data-design="lobby"] body .gs-podium-art:not(#lb) {
+  display:block; position:absolute; inset:0 0 0 auto; width:58%; z-index:0; pointer-events:none; overflow:hidden; border-radius:inherit;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgb(0 0 0 / .55) 45%,#000 100%); mask-image:linear-gradient(90deg,transparent 0%,rgb(0 0 0 / .55) 45%,#000 100%);
+  opacity:.62;
+}
+html[data-design="lobby"][data-color-mode="light"] body .gs-podium-art:not(#lb) { opacity:.42; }
+html[data-design="lobby"] body .gs-podium-art:not(#lb) img { display:block; width:100%; height:100%; object-fit:cover; }
+html[data-design="lobby"] body .gs-top-row:not(#lb) > :not(.gs-podium-art):not(.fav) { position:relative; z-index:1; }
+html[data-design="lobby"] body .gs-top-row:not(#lb) > .fav { z-index:2; }
+/* Numbers stay readable over the art. */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) :is(.server-right,.server-right *,.text-right) { text-shadow:0 1px 8px rgb(0 0 0 / .85); }
+
+/* ---------- Owner banner without the roman mark ---------- */
+html[data-design="lobby"] body .l2a .owner:not(#lb) { grid-template-columns:minmax(0,1fr) auto!important; }
+html[data-design="lobby"] body .l2a .owner:not(#lb) h3 { font:800 clamp(20px,2.4vw,28px)/1.15 var(--lb-display)!important; font-stretch:112.5%; }
+
+/* ---------- «Поддержать сервер»: the one gold call to action ---------- */
+@keyframes lb-shine { 0%,62% { transform:translateX(-120%) skewX(-18deg); } 100% { transform:translateX(220%) skewX(-18deg); } }
 html[data-design="lobby"] body .gs-support-launch:not(#lb) {
   position:relative; overflow:hidden; isolation:isolate; display:inline-flex; align-items:center; gap:10px;
   min-height:48px; padding:0 22px; border-radius:14px!important; border:0!important;
@@ -373,3 +497,57 @@ html[data-design="lobby"][data-color-mode="light"] body .gs-hall-header:not(#lb)
 html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) > .fav { background:rgb(10 12 14 / .55)!important; border-radius:10px!important; color:#e9ecf1!important; }
 html[data-design="lobby"] body :is(.l2a .rows .fav,.gs-row button[aria-label*="избранно"]):not(#lb) { min-width:40px!important; }
 html[data-design="lobby"] body .gs-server-profile:not(#lb) a[href^="http"] { min-height:40px; display:inline-flex; align-items:center; }
+
+/* ---------- «Поддержать сервер»: calm gold, still the one thing that glints (all games) ---------- */
+html[data-design="lobby"] body .gs-support-launch:not(#lb) {
+  position:relative; overflow:hidden; isolation:isolate; display:inline-flex; align-items:center; gap:10px;
+  min-height:46px; padding:0 20px; border-radius:13px!important;
+  background:linear-gradient(180deg,rgb(255 201 60 / .16),rgb(255 201 60 / .07))!important;
+  border:1px solid rgb(255 201 60 / .5)!important; color:#ffd66e!important; font-weight:800!important; font-size:14px!important;
+  box-shadow:0 10px 28px -18px rgb(255 201 60 / .9)!important;
+}
+html[data-design="lobby"] body .gs-support-launch:not(#lb) svg { color:#ffc93c; }
+html[data-design="lobby"] body .gs-support-launch:not(#lb)::after {
+  content:""; position:absolute; inset:0 auto 0 0; width:34%; z-index:-1; pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgb(255 220 130 / .18),transparent); animation:lb-shine 4.8s ease-in-out infinite;
+}
+html[data-design="lobby"] body .gs-support-launch:not(#lb):hover { border-color:#ffc93c!important; background:linear-gradient(180deg,rgb(255 201 60 / .24),rgb(255 201 60 / .1))!important; }
+html[data-design="lobby"] body .gs-support-launch:not(#lb):disabled { opacity:.55; }
+html[data-design="lobby"][data-color-mode="light"] body .gs-support-launch:not(#lb) { color:#7a5200!important; background:linear-gradient(180deg,#fff3cf,#ffeab0)!important; border-color:#e0b34a!important; }
+/* Card banner: same calm tone. */
+html[data-design="lobby"] body .gs-profile-support:not(#lb) { background:linear-gradient(100deg,rgb(255 201 60 / .12),rgb(255 201 60 / .04) 45%,var(--lb-panel) 80%)!important; border-color:rgb(255 201 60 / .4)!important; box-shadow:0 14px 34px -26px rgb(255 201 60 / .8)!important; }
+html[data-design="lobby"] body .gs-profile-support:not(#lb) .gs-profile-support-icon { background:rgb(255 201 60 / .16)!important; color:#ffc93c!important; border:1px solid rgb(255 201 60 / .45); box-shadow:none!important; }
+html[data-design="lobby"] body .gs-profile-support:not(#lb)::after { background:linear-gradient(90deg,transparent,rgb(255 230 150 / .12),transparent)!important; }
+
+/* ---------- Old background field (green glow + grid) is not part of the lobby ---------- */
+html[data-design="lobby"] .gs-bg-field { display:none!important; }
+
+/* ---------- Catalog toolbar sits inside the page width ---------- */
+html[data-design="lobby"] body .gs-catalog-toolbar:not(#lb) {
+  width:var(--lb-wrap); margin-inline:auto; border:1px solid var(--lb-line)!important; border-radius:16px;
+  background:color-mix(in srgb,var(--lb-panel) 92%,transparent)!important; padding-block:6px!important;
+}
+html[data-design="lobby"] body .gs-catalog-toolbar:not(#lb) > .gs-container { width:auto!important; padding-inline:10px!important; }
+
+/* ---------- Owners: «Твой сервер в GameScout» ---------- */
+.gs-owner-join { padding-block:28px 56px; display:grid; gap:18px; }
+.gs-owner-hero { position:relative; isolation:isolate; overflow:hidden; min-height:340px; border-radius:24px; border:1px solid var(--lb-line,#2a2f35); background:#14161a center/cover no-repeat; display:flex; align-items:flex-end; padding:clamp(22px,4vw,44px); }
+.gs-owner-hero::before { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgb(10 12 14 / .94),rgb(10 12 14 / .7) 45%,rgb(10 12 14 / .15)),linear-gradient(0deg,rgb(10 12 14 / .7),transparent 55%); }
+.gs-owner-hero-copy { max-width:560px; color:#f5f6f8; }
+.gs-owner-kicker { font:800 11px/1 var(--font-sans); letter-spacing:.18em; text-transform:uppercase; color:var(--lb-lime,#c6ff52); }
+.gs-owner-hero h1 { margin:12px 0 10px; font:800 clamp(28px,4vw,46px)/1.05 var(--lb-display,'Saira'),sans-serif; font-stretch:112.5%; letter-spacing:-.02em; color:#fff; }
+.gs-owner-hero p { margin:0; color:#cfd3da; font-size:15.5px; line-height:1.55; }
+.gs-owner-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+.gs-owner-primary,.gs-owner-secondary { display:inline-flex; align-items:center; gap:9px; min-height:48px; padding:0 20px; border-radius:13px; font-weight:800; font-size:14px; }
+.gs-owner-primary { background:var(--lb-lime,#c6ff52); color:var(--lb-lime-ink,#11160a); box-shadow:0 12px 30px -12px var(--lb-lime,#c6ff52); }
+.gs-owner-secondary { background:rgb(255 255 255 / .08); border:1px solid rgb(255 255 255 / .22); color:#fff; }
+.gs-owner-secondary:hover { border-color:var(--lb-lime,#c6ff52); }
+.gs-owner-steps { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.gs-owner-step { display:grid; gap:6px; align-content:start; padding:20px; border-radius:20px; border:1px solid var(--lb-line,#2a2f35); background:linear-gradient(180deg,var(--lb-panel-2,#20242a),var(--lb-panel,#191c20)); }
+.gs-owner-step-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:13px; color:var(--lb-lime,#c6ff52); background:color-mix(in srgb,var(--lb-lime,#c6ff52) 12%,transparent); margin-bottom:6px; }
+.gs-owner-step-num { font:800 11px/1 var(--font-sans); letter-spacing:.16em; text-transform:uppercase; color:var(--lb-faint,#6c737e); }
+.gs-owner-step strong { font:800 17px/1.25 var(--lb-display,'Saira'),sans-serif; font-stretch:112.5%; color:var(--lb-text,#f5f6f8); }
+.gs-owner-step p { margin:0; color:var(--lb-muted,#a0a6b0); font-size:14px; line-height:1.5; }
+.gs-owner-note { margin:0; padding:14px 18px; border-radius:16px; border:1px dashed var(--lb-line-2,#3a4048); color:var(--lb-muted,#a0a6b0); font-size:13.5px; line-height:1.5; }
+@media (max-width:767px) { .gs-owner-steps { grid-template-columns:minmax(0,1fr); } .gs-owner-hero { min-height:300px; } .gs-owner-hero::before { background:linear-gradient(0deg,rgb(10 12 14 / .95) 20%,rgb(10 12 14 / .45)); } }
+html[data-design="lobby"] body :is(.gs-catalog-toolbar button,.gs-fav-btn):not(#lb) { min-width:40px; flex-shrink:0; }

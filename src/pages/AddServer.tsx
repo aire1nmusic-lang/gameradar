@@ -25,6 +25,7 @@ import { Notice } from '@/components/ui/feedback'
 import { ServerCard } from '@/components/server/ServerCard'
 import { Logo } from '@/components/layout/Logo'
 import { useSeo } from '@/lib/seo'
+import { OwnerJoin } from '@/components/owners/OwnerJoin'
 
 const STEPS = ['Основное', 'Проверка онлайна', 'Владение', 'Готово']
 
@@ -165,12 +166,7 @@ export default function AddServer() {
     step === 0 ? form.name.trim().length > 1 && form.modes.length > 0 : step === 2 ? form.agreeRules : true
 
   if(loading) return <Container className="py-16">Проверяем доступность кабинета…</Container>
-  if(privateCore) return <Container className="max-w-2xl space-y-5 py-16">
-    <h1 className="text-3xl font-semibold">Добавление нового сервера</h1>
-    <Notice tone="info">Приём новых карточек через единый аккаунт ещё не подключён. Отправка через старую форму отключена, чтобы заявка не попала в прежнюю приватную базу D1.</Notice>
-    <p className="text-ink-300">Если сервер уже есть в каталоге, откройте его страницу и подайте Claim. После проверки вы сможете предложить фактические правки.</p>
-    <div className="flex flex-wrap gap-3"><Button to="/catalog">Открыть каталог</Button><Button to="/account" variant="outline">Мои серверы и Claim</Button></div>
-  </Container>
+  if(privateCore) return <OwnerJoin />
 
   return (
     <div className="pb-20">

@@ -65,7 +65,7 @@ function LayoutContent() {
 
 function BackgroundField() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="gs-bg-field pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div className="absolute inset-0 bg-ink-950" />
       <div
         className="absolute -top-[22rem] left-1/2 h-[46rem] w-[78rem] -translate-x-1/2 animate-drift rounded-full opacity-[0.16] blur-[120px]"

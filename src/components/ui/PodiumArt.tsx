@@ -7,7 +7,7 @@ export function PodiumArt({ server }: { server: GameServer }) {
   if (!art) return null
   return (
     <span className="gs-podium-art" aria-hidden="true">
-      <img src={artSrc(art, 800)} alt="" loading="lazy" decoding="async" style={{ objectPosition: art.focus.desktop }} />
+      <img src={artSrc(art, 800)} alt="" decoding="async" style={{ objectPosition: art.focus.desktop }} />
     </span>
   )
 }

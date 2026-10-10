@@ -46,7 +46,7 @@ export default function Openings() {
   return (
     <div className="gs-openings-page pb-16">
       <Container className="pt-6 lg:pt-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="gs-page-head flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">
               <WorldIcon name="opening" size={13} />

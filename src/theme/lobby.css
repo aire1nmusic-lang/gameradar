@@ -582,3 +582,32 @@ html[data-design="lobby"][data-color-mode="light"] .gs-world-backdrop::after {
 html[data-design="lobby"][data-color-mode="dark"] body .gs-catalog-page :is(.gs-row,.gs-row-line):not(.gs-top-row):not(#lb) { background:rgb(24 27 32 / .9)!important; }
 html[data-design="lobby"][data-color-mode="dark"] body .gs-catalog-page :is(.gs-row,.gs-row-line):not(.gs-top-row):not(#lb):hover { background:rgb(34 38 44 / .94)!important; }
 html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row[data-rank]:not(#lb) { --top-base:#1b1e23; }
+
+/* ---------- World art behind the whole inner page, like the world page ---------- */
+html[data-design="lobby"] .gs-world-backdrop { position:fixed!important; inset:0!important; height:auto!important; }
+html[data-design="lobby"] .gs-world-backdrop::after {
+  background:linear-gradient(180deg,rgb(14 16 18 / .35) 0%,rgb(14 16 18 / .55) 45%,rgb(14 16 18 / .72) 100%),
+             linear-gradient(90deg,rgb(14 16 18 / .5),transparent 26%,transparent 74%,rgb(14 16 18 / .5))!important;
+}
+html[data-design="lobby"][data-color-mode="light"] .gs-world-backdrop::after {
+  background:linear-gradient(180deg,rgb(243 238 230 / .45) 0%,rgb(243 238 230 / .7) 45%,rgb(243 238 230 / .82) 100%)!important;
+}
+
+/* ---------- Page heads and small controls stay readable over the art ---------- */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-page-head:not(#lb) :is(h1,span,div) { text-shadow:0 2px 12px rgb(0 0 0 / .85); }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-page-head:not(#lb) :is(.text-ink-400,.num) { color:#d5d9e0!important; }
+html[data-design="lobby"][data-color-mode="light"] body .gs-page-head:not(#lb) :is(h1,span,div) { text-shadow:0 0 10px rgb(251 248 242 / .95),0 0 2px rgb(251 248 242 / .9); }
+html[data-design="lobby"][data-color-mode="light"] body .gs-page-head:not(#lb) :is(.text-ink-400,.num) { color:#3e3a36!important; }
+html[data-design="lobby"] body .gs-seg:not(#lb) { background:var(--lb-panel)!important; border:1px solid var(--lb-line-2)!important; border-radius:13px!important; padding:4px!important; box-shadow:0 8px 24px -16px #000; }
+html[data-design="lobby"] body .gs-seg:not(#lb) .gs-seg-btn:not(.is-active) { color:var(--lb-muted)!important; }
+
+/* ---------- Account / admin tabs: clear outlines ---------- */
+html[data-design="lobby"] body :is(.gs-admin-groups button,.gs-admin-subtabs button):not(#lb) {
+  background:var(--lb-panel-2)!important; border:1px solid var(--lb-line-2)!important; border-radius:12px!important; color:var(--lb-text)!important;
+  box-shadow:0 1px 0 rgb(255 255 255 / .04) inset!important; transition:border-color .15s,background .15s;
+}
+html[data-design="lobby"] body :is(.gs-admin-groups button,.gs-admin-subtabs button):not(#lb):hover { border-color:color-mix(in srgb,var(--lb-lime) 60%,var(--lb-line-2))!important; }
+html[data-design="lobby"] body :is(.gs-admin-groups button[aria-pressed="true"],.gs-admin-tab.is-active):not(#lb) {
+  background:color-mix(in srgb,var(--lb-lime) 14%,var(--lb-panel-2))!important; border-color:var(--lb-lime)!important; color:var(--lb-lime)!important;
+}
+html[data-design="lobby"][data-color-mode="light"] body :is(.gs-admin-groups button[aria-pressed="true"],.gs-admin-tab.is-active):not(#lb) { color:#3d5c00!important; }

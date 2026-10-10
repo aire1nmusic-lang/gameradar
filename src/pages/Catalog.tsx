@@ -132,7 +132,7 @@ export default function Catalog() {
   return (
     <div className="gs-catalog-page pb-16">
       <Container className="pt-6 lg:pt-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="gs-page-head flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-[26px] leading-tight sm:text-[30px]">Серверы{world?` · ${world.shortName}`:''}</h1>
           <span className="num text-[13px] text-ink-400">
             {loading&&!page?'Загружаем серверы…':error?(page?'Предыдущие результаты · обновление недоступно':'Данные недоступны'):

@@ -1564,5 +1564,365 @@
     "checkedAt": "2026-10-10",
     "confidence": "confirmed",
     "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:la2p.ru",
+    "game": "lineage2",
+    "name": "LA2P REMASTER",
+    "website": "https://la2p.ru/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x2",
+    "openedAt": "2026-10-03",
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://la2p.ru/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://la2p.ru/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/38875"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2play.su",
+    "game": "lineage2",
+    "name": "L2Play.su",
+    "website": "https://l2play.su/",
+    "chronicle": null,
+    "version": "C4",
+    "rates": "x10",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2play.su/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2play.su/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/38853"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:masterl2.online",
+    "game": "lineage2",
+    "name": "Masterl2.online x50",
+    "website": "https://masterl2.online/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x50",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://masterl2.online/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://masterl2.online/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/38029"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:lineagegame.club",
+    "game": "lineage2",
+    "name": "Lineagegame.club x10",
+    "website": "https://lineagegame.club/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x10",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://lineagegame.club/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lineagegame.club/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/5603"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:lineageclassic.net",
+    "game": "lineage2",
+    "name": "Lineageclassic.net x3",
+    "website": "https://lineageclassic.net/",
+    "chronicle": null,
+    "version": "C4",
+    "rates": "x3",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://lineageclassic.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lineageclassic.net/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39243"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:lin2death.com",
+    "game": "lineage2",
+    "name": "Lin2death.com x10000",
+    "website": "https://lin2death.com/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x10000",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://lin2death.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lin2death.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/36429"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2dewell.ru",
+    "game": "lineage2",
+    "name": "l2dewell.ru x5 HF",
+    "website": "https://l2dewell.ru/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x5",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2dewell.ru/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2dewell.ru/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/30418"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2vortex.net",
+    "game": "lineage2",
+    "name": "L2Vortex HF Bot Allowed",
+    "website": "https://l2vortex.net/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2vortex.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2vortex.net/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/35938"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2satory.ru",
+    "game": "lineage2",
+    "name": "L2satory.ru x1",
+    "website": "https://l2satory.ru/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2satory.ru/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2satory.ru/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/31405"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:destarion.site",
+    "game": "lineage2",
+    "name": "Destarion.site x55",
+    "website": "https://destarion.site/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x55",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://destarion.site/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://destarion.site/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/29209"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2sand.pro",
+    "game": "lineage2",
+    "name": "L2sand.pro x1200",
+    "website": "https://l2sand.pro/",
+    "chronicle": null,
+    "version": "Gracia Epilogue",
+    "rates": "x1200",
+    "openedAt": "2026-10-02",
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2sand.pro/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2sand.pro/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/30402"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:la2age.com",
+    "game": "lineage2",
+    "name": "La2age.com x7",
+    "website": "https://la2age.com/",
+    "chronicle": null,
+    "version": "Remastered",
+    "rates": "x7",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://la2age.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://la2age.com/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/33247"
+      }
+    ],
+    "checkedAt": "2026-10-10",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-10; official site answered and names the project."
   }
 ]

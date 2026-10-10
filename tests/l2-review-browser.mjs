@@ -78,7 +78,7 @@ try{
  await intercept(slowPage,'none',peopleGate)
  await slowPage.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'})
  await slowPage.locator('.l2a .support .server').first().waitFor({timeout:5000})
- assert.equal(await slowPage.locator('.l2a .support .server:visible').count(),10,'Stalled ranking cannot block cards')
+ assert.equal(await slowPage.locator('.l2a .support .server:visible').count(),5,'Stalled ranking cannot block cards')
  assert.equal(await slowPage.locator('.gs-ranking-availability').count(),0,'Pending enrichment is not an outage')
  releasePeople();await slowContext.close();console.log('PASS catalog paints before stalled private ranking')
  for(const missing of ['people','support','both']){

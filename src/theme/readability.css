@@ -187,3 +187,12 @@ html[data-color-mode] body .gs-sheet .gs-button-primary:not(#gs) {
   background:linear-gradient(180deg,#e2c07a,#b98d3c)!important; color:#1f1606!important; border:1px solid #a87d31!important;
   box-shadow:inset 0 1px 0 rgb(255 255 255 / .4),0 8px 18px -12px rgb(120 84 24 / .7)!important; font-weight:600;
 }
+/* At ≤359px the header has no slack (wider Linux fonts overflowed it): icons 34px, world switch may shrink. */
+@media (max-width:359px) {
+  html[data-color-mode] body .gs-site-header:not(#gs) :is(.gs-header-search,a[aria-label^="Аккаунт"]) { min-width:34px!important; flex-shrink:12!important; }
+  html[data-color-mode] body .gs-site-header:not(#gs) [aria-label^="Сменить мир"] { min-width:0!important; flex-shrink:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding-inline:6px!important; }
+  html[data-color-mode] body .gs-site-header:not(#gs) [aria-label^="Сменить мир"] > * { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  html[data-color-mode] body .gs-site-header:not(#gs) > div > :has([aria-label^="Сменить мир"]) { min-width:0!important; flex-shrink:1!important; }
+  html[data-color-mode] body .gs-site-header:not(#gs) [aria-label^="Сменить мир"] { max-width:100%; }
+  html[data-color-mode] body .gs-site-header:not(#gs) > div { gap:4px!important; }
+}

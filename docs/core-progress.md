@@ -1,3 +1,7 @@
+## 10.10.2026 — release 38058182458 (2edfad2) FAILED on discovery header colour; fixed
+
+Light world header ink must stay the established navy #182531 (gate); my override used #2d2a2f. Header links/buttons and the «Game» wordmark now use #182531. Grepped every colour assertion in browser suites; preview matches header rgb(24,37,49) and search input rgb(38,48,57).
+
 ## 10.10.2026 — release 38057287364 (217f80f) FAILED on discovery gate; fixed
 
 Loader gate (320px overflow) PASSED this time. discovery-browser still required the old 72–88px «Illustrated podium row» on /rating; owner rejected that tile. Updated to the new design: podium 56–76px and not shorter than regular rows (measured 58/62 vs 56 at 320/390/768/1440, both themes). Also light --aether-bg now equals the paper colour so the L2 mobile nav gradient has no darker band (gate compares to the same variable). Grepped all browser suites for other old-podium/strip assumptions: none left.

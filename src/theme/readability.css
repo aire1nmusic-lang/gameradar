@@ -38,7 +38,7 @@ html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:not(#gs)::af
 
 /* ---------- Header: no painted strip (by design); dark ink once the page under it is paper ---------- */
 html[data-color-mode='light'] body .gs-site-header:not(#gs) :is(a,button,span) { text-shadow:none!important; }
-html[data-color-mode='light'] body .gs-site-header:not(#gs) :is(a,button):not(.gs-button-primary) { color:#2d2a2f!important; }
+html[data-color-mode='light'] body .gs-site-header:not(#gs) :is(a,button):not(.gs-button-primary) { color:#182531!important; }
 
 /* ---------- Surfaces: opaque cards with a visible edge ---------- */
 html[data-color-mode='light'] body :is(.surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,.gs-account-card,.gs-account-glass,.gs-coins-card,.gs-account-empty,.gs-account-claim):not(#gs),
@@ -142,7 +142,7 @@ html[data-color-mode='light'] body .gs-rank-number:not(.gs-rank-podium):not(#gs)
 
 /* ---------- Wordmark on the light header ---------- */
 html[data-color-mode='light'] body .gs-site-header:not(#gs) .gs-wordmark { filter:none!important; }
-html[data-color-mode='light'] body .gs-site-header:not(#gs) .gs-wordmark__game { background:none!important; color:#1d1b20!important; -webkit-text-fill-color:#1d1b20; }
+html[data-color-mode='light'] body .gs-site-header:not(#gs) .gs-wordmark__game { background:none!important; color:#182531!important; -webkit-text-fill-color:#182531; }
 
 /* ---------- Switches in light mode: a visible track and knob ---------- */
 html[data-color-mode='light'] body button[role=switch][aria-checked=false]:not(#gs) { background:rgb(80 62 40 / .2)!important; border-color:rgb(80 62 40 / .28)!important; }

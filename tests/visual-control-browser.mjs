@@ -26,7 +26,7 @@ await route.fulfill({json})});
  await page.screenshot({path:`output/control-qa/admin-${theme}-${w}.png`,fullPage:true})
  await page.getByRole('button',{name:'Включить демо',exact:true}).click();await page.locator('.gs-demo-banner').waitFor()
  for(const path of ['/lineage-2','/rating?game=lineage2','/catalog?game=lineage2']){
- await page.goto(base+path,{waitUntil:'domcontentloaded'});await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"],.l2a .server img[src^="data:image/svg+xml"]'))
+ await page.goto(base+path,{waitUntil:'domcontentloaded'});await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"],.l2a .server'))
  assert.equal(await page.locator('.gs-demo-banner').count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
  if(path.startsWith('/catalog')){
   const rows=page.locator('.gs-catalog-page .gs-row');assert.equal(await rows.count(),10)

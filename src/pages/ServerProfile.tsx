@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   CalendarClock,
@@ -33,7 +33,7 @@ import { useAsync, useServer, useServers, useSimilarServers } from '@/hooks/data
 import { RankStrip } from '@/components/profile/RankStrip'
 import { repo } from '@/repositories'
 import { track, visitSource } from '@/services/events'
-import type { ChartRange, GameServer, HistoryEvent } from '@/models'
+import type { ChartRange, GameServer } from '@/models'
 import { useFavorites } from '@/hooks/useFavorites'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
@@ -63,6 +63,10 @@ import {
 } from '@/theme'
 import { ServerList } from '@/components/server/ServerRow'
 import { breadcrumbs, useSeo } from '@/lib/seo'
+import { SupportStudio } from '@/components/rating/SupportStudio'
+import { WorldIcon } from '@/components/icons/WorldIcon'
+import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
+import { useVisualDemo } from '@/hooks/useVisualDemo'
 
 /** "mc.hypixel.net" → clipboard. The address is what a player actually needs from this page. */
 function CopyAddress({ address, serverId, size }: { address: string; serverId: string; size: 'md' | 'lg' }) {
@@ -151,17 +155,19 @@ function Profile({ server: source }: { server: GameServer }) {
       .catch(()=>{if(live)setRestrictions(null)})
     return()=>{live=false}
   },[privateCore,source.id])
-  // Hide restricted material while the private gate is pending or unavailable.
-  const descriptionRestricted=!!source.descriptionRestricted || !restrictions || restrictions.restrictedMaterials.includes('description')
+  // The public projection already carries restrictions (descriptionRestricted); the private gate only adds to it.
+  // An unreachable private service must not blank every card.
+  const descriptionRestricted=!!source.descriptionRestricted || !!restrictions?.restrictedMaterials.includes('description')
+  const linkHidden=(kind:string)=>!!restrictions?.restrictedLinks.includes(kind)
   const server=privateCore?{...source,
     summary:descriptionRestricted?'':source.summary,
     description:descriptionRestricted?'':source.description,
     highlights:descriptionRestricted?[]:source.highlights,
     descriptionRestricted,
     links:{...source.links,
-      site:restrictions&&!restrictions.restrictedLinks.includes('site')?source.links.site:'',
-      discord:restrictions&&!restrictions.restrictedLinks.includes('discord')?source.links.discord:'',
-      telegram:restrictions&&!restrictions.restrictedLinks.includes('telegram')?source.links.telegram:undefined}}:source
+      site:linkHidden('site')?'':source.links.site,
+      discord:linkHidden('discord')?'':source.links.discord,
+      telegram:linkHidden('telegram')?undefined:source.links.telegram}}:source
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
@@ -172,6 +178,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
   const { data: peers = [] } = useServers({ gameId: server.gameId, limit: 200 }, true)
@@ -222,7 +229,7 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className="pb-28 lg:pb-16" >
+    <ThemeScope theme={theme} as="div" className="gs-server-profile pb-28 lg:pb-16" >
       {/* hero: art of the server's world */}
       <div className={cn('relative overflow-hidden', showcase ? 'h-[300px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
         <WorldArtSurface
@@ -274,6 +281,7 @@ function Profile({ server: source }: { server: GameServer }) {
               kind={server.chronicleId ?? chronicle?.id}
               hue={server.hue}
               src={server.logoUrl}
+              forceGameGlyph
               size="xl"
               className="shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] ring-4 ring-ink-950"
             />
@@ -357,11 +365,10 @@ function Profile({ server: source }: { server: GameServer }) {
           <div className="min-w-0 space-y-4 sm:space-y-6">
             <OnlineSection server={server} />
             <div className="lg:hidden"><VotePanel server={server} /></div>
-            {privateCore && <Button to={`/rating?game=${server.gameId}&server=${encodeURIComponent(server.id)}#support-studio`} className="min-h-11">Поддержка и прогноз позиции →</Button>}
+            {privateCore && <button type="button" className="gs-profile-support" onClick={() => setSupportOpen(true)}><span className="gs-profile-support-icon"><WorldIcon name="coins" size={18}/></span><span><strong>Поддержать сервер</strong><small>Прогноз позиции в рейтинге поддержки</small></span><ChevronRight size={18}/></button>}
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
             {server.demo && <ServerMedia server={server} />}
             <InfoSection server={server} />
-            <HistorySection server={server} />
             <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />
           </div>
 
@@ -376,13 +383,10 @@ function Profile({ server: source }: { server: GameServer }) {
         </div>
 
         {similar.length > 0 && (
-          <section className="mt-14">
+          <section className="gs-profile-similar surface mt-10 rounded-xl p-4 sm:p-6">
             <div className="mb-5 flex items-end justify-between">
               <div>
-                <h2 className="text-[22px]">Похожие серверы</h2>
-                <p className="mt-1.5 text-[13.5px] text-ink-300">
-                  Те же игра и режимы — сравните онлайн и рейтинг перед выбором.
-                </p>
+                <h2 className="gs-profile-eyebrow">Похожие серверы</h2>
               </div>
               <Link
                 to={`/catalog?game=${server.gameId}`}
@@ -445,6 +449,7 @@ function Profile({ server: source }: { server: GameServer }) {
         </Notice>
       </Modal>
       <ClaimModal server={server} open={claimOpen} onClose={() => setClaimOpen(false)} />
+      {supportOpen && <ProfileSupportDialog server={server} onClose={() => setSupportOpen(false)} />}
     </ThemeScope>
   )
 }
@@ -546,13 +551,6 @@ function OnlineSection({ server }: { server: GameServer }) {
           {server.online.note} До завершения перепроверки сервер не участвует в рейтинге и блоках роста.
         </Notice>
       )}
-      {status === 'OWNER_REPORTED' && (
-        <Notice tone="info" title="Онлайн не подтверждён независимо" className="mt-5">
-          {server.online.sourceTier === 'OFFICIAL'
-            ? 'Число опубликовано на сайте проекта. GameScout не может его проверить — подключение Verified Online доступно владельцу бесплатно.'
-            : 'Число передано владельцем сервера. GameScout не может его проверить — подключение Verified Online доступно владельцу бесплатно.'}
-        </Notice>
-      )}
       {status === 'EXTERNAL' && (
         <Notice tone="info" title="Онлайн по данным стороннего мониторинга" className="mt-5">
           Число взято у {server.online.source}
@@ -625,12 +623,6 @@ function InfoSection({ server }: { server: GameServer }) {
   if (server.nextWipeAt) specs.push(['Следующий вайп', formatDate(server.nextWipeAt)])
   // A future opening is shown by the launch block; "opened N months ago" would be false.
   if (server.openedAt && Date.parse(server.openedAt) <= Date.now()) specs.push(['Открыт', `${formatDate(server.openedAt)} · ${formatAge(server.openedAt)}`])
-  // An imported card says where its facts come from and when they were last checked.
-  if (server.provenance?.sourceName)
-    specs.push([
-      'Источник данных',
-      `${server.provenance.sourceName}${server.provenance.lastSourceCheckAt ? ` · проверено ${formatDate(server.provenance.lastSourceCheckAt)}` : ''}`,
-    ])
 
   return (
     <section className="surface rounded-xl p-4 sm:p-6">
@@ -663,58 +655,6 @@ function InfoSection({ server }: { server: GameServer }) {
   )
 }
 
-/** Facts the platform stores about the card — nothing generated. */
-function projectEvents(server: GameServer): HistoryEvent[] {
-  const now = Date.now()
-  const events: HistoryEvent[] = [...server.events]
-  if (server.openedAt && Date.parse(server.openedAt) <= now) events.push({ label: 'Открытие сервера', date: server.openedAt, kind: 'open' })
-  if (server.lastWipeAt) events.push({ label: 'Последний вайп', date: server.lastWipeAt, kind: 'wipe' })
-  events.push({ label: 'Карточка добавлена в каталог GameScout', date: server.addedAt, kind: 'update' })
-  if (server.provenance?.lastSourceCheckAt)
-    events.push({ label: 'Данные карточки сверены с источниками', date: server.provenance.lastSourceCheckAt, kind: 'verify' })
-  return events.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
-}
-
-function HistorySection({ server }: { server: GameServer }) {
-  const events = projectEvents(server)
-  if (!events.length) return null
-  return (
-    <section className="surface rounded-xl p-4 sm:p-6">
-      <h2 className="text-[18px]">История проекта</h2>
-      <div className="mt-5 space-y-0">
-        {events.map((event, index) => (
-          <div key={`${event.label}-${index}`} className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <span
-                className={cn(
-                  'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                  event.kind === 'verify'
-                    ? 'bg-signal-400'
-                    : event.kind === 'wipe'
-                      ? 'bg-warn-400'
-                      : event.kind === 'season'
-                        ? 'bg-promo-400'
-                        : 'bg-ink-500',
-                )}
-              />
-              {index < events.length - 1 && <span className="w-px flex-1 bg-white/8" />}
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col items-start justify-between gap-1 pb-5 sm:flex-row sm:items-baseline sm:gap-4">
-              <span className="text-[13.5px] text-ink-100">{event.label}</span>
-              <span className="text-left font-mono text-[12px] text-ink-400 sm:shrink-0 sm:text-right">
-                {formatDate(event.date)}
-                {formatRelativeDays(event.date) !== formatDate(event.date) && (
-                  <span className="ml-2 text-ink-600">{formatRelativeDays(event.date)}</span>
-                )}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () => void }) {
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -740,7 +680,7 @@ function ReviewsSection({ server, onWrite }: { server: GameServer; onWrite: () =
           <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-ink-400">
             {server.launch
               ? 'Сервер ещё не открылся. Первые отзывы появятся после старта.'
-              : 'Отзывы на GameScout пока не принимаются — мы запустим их вместе с проверкой, что автор действительно играл на сервере.'}
+              : 'Отзывы скоро появятся.'}
           </p>
         </div>
       ) : (
@@ -885,4 +825,26 @@ function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) 
       </Button>
     </div>
   )
+}
+
+/** Support right on the card: the list is loaded once and kept while the dialog is open, closing returns to the card. */
+function ProfileSupportDialog({ server, onClose }: { server: GameServer; onClose: () => void }) {
+  const demo = useVisualDemo()
+  const ref = useRef<HTMLDialogElement>(null)
+  const [servers, setServers] = useState<GameServer[] | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    let live = true
+    // cards arrive first, rankings once (the dialog updates at most one more time, never on a timer)
+    discoveryServers({ gameId: server.gameId }, demo, early => { if (live) setServers(previous => previous ?? early) }).then(list => { if (live) setServers(list) }).catch(() => { if (live) setFailed(true) })
+    return () => { live = false }
+  }, [server.gameId, demo])
+  useEffect(() => { const node = ref.current; if (node && !node.open) node.showModal() }, [])
+  const close = () => { ref.current?.close(); onClose() }
+  return <dialog ref={ref} className="gs-support-dialog" aria-label="Поддержать сервер" onCancel={e => { e.preventDefault(); close() }} onClick={e => { if (e.target === ref.current) close() }}>
+    <div className="gs-support-dialog-head"><h2>Поддержка сервера</h2><button type="button" aria-label="Закрыть и вернуться к серверу" onClick={close}><WorldIcon name="close" /></button></div>
+    {failed && !servers ? <Notice tone="warn">Рейтинг поддержки сейчас недоступен. Попробуйте позже.</Notice>
+      : !servers ? <p className="px-1 py-4 text-[13px] text-ink-400">Загружаем рейтинг…</p>
+      : <SupportStudio servers={servers} demo={demo} initialServer={server.id} onSupported={() => { invalidateDiscoveryCache() }} />}
+  </dialog>
 }

@@ -45,3 +45,6 @@ html[data-color-mode] body .gs-rank-podium.gs-rank-3 { background:linear-gradien
 :root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.text-ink-400,.text-ink-500) { color:#d1cdda!important; }
 :root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-name,.server-right strong) { color:#f6f3ef!important; }
 :root[data-color-mode] body .gs-l2-aether-layout .gs-top-row :is(.server-meta,.server-right small) { color:#d1cdda!important; }
+/* Medals are plain metal discs with the number: no crown, no tall tile. */
+html[data-color-mode] body .gs-rank-podium { width:30px!important; height:30px!important; border-radius:50%!important; border:0!important; font-size:13px!important; font-weight:700!important; box-shadow:inset 0 1px 0 #ffffff8c,inset 0 -2px 4px #0000002e,0 6px 14px -8px var(--top-accent,#000)!important; }
+@media (max-width:767px) { html[data-color-mode] body .gs-rank-podium { width:28px!important; height:28px!important; } }

@@ -106,7 +106,8 @@ const WORLDS: Record<string, Partial<WorldMedia>> = {
   'lineage2:classic': { hero: ART.l2ClassicHero, card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
   'lineage2:essence': { hero: ART.l2EssenceHero, card: ART.l2EssenceCard, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
   // Gracia Final stays text-only in the compact rail for now, but its route gets a full-resolution era image.
-  'lineage2:gracia': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
+  // Gracia has no portrait yet: its tile uses the siege key art so it never repeats the High Five portrait.
+  'lineage2:gracia': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveHero, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
 
   // ── Minecraft — the survival world fronts the game, modes vary ───────────
   minecraft: { hero: ART.mcMaster, card: ART.mcMaster, promo: ART.mcSkyBlock, gallery: [ART.mcMaster, ART.mcSkyBlock, ART.mcMinigames, ART.mcAnarchy] },

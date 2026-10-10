@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils'
-import { Crown } from 'lucide-react'
 import './top-ranks.css'
 
 export const MEDAL: Record<number, { bg: string; ring: string; text: string }> = {
@@ -30,7 +29,6 @@ export function RankMedal({ rank, className, neutral=false }: { rank: number; cl
 
       }}
     >
-      {rank === 1 && <Crown size={11} aria-hidden="true" />}
       <span>{rank}</span>
     </span>
   )

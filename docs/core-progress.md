@@ -1,3 +1,19 @@
+## 11.10.2026 — Lobby: owner's phone review fixes + smoothness pass (local, not pushed)
+
+Owner (live site, phone): chronicles should start collapsed; the favourite on world shelves too big; filter switch knob outside its track; 24 ч / 7 дн / 30 дн control looks off and the chart flips to «Загрузка истории…» and back; card text names third-party monitorings (L2OOPS, MMOTOP…); the site lags and jumps on transitions on every size.
+
+Done (branch design/lobby-preview, uncommitted):
+- Chronicles: `<details>` closed by default; the summary is the heading row (kicker, «Выбери свою эпоху», current-epoch chip, chevron); picking an epoch folds it again (keyed by chronicle).
+- Shelf favourite: quiet 36px heart without plate. Switch: knob had no `left`, its static position put it outside the track → `left-0`.
+- 24/7/30: solid lime active pill on an even track (same language as active chips). Online history keeps the previous chart (dimmed) while a new range loads; the loading state reserves the chart height; OnlineSection keyed by server.
+- Card description: `cleanDescription` split regex was `/(?<=[.!?])s+/` (literal «s») — nothing was ever filtered; fixed to `\s+` and the import boilerplate (provenance with source names, monitoring notes) is dropped on the page; importer no longer writes source names into new descriptions. D1 rows still contain the old text (display-only fix, no data migration).
+- Smoothness (measured with output/perf-audit/audit.mjs: layout-shift + long tasks per load/click, 390 dark/light, 768, 1440, 320): LIVE strip keeps its height while loading (was pushing every inner page down 40px) and has a fixed height; world art runs under header+strip; world counters and the third metric reserve their place; world shelves show placeholder rows with the real row geometry; filter sheet facets warmed by the catalog and placeholder chips for chronicles/languages (versions no longer wait for the 500-server list); server card rank strip reserves its row; owners counters reserved; rating shows skeleton panels instead of «Загрузка…»; LIVE strip not shown in the account. Full-catalogue downloads (`allServers`) are shared for 60 s instead of being repeated by ticker/shelves/filters/counters (faster pages, fewer D1 reads). Portal (hall → world) no longer re-blurs the page every frame (fixed blur, animated opacity) and the frame is `contain:strict`.
+- Result: world pages CLS 0.18–0.50 → ≤0.05 (remaining shifts below the fold: shelves with fewer real rows than placeholders), filters 0.21 → ~0.01, server card 0.05–0.14 → ≤0.01, owners 0.04–0.09 → 0, rating 0.25 (320) → ≤0.09; 106/115 steps ≤0.01; longest task 66 ms. The hall→world portal still reports CLS because its overlay animates size (intentional zoom, not page content).
+- Bottom bar: 6px side gutters, labels never clip (320/390 checked).
+- Tests: review/aether/discovery now click the summary (epochs start collapsed); shelf row selectors use `a.server` (placeholder rows are divs). All 9 browser suites PASS locally against the production build.
+
+Next: owner review → commit (without .claude/launch.json) → push to main → live check on phone. Image inventory answered in chat (see owner question 11.10).
+
 ## 10.10.2026 — VERIFIED Lobby design live (release 38081457541, gs-build 4f17e7f); image fix follows
 
 Live check at 390px: design=lobby, build 4f17e7f, no horizontal overflow on /lineage-2, /minecraft, /catalog?game=lineage2 (54/54 rows), /server/bohpts-x500. Found on live: epoch tile images and podium art in catalog rows stayed unloaded (naturalWidth 0) with loading=lazy while eager loading worked instantly — removed lazy loading from the six epoch tiles and from PodiumArt (three per list). Files themselves return 200 image/webp.

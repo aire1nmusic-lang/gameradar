@@ -39,7 +39,17 @@ export function createHttpRepositories(base = '/api/v1'): Repositories {
     }
     catch (error) { if (error instanceof HttpError && error.status === 404) return undefined; throw error }
   }
-  async function allServers(query: ServerQuery = {}): Promise<GameServer[]> {
+  // The full list feeds the ticker, shelves, filters and counters of one page; one download serves them all for a minute.
+  const allServersCache = new Map<string, { at: number; request: Promise<GameServer[]> }>()
+  function allServers(query: ServerQuery = {}): Promise<GameServer[]> {
+    const key = params(query), hit = allServersCache.get(key)
+    if (hit && Date.now() - hit.at < 60_000) return hit.request
+    const request = fetchAllServers(query)
+    allServersCache.set(key, { at: Date.now(), request })
+    request.catch(() => { if (allServersCache.get(key)?.request === request) allServersCache.delete(key) })
+    return request
+  }
+  async function fetchAllServers(query: ServerQuery): Promise<GameServer[]> {
     const items: GameServer[] = []
     let offset = 0
     while (true) {

@@ -53,7 +53,7 @@ function LayoutContent() {
           <FavoritesSync/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
-            <VisualDemoBanner/>{!hall && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>
+            <VisualDemoBanner/>{!hall && location.pathname !== "/account" && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>
           </main>
           {!location.pathname.startsWith('/admin') && <Footer />}
           {!hall && <MobileNav />}

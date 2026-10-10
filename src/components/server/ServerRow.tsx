@@ -207,9 +207,9 @@ function RowFavorite({ slug }: { slug: string }) {
   )
 }
 
-export function ServerRowSkeleton() {
+export function ServerRowSkeleton({ className }: { className?: string } = {}) {
   return (
-    <div className="flex min-h-[58px] items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3">
+    <div className={cn('flex min-h-[58px] items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3', className)}>
       <div className="skeleton h-10 w-10 rounded-md" />
       <div className="flex-1 space-y-2">
         <div className="skeleton h-3.5 w-1/3 rounded" />

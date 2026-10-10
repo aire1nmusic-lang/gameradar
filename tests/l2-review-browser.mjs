@@ -22,7 +22,7 @@ async function intercept(page,missing='none',peopleGate){
 }
 try{
  for(const[w,h]of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]])for(const theme of ['dark','light']){
-  const context=await browser.newContext({viewport:{width:w,height:h}}),page=await context.newPage();active=page;await intercept(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.clock.install();await page.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'});await page.locator('.l2a .server').first().waitFor()
+  const context=await browser.newContext({viewport:{width:w,height:h}}),page=await context.newPage();active=page;await intercept(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.clock.install();await page.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'});await page.locator('.l2a a.server').first().waitFor()
   if(await page.evaluate(()=>document.documentElement.dataset.colorMode)!==theme)await page.getByRole('button',{name:theme==='light'?'Включить светлую тему':'Включить тёмную тему',exact:true}).click()
   assert.deepEqual(await page.locator('.gs-mobile-nav a').evaluateAll(els=>els.map(e=>e.getAttribute('aria-label'))),['Главная','Серверы','Открытия','Рейтинг','Избранное'])
   assert.equal(await page.locator('.l2a button').getByText('Избранное',{exact:true}).count(),0)
@@ -43,7 +43,7 @@ try{
   }
   await page.evaluate(()=>window.scrollTo(0,0))
   await page.screenshot({path:`output/l2-review-qa/home-${w}-${theme}.png`,fullPage:true})
-  assert.equal(await page.locator('.chronicle-picker').getAttribute('open'),'','Epoch tiles are open without a click')
+  assert.equal(await page.locator('.chronicle-picker').getAttribute('open'),null,'Epochs start collapsed');await page.locator('.chronicle-picker>summary').click();assert.equal(await page.locator('.chronicle-picker').getAttribute('open'),'','Summary opens the epochs');
   await page.waitForFunction(()=>[...document.querySelectorAll('.chronicle-picker img')].every(i=>i.complete&&i.naturalWidth>0));const images=await page.locator('.chronicle-picker img').evaluateAll(els=>els.map(e=>({width:e.getBoundingClientRect().width,loaded:e.complete&&e.naturalWidth>0})));assert.ok(images.length>=5);assert.ok(images.every(i=>i.width>=120&&i.loaded),'Epoch tiles carry real artwork')
   await page.screenshot({path:`output/l2-review-qa/chronicles-${w}-${theme}.png`,fullPage:true})
   await page.goto(base+'/rating?game=lineage2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-support .gs-row').first().waitFor();await page.getByRole('button',{name:'Поиск',exact:true}).click();const search=page.getByRole('dialog',{name:'Поиск серверов'});await search.waitFor();assert.equal(await search.locator('input').evaluate(e=>getComputedStyle(e).color),theme==='light'?'rgb(38, 48, 57)':'rgb(243, 239, 229)');await page.screenshot({path:`output/l2-review-qa/search-${w}-${theme}.png`});await search.locator('input').press('Escape')
@@ -77,13 +77,13 @@ try{
  const slowContext=await browser.newContext({viewport:{width:390,height:844}}),slowPage=await slowContext.newPage();active=slowPage
  await intercept(slowPage,'none',peopleGate)
  await slowPage.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'})
- await slowPage.locator('.l2a .support .server').first().waitFor({timeout:5000})
- assert.equal(await slowPage.locator('.l2a .support .server:visible').count(),5,'Stalled ranking cannot block cards')
+ await slowPage.locator('.l2a .support a.server').first().waitFor({timeout:5000})
+ assert.equal(await slowPage.locator('.l2a .support a.server:visible').count(),5,'Stalled ranking cannot block cards')
  assert.equal(await slowPage.locator('.gs-ranking-availability').count(),0,'Pending enrichment is not an outage')
  releasePeople();await slowContext.close();console.log('PASS catalog paints before stalled private ranking')
  for(const missing of ['people','support','both']){
   const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage();active=page;await intercept(page,missing)
-  await page.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'});await page.locator('.l2a .support .server').first().waitFor();assert.equal(await page.locator('.l2a .support .server').count(),30);await page.locator('.gs-ranking-availability').waitFor();assert.equal(await page.getByText('Не удалось загрузить данные',{exact:true}).count(),0)
+  await page.goto(base+'/lineage-2',{waitUntil:'domcontentloaded'});await page.locator('.l2a .support a.server').first().waitFor();assert.equal(await page.locator('.l2a .support a.server').count(),30);await page.locator('.gs-ranking-availability').waitFor();assert.equal(await page.getByText('Не удалось загрузить данные',{exact:true}).count(),0)
   await page.goto(base+'/catalog?game=lineage2',{waitUntil:'domcontentloaded'});await page.locator('.gs-catalog-page .gs-row').first().waitFor();await page.locator('.gs-ranking-availability').waitFor()
   await page.goto(base+'/rating?game=lineage2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-support a[href^="/server/"]').first().waitFor();assert.equal(await page.getByRole('button',{name:'Поддержать сервер',exact:true}).isEnabled(),missing==='people');await context.close();console.log('PASS live aggregate 503 keeps cards,',missing)
  }

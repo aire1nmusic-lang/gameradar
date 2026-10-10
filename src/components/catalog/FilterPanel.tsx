@@ -55,7 +55,8 @@ export function FilterPanel({
 
   const versions = useMemo(() => {
     const all = facets?.versions ?? []
-    if (!filters.games.length) return all
+    // Until the full list arrives the facet versions stand as they are (an empty group would jump later).
+    if (!filters.games.length || !allServers.length) return all
     const set = new Set(allServers.filter((s) => filters.games.includes(s.gameId)).map((s) => s.version))
     return all.filter((v) => set.has(v))
   }, [facets, allServers, filters.games])
@@ -86,6 +87,8 @@ export function FilterPanel({
 
         <Group title={world?.id==='lineage2'?'Хроники':'Версия'}>
           <div className="flex flex-wrap gap-2">
+            {/* Placeholder chips hold the group's height until the catalogue answers, so the sheet does not jump. */}
+            {!facets && Array.from({ length: 5 }, (_, index) => <span key={index} aria-hidden="true" className="skeleton h-8 w-24 rounded-full" />)}
             {versions.map((version) => (
               <ChipToggle
                 key={version}
@@ -126,8 +129,9 @@ export function FilterPanel({
           </div>
         </Group>}
 
-        {(facets?.languages?.length ?? 0) > 0 && <Group title="Язык">
+        {(!facets || (facets.languages?.length ?? 0) > 0) && <Group title="Язык">
           <div className="flex flex-wrap gap-2">
+            {!facets && Array.from({ length: 4 }, (_, index) => <span key={index} aria-hidden="true" className="skeleton h-8 w-24 rounded-full" />)}
             {(facets?.languages ?? []).map((language) => (
               <ChipToggle
                 key={language}

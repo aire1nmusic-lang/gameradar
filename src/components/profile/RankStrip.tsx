@@ -11,13 +11,15 @@ const measured = (server: GameServer) => server.online.playersKnown === true && 
  * Where this server stands, in one glance: place by online among the servers of the same
  * game, place by players' votes, and the countdown to the opening. Only what is measured.
  */
-export function RankStrip({ server, peers }: { server: GameServer; peers: GameServer[] }) {
+export function RankStrip({ server, peers, loading = false }: { server: GameServer; peers: GameServer[]; loading?: boolean }) {
   const game = getGame(server.gameId)
   const ranked = peers.filter(measured).sort((a, b) => b.online.current - a.online.current)
   const onlineRank = measured(server) ? ranked.findIndex((item) => item.id === server.id) + 1 : 0
   const byVotes = peers.filter((item) => item.votes > 0).sort((a, b) => b.votes - a.votes)
   const voteRank = server.votes > 0 ? byVotes.findIndex((item) => item.id === server.id) + 1 : 0
   const opening = server.launch && Date.parse(server.launch.at) > Date.now() ? server.launch.at : undefined
+  // While the peers load, a measured server keeps one chip row reserved, so the card does not jump.
+  if (loading && !peers.length && (measured(server) || server.votes > 0 || opening)) return <div className="mt-5 h-8" aria-hidden="true" />
   if (!onlineRank && !voteRank && !opening) return null
 
   const chip = 'inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] py-1 pr-3.5 pl-1.5 text-[13px] text-ink-100'

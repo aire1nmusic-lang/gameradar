@@ -242,10 +242,8 @@ function PortalOverlay({ flight, onDone }: { flight: Flight; onDone: () => void 
       // a fine rim of light that thins out as the card becomes the screen
       rim.current!.style.opacity = String(0.9 * (1 - p))
 
-      const s = scrim.current!.style
-      s.backgroundColor = `rgba(3,4,8,${0.5 * c})`
-      const blur = 9 * c
-      s.backdropFilter = blur > 0.2 ? `blur(${blur.toFixed(1)}px)` : ''
+      // The blur is fixed and only its opacity moves: re-blurring the page every frame stalled phones.
+      scrim.current!.style.opacity = String(c)
 
       root.current!.style.opacity = String(1 - out)
       light.draw(ms)
@@ -272,8 +270,8 @@ function PortalOverlay({ flight, onDone }: { flight: Flight; onDone: () => void 
 
   return (
     <div ref={root} aria-hidden className="pointer-events-auto fixed inset-0 z-[70] select-none">
-      <div ref={scrim} className="absolute inset-0" />
-      <div ref={frame} className="absolute overflow-hidden will-change-[top,left,width,height]" style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}>
+      <div ref={scrim} className="absolute inset-0 bg-[rgba(3,4,8,0.5)] opacity-0 backdrop-blur-[9px] will-change-[opacity]" />
+      <div ref={frame} className="absolute overflow-hidden [contain:strict] will-change-[top,left,width,height]" style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}>
         <img ref={image} src={cardSrc(game.id, 1600)} alt="" className="absolute inset-0 h-full w-full object-cover will-change-transform" />
         <div ref={rim} className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.55),inset_0_0_38px_rgba(255,255,255,0.14)]" />
       </div>

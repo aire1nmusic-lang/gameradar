@@ -31,7 +31,7 @@ const FAQ = [
 /** The page an owner lands on: what the server gets here, how to connect, what is free. */
 export function CoreOwners() {
   useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Как попасть в топ GameScout: подтвердите сервер, подключите проверку онлайна и получите место по фактам.' })
-  const { data: servers = [] } = useServers({ limit: 200 }, true)
+  const { data: servers = [], loading } = useServers({ limit: 200 }, true)
   const online = servers.reduce((sum, server) => sum + (server.online.playersKnown === true && server.online.freshness === 'fresh' ? server.online.current : 0), 0)
   const openings = servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()).length
 
@@ -49,12 +49,13 @@ export function CoreOwners() {
             <Button to="/catalog" variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>Найти свой сервер</Button>
             <Button href={mailto('Заявка владельца сервера')} variant="outline" size="lg" icon={<Mail size={16} />}>Написать нам</Button>
           </div>
-          {servers.length > 0 && (
+          {/* Counters keep their place while loading, so the hero does not grow under the reader. */}
+          {(loading || servers.length > 0) && (
             <dl className="mt-10 grid max-w-xl grid-cols-3 gap-3">
               {[
-                [formatNumber(servers.length), plural(servers.length, ['сервер', 'сервера', 'серверов']) + ' в каталоге'],
+                [loading ? '—' : formatNumber(servers.length), plural(servers.length, ['сервер', 'сервера', 'серверов']) + ' в каталоге'],
                 [online > 0 ? formatCompact(online) : '—', 'игроков онлайн сейчас'],
-                [String(openings), plural(openings, ['открытие', 'открытия', 'открытий']) + ' впереди'],
+                [loading ? '—' : String(openings), plural(openings, ['открытие', 'открытия', 'открытий']) + ' впереди'],
               ].map(([value, label]) => (
                 <div key={label} className="rounded-xl border border-white/12 bg-black/35 px-3.5 py-3 backdrop-blur">
                   <dt className="num font-display text-[24px] leading-none font-semibold text-white">{value}</dt>

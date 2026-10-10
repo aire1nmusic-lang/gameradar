@@ -137,7 +137,6 @@ html[data-design="lobby"] .gs-epoch-head .section-kicker { font:800 10.5px/1 var
 html[data-design="lobby"] .gs-epoch-head h2 { margin:0; font:800 clamp(22px,2.4vw,30px)/1.1 var(--lb-display); font-stretch:112.5%; letter-spacing:-.02em; color:var(--lb-text); }
 .gs-epoch-head { display:none; }
 /* L2 picker: always open, summary hidden, links become art tiles. */
-html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) > summary { display:none!important; }
 html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) { border:0!important; background:none!important; padding:0!important; box-shadow:none!important; }
 html[data-design="lobby"] body .l2a .chronicle-row:not(#lb) { padding:0!important; background:none!important; border:0!important; }
 html[data-design="lobby"] body .l2a .chronicles:not(#lb) {
@@ -494,7 +493,6 @@ html[data-design="lobby"] body .gs-hall-header:not(#lb) a[aria-label^="GameScout
 html[data-design="lobby"] body .gs-hall-header:not(#lb) .gs-wordmark { filter:none!important; }
 html[data-design="lobby"] body .gs-hall-header:not(#lb) .gs-wordmark__game { background:none!important; color:#fff!important; -webkit-text-fill-color:#fff; }
 html[data-design="lobby"][data-color-mode="light"] body .gs-hall-header:not(#lb) .gs-theme-toggle { outline:0; }
-html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) > .fav { background:rgb(10 12 14 / .55)!important; border-radius:10px!important; color:#e9ecf1!important; }
 html[data-design="lobby"] body :is(.l2a .rows .fav,.gs-row button[aria-label*="избранно"]):not(#lb) { min-width:40px!important; }
 html[data-design="lobby"] body .gs-server-profile:not(#lb) a[href^="http"] { min-height:40px; display:inline-flex; align-items:center; }
 
@@ -613,3 +611,55 @@ html[data-design="lobby"] body :is(.gs-admin-groups button[aria-pressed="true"],
 html[data-design="lobby"][data-color-mode="light"] body :is(.gs-admin-groups button[aria-pressed="true"],.gs-admin-tab.is-active):not(#lb) { color:#3d5c00!important; }
 /* The forecast column flows in the dialog grid (a sticky offset must not shift it onto the checkout). */
 html[data-design="lobby"] body .gs-support-dialog .gs-support-preview:not(#lb) { position:static!important; top:auto!important; }
+
+/* ---------- Epochs: collapsed by default, the heading row opens the tiles ---------- */
+html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) { margin-top:30px; }
+html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) > summary.gs-epoch-summary {
+  display:flex!important; align-items:center; gap:14px; list-style:none; cursor:pointer; user-select:none;
+  min-height:64px; padding:12px 16px!important; border-radius:18px!important;
+  background:color-mix(in srgb,var(--lb-panel) 88%,transparent)!important; border:1px solid var(--lb-line-2)!important;
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); width:100%; max-width:100%; box-shadow:none!important;
+}
+html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) > summary::-webkit-details-marker { display:none; }
+html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) > summary:hover { border-color:color-mix(in srgb,var(--lb-lime) 60%,var(--lb-line-2))!important; }
+html[data-design="lobby"] .gs-epoch-text { display:grid; gap:4px; flex:1; min-width:0; }
+html[data-design="lobby"] .gs-epoch-text .section-kicker { font:800 10.5px/1 var(--font-sans)!important; letter-spacing:.2em; text-transform:uppercase; color:var(--lb-faint)!important; }
+html[data-design="lobby"] .gs-epoch-title { font:800 clamp(18px,2.2vw,26px)/1.15 var(--lb-display); font-stretch:112.5%; letter-spacing:-.02em; color:var(--lb-text); }
+html[data-design="lobby"] .gs-epoch-current { flex:none; padding:6px 12px; border-radius:999px; font-weight:800; font-size:13px; color:var(--lb-lime); background:color-mix(in srgb,var(--lb-lime) 12%,transparent); border:1px solid color-mix(in srgb,var(--lb-lime) 45%,transparent); }
+html[data-design="lobby"] .gs-epoch-chevron { flex:none; color:var(--lb-muted); transition:transform .2s; }
+html[data-design="lobby"] body .l2a .chronicle-picker[open]:not(#lb) .gs-epoch-chevron { transform:rotate(90deg); }
+html[data-design="lobby"] body .l2a .chronicle-picker[open]:not(#lb) > .chronicle-row { margin-top:12px!important; }
+
+/* ---------- Favourites in world shelves: the same quiet heart as in the rating ---------- */
+html[data-design="lobby"] body .l2a .rows .fav:not(#lb) { min-width:36px!important; width:36px!important; background:transparent!important; border:0!important; color:var(--lb-muted)!important; }
+html[data-design="lobby"] body .l2a .rows .fav:not(#lb):hover { color:var(--lb-text)!important; }
+html[data-design="lobby"] body .l2a .rows .fav.selected:not(#lb) { color:#ff5f8f!important; }
+html[data-design="lobby"] body .l2a .rows .server:not(#lb) { padding-right:52px!important; }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) > .fav { filter:drop-shadow(0 1px 4px rgb(0 0 0 / .9)); }
+
+/* Loading rows: same geometry as real rows, quiet shimmer instead of text (no jump when data lands). */
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) { pointer-events:none; }
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) :is(.server-name,.server-meta,.server-right strong,.server-right small) { display:block; border-radius:6px; color:transparent!important; background:linear-gradient(90deg,var(--lb-line) 0%,var(--lb-line-2) 50%,var(--lb-line) 100%); background-size:200% 100%; animation:lb-skeleton 1.4s ease-in-out infinite; }
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) .server-name { width:62%; }
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) .server-meta { width:40%; margin-top:6px; }
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) .server-right :is(strong,small) { width:44px; margin-left:auto; }
+html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) .server-right small { margin-top:4px; width:34px; }
+@keyframes lb-skeleton { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+@media (prefers-reduced-motion:reduce){ html[data-design="lobby"] body .l2a .rows .server.is-skeleton:not(#lb) * { animation:none!important; } }
+
+/* Segmented switches (24 часа / 7 дней / 30 дней): one even track, the active part is a solid lime pill like active chips. */
+html[data-design="lobby"] body .gs-seg:not(#lb) { display:flex!important; gap:4px!important; padding:4px!important; border-radius:14px!important; }
+html[data-design="lobby"] body .gs-seg:not(#lb) .gs-seg-btn { min-height:40px; border-radius:10px!important; justify-content:center; transition:background-color .18s,color .18s; }
+html[data-design="lobby"] body .gs-seg:not(#lb) .gs-seg-btn.is-active { background:var(--lb-lime)!important; color:var(--lb-lime-ink)!important; box-shadow:none!important; font-weight:700; }
+html[data-design="lobby"] body .gs-seg:not(#lb) .gs-seg-btn:not(.is-active):hover { color:var(--lb-text)!important; background:color-mix(in srgb,var(--lb-text) 6%,transparent)!important; }
+
+/* Bottom bar: side gutters so «Главная» and «Избранное» never touch the screen edge; labels never clip. */
+html[data-design="lobby"] body .gs-mobile-nav:not(#lb) > div { padding:0 6px; gap:2px; }
+html[data-design="lobby"] body .gs-mobile-nav:not(#lb) a { min-width:0; white-space:nowrap; letter-spacing:-.01em; }
+@media (max-width:359px) { html[data-design="lobby"] body .gs-mobile-nav:not(#lb) a { font-size:10px!important; } }
+
+/* The LIVE strip has one fixed height per size, and the world art runs up under it to the header, as without the strip. */
+html[data-design="lobby"] .gs-live { --gs-live-h:44px; height:var(--gs-live-h); min-height:0!important; box-sizing:border-box; }
+@media (max-width:767px) { html[data-design="lobby"] .gs-live { --gs-live-h:40px; } }
+html[data-design="lobby"] body .gs-live ~ * .l2a > .scene:not(#lb) { top:-104px; }
+@media (max-width:767px) { html[data-design="lobby"] body .gs-live ~ * .l2a > .scene:not(#lb) { top:-100px; } }

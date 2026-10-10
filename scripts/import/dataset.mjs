@@ -273,8 +273,7 @@ const dateRu = iso => new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric'
  * project's own advertising.
  */
 export function cardText(record) {
-  const sources = [...new Set(record.refs.map(item => item.name))].join(', ')
-  const provenance = `Карточка собрана GameScout по открытым данным (${sources}). Владелец может подтвердить сервер и дополнить описание.`
+  const provenance = `Карточка собрана GameScout по открытым данным. Владелец может подтвердить сервер и дополнить описание.`
   if (record.game === 'lineage2') {
     const facts = [`Хроника: ${record.version}.`, record.rates && `Рейты: ${record.rates}.`, record.openedAt && `Открытие: ${dateRu(record.openedAt)}.`].filter(Boolean)
     return {

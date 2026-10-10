@@ -122,7 +122,7 @@ export function Toggle({
       >
         <span
           className={cn(
-            'absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white transition-transform duration-200',
+            'absolute left-0 top-[2px] h-[16px] w-[16px] rounded-full bg-white transition-transform duration-200',
             checked ? 'translate-x-[19px]' : 'translate-x-[2px]',
           )}
         />

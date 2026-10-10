@@ -22,7 +22,6 @@ export function LiveTicker() {
     ...added.map(s => ({ key: 'a' + s.id, server: s, label: 'Новый в каталоге', value: s.version || '' })),
     ...online.filter(s => s.online.playersKnown && s.online.current > 0).map(s => ({ key: 'n' + s.id, server: s, label: 'Онлайн', value: formatNumber(s.online.current) })),
   ]
-  if (!items.length) return null
   const strip = items.map(item => {
     const art = serverArt(item.server)
     return (
@@ -38,10 +37,11 @@ export function LiveTicker() {
     <div className="gs-live" aria-label="Что происходит в каталоге">
       <span className="gs-live-tag">LIVE</span>
       <div className="gs-live-view">
-        <div className="gs-live-track" style={{ animationDuration: `${Math.max(30, items.length * 6)}s` }}>
+        {/* The strip keeps its height while data loads, so the page below never jumps. */}
+        {items.length > 0 && <div className="gs-live-track" style={{ animationDuration: `${Math.max(30, items.length * 6)}s` }}>
           {strip}
           <span aria-hidden="true" className="contents">{strip}</span>
-        </div>
+        </div>}
       </div>
     </div>
   )

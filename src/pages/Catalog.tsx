@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { formatNumber, plural } from '@/lib/format'
 import { GAMES_BY_ID } from '@/data/games'
 import { countActiveFilters, EMPTY_FILTERS, SORT_OPTIONS, toServerQuery, searchServers, peopleSortedServers, supportSortedServers, type CatalogFilters } from '@/services'
-import { useAsync } from '@/hooks/data'
+import { useAsync, useFacets } from '@/hooks/data'
 import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
@@ -37,6 +37,7 @@ const COMPACT_SORT_LABELS: Record<SortKey, string> = {
 export default function Catalog() {
   const demo=useVisualDemo()
   const {game:world}=useWorldNavigation()
+  useFacets(world?.id) // warm the filter sheet, so it opens already filled instead of growing
   const { privateCore, loading: authLoading } = useAuth()
   useSeo({ title: 'Каталог игровых серверов', path: '/catalog', description: 'Все серверы в каталоге GameScout: фильтры по игре, хронике, режиму, языку и онлайну. Источник онлайна указан у каждого сервера.' })
   const [params, setParams] = useSearchParams()

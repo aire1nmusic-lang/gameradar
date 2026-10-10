@@ -181,7 +181,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const [supportOpen, setSupportOpen] = useState(false)
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
-  const { data: peers = [] } = useServers({ gameId: server.gameId, limit: 200 }, true)
+  const { data: peers = [], loading: peersLoading } = useServers({ gameId: server.gameId, limit: 200 }, true)
 
   useSeo({
     title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
@@ -351,7 +351,7 @@ function Profile({ server: source }: { server: GameServer }) {
           </div>
         </div>
 
-        <RankStrip server={server} peers={peers} />
+        <RankStrip server={server} peers={peers} loading={peersLoading} />
 
         {server.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-1.5 sm:mt-6">
@@ -363,7 +363,7 @@ function Profile({ server: source }: { server: GameServer }) {
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 lg:grid-cols-[1fr_340px] lg:gap-8">
           <div className="min-w-0 space-y-4 sm:space-y-6">
-            <OnlineSection server={server} />
+            <OnlineSection key={server.id} server={server} />
             <div className="lg:hidden"><VotePanel server={server} /></div>
             {privateCore && <button type="button" className="gs-profile-support" onClick={() => setSupportOpen(true)}><span className="gs-profile-support-icon"><WorldIcon name="coins" size={18}/></span><span><strong>Поддержать сервер</strong><small>Прогноз позиции в рейтинге поддержки</small></span><ChevronRight size={18}/></button>}
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
@@ -459,7 +459,7 @@ function OnlineSection({ server }: { server: GameServer }) {
   const { status, change24h, peak24h, avg7d, peak30d } = server.online
   const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
   const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
-    useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range])
+    useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range], true)
 
   if (status === 'PENDING' && server.launch) {
     return (
@@ -559,10 +559,10 @@ function OnlineSection({ server }: { server: GameServer }) {
       )}
 
       <div className="mt-4 sm:mt-6">
-        {historyLoading?<p className="text-[13px] text-ink-400">Загрузка истории онлайна…</p>
-          :historyError?<Notice tone="warn" title="История сейчас недоступна">
+        {historyLoading&&!samples?<div className="gs-history-skeleton flex h-[150px] items-center justify-center rounded-md border border-white/10 text-[13px] text-ink-400 sm:h-[194px]">Загрузка истории онлайна…</div>
+          :historyError&&!samples?<Notice tone="warn" title="История сейчас недоступна">
             <button type="button" className="underline" onClick={reloadHistory}>Повторить загрузку</button>
-          </Notice>:<ObservedHistoryChart samples={samples??[]} range={range}/>}
+          </Notice>:<div className={historyLoading?'opacity-60 transition-opacity':'transition-opacity'}><ObservedHistoryChart samples={samples??[]} range={range}/></div>}
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
@@ -605,9 +605,10 @@ function StatTile({
 
 /** Imported cards carry a generated paragraph that repeats the facts table; the player keeps the part that is not in it. */
 function cleanDescription(text: string): string {
-  const auto = /^(Режимы|Версии?|Адрес|Рейты|Хроника|Открытие|Онлайн —|Точный онлайн|Сервер (Minecraft|Lineage 2|GTA RP|Rust|CS2|DayZ))/
-  const kept = text.split(/(?<=[.!?])s+/).filter((sentence) => !auto.test(sentence.trim()))
-  return kept.join(' ').trim() || text
+  // Import boilerplate (source names included) never reaches the player; facts are in the table below.
+  const auto = /^(Режимы|Версии?|Адрес|Рейты|Хроника|Открытие|Онлайн —|Онлайн по данным|Точный онлайн|Карточка собрана|Владелец может|При успешной прямой проверке|Доступный сторонний мониторинг|Для прямой проверки|Прямой endpoint|Сервер (Minecraft|Lineage 2|GTA RP|Rust|CS2|DayZ)|Ролевой сервер GTA)/
+  const kept = text.split(/(?<=[.!?])\s+/).filter((sentence) => !auto.test(sentence.trim()))
+  return kept.join(' ').trim()
 }
 
 function InfoSection({ server }: { server: GameServer }) {

@@ -73,6 +73,8 @@ const ART = {
   l2InterludeCard: art('lineage-2/interlude-user-v7', 'Lineage 2 Interlude — розововолосая разбойница', 'medium', { desktop: '50% 46%', mobile: '50% 46%' }, [192]),
   l2HighFiveCard: art('lineage-2/high-five-user-v7', 'Lineage 2 High Five — рыжеволосая волшебница', 'medium', { desktop: '50% 42%', mobile: '50% 42%' }, [192]),
   l2EssenceCard: art('lineage-2/essence-user-v7', 'Lineage 2 Essence — воительница в светлых доспехах', 'medium', { desktop: '50% 38%', mobile: '50% 38%' }, [192]),
+  // The user-v7 Essence portrait cuts the head off; until a new one exists the tile is a square crop of the Essence key art, knight centred.
+  l2EssenceTile: keyart('lineage-2/essence', 'Lineage 2 Essence — рыцарь на фоне королевства', 'medium', '62% 40%', '62% 40%'),
   l2ClassicCard: art('lineage-2/classic-user-v7', 'Lineage 2 Classic — орк-воин', 'medium', { desktop: '50% 38%', mobile: '50% 38%' }, [192]),
   mcMaster: keyart('minecraft/master', 'Minecraft — солнечная долина с деревней, каменным замком и водопадом, игрок в алмазной броне', 'bright', '82% 55%', '60% 50%'),
   mcAnarchy: keyart('minecraft/anarchy', 'Minecraft Anarchy — разрушенный блочный город с лавой ночью', 'dark', '70% 55%'),
@@ -104,7 +106,7 @@ const WORLDS: Record<string, Partial<WorldMedia>> = {
   'lineage2:interlude': { hero: ART.l2InterludeHero, card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
   'lineage2:high-five': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
   'lineage2:classic': { hero: ART.l2ClassicHero, card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
-  'lineage2:essence': { hero: ART.l2EssenceHero, card: ART.l2EssenceCard, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
+  'lineage2:essence': { hero: ART.l2EssenceHero, card: ART.l2EssenceTile, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
   // Gracia Final stays text-only in the compact rail for now, but its route gets a full-resolution era image.
   // Gracia has no portrait yet: its tile uses the siege key art so it never repeats the High Five portrait.
   'lineage2:gracia': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveHero, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },

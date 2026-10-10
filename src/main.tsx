@@ -9,6 +9,7 @@ import { AppearanceProvider, applyAppearance, applyColorMode, readAppearance, re
 import App from './App'
 import './index.css'
 import '@/theme/colorMode.css'
+import '@/theme/readability.css'
 import '@/theme/worldFonts'
 
 applyAppearance(readAppearance())

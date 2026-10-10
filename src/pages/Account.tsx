@@ -114,7 +114,7 @@ export default function Account() {
           </div>
           <div className="mt-1 flex min-w-0 items-center gap-2 text-[12px] opacity-68">
             <span className="truncate">{profile?.email??'Email не привязан'}</span>
-            {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg hover:bg-current/5"><WorldIcon name="copy" size={13}/></button>}
+            {profile?.email&&<button type="button" onClick={copyEmail} aria-label="Скопировать email" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg hover:bg-current/5"><WorldIcon name="copy" size={13}/></button>}
           </div>
           {profile?.email&&<div className="mt-1 flex items-center gap-1.5 text-[11px] opacity-65">{profile.emailVerified?<><WorldIcon name="shield" size={13} className="text-signal-400"/> Email подтверждён</>:<>Email требует подтверждения</>}</div>}
           <div className="gs-login-method mt-3 inline-flex items-center gap-2 text-[13px]">

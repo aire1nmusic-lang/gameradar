@@ -148,7 +148,8 @@ export function ChipToggle({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border px-3 py-[6px] text-[13px] transition-all duration-200',
+        'gs-chip inline-flex items-center gap-2 rounded-full border px-3 py-[6px] text-[13px] transition-all duration-200',
+        active && 'is-active',
         active
           ? 'border-white/22 bg-white/10 text-ink-50'
           : 'border-white/8 bg-white/[0.03] text-ink-300 hover:border-white/16 hover:text-ink-100',
@@ -257,9 +258,9 @@ export function RangeSlider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-950 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
+        className="gs-range h-1.5 w-full cursor-pointer appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink-950 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_0_1px_rgba(255,255,255,0.2)]"
         style={{
-          background: `linear-gradient(90deg, var(--color-signal-500) ${percent}%, rgba(255,255,255,0.08) ${percent}%)`,
+          background: `linear-gradient(90deg, var(--color-signal-500) ${percent}%, var(--gs-range-track, rgba(255,255,255,0.08)) ${percent}%)`,
         }}
       />
     </div>

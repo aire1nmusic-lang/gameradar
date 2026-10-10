@@ -9,7 +9,6 @@ import type { GameServer } from '@/models'
 import { OnlineStatus } from '@/models'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { RankMedal, MEDAL } from '@/components/ui/RankMedal'
-import { TopRankArt } from '@/components/ui/TopRankArt'
 import { TrendChip } from '@/components/ui/Badge'
 import { LiveDot, STATUS_META } from '@/components/trust/status'
 
@@ -92,7 +91,6 @@ export function ServerRow({
       data-rank={rank}
       style={medal ? { borderColor: medal.ring } : undefined}
     >
-      <TopRankArt rank={rank} gameId={server.gameId} />
       {rank !== undefined && <RankMedal rank={rank} neutral={(metric==='votes'&&server.votes===0)||(metric==='support'&&support===0)} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />

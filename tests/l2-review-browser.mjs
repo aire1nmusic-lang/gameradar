@@ -37,7 +37,7 @@ try{
     await page.clock.runFor(32)
     const target=await favorite.evaluate(button=>{const r=button.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {clickable:hit===button||button.contains(hit),hit:hit?.outerHTML.slice(0,180),rect:{x:r.x,y:r.y,width:r.width,height:r.height}}})
     assert.equal(target.clickable,true,`Favorite remains above metrics and artwork: ${w}x${h}/${theme} ${JSON.stringify(target)}`)
-    assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),'rgb(246, 243, 239)','Podium name contrast in both themes')
+    assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),theme==='light'?'rgb(29, 27, 32)':'rgb(246, 243, 239)','Podium name uses the ink of its theme')
     assert.notEqual(await row.locator('.gs-rank-podium').evaluate(e=>getComputedStyle(e).backgroundImage),'none','Visible medal surface')
     const rect=await row.boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=w,'Podium remains in viewport')
   }

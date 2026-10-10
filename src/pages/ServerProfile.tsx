@@ -259,11 +259,11 @@ function Profile({ server: source }: { server: GameServer }) {
         />
         <Container className="relative flex h-full items-start pt-4">
           <nav className="flex items-center gap-1.5 text-[12.5px] text-white/60">
-            <Link to="/" className="transition-colors hover:text-white">
+            <Link to="/" className="py-2 transition-colors hover:text-white">
               Главная
             </Link>
             <ChevronRight size={12} />
-            <Link to={`/catalog?game=${game.id}`} className="transition-colors hover:text-white">
+            <Link to={`/catalog?game=${game.id}`} className="py-2 transition-colors hover:text-white">
               {game.shortName}
             </Link>
             <ChevronRight size={12} />
@@ -273,7 +273,7 @@ function Profile({ server: source }: { server: GameServer }) {
       </div>
 
       <Container className={cn('relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className={cn("gs-profile-head flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between", showcase && "gs-profile-over-hero")}>
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
             <ServerLogo
               name={server.name}
@@ -531,7 +531,7 @@ function OnlineSection({ server }: { server: GameServer }) {
         <Segmented
           value={range}
           onChange={setRange}
-          size="sm"
+          size="md"
           className="w-full sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none"
           options={[
             { value: '24h', label: '24 часа' },

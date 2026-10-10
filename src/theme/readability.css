@@ -1,0 +1,189 @@
+/* Final readability layer, loaded after every other stylesheet.
+   Light mode is a solid warm paper: artwork only behind the world hero, never a white veil over
+   it, every control with a visible edge. `:not(#gs)` lifts these rules above route-level CSS that
+   is injected later. Dark-mode rules here only fix contrast both modes share. */
+
+/* ---------- Light tokens: dark enough ink for body text and hints ---------- */
+html[data-color-mode='light'] {
+  --color-ink-600:#857563;
+  --color-ink-500:#6b6157;
+  --color-ink-400:#554d45;
+  --color-ink-300:#433e39;
+  --gs-paper:#f3eee6;
+  --gs-card:#fcf9f4;
+  --gs-field:#ece5d9;
+  --gs-edge:rgb(80 62 40 / .17);
+  --gs-edge-strong:rgb(80 62 40 / .30);
+  --gs-range-track:rgb(80 62 40 / .16);
+}
+
+/* ---------- Background: paper, no fixed artwork veil ---------- */
+html[data-color-mode='light'] body .gs-l2-aether-layout:not(#gs) { background:var(--gs-paper)!important; }
+html[data-color-mode='light'] body .gs-l2-aether-layout:not(#gs)::before { background:var(--gs-paper)!important; }
+/* World home keeps its hero art at full colour; it fades into the paper before the lists. */
+html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:not(#gs)::before {
+  opacity:1!important;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 380px,transparent 700px);
+          mask-image:linear-gradient(180deg,#000 0,#000 380px,transparent 700px);
+}
+/* Only a left scrim behind the title column; the characters stay unveiled. */
+html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:not(#gs)::after {
+  background:linear-gradient(90deg,var(--gs-paper) 0%,rgb(243 238 230 / .9) 26%,rgb(243 238 230 / .55) 40%,rgb(243 238 230 / 0) 58%)!important;
+}
+@media (max-width:767px) {
+  html[data-color-mode='light'] body .gs-l2-aether-layout .l2a .scene:not(#gs)::after {
+    background:linear-gradient(180deg,rgb(243 238 230 / .9) 0%,rgb(243 238 230 / .82) 42%,rgb(243 238 230 / .6) 60%,var(--gs-paper) 82%)!important;
+  }
+}
+
+/* ---------- Header: no painted strip (by design); dark ink once the page under it is paper ---------- */
+html[data-color-mode='light'] body .gs-site-header:not(#gs) :is(a,button,span) { text-shadow:none!important; }
+html[data-color-mode='light'] body .gs-site-header:not(#gs) :is(a,button):not(.gs-button-primary) { color:#2d2a2f!important; }
+
+/* ---------- Surfaces: opaque cards with a visible edge ---------- */
+html[data-color-mode='light'] body :is(.surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,.gs-account-card,.gs-account-glass,.gs-coins-card,.gs-account-empty,.gs-account-claim):not(#gs),
+html[data-color-mode='light'] body .gs-l2-aether-layout .l2a :is(.panel,.owner):not(#gs) {
+  background:var(--gs-card)!important;
+  border:1px solid var(--gs-edge)!important;
+  box-shadow:0 1px 0 #fff inset,0 12px 28px -24px rgb(60 44 24 / .55)!important;
+  -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
+}
+/* Rows inside lists: separated by hairlines, not floating white boxes. */
+html[data-color-mode='light'] body :is(.gs-row,.gs-row-line):not(.gs-top-row):not(#gs) {
+  background:var(--gs-card)!important;
+  border-color:var(--gs-edge)!important;
+}
+html[data-color-mode='light'] body :is(.gs-row,.gs-row-line):not(.gs-top-row):not(#gs):hover { background:#f6efe3!important; border-color:var(--gs-edge-strong)!important; }
+
+/* ---------- White-alpha utilities: invisible on paper, so give them ink ---------- */
+html[data-color-mode='light'] body :is([class^="border-white/"],[class*=" border-white/"]):not(.gs-top-row):not(#gs) { border-color:var(--gs-edge)!important; }
+html[data-color-mode='light'] body :is([class^="bg-white/"],[class*=" bg-white/"]):not(.gs-top-row):not(.gs-row):not(#gs) { background-color:rgb(80 62 40 / .045)!important; }
+html[data-color-mode='light'] body [class*="border-t border-white/"]:not(#gs) { border-top-color:var(--gs-edge)!important; }
+
+/* ---------- Search fields: tinted, framed, never glaring white ---------- */
+html[data-color-mode='light'] body :is(.gs-catalog-search,.l2a .search-box,.gs-search-surface .gs-search-field):not(#gs) {
+  background:var(--gs-field)!important;
+  border:1px solid var(--gs-edge-strong)!important;
+  box-shadow:inset 0 1px 2px rgb(60 44 24 / .08)!important;
+  -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
+}
+html[data-color-mode='light'] body :is(.gs-catalog-search,.l2a .search-box):not(#gs):focus-within {
+  border-color:#b48a3e!important; box-shadow:0 0 0 3px rgb(180 138 62 / .18)!important;
+}
+html[data-color-mode='light'] body .gs-search-surface:not(#gs) {
+  background:var(--gs-card)!important;
+  border:1px solid var(--gs-edge)!important;
+  box-shadow:0 30px 70px -30px rgb(30 20 10 / .55)!important;
+}
+html[data-color-mode='light'] body input:not([type=range]):not([type=checkbox]):not(#gs)::placeholder { color:#7a6f63!important; }
+
+/* ---------- Modal scrims: dim the page, never whiten it ---------- */
+html[data-color-mode='light'] body [class*="bg-ink-1000/"].absolute.inset-0:not(#gs) {
+  background-color:rgb(28 22 30 / .46)!important;
+}
+html[data-color-mode='light'] body .gs-sheet > :not(:first-child):not(#gs) {
+  background:var(--gs-card)!important;
+  border-color:var(--gs-edge)!important;
+  -webkit-backdrop-filter:none!important; backdrop-filter:none!important;
+}
+
+/* ---------- Chips and slider (both modes) ---------- */
+html[data-color-mode] body .gs-chip.gs-chip.gs-chip:not(#gs) { min-height:36px; }
+html[data-color-mode='light'] body .gs-chip.gs-chip.gs-chip:not(#gs) {
+  background:#f6f1e8!important; border-color:var(--gs-edge-strong)!important; color:#3f3a35!important;
+}
+html[data-color-mode='light'] body .gs-chip.gs-chip.gs-chip:not(#gs):hover { background:#efe6d7!important; color:#1d1b20!important; }
+html[data-color-mode] body .gs-chip.gs-chip.gs-chip.is-active:not(#gs) {
+  background:color-mix(in srgb,var(--color-signal-500) 18%,transparent)!important;
+  border-color:var(--color-signal-500)!important;
+}
+html[data-color-mode='light'] body .gs-chip.gs-chip.gs-chip.is-active:not(#gs) {
+  background:#2c2830!important; border-color:#2c2830!important; color:#fbf7f0!important;
+}
+html[data-color-mode] body .gs-range:not(#gs) { height:6px; }
+html[data-color-mode='light'] body .gs-range:not(#gs)::-webkit-slider-thumb {
+  width:20px; height:20px; background:#fffaf2; border:2px solid #2c2830;
+  box-shadow:0 2px 6px rgb(30 20 10 / .3);
+}
+html[data-color-mode='light'] body .gs-range:not(#gs)::-moz-range-thumb {
+  width:16px; height:16px; background:#fffaf2; border:2px solid #2c2830; border-radius:50%;
+}
+
+/* ---------- Primary buttons in light mode: solid, not a pale slab ---------- */
+html[data-color-mode='light'] body .gs-button-primary:not(#gs) {
+  background:linear-gradient(180deg,#d9b46a,#b98d3c)!important;
+  color:#1f1606!important; border:1px solid #a87d31!important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .45),0 8px 18px -12px rgb(120 84 24 / .7)!important;
+}
+html[data-color-mode='light'] body .gs-button-primary:not(#gs):hover { filter:brightness(1.04); }
+
+/* ---------- Footer: no band (by design); readable ink on the paper page ---------- */
+html[data-color-mode='light'] body .gs-site-footer:not(#gs) :is(a,span,p,li,h2,h3,h4,summary) { color:#3d3833!important; text-shadow:none!important; }
+html[data-color-mode='light'] body .gs-site-footer:not(#gs) :is(h2,h3,h4) { color:#1d1b20!important; }
+
+/* ---------- Server card: from 640px the title sits on the dark hero, so it is light in both modes.
+   Below 640px it drops onto the page and keeps the normal ink. ---------- */
+@media (min-width:640px) {
+  html[data-color-mode] body .gs-profile-over-hero:not(#gs) h1 { color:#fbf8f3!important; text-shadow:0 2px 14px rgb(0 0 0 / .55); }
+  html[data-color-mode] body .gs-profile-over-hero:not(#gs) :is(.text-ink-300,.text-ink-400,.text-ink-200) { color:#e4ded5!important; }
+  html[data-color-mode] body .gs-profile-over-hero:not(#gs) .text-ink-600 { color:#a9a29a!important; }
+  html[data-color-mode='light'] body .gs-profile-over-hero:not(#gs) button[aria-label].grid.place-items-center { background:rgb(20 16 24 / .45)!important; border-color:rgb(255 255 255 / .28)!important; color:#f4efe8!important; }
+}
+
+/* ---------- Plain positions (4+): a quiet round number, no stray tick ---------- */
+html[data-color-mode] body .gs-rank-number:not(.gs-rank-podium):not(#gs) {
+  width:26px!important; height:26px!important; border:0!important; border-radius:50%!important;
+  background:rgb(255 255 255 / .07)!important; color:#b9b5c4!important;
+  font-size:12px!important; font-weight:650!important; box-shadow:none!important;
+}
+html[data-color-mode='light'] body .gs-rank-number:not(.gs-rank-podium):not(#gs) {
+  background:rgb(80 62 40 / .08)!important; color:#5b5249!important;
+}
+
+/* ---------- Wordmark on the light header ---------- */
+html[data-color-mode='light'] body .gs-site-header:not(#gs) .gs-wordmark { filter:none!important; }
+html[data-color-mode='light'] body .gs-site-header:not(#gs) .gs-wordmark__game { background:none!important; color:#1d1b20!important; -webkit-text-fill-color:#1d1b20; }
+
+/* ---------- Switches in light mode: a visible track and knob ---------- */
+html[data-color-mode='light'] body button[role=switch][aria-checked=false]:not(#gs) { background:rgb(80 62 40 / .2)!important; border-color:rgb(80 62 40 / .28)!important; }
+html[data-color-mode='light'] body button[role=switch][aria-checked=true]:not(#gs) { background:#1f9b6f!important; border-color:#1a8a62!important; }
+html[data-color-mode='light'] body button[role=switch]:not(#gs) > span { box-shadow:0 1px 3px rgb(30 20 10 / .35); }
+/* A global 44px tap-target rule turned switches into squares; the whole label row is the target. */
+html[data-color-mode] body button[role=switch]:not(#gs) { min-height:0!important; height:22px!important; width:38px!important; border-radius:999px!important; padding:0!important; }
+
+/* ---------- Server card body in light mode ---------- */
+html[data-color-mode='light'] body .gs-server-profile:not(#gs) td { color:#3b3834!important; }
+html[data-color-mode='light'] body .gs-server-profile:not(#gs) th { color:#6b6157!important; }
+/* World accent text (eyebrows, headings) is a pale gold made for dark glass; deepen it on paper. */
+html[data-color-mode='light'] body .gs-server-profile:not(#gs) .surface h2,
+html[data-color-mode='light'] body .gs-server-profile:not(#gs) [style*="color: var(--gt-primary)"],
+html[data-color-mode='light'] body .gs-server-profile:not(#gs) .gs-profile-eyebrow { color:#86601d!important; }
+html[data-color-mode='light'] body .gs-vote-panel:not(#gs) > span[aria-hidden] { opacity:.07!important; }
+html[data-color-mode='light'] body .gs-vote-panel:not(#gs) { background:linear-gradient(140deg,#f6ead2,var(--gs-card) 70%)!important; }
+/* Rank chip under the title sits on the dark hero in both modes. */
+html[data-color-mode] body .gs-profile-over-hero + div:not(#gs) > span.inline-flex.rounded-full {
+  background:rgb(16 13 22 / .62)!important; border-color:rgb(255 255 255 / .22)!important; color:#efe9df!important;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+html[data-color-mode] body .gs-profile-over-hero + div:not(#gs) > span * { color:inherit; }
+html[data-color-mode] body .gs-profile-over-hero + div:not(#gs) > span .gs-rank-podium { color:#2b1c05!important; }
+
+/* ---------- Status colours made for dark glass, deepened on paper ---------- */
+html[data-color-mode='light'] body :is(.text-danger-300,.text-danger-400):not(#gs) { color:#a8233a!important; }
+html[data-color-mode='light'] body :is(.text-signal-300,.text-signal-400):not(#gs) { color:#11795a!important; }
+html[data-color-mode='light'] body :is(.text-promo-300,.text-promo-400):not(#gs) { color:#8a5a12!important; }
+html[data-color-mode='light'] body .gs-vote-panel:not(#gs) .num:not([style*="color"]) { color:#1d1b20!important; }
+
+/* ---------- Tap targets: header icons keep 40px even on 320px phones ---------- */
+html[data-color-mode] body .gs-site-header:not(#gs) :is(.gs-header-search,a[aria-label^="Аккаунт"]) { min-width:40px!important; min-height:40px; justify-content:center; }
+@media (max-width:359px) {
+  html[data-color-mode] body .gs-site-header:not(#gs) svg.gs-logo { width:40px!important; height:24px!important; }
+  html[data-color-mode] body .gs-site-header:not(#gs) .gs-wordmark { font-size:15px!important; }
+  html[data-color-mode] body .gs-site-header:not(#gs) a[aria-label^="GameScout"] { gap:6px!important; }
+}
+
+/* The filter sheet's apply button is the main action in both modes. */
+html[data-color-mode] body .gs-sheet .gs-button-primary:not(#gs) {
+  background:linear-gradient(180deg,#e2c07a,#b98d3c)!important; color:#1f1606!important; border:1px solid #a87d31!important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .4),0 8px 18px -12px rgb(120 84 24 / .7)!important; font-weight:600;
+}

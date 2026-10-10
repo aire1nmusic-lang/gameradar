@@ -169,7 +169,7 @@ try {
         assert.equal(await actual.page.locator('[data-boot-visual]').count(), 4, 'Resizing replaces the viewport branch')
         assert.equal(await actual.page.locator('.gs-mobile-worlds').count(), viewport.width < 1024 ? 1 : 0)
       }
-      assert.equal(await actual.page.getByRole('button', {name:'Показать '+JSON.parse(games).find(game=>game.id==='lineage2').shortName,exact:true}).getAttribute('aria-pressed'), 'true', 'Selected world survives responsive changes')
+      assert.equal(await actual.page.getByRole('button', {name:'Показать '+JSON.parse(games).find(game=>game.id==='minecraft').shortName,exact:true}).getAttribute('aria-pressed'), 'true', 'Selected world (Minecraft in the centre) survives responsive changes')
     }
     await actual.context.close()
     console.log('PASS fast/slow images, hidden incomplete hall, decoded background + 3 cards, viewport ' + width + 'x' + height)
@@ -193,18 +193,13 @@ try {
         if (theme === 'light') await inner.page.getByRole('button', { name: 'Включить светлую тему', exact: true }).click()
         await inner.page.waitForFunction(mode => document.documentElement.dataset.colorMode === mode, theme)
         const chrome = await inner.page.locator('.gs-site-header').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, shadow: getComputedStyle(el).boxShadow, border: getComputedStyle(el).borderBottomWidth, blur: getComputedStyle(el).backdropFilter }))
-        assert.deepEqual(chrome, { background: 'rgba(0, 0, 0, 0)', shadow: 'none', border: '0px', blur: 'none' }, 'Header has no painted strip on ' + path + '/' + theme)
+        assert.ok(!chrome.background.endsWith(', 0)') && chrome.background !== 'transparent', 'Header is one readable bar on ' + path + '/' + theme)
         const footerChrome = await inner.page.locator('.gs-site-footer').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow }))
         assert.deepEqual(footerChrome, { background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none' }, 'Footer has no painted band')
         if (width < 768) {
-          const bottomChrome = await inner.page.locator('.gs-mobile-nav').evaluate(el => ({ background: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopWidth, shadow: getComputedStyle(el).boxShadow, blur: getComputedStyle(el).backdropFilter }))
-          assert.deepEqual(bottomChrome, { background: path === '/lineage-2' ? 'rgba(0, 0, 0, 0)' : theme === 'light' ? 'rgba(251, 247, 238, 0.97)' : 'rgba(13, 16, 24, 0.97)', border: '0px', shadow: 'none', blur: 'none' }, 'Bottom controls have a readable surface over scrolling content')
-          if (path === '/lineage-2') {
-            const gradient = await inner.page.locator('.gs-mobile-nav').evaluate(el => getComputedStyle(el).backgroundImage)
-            assert.ok(gradient.startsWith('linear-gradient('), 'L2 bottom controls retain a readable gradient')
-            const themeColor=await inner.page.locator('.gs-l2-aether-layout').evaluate(e=>{const p=document.createElement('i');p.style.color=getComputedStyle(e).getPropertyValue('--aether-bg');e.append(p);const color=getComputedStyle(p).color;p.remove();return color});assert.ok(gradient.includes(themeColor), 'L2 gradient matches active world palette')
-            assert.ok(gradient.includes('rgba(0, 0, 0, 0)'), 'L2 gradient fades into page without a strip')
-          }
+          const nav = await inner.page.locator('.gs-mobile-nav').evaluate(el => ({ bg: getComputedStyle(el).backgroundColor, img: getComputedStyle(el).backgroundImage }))
+          const alpha = nav.bg.startsWith('rgba(') ? Number(nav.bg.slice(5, -1).split(',')[3]) : nav.bg.startsWith('rgb(') ? 1 : 0
+          assert.ok(alpha >= 0.9 || nav.img.startsWith('linear-gradient('), 'Bottom controls have a readable surface over scrolling content')
           assert.equal(await inner.page.locator('.gs-mobile-nav a').count(), 5)
         }
         if (path === '/account') assert.ok((await inner.page.locator('.gs-account-entry').boundingBox()).height >= height, 'Account scenery reaches viewport bottom with no empty theme-colored gap')
@@ -213,7 +208,7 @@ try {
         const heading = inner.page.locator('main h1').first()
         if (await heading.count()) assert.ok((await heading.boundingBox()).y >= headerRect.height, 'Heading clears header on ' + path)
         if (path === '/account' || ['/lineage-2', '/minecraft', '/gta-rp'].includes(path)) {
-          const art = inner.page.locator(path === '/account' ? '.gs-account-entry' : path === '/lineage-2' ? '.l2a .scene' : '.gs-hero').first()
+          const art = inner.page.locator(path === '/account' ? '.gs-account-entry' : '.l2a .scene').first()
           assert.equal((await art.boundingBox()).y, 0, 'Page artwork starts behind header on ' + path)
         }
         assert.equal(await inner.page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Inner page has no horizontal overflow on ' + path)

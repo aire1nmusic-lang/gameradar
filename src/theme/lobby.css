@@ -24,7 +24,7 @@ html[data-design="lobby"][data-color-mode="light"] {
 }
 
 /* ---------- Page ground with ambient glow (dark) ---------- */
-html[data-design="lobby"][data-color-mode="dark"] body:not(#lb) {
+html[data-design="lobby"][data-color-mode="dark"]:not(.gs-boot-pending):not(.gs-loader-visible) body:not(#lb) {
   background:radial-gradient(56rem 30rem at 82% -8%,rgb(198 255 82 / .06),transparent 65%),
              radial-gradient(44rem 26rem at 8% 100%,rgb(175 161 255 / .07),transparent 65%),var(--lb-bg)!important;
   background-attachment:fixed!important;
@@ -611,3 +611,5 @@ html[data-design="lobby"] body :is(.gs-admin-groups button[aria-pressed="true"],
   background:color-mix(in srgb,var(--lb-lime) 14%,var(--lb-panel-2))!important; border-color:var(--lb-lime)!important; color:var(--lb-lime)!important;
 }
 html[data-design="lobby"][data-color-mode="light"] body :is(.gs-admin-groups button[aria-pressed="true"],.gs-admin-tab.is-active):not(#lb) { color:#3d5c00!important; }
+/* The forecast column flows in the dialog grid (a sticky offset must not shift it onto the checkout). */
+html[data-design="lobby"] body .gs-support-dialog .gs-support-preview:not(#lb) { position:static!important; top:auto!important; }

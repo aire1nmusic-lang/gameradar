@@ -29,8 +29,8 @@ await route.fulfill({json})});
  await page.goto(base+path,{waitUntil:'domcontentloaded'});await page.locator('a[href^="/server/"]').first().waitFor();await page.waitForFunction(()=>document.querySelector('.gs-row img[src^="data:image/svg+xml"],.l2a .server'))
  assert.equal(await page.locator('.gs-demo-banner').count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)
  if(path.startsWith('/catalog')){
-  const rows=page.locator('.gs-catalog-page .gs-row');assert.equal(await rows.count(),10)
-  for(const name of ['Поддержка','Голоса','Общий топ']){await page.getByRole('button',{name:'Сортировка',exact:true}).click();await page.getByRole('option',{name,exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-page .gs-row .gs-rank-number').length===10)}
+  const rows=page.locator('.gs-catalog-page .gs-row');assert.ok(await rows.count()>10,'Catalog shows the whole world at once')
+  for(const name of ['Поддержка','Голоса','Общий топ']){await page.getByRole('button',{name:'Сортировка',exact:true}).click();await page.getByRole('option',{name,exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.gs-catalog-page .gs-row .gs-rank-number').length===document.querySelectorAll('.gs-catalog-page .gs-row').length)}
   await page.getByRole('button',{name:'Сортировка',exact:true}).click();await page.screenshot({path:`output/control-qa/sort-${theme}-${w}.png`});await page.keyboard.press('Escape');assert.equal(await page.getByRole('listbox').count(),0)
   if(w<1024){await page.getByRole('button',{name:'Фильтры',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Фильтры',exact:true});await sheet.waitFor();assert.equal(await sheet.getByText('Только проверенный онлайн',{exact:true}).count(),0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`output/control-qa/filters-${theme}-${w}.png`});await page.keyboard.press('Escape');await sheet.waitFor({state:'hidden'})}
  }

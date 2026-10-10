@@ -26,7 +26,8 @@ function LayoutContent() {
   const location = useLocation()
   const { colorMode } = useAppearance()
   const { game } = useWorldNavigation()
-  const aether = game?.id === 'lineage2'
+  // One world shell for every game (design preview): same layout as Lineage 2.
+  const aether = !!game
   const hall = location.pathname === '/'
 
   useEffect(() => {

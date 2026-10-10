@@ -17,7 +17,7 @@ import { cardSrc, reducedMotion, usePortalFlight } from './portal'
  * Phones: the vertical hall and the cards in a swipeable row.
  */
 
-const WORLDS = ['lineage2', 'gtarp', 'minecraft'] as const
+const WORLDS = ['lineage2', 'minecraft', 'gtarp'] as const
 
 const cardSrcSet = (gameId: string) => `${cardSrc(gameId, 480)} 480w, ${cardSrc(gameId, 960)} 960w`
 const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/nave-${w}.webp ${w}w`).join(', ')
@@ -77,8 +77,8 @@ export function WorldHall() {
   const { flightId, enter, preload } = usePortalFlight()
   const tilt = useTilt(desktop)
   const mobileRow=useRef<HTMLDivElement>(null),mobileIndex=useRef(1)
-  const mobileWorlds=['minecraft','lineage2','gtarp'].map(id=>byId[id]).filter((game):game is Game=>!!game)
-  const [selectedWorld,setSelectedWorld]=useState('lineage2')
+  const mobileWorlds=['lineage2','minecraft','gtarp'].map(id=>byId[id]).filter((game):game is Game=>!!game)
+  const [selectedWorld,setSelectedWorld]=useState('minecraft')
   useLayoutEffect(()=>{
     const row=mobileRow.current
     if(!row||mobileWorlds.length!==3)return
@@ -96,7 +96,7 @@ export function WorldHall() {
     const center=row.scrollLeft+row.clientWidth/2
     const cards=[...row.children] as HTMLElement[]
     const nearest=cards.reduce((best,card,index)=>Math.abs(card.offsetLeft-row.offsetLeft+card.clientWidth/2-center)<Math.abs(cards[best].offsetLeft-row.offsetLeft+cards[best].clientWidth/2-center)?index:best,0)
-    mobileIndex.current=nearest;setSelectedWorld(mobileWorlds[nearest]?.id??'lineage2')
+    mobileIndex.current=nearest;setSelectedWorld(mobileWorlds[nearest]?.id??'minecraft')
   }
 
   const go = (event: React.MouseEvent<HTMLElement>, game: Game) => {

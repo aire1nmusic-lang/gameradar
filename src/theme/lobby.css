@@ -296,3 +296,80 @@ html[data-design="lobby"] body .gs-seg-btn.is-active:not(#lb) { background:color
 html[data-design="lobby"] body .gs-profile-cta-bar:not(#lb) { padding-inline:calc((100% - var(--lb-wrap)) / 2)!important; }
 html[data-design="lobby"] body .gs-server-profile:not(#lb) :is(nav a,a.inline-flex) { min-height:40px; display:inline-flex; align-items:center; }
 html[data-design="lobby"] body .gs-support-checkout:not(#lb) > a { margin-right:18px; }
+
+/* ---------- World title faces (the only place the world type is used) ---------- */
+html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb) { font-family:'Pixelify Sans','Courier New',monospace!important; font-weight:600!important; letter-spacing:0!important; }
+html[data-design="lobby"] body .l2a--gtarp .hero h1:not(#lb) { font-family:'Oswald','Arial Narrow',sans-serif!important; font-weight:700!important; text-transform:uppercase; letter-spacing:.01em!important; }
+
+/* ---------- Artwork inside the 1–3 plaques ---------- */
+.gs-podium-art { display:none; }
+html[data-design="lobby"] body .gs-podium-art:not(#lb) {
+  display:block; position:absolute; inset:0 0 0 auto; width:58%; z-index:0; pointer-events:none; overflow:hidden; border-radius:inherit;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgb(0 0 0 / .55) 45%,#000 100%); mask-image:linear-gradient(90deg,transparent 0%,rgb(0 0 0 / .55) 45%,#000 100%);
+  opacity:.62;
+}
+html[data-design="lobby"][data-color-mode="light"] body .gs-podium-art:not(#lb) { opacity:.42; }
+html[data-design="lobby"] body .gs-podium-art:not(#lb) img { display:block; width:100%; height:100%; object-fit:cover; }
+html[data-design="lobby"] body .gs-top-row:not(#lb) > :not(.gs-podium-art):not(.fav) { position:relative; z-index:1; }
+html[data-design="lobby"] body .gs-top-row:not(#lb) > .fav { z-index:2; }
+/* Numbers stay readable over the art. */
+html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) :is(.server-right,.server-right *,.text-right) { text-shadow:0 1px 8px rgb(0 0 0 / .85); }
+
+/* ---------- Owner banner without the roman mark ---------- */
+html[data-design="lobby"] body .l2a .owner:not(#lb) { grid-template-columns:minmax(0,1fr) auto!important; }
+html[data-design="lobby"] body .l2a .owner:not(#lb) h3 { font:800 clamp(20px,2.4vw,28px)/1.15 var(--lb-display)!important; font-stretch:112.5%; }
+
+/* ---------- «Поддержать сервер»: the one gold call to action ---------- */
+@keyframes lb-shine { 0%,62% { transform:translateX(-120%) skewX(-18deg); } 100% { transform:translateX(220%) skewX(-18deg); } }
+html[data-design="lobby"] body .gs-support-launch:not(#lb) {
+  position:relative; overflow:hidden; isolation:isolate; display:inline-flex; align-items:center; gap:10px;
+  min-height:48px; padding:0 22px; border-radius:14px!important; border:0!important;
+  background:linear-gradient(180deg,#ffe58a,#ffc93c 55%,#e39b12)!important; color:#2a1600!important; font-weight:800!important; font-size:14.5px!important;
+  box-shadow:0 0 0 1px rgb(255 255 255 / .35) inset,0 12px 32px -10px rgb(255 201 60 / .75)!important;
+}
+html[data-design="lobby"] body .gs-support-launch:not(#lb)::after {
+  content:""; position:absolute; inset:0 auto 0 0; width:40%; z-index:-1; pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgb(255 255 255 / .55),transparent); animation:lb-shine 3.6s ease-in-out infinite;
+}
+html[data-design="lobby"] body .gs-support-launch:not(#lb):hover { filter:brightness(1.05); transform:translateY(-1px); }
+html[data-design="lobby"] body .gs-support-launch:not(#lb):disabled { filter:grayscale(.6); opacity:.6; }
+html[data-design="lobby"] body .gs-profile-support:not(#lb) {
+  position:relative; overflow:hidden; isolation:isolate; width:100%; display:grid!important; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:14px!important;
+  min-height:72px; padding:14px 18px!important; text-align:left;
+  background:linear-gradient(100deg,rgb(255 201 60 / .2),rgb(255 201 60 / .06) 45%,var(--lb-panel) 80%)!important;
+  border:1px solid rgb(255 201 60 / .55)!important; border-radius:18px!important; box-shadow:0 18px 40px -26px rgb(255 201 60 / .8)!important;
+}
+html[data-design="lobby"] body .gs-profile-support:not(#lb)::after {
+  content:""; position:absolute; inset:0 auto 0 0; width:30%; z-index:-1; pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgb(255 230 150 / .22),transparent); animation:lb-shine 4.2s ease-in-out infinite;
+}
+html[data-design="lobby"] body .gs-profile-support:not(#lb) .gs-profile-support-icon {
+  width:46px; height:46px; display:grid; place-items:center; border-radius:14px; color:#2a1600;
+  background:linear-gradient(180deg,#ffe58a,#ffc93c 55%,#e39b12); box-shadow:0 0 22px -4px rgb(255 201 60 / .8);
+}
+html[data-design="lobby"] body .gs-profile-support:not(#lb) strong { display:block; font:800 16px/1.25 var(--lb-display); font-stretch:112.5%; color:var(--lb-text); }
+html[data-design="lobby"] body .gs-profile-support:not(#lb) small { display:block; margin-top:2px; font-size:13px; color:var(--lb-muted); }
+html[data-design="lobby"] body .gs-profile-support:not(#lb) > svg { color:#ffc93c; }
+html[data-design="lobby"] body .gs-profile-support:not(#lb):hover { border-color:#ffc93c!important; }
+html[data-design="lobby"][data-color-mode="light"] body .gs-profile-support:not(#lb) { background:linear-gradient(100deg,#fff1c7,#fff8e6 50%,var(--lb-panel) 85%)!important; }
+
+/* ---------- Light mode: header + LIVE strip are one straight bar ---------- */
+html[data-design="lobby"][data-color-mode="light"] body .gs-site-header:not(.gs-hall-header):not(#lb) {
+  background:rgb(251 248 242 / .94)!important; -webkit-backdrop-filter:blur(14px)!important; backdrop-filter:blur(14px)!important;
+  border-bottom:0!important; box-shadow:none!important;
+}
+html[data-design="lobby"][data-color-mode="light"] .gs-live { background:rgb(251 248 242 / .94); border-top:1px solid var(--lb-line); border-bottom:1px solid var(--lb-line); }
+html[data-design="lobby"][data-color-mode="light"] .gs-live-item { background:#fff; }
+
+/* ---------- Hall header: same glass controls in both modes ---------- */
+html[data-design="lobby"] body .gs-hall-header:not(#lb) :is(a[aria-label^="GameScout"],.gs-theme-toggle,a[aria-label^="Аккаунт"],button[aria-label="Войти"]) {
+  background:rgb(12 14 18 / .52)!important; border:1px solid rgb(255 255 255 / .22)!important; color:#fff!important;
+  -webkit-backdrop-filter:blur(12px)!important; backdrop-filter:blur(12px)!important; box-shadow:0 10px 30px -18px #000!important;
+}
+html[data-design="lobby"] body .gs-hall-header:not(#lb) a[aria-label^="GameScout"] { padding:6px 12px; border-radius:14px; }
+html[data-design="lobby"] body .gs-hall-header:not(#lb) .gs-wordmark { filter:none!important; }
+html[data-design="lobby"] body .gs-hall-header:not(#lb) .gs-wordmark__game { background:none!important; color:#fff!important; -webkit-text-fill-color:#fff; }
+html[data-design="lobby"][data-color-mode="light"] body .gs-hall-header:not(#lb) .gs-theme-toggle { outline:0; }
+html[data-design="lobby"][data-color-mode="dark"] body .gs-top-row:not(#lb) > .fav { background:rgb(10 12 14 / .55)!important; border-radius:10px!important; color:#e9ecf1!important; }
+html[data-design="lobby"] body :is(.l2a .rows .fav,.gs-row button[aria-label*="избранно"]):not(#lb) { min-width:40px!important; }
+html[data-design="lobby"] body .gs-server-profile:not(#lb) a[href^="http"] { min-height:40px; display:inline-flex; align-items:center; }

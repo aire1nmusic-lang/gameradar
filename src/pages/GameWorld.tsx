@@ -1,25 +1,13 @@
 import type { GameServer } from '@/models'
 import { LineageDiscovery } from '@/components/world/LineageDiscovery'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
-import { useMemo } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import NotFound from './NotFound'
-import { WorldIcon } from '@/components/icons/WorldIcon'
 import { resolveWorld } from '@/data/themes'
-import { chronicleOfVersion } from '@/data/games'
 import { useAsync } from '@/hooks/data'
 import { discoveryServers } from '@/services/catalogService'
-import { peopleOrder, supportOrder } from '@/services/supportProjection'
-import { hasFreshOnline } from '@/services/discoveryRanking'
-import { Container } from '@/components/layout/Container'
-import { ThemeScope, ThemedButton, ThemedEyebrow, ThemedHeading, useGameTheme } from '@/theme'
+import { ThemeScope } from '@/theme'
 import { lightWorldTheme } from '@/theme/lightWorld'
-import { GameHero } from '@/components/game/GameHero'
-import { ChronicleNav } from '@/components/game/ChronicleNav'
-import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
-import { RankPanel, ShelfNote } from '@/components/world/Shelves'
-import { ChronicleTiles } from '@/components/world/ChronicleTiles'
-import { EmptyState } from '@/components/ui/feedback'
 import { breadcrumbs, useSeo } from '@/lib/seo'
 import { useAppearance } from '@/theme/appearance'
 
@@ -55,7 +43,6 @@ export default function GameWorld() {
 
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const demo=useVisualDemo()
-  const theme = useGameTheme()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
@@ -73,120 +60,8 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   })
   const { data: servers = [], loading, error, reload } = useAsync<GameServer[]>(publish => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo,publish), [game?.id, chronicle?.id,demo], true)
 
-  const known = hasFreshOnline
-  const openings = useMemo(
-    () => servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()).sort((a, b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at)),
-    [servers],
-  )
-  const topPeople = useMemo(() => [...servers].sort(peopleOrder), [servers])
-  const topSupport = useMemo(() => servers.filter(server => (server.support?.coins ?? 0) > 0).sort(supportOrder), [servers])
-  const counts = useMemo(() => {
-    const result: Record<string, { servers: number; online: number }> = {}
-    for (const server of servers) {
-      const id = server.chronicleId ?? chronicleOfVersion(server.gameId, server.version)?.id
-      if (!id) continue
-      const entry = (result[id] ??= { servers: 0, online: 0 })
-      entry.servers += 1
-      if (known(server)) entry.online += server.online.current
-    }
-    return result
-  }, [servers])
-
   if (!game) return null
-  if (game.id === 'lineage2') return <LineageDiscovery game={game} chronicle={chronicle} servers={servers} loading={loading} error={error} reload={reload} demo={demo} />
-
-  const playersOnline = servers.reduce((sum, server) => sum + (known(server) ? server.online.current : 0), 0)
-  return (
-    <div className="relative" style={{ background: theme.colors.bg, color: theme.colors.text }}>
-      {/* No count until the list arrives: a slow or failed request must not read as "0 серверов". */}
-      <GameHero
-        game={game}
-        chronicle={chronicle}
-        serversCount={(loading || error) && servers.length === 0 ? undefined : servers.length}
-        playersOnline={playersOnline}
-        openings={openings.length}
-      />
-
-      <Container className="relative pb-16">
-        {chronicle ? (
-          // inside a chronicle the switcher stays reachable while the list scrolls
-          <div className="sticky top-[60px] z-30 -mx-5 px-5 py-2.5 sm:mx-0 sm:px-0" style={{ background: `color-mix(in oklab, ${theme.colors.bg} 92%, transparent)`, backdropFilter: 'blur(12px)' }}>
-            <ChronicleNav game={game} chronicles={game.chronicles} />
-          </div>
-        ) : (
-          <><div className="gs-epoch-head mt-6"><span className="section-kicker">{game.id === 'lineage2' ? 'Хроники' : game.id === 'gtarp' ? 'Платформы' : 'Режимы'}</span><h2>{game.id === 'gtarp' ? 'Где начнётся твоя история' : 'Во что играем сегодня'}</h2></div>
-          <details className="gs-chronicle-disclosure mt-3" open>
-            <summary><span className="gs-chronicle-symbol"><WorldIcon name="chronicles" size={22}/></span><span className="gs-chronicle-label">{game.id === 'lineage2' ? 'Выбрать хроники' : game.id === 'gtarp' ? 'Выбрать платформу' : 'Выбрать режим'}<small>{game.id === 'lineage2' ? 'Interlude, High Five, Essence и другие' : 'Серверы по вашим предпочтениям'}</small></span><span className="gs-chronicle-chevron"><WorldIcon name="chevronRight" size={18}/></span></summary>
-            <ChronicleTiles game={game} chronicles={game.chronicles} counts={counts} />
-          </details></>
-        )}
-
-        {loading && servers.length === 0 ? (
-          <div className="mt-8 space-y-1.5" aria-busy="true">
-            {Array.from({ length: 6 }, (_, index) => <ServerRowSkeleton key={index} />)}
-          </div>
-        ) : error && servers.length === 0 ? (
-          // A failed request is not an empty game.
-          <div className="mt-8"><EmptyState title="Не удалось загрузить серверы" description="Проверьте соединение и попробуйте ещё раз." action="Повторить" onAction={reload} /></div>
-        ) : (
-          <>
-            <div className={`gs-world-ranks ${openings.length?'gs-has-openings':'gs-no-openings'} mt-4 grid gap-5 lg:grid-cols-3 lg:gap-3`}>
-              <RankPanel
-                className="gs-shelf-support"
-                title="Лидеры поддержки"
-                hint="Поддержка за Coins"
-                icon={<WorldIcon name="coins"/>}
-                to={`/rating?game=${game.id}&all=support`}
-              >
-                {topSupport.length > 0
-                  ? topSupport.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="support" compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
-                  : <ShelfNote title="Рейтинг пока формируется" text="Здесь появятся серверы, получившие поддержку за Coins." />}
-              </RankPanel>
-
-              <RankPanel
-                className="gs-shelf-opening"
-                title="Скоро открытие"
-                hint="Ближайшие запуски"
-                icon={<WorldIcon name="opening"/>}
-                to={`/openings?game=${game.id}`}
-              >
-                {openings.length > 0
-                  ? openings.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} showGame={false} compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
-                  : <ShelfNote title="Ближайших открытий нет" text="Как только проект объявит дату старта, он появится здесь." />}
-              </RankPanel>
-
-              <RankPanel
-                className="gs-shelf-people"
-                title="Выбор игроков"
-                hint="Поддержка голосами"
-                icon={<WorldIcon name="ballot"/>}
-                to={`/rating?game=${game.id}&all=people`}
-              >
-                {topPeople.length > 0
-                  ? topPeople.slice(0, 10).map((server, index) => <ServerRow key={server.slug} server={server} rank={index + 1} showGame={false} metric="votes" compact className={index >= 10 ? 'gs-preview-overflow' : undefined} />)
-                  : <ShelfNote title="Серверов пока нет" text="Здесь появятся проекты и голоса игроков." />}
-              </RankPanel>
-            </div>
-
-          </>
-        )}
-
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-5" style={{ borderColor: theme.colors.border, background: theme.colors.surface }}>
-          <div>
-            <ThemedEyebrow className="mb-1.5">Владельцам</ThemedEyebrow>
-            <ThemedHeading size={17} as="h3">
-              Ваш сервер {game.shortName}?
-            </ThemedHeading>
-            <p className="mt-1 text-[13px]" style={{ color: theme.colors.textMuted }}>
-              Разместите проект бесплатно и подключите проверку онлайна.
-            </p>
-          </div>
-          <ThemedButton to="/owners" icon={<WorldIcon name="owner" size={14} />}>
-            Узнать больше
-          </ThemedButton>
-        </div>
-      </Container>
-    </div>
-  )
+  if (game) return <LineageDiscovery game={game} chronicle={chronicle} servers={servers} loading={loading} error={error} reload={reload} demo={demo} />
+  return null
 }
 

@@ -49,7 +49,8 @@ jobs:
           }
           const z=await fetchJson('https://api.cloudflare.com/client/v4/zones?name=gamescout.online')
           console.log('Cloudflare zones',JSON.stringify({status:z.status,success:z.success,count:z.data?.length,errorCodes:z.errors}))
-          if(!z.data?.length)return
+          if(z.data?.length){
           const d=await fetchJson('https://api.cloudflare.com/client/v4/zones/'+encodeURIComponent(z.data[0].id)+'/dns_records?name=gamescout.online')
           console.log('Cloudflare apex',JSON.stringify({status:d.status,success:d.success,records:d.data?.map(r=>({type:r.type,name:r.name,content:r.content,proxied:r.proxied})),errorCodes:d.errors}))
+          }
           NODE

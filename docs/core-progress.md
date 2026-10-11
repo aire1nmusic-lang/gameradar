@@ -1,3 +1,8 @@
+## 11.10.2026 — Lineage 2 elf sunset background (GitHub branch, pending CI/live check)
+
+Owner supplied new full-width L2 elf-and-castle picture. Prepared four WebP assets (768/1536/2048 and 720 portrait), and replaced ONLY the main Lineage 2 world hero artwork. Chronicle heroes, server cover cards, promo/gallery images and other worlds are unchanged. L2 inner-world pages reuse the new hero through WorldBackdrop; portrait art is used on mobile. Selective CSS keeps both characters/landscape visible on desktop and crops to the elf on phones while fading under content.
+Environment: GitHub branch design/l2-elf-sunset-20261011 from main 783615b, no local worktree. Revert: rollback this commit or restore earlier themeMedia hero mapping and delete the four images. Status: LIKELY; checks pending TypeScript/build, actual live site across 320/390/768/1024/1440, light/dark, and owner's visual approval. Production DNS/payments/secrets untouched. Next: CI/review, merge and verify live image URLs after release.
+
 ## 11.10.2026 — Lobby: owner's phone review fixes + smoothness pass (local, not pushed)
 
 Owner (live site, phone): chronicles should start collapsed; the favourite on world shelves too big; filter switch knob outside its track; 24 ч / 7 дн / 30 дн control looks off and the chart flips to «Загрузка истории…» and back; card text names third-party monitorings (L2OOPS, MMOTOP…); the site lags and jumps on transitions on every size.

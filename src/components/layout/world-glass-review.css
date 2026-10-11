@@ -148,3 +148,11 @@ html[data-color-mode] body .gs-l2-filter-sheet .gs-button-primary {background:co
 }
 @media(min-width:1024px) {.gs-l2-filter-sheet > div {border-radius:22px!important}}
 @media(max-height:500px) {.gs-l2-filter-sheet > div {max-height:94dvh!important}.gs-l2-aether-layout .gs-support-dialog {max-height:calc(100dvh - 12px)}}
+
+/* Lineage 2 inner-world routes share the approved sunset picture; keep mobile subject in frame. */
+@media (max-width: 767px) {
+  .gs-world-backdrop.gs-world-backdrop--elf-sunset {
+    background-image: url('/media/worlds/lineage-2/elf-sunset-v1-mobile-720.webp') !important;
+    background-position: 62% 0 !important;
+  }
+}

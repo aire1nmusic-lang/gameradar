@@ -1,0 +1,48 @@
+name: Deploy read-only catalog CI bridge
+
+on:
+  push:
+    branches: [main, design/l2-elf-sunset-20261011]
+    paths:
+      - 'workers/catalog-ci-gateway.mjs'
+      - 'wrangler.catalog-ci.toml'
+      - '.github/workflows/deploy-public-catalog-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-public-catalog-bridge
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy isolated public catalog Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config wrangler.catalog-ci.toml
+      - name: Confirm published catalog endpoint (no private routes)
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://gamescout-public-catalog.aire1n-music.workers.dev'
+          const r=await fetch(base+'/api/v1/servers?limit=100&offset=0',{signal:AbortSignal.timeout(20000)})
+          const data=await r.json().catch(()=>null)
+          if(!r.ok || !Array.isArray(data?.items) || !Number.isSafeInteger(data?.total) || data?.limit!==100 || data?.offset!==0 || data.total<1) throw Error('Public-only catalog bridge failed: '+r.status)
+          const blocked=await fetch(base+'/api/v1/auth/me',{signal:AbortSignal.timeout(10000)})
+          if(blocked.status!==404)throw Error('Private route must be blocked: '+blocked.status)
+          console.log('Verified public-only Worker:',data.items.length,'rows, total',data.total,'private route',blocked.status)
+          NODE

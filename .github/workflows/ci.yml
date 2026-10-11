@@ -82,6 +82,15 @@ jobs:
                 console.log(label,JSON.stringify({status:r.status,success:j?.success,enabled:j?.result?.enabled,hasResult:!!j?.result,errorCodes:j?.errors?.map(e=>e.code)}))
               }catch(e){console.log(label,'FAIL',e.name,e.cause?.code)}
             }
+            try{
+              const q=await fetch('https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(process.env.CF_ACCOUNT)+'/d1/database/28f90736-92b9-4261-82f5-ed5d8f55f239/query',{
+                method:'POST',headers:{Authorization:'Bearer '+process.env.CF_TOKEN,'Content-Type':'application/json'},
+                body:JSON.stringify({sql:"SELECT COUNT(*) AS total FROM servers WHERE moderation='PUBLISHED' AND is_demo=0"}),
+                signal:AbortSignal.timeout(12000)
+              })
+              const j=await q.json().catch(()=>null)
+              console.log('public-D1-query',JSON.stringify({status:q.status,success:j?.success,querySuccess:j?.result?.[0]?.success,count:j?.result?.[0]?.results?.[0]?.total,errorCodes:j?.errors?.map(e=>e.code)}))
+            }catch(e){console.log('public-D1-query FAIL',e.name,e.cause?.code)}
             const subdomain=json?.result?.subdomain
             if (response.ok && typeof subdomain === 'string' && /^[a-z0-9-]+$/.test(subdomain)) {
               const url='https://gamescout-api.'+subdomain+'.workers.dev/api/v1/servers?limit=100&offset=0'

@@ -23,6 +23,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Diagnose public API network (read-only)
+        run: |
+          node --input-type=module <<'NODE'
+          import { lookup, resolve4, resolve6 } from 'node:dns/promises'
+          const host = 'gamescout.online'
+          for (const [label, fn] of [['dns-lookup', () => lookup(host, { all: true })], ['dns-A', () => resolve4(host)], ['dns-AAAA', () => resolve6(host)]]) {
+            try { console.log(label, JSON.stringify(await fn())) }
+            catch (e) { console.log(label, 'FAIL', e.code, e.message) }
+          }
+          const url = 'https://gamescout.online/api/v1/servers?limit=1&offset=0'
+          try {
+            const r = await fetch(url, { signal: AbortSignal.timeout(14000), headers: { Accept: 'application/json' } })
+            const body = await r.text()
+            console.log('fetch', JSON.stringify({ status: r.status, bytes: body.length, contentType: r.headers.get('content-type') }))
+          } catch (e) { console.log('fetch FAIL', JSON.stringify({ name:e.name, message:e.message, cause:e.cause && { code:e.cause.code, errno:e.cause.errno, syscall:e.cause.syscall, address:e.cause.address, errors:e.cause.errors?.map(v=>({code:v.code,address:v.address})) } })) }
+          NODE
+          curl -4 --silent --show-error --location --output /dev/null --write-out 'curl-v4 status=%{http_code} peer=%{remote_ip} tls=%{ssl_verify_result} time=%{time_total}\\n' --connect-timeout 5 --max-time 12 'https://gamescout.online/api/v1/servers?limit=1&offset=0' || true
+          curl -6 --silent --show-error --location --output /dev/null --write-out 'curl-v6 status=%{http_code} peer=%{remote_ip} time=%{time_total}\\n' --connect-timeout 5 --max-time 12 'https://gamescout.online/api/v1/servers?limit=1&offset=0' || true
       - name: Private core tests
         run: |
           npm run test:private

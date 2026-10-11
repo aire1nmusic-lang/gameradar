@@ -36,6 +36,7 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const art = worldArt('hero', game.id, chronicle?.id)
+  const l2Sunset = game.id === 'lineage2' && !chronicle
   const statsReady = !loading && !error
   const known = servers.filter(hasFreshOnline)
   const upcoming = servers.filter(s => s.launch && Date.parse(s.launch.at) > Date.now())
@@ -68,7 +69,7 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
       
     </section>
   }
-  return <div className={`l2a l2a--${game.id} ${colorMode === 'light' ? 'light' : ''}`} style={art ? { '--art': `url("${artSrc(art, 2560)}")`, '--art-mobile': `url("${artSrc(art, 800)}")` } as CSSProperties : undefined}>
+  return <div className={`l2a l2a--${game.id} ${l2Sunset ? 'l2a--sunset' : ''} ${colorMode === 'light' ? 'light' : ''}`} style={art ? { '--art': `url("${artSrc(art, 2560)}")`, '--art-mobile': `url("${l2Sunset ? '/media/worlds/lineage-2/elf-sunset-v1-mobile-720.webp' : artSrc(art, 800)}")` } as CSSProperties : undefined}>
     <div className="scene" aria-hidden="true"><div className="atmosphere"/></div>
     <div className="wrap l2-content">
       <section className="hero gs-hero" aria-labelledby="l2-world-title"><div className="hero-copy"><div className="breadcrumb"><Link to="/">Зал миров</Link><span/><Link to={`/${game.slug}`}>{game.name}</Link>{chronicle && <> / {chronicle.label}</>}</div><div className="edition">{copy.edition}</div><h1 id="l2-world-title">{game.id === 'lineage2' ? <>Lineage <em>II</em></> : game.name}</h1>{chronicle ? <p className="chronicle-description">{chronicle.label} · {chronicle.tagline}</p> : <p>{copy.lead}</p>}<div className="metrics" aria-busy={!statsReady}><div className="metric"><strong>{statsReady ? formatNumber(servers.length) : '—'}</strong><small>серверов</small></div><div className="metric"><strong>{statsReady ? formatNumber(upcoming.length) : '—'}</strong><small>открытий</small></div>{<div className="metric" style={statsReady && known.length > 0 ? undefined : { visibility: 'hidden' }} aria-hidden={!(statsReady && known.length > 0)}><strong><i className="dot"/>{formatCompact(known.reduce((sum,s) => sum+s.online.current,0))}</strong><small>игроков по источникам</small></div>}</div></div><div className="hero-note">В каждом мире — своя история.<small>Выбери, где начнётся твоя.</small></div></section>

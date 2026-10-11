@@ -1,3 +1,16 @@
+## 11.10.2026 — CI public catalog connectivity repaired via isolated read-only Worker (branch)
+
+VERIFIED root cause: GitHub Actions eastus resolved gamescout.online to Yandex 158.160.184.183 but TCP/443 timed out (Node UND_ERR_CONNECT_TIMEOUT and curl IPv4 timeout); unrelated to artwork or React. Both prior CI runs had 57/57 private tests PASS but no build. Cloudflare workers.dev on original gamescout-api is explicitly disabled; it must remain disabled. Cloudflare D1 read-only diagnostic query succeeded with 129 published non-demo servers.
+
+VERIFIED alternative: deployed separate gamescout-public-catalog Worker through .github/workflows/deploy-public-catalog-ci.yml, service binding to existing gamescout-api, with strict GET /api/v1/servers, limit=100 and 100-aligned offsets only. No D1 access, no auth/admin/vote routes, no new DNS or secret; Worker-to-Worker call returns actual live public DTO. Deployment run 38118369175 attempt 2 PASS: page 100 of 129, /api/v1/auth/me HTTP 404; initial first-run 404 was propagation timing. The Worker URL is https://gamescout-public-catalog.aire1n-music.workers.dev. CI and production's build:catalog now point to this existing public-only catalog path; SEO canonical and site live verification still use gamescout.online. Public site may remain inaccessible to GitHub because of Yandex route; publishing is not considered VERIFIED until production build, browser gates, rollback and live checks actually pass.
+
+Rollback: revert these workflow edits, delete the isolated Worker with Wrangler/API only after confirming the main public route is reachable from Actions; existing gamescout-api unchanged. Status: VERIFIED API bridge, LIKELY CI recovery pending rerun, BLOCKED direct reachability gamescout.online from GitHub Actions.
+
+## 11.10.2026 — Lineage 2 elf sunset background (GitHub branch, pending CI/live check)
+
+Owner supplied new full-width L2 elf-and-castle picture. Prepared four WebP assets (768/1536/2048 and 720 portrait), and replaced ONLY the main Lineage 2 world hero artwork. Chronicle heroes, server cover cards, promo/gallery images and other worlds are unchanged. L2 inner-world pages reuse the new hero through WorldBackdrop; portrait art is used on mobile. Selective CSS keeps both characters/landscape visible on desktop and crops to the elf on phones while fading under content.
+Environment: GitHub branch design/l2-elf-sunset-20261011 from main 783615b, no local worktree. Revert: rollback this commit or restore earlier themeMedia hero mapping and delete the four images. Status: LIKELY; checks pending TypeScript/build, actual live site across 320/390/768/1024/1440, light/dark, and owner's visual approval. Production DNS/payments/secrets untouched. Next: CI/review, merge and verify live image URLs after release.
+
 ## 11.10.2026 — Lobby: owner's phone review fixes + smoothness pass (local, not pushed)
 
 Owner (live site, phone): chronicles should start collapsed; the favourite on world shelves too big; filter switch knob outside its track; 24 ч / 7 дн / 30 дн control looks off and the chart flips to «Загрузка истории…» and back; card text names third-party monitorings (L2OOPS, MMOTOP…); the site lags and jumps on transitions on every size.

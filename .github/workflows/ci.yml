@@ -28,6 +28,6 @@ jobs:
           npm run test:private
           node --experimental-strip-types tests/support-projection.mjs
       - name: Build from live public catalog and verify SEO
-        run: npm run build:catalog -- https://gamescout.online/
+        run: npm run build:catalog -- https://gamescout-public-catalog.aire1n-music.workers.dev/
       - name: Bundle gate
         run: npm run test:bundle

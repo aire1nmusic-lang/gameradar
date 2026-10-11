@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PUBLIC_API_ORIGIN: https://gamescout.online/
+      PUBLIC_API_ORIGIN: https://gamescout-public-catalog.aire1n-music.workers.dev/
       PUBLIC_SITE_ORIGIN: https://gamescout.online
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +20,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build:catalog -- https://gamescout.online
+      - run: npm run build:catalog -- https://gamescout-public-catalog.aire1n-music.workers.dev/
       - name: Browser runtime
         run: |
           npm install --no-save --package-lock=false playwright@1.58.2

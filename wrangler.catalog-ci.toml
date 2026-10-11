@@ -1,0 +1,10 @@
+# Read-only catalog endpoint for build and SEO checks.
+# Uses the existing production Worker internally; never exposes auth, voting or admin routes.
+name = "gamescout-public-catalog"
+main = "workers/catalog-ci-gateway.mjs"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[[services]]
+binding = "CATALOG_API"
+service = "gamescout-api"

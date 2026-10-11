@@ -68,7 +68,7 @@ function LayoutContent() {
 function WorldBackdrop({ gameId }: { gameId: string }) {
   const art = worldArt('hero', gameId)
   if (!art) return null
-  return <div aria-hidden className="gs-world-backdrop" style={{ backgroundImage: `url("${artSrc(art, 1600)}")`, backgroundPosition: art.focus.desktop }} />
+  return <div aria-hidden className={gameId === "lineage2" ? "gs-world-backdrop gs-world-backdrop--elf-sunset" : "gs-world-backdrop"} style={{ backgroundImage: `url("${artSrc(art, 1600)}")`, backgroundPosition: art.focus.desktop }} />
 }
 
 function BackgroundField() {

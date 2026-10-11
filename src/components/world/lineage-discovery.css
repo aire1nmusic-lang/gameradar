@@ -134,3 +134,26 @@ html[data-color-mode] .gs-l2-aether-layout :is(.gs-coins-card,.gs-account-empty,
 :root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .gs-top-row[data-rank] + .server:not(.gs-top-row){margin-top:6px}
 :root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .fav{right:12px!important}
 :root[data-color-mode] body .gs-l2-aether-layout .l2a .rows .server.l2-overflow-all{display:none!important}
+
+/* Custom panoramic world hero, only for the main Lineage 2 world (not chronicles). */
+.l2a.l2a--sunset .scene::before {
+  background-position: 50% 0;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  opacity: .93;
+}
+.l2a.l2a--sunset .scene::after {
+  background: linear-gradient(180deg, transparent 0%, #070f1c44 42%, var(--bg) 93%),
+              linear-gradient(90deg, #07101bbb 0%, #07101b66 38%, transparent 83%);
+}
+@media (max-width: 767px) {
+  .l2a.l2a--sunset .scene::before {
+    background-position: 62% 0;
+    background-size: cover;
+    opacity: .83;
+  }
+  .l2a.l2a--sunset .scene::after {
+    background: linear-gradient(180deg, #06101b66 0%, #06101b33 32%, var(--bg) 95%),
+                linear-gradient(90deg, #06101baa, #06101b33 76%);
+  }
+}

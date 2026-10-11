@@ -35,7 +35,7 @@ concurrency:
 env:
   YC_BUCKET: gamescout-ru-site
   YC_S3_ENDPOINT: https://storage.yandexcloud.net
-  PUBLIC_API_ORIGIN: https://gamescout.online/
+  PUBLIC_API_ORIGIN: https://gamescout-public-catalog.aire1n-music.workers.dev/
   PUBLIC_SITE_ORIGIN: https://gamescout.online
 
 jobs:

@@ -65,6 +65,7 @@ const keyart = (base: string, alt: string, tone: ArtTone, mobile: string, deskto
 const ART = {
   // Full-page art stays high-resolution. Approved portrait crops are a separate card layer,
   // so chronicle tiles keep the selected images without forcing 192px artwork into page heroes.
+  l2ElfSunset: art('lineage-2/elf-sunset-v1', 'Lineage 2 — эльфийская воительница над закатным городом', 'bright', { desktop: '50% 0%', mobile: '62% 0%' }, [768, 1536, 2048]),
   l2Master: art('lineage-2/master-v8', 'Lineage 2 — рыцарь и тёмная эльфийка у замка', 'medium', { desktop: '60% 50%', mobile: '50% 50%' }, [768,1536]),
   l2InterludeHero: keyart('lineage-2/interlude', 'Lineage 2 Interlude — эльфийский мир на закате', 'medium', '68% 50%', '54% 50%'),
   l2HighFiveHero: keyart('lineage-2/high-five', 'Lineage 2 High Five — осада замка и герои', 'medium', '68% 50%', '55% 50%'),
@@ -102,7 +103,7 @@ const solo = (item: WorldArt): Partial<WorldMedia> => ({ hero: item, card: item,
 
 const WORLDS: Record<string, Partial<WorldMedia>> = {
   // ── Lineage 2 — one master, one look per chronicle ───────────────────────
-  lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFiveHero, gallery: [ART.l2Master, ART.l2InterludeHero, ART.l2HighFiveHero, ART.l2ClassicHero, ART.l2EssenceHero] },
+  lineage2: { hero: ART.l2ElfSunset, card: ART.l2Master, promo: ART.l2HighFiveHero, gallery: [ART.l2Master, ART.l2InterludeHero, ART.l2HighFiveHero, ART.l2ClassicHero, ART.l2EssenceHero] },
   'lineage2:interlude': { hero: ART.l2InterludeHero, card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
   'lineage2:high-five': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
   'lineage2:classic': { hero: ART.l2ClassicHero, card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },

@@ -1,0 +1,55 @@
+name: Emergency public-edge read-only diagnostics
+on:
+  push:
+    branches: ['incident/public-edge-20261011']
+    paths: ['.github/workflows/incident-public-edge-diagnostics.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: DNS and TCP evidence (bounded)
+        run: |
+          node --input-type=module <<'NODE'
+          import {lookup,resolve4,resolve6} from 'node:dns/promises';
+          for(const domain of ['gamescout.online','www.gamescout.online']){
+            for(const [name,fn] of [['A',()=>resolve4(domain)],['AAAA',()=>resolve6(domain)]]){
+              try{console.log(JSON.stringify({domain,record:name,result:await fn()}))}
+              catch(e){console.log(JSON.stringify({domain,record:name,error:e.code}))}
+            }
+          }
+          NODE
+          for url in 'https://gamescout.online/' 'http://gamescout.online/' 'https://storage.yandexcloud.net/gamescout-ru-site/index.html' 'https://gamescout-public-catalog.aire1n-music.workers.dev/api/v1/games'; do
+            printf 'PROBE %s ' "$url"
+            curl -sS -o /dev/null --connect-timeout 4 --max-time 10 -w 'http=%{http_code} ip=%{remote_ip} connect=%{time_connect} tls=%{time_appconnect} total=%{time_total}\n' "$url" || true
+          done
+      - name: Verify Yandex Object Storage baseline only
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then echo 'S3 credentials unavailable'; exit 0; fi
+          aws s3api head-object --bucket gamescout-ru-site --key index.html --endpoint-url https://storage.yandexcloud.net --query '{ContentType:ContentType,ContentLength:ContentLength,LastModified:LastModified,CacheControl:CacheControl}' --output json
+      - name: Read-only Cloudflare DNS control-plane check
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          node --input-type=module <<'NODE'
+          const token=process.env.CF_TOKEN
+          if(!token){console.log('No Cloudflare token');process.exit(0)}
+          const headers={Authorization:'Bearer '+token}
+          const fetchJson=async url=>{
+            const r=await fetch(url,{headers,signal:AbortSignal.timeout(9000)})
+            const j=await r.json()
+            return {status:r.status,success:j.success,errors:j.errors?.map(e=>e.code),data:j.result}
+          }
+          const z=await fetchJson('https://api.cloudflare.com/client/v4/zones?name=gamescout.online')
+          console.log('Cloudflare zones',JSON.stringify({status:z.status,success:z.success,count:z.data?.length,errorCodes:z.errors}))
+          if(!z.data?.length)return
+          const d=await fetchJson('https://api.cloudflare.com/client/v4/zones/'+encodeURIComponent(z.data[0].id)+'/dns_records?name=gamescout.online')
+          console.log('Cloudflare apex',JSON.stringify({status:d.status,success:d.success,records:d.data?.map(r=>({type:r.type,name:r.name,content:r.content,proxied:r.proxied})),errorCodes:d.errors}))
+          NODE

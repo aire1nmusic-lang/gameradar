@@ -21,6 +21,14 @@ jobs:
             }
           }
           NODE
+          echo '--- AUTH DNS ---'
+          for type in NS A AAAA CAA; do
+            dig +time=3 +tries=1 +short @1.1.1.1 gamescout.online "$type" || true
+          done
+          echo '--- CF RESOLVER ---'
+          dig +time=3 +tries=1 +short @8.8.8.8 gamescout.online A || true
+          echo '--- TRACE SERVICE ---'
+          ip route get 158.160.184.183 || true
           for url in 'https://gamescout.online/' 'http://gamescout.online/' 'https://storage.yandexcloud.net/gamescout-ru-site/index.html' 'https://gamescout-public-catalog.aire1n-music.workers.dev/api/v1/games'; do
             printf 'PROBE %s ' "$url"
             curl -sS -o /dev/null --connect-timeout 4 --max-time 10 -w 'http=%{http_code} ip=%{remote_ip} connect=%{time_connect} tls=%{time_appconnect} total=%{time_total}\n' "$url" || true

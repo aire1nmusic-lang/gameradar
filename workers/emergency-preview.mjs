@@ -4,10 +4,13 @@
  */
 const publicPaths = new Set(['/api/v1/games','/api/v1/servers','/api/v1/rating','/api/v1/support/ranking'])
 const serverDetail = /^\/api\/v1\/servers\/[a-z0-9-]+(?:\/online-history)?$/
-const commonHeaders = {'X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff'}
+// Temporary workers.dev mirror is noindex. The canonical domain must remain indexable if an explicitly approved cutover occurs.
 export default {
   async fetch(request,env) {
     const url = new URL(request.url)
+    const commonHeaders = url.hostname.endsWith('.workers.dev')
+      ? {'X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff'}
+      : {'X-Content-Type-Options':'nosniff'}
     const path=url.pathname
     if(request.method !== 'GET' && request.method !== 'HEAD')return new Response('Read-only preview',{status:405,headers:commonHeaders})
     if(path.startsWith('/api/')) {

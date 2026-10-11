@@ -1,0 +1,56 @@
+name: Emergency read-only GameScout preview
+on:
+  push:
+    branches: ['incident/public-edge-20261011']
+    paths:
+      - '.github/workflows/emergency-preview.yml'
+      - 'workers/emergency-preview.mjs'
+      - 'wrangler.emergency-preview.toml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Produce authoritative SEO-matched public build
+        run: npm run build:catalog -- https://gamescout-public-catalog.aire1n-music.workers.dev/
+      - name: Deploy temporary preview only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config wrangler.emergency-preview.toml
+      - name: Verify public preview and private-route isolation
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://gamescout-emergency-preview.aire1n-music.workers.dev'
+          const check=async(path)=>{
+            let response
+            for(let attempt=0;attempt<6;attempt++){
+              response=await fetch(base+path,{signal:AbortSignal.timeout(12000)})
+              if(response.status!==404||attempt===5)break
+              await new Promise(resolve=>setTimeout(resolve,1500))
+            }
+            console.log(path,response.status,response.headers.get('content-type'),response.headers.get('x-robots-tag'))
+            return response
+          }
+          const home=await check('/')
+          if(!home.ok || !/text\/html/.test(home.headers.get('content-type')||'') || !home.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Preview home is not ready')
+          const world=await check('/lineage-2')
+          if(!world.ok)throw Error('L2 world preview inaccessible')
+          const games=await check('/api/v1/games')
+          if(!games.ok || !Array.isArray(await games.json()))throw Error('Public games API inaccessible')
+          const servers=await check('/api/v1/servers?limit=1&offset=0')
+          if(!servers.ok || !Array.isArray((await servers.json()).items))throw Error('Public servers API inaccessible')
+          const privateRoute=await check('/api/v1/auth/me')
+          if(privateRoute.status!==404)throw Error('Private route must remain blocked')
+          NODE

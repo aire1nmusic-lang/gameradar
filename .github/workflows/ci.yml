@@ -70,6 +70,18 @@ jobs:
             })
             const json=await response.json().catch(()=>null)
             console.log('Cloudflare subdomain discovery HTTP',response.status,'success',json?.success,'errors',JSON.stringify(json?.errors?.map(e=>({code:e.code,message:e.message}))))
+            // Check whether workers.dev was intentionally disabled and whether D1 remote read is available.
+            const requests=[
+              ['script-subdomain','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(process.env.CF_ACCOUNT)+'/workers/scripts/gamescout-api/subdomain'],
+              ['public-D1-metadata','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(process.env.CF_ACCOUNT)+'/d1/database/28f90736-92b9-4261-82f5-ed5d8f55f239']
+            ]
+            for(const [label,url] of requests){
+              try{
+                const r=await fetch(url,{signal:AbortSignal.timeout(10000),headers:{Authorization:'Bearer '+process.env.CF_TOKEN}})
+                const j=await r.json().catch(()=>null)
+                console.log(label,JSON.stringify({status:r.status,success:j?.success,enabled:j?.result?.enabled,hasResult:!!j?.result,errorCodes:j?.errors?.map(e=>e.code)}))
+              }catch(e){console.log(label,'FAIL',e.name,e.cause?.code)}
+            }
             const subdomain=json?.result?.subdomain
             if (response.ok && typeof subdomain === 'string' && /^[a-z0-9-]+$/.test(subdomain)) {
               const url='https://gamescout-api.'+subdomain+'.workers.dev/api/v1/servers?limit=100&offset=0'

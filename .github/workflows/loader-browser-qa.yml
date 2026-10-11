@@ -13,6 +13,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   browser:
+    env:
+      PUBLIC_API_ORIGIN: https://gamescout-public-catalog.aire1n-music.workers.dev/
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

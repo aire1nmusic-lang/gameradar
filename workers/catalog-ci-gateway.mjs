@@ -6,19 +6,26 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    if (request.method !== 'GET' || url.pathname !== '/api/v1/servers') {
+    const isGames = url.pathname === '/api/v1/games'
+    const isServers = url.pathname === '/api/v1/servers'
+    if (request.method !== 'GET' || (!isGames && !isServers)) {
       return new Response('Not found', { status: 404 })
     }
-    if ([...url.searchParams.keys()].some(key => !['limit', 'offset'].includes(key))) {
-      return new Response('Unsupported query', { status: 400 })
+    if (isGames && url.search) return new Response('Unsupported query', { status: 400 })
+    if (isServers) {
+      if ([...url.searchParams.keys()].some(key => !['limit', 'offset'].includes(key))) {
+        return new Response('Unsupported query', { status: 400 })
+      }
+      const limit = url.searchParams.get('limit')
+      const offset = url.searchParams.get('offset')
+      if (limit !== '100' || offset === null || !/^(0|[1-9][0-9]*)$/.test(offset) ||
+          Number(offset) > 100000 || Number(offset) % 100 !== 0) {
+        return new Response('Invalid catalog page', { status: 400 })
+      }
     }
-    const limit = url.searchParams.get('limit')
-    const offset = url.searchParams.get('offset')
-    if (limit !== '100' || offset === null || !/^(0|[1-9][0-9]*)$/.test(offset) ||
-        Number(offset) > 100000 || Number(offset) % 100 !== 0) {
-      return new Response('Invalid catalog page', { status: 400 })
-    }
-    const endpoint = 'https://gamescout.online/api/v1/servers?limit=100&offset=' + offset
+    const endpoint = isGames
+      ? 'https://gamescout.online/api/v1/games'
+      : 'https://gamescout.online/api/v1/servers?limit=100&offset=' + url.searchParams.get('offset')
     try {
       const res = await env.CATALOG_API.fetch(new Request(endpoint, {
         method: 'GET',

@@ -43,10 +43,12 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] > .fa
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-copy {
   min-width:0;max-width:100%;overflow:hidden;align-self:center;
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-name,.server-meta,.server-right strong,.server-right small) {
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) :is(.server-name,.server-meta,.server-right strong,.server-right small) {
   color:#f8f6f3!important;text-shadow:0 1px 8px #070a12ee!important;
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-meta,.server-right small) {color:#cdd0da!important;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) :is(.server-meta,.server-right small) {color:#cdd0da!important;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) .fav {color:#cdd0da!important;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) .fav.selected {color:#ffe29a!important;}
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-right {
   position:relative;z-index:4;min-width:31px;margin-left:auto;padding:0!important;text-align:right!important;
 }

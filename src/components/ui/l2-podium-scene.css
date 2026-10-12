@@ -1,0 +1,113 @@
+/* GameScout Lineage II: rank-place artwork. The ranking/coins/votes data are untouched. */
+/* Deliberately world-shelf only. Catalog/rating pages retain their original cards. */
+html[data-design="lobby"] body .l2a--lineage2 :is(.gs-shelf-support,.gs-shelf-people) {
+  overflow:visible;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
+  --gs-spotlight:#e6b959;
+  position:relative;isolation:isolate;overflow:visible!important;
+  display:grid;grid-template-columns:43px minmax(0,1fr) auto;gap:8px;
+  min-height:64px!important;margin:4px 0!important;padding:9px 46px 9px 9px!important;
+  border:1px solid var(--gs-spotlight)!important;border-left:3px solid var(--gs-spotlight)!important;
+  border-radius:12px!important;
+  background:linear-gradient(95deg,#382918 0%,#242323 44%,#141a22 100%)!important;
+  box-shadow:0 0 13px color-mix(in srgb,var(--gs-spotlight) 16%,transparent),inset 0 1px #fff2!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"]:not(#gs) {
+  --gs-spotlight:#adc5e0;background:linear-gradient(95deg,#202e41 0%,#1e2531 55%,#141a23 100%)!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"]:not(#gs) {
+  --gs-spotlight:#ad78db;background:linear-gradient(95deg,#33203f 0%,#28213b 56%,#1a1924 100%)!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs)::before {
+  content:"";position:absolute;inset:0;z-index:0;border-radius:10px;pointer-events:none;overflow:hidden;
+  background:linear-gradient(90deg,#121923df 0%,#141923ab 34%,#14192357 75%,#131923b8 100%),url("/media/worlds/lineage-2/master-400.webp") 70% 45%/cover no-repeat;
+  opacity:.62;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="1"]:not(#gs)::before {
+  background-image:linear-gradient(90deg,#34200fc9 0%,#261d1ca5 48%,#28190970 100%),url("/media/worlds/lineage-2/essence-400.webp");
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"]:not(#gs)::before {
+  background-image:linear-gradient(90deg,#1c283aca 0%,#1b24309c 52%,#1924369c 100%),url("/media/worlds/lineage-2/interlude-400.webp");
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"]:not(#gs)::before {
+  background-image:linear-gradient(90deg,#382444d0 0%,#272038a5 55%,#202038a6 100%),url("/media/worlds/lineage-2/high-five-400.webp");
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] > :not(.fav):not(.gs-podium-person) {
+  position:relative;z-index:3;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] > .fav {z-index:5;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-copy {
+  min-width:0;max-width:100%;overflow:hidden;align-self:center;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-name,.server-meta,.server-right strong,.server-right small) {
+  color:#f8f6f3!important;text-shadow:0 1px 8px #070a12ee!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-meta,.server-right small) {color:#cdd0da!important;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-right {
+  position:relative;z-index:4;min-width:31px;margin-left:auto;padding:0!important;text-align:right!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:clamp(12px,1.05vw,15px);font-weight:760;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs) {
+  width:38px!important;height:47px!important;align-self:center;justify-self:center;
+  position:relative;z-index:4;display:grid!important;place-items:center;
+  padding:0!important;margin:0!important;border-radius:5px 5px 16px 16px!important;
+  clip-path:polygon(50% 0%,88% 8%,98% 26%,92% 74%,50% 100%,8% 74%,2% 26%,12% 8%);
+  background:linear-gradient(145deg,#ffe6a1,#d19d3e 38%,#684211 66%,#fae1a7 100%)!important;
+  filter:drop-shadow(0 0 5px #dba9538a)!important;
+  box-shadow:inset 0 0 0 3px #f7d084,inset 0 0 0 6px #4f300e!important;
+  font:800 23px/1 Georgia,serif!important;color:#ffdf93!important;-webkit-text-fill-color:#ffdf93!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs) {
+  background:linear-gradient(145deg,#f6fbff,#91a8c5 43%,#526a87 70%,#e4f4ff)!important;
+  color:#f0f8ff!important;-webkit-text-fill-color:#f0f8ff!important;filter:drop-shadow(0 0 5px #9bb8ef6a)!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs) {
+  background:linear-gradient(145deg,#edc9fa,#b472d9 40%,#664383 72%,#eebcfd)!important;
+  color:#ffe3ff!important;-webkit-text-fill-color:#ffe3ff!important;filter:drop-shadow(0 0 5px #bc79e36a)!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs)::before {
+  content:"";display:block!important;position:absolute;z-index:0;inset:3px;
+  clip-path:inherit;border-radius:4px 4px 12px 12px;
+  background:linear-gradient(145deg,#271c16,#1e171a);box-shadow:inset 0 0 0 1px #ffffff63;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs)::after {display:none!important;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium > span {
+  position:relative;z-index:1;-webkit-text-fill-color:inherit!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {
+  display:block;position:absolute;z-index:2;pointer-events:none;
+  width:90px;height:64px;right:56px;bottom:0;
+  background-image:url("/media/ranks/l2-podium-characters-20261012.webp");
+  background-size:270px 114px;background-repeat:no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,#000 2%,#000 58%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 2%,#000 58%,transparent 100%);
+  filter:drop-shadow(-7px 0 7px #0008);
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--1:not(#gs) {
+  height:114px;right:56px;background-position:0 100%;z-index:2;
+  filter:drop-shadow(-8px 0 9px #0009);
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--2:not(#gs) {background-position:-90px 100%;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--3:not(#gs) {background-position:-180px 100%;}
+/* Preserve the original two-column/tablet break and right-side numbers. */
+@media (min-width:601px) and (max-width:1150px) {
+  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .rows {display:block!important;}
+  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .server {grid-template-columns:43px minmax(0,1fr) auto!important;}
+  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .server-right {grid-column:auto!important;text-align:right!important;display:block!important;}
+}
+@media(max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
+    grid-template-columns:39px minmax(0,1fr) auto!important;gap:7px!important;
+    min-height:64px!important;padding:8px 44px 8px 8px!important;
+  }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs) {
+    width:37px!important;height:45px!important;font-size:21px!important;
+  }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {right:47px;}
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:12px!important;}
+}
+@media(max-width:359px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:11px!important;}
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {right:39px;opacity:.83;}
+}

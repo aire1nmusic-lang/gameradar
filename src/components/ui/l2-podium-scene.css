@@ -1,113 +1,212 @@
-/* GameScout Lineage II: rank-place artwork. The ranking/coins/votes data are untouched. */
-/* Deliberately world-shelf only. Catalog/rating pages retain their original cards. */
-html[data-design="lobby"] body .l2a--lineage2 :is(.gs-shelf-support,.gs-shelf-people) {
-  overflow:visible;
+/* GameScout Lineage II world shelves: places 1–3 as plaques with place-bound art.
+   One grid for every place: [medal][name + meta][number], favourite pinned right;
+   the art lives behind, in the gap between the text and the number, and never takes a grid cell. */
+html[data-design="lobby"] body .l2a--lineage2 :is(.gs-shelf-support,.gs-shelf-people) { overflow:visible; }
+
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) {
+  --spot:#e6b959;
+  position:relative; isolation:isolate; overflow:visible!important;
+  display:grid!important; grid-template-columns:58px minmax(0,1fr) auto 34px!important; align-items:center; column-gap:16px!important;
+  min-height:108px!important; margin:6px 0!important; padding:10px 8px 10px 12px!important;
+  border:1px solid color-mix(in srgb,var(--spot) 75%,transparent)!important; border-radius:14px!important;
+  background:#121019!important;
+  box-shadow:0 0 0 1px #0006, 0 8px 22px -12px color-mix(in srgb,var(--spot) 60%,transparent), inset 0 1px #ffffff1a!important;
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
-  --gs-spotlight:#e6b959;
-  position:relative;isolation:isolate;overflow:visible!important;
-  display:grid;grid-template-columns:43px minmax(0,1fr) auto;gap:8px;
-  min-height:64px!important;margin:4px 0!important;padding:9px 46px 9px 9px!important;
-  border:1px solid var(--gs-spotlight)!important;border-left:3px solid var(--gs-spotlight)!important;
-  border-radius:12px!important;
-  background:linear-gradient(95deg,#382918 0%,#242323 44%,#141a22 100%)!important;
-  box-shadow:0 0 13px color-mix(in srgb,var(--gs-spotlight) 16%,transparent),inset 0 1px #fff2!important;
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { min-height:136px!important; margin-top:56px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"]:not(#gs):not(#lb) { --spot:#b9cde6; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"]:not(#gs):not(#lb) { --spot:#b07de0; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb)::before { content:none!important; }
+
+/* Grid children above the art, in fixed cells. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] > .gs-rank-podium { grid-column:1; grid-row:1; position:relative; z-index:4; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] > .server-copy { grid-column:2; grid-row:1; position:relative; z-index:4; min-width:0; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] > .server-right { grid-column:3; grid-row:1; position:relative; z-index:4; min-width:56px; padding:0!important; text-align:right!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] > .fav:not(#gs):not(#lb) { grid-column:4; grid-row:1; position:relative!important; inset:auto!important; transform:none!important; z-index:5; justify-self:center; align-self:center; margin:0!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] :is(.server-name,.server-right strong) { color:#fbf8f2!important; text-shadow:0 1px 10px #000d!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] :is(.server-meta,.server-right small) { color:#d4d1da!important; text-shadow:0 1px 8px #000c!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-name { font-size:20px; font-weight:750; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .server-name { font-size:24px; }
+
+/* Medal: one shield per place, metal in the place colour. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) {
+  width:54px!important; height:64px!important; justify-self:center; display:grid!important; place-items:center; margin:0!important; padding:0!important;
+  clip-path:polygon(50% 0%,90% 9%,98% 28%,92% 72%,50% 100%,8% 72%,2% 28%,10% 9%)!important; border-radius:0!important; border:0!important;
+  background:linear-gradient(150deg,#fff3c8,#e0ad4c 38%,#7a5016 68%,#f7dc9c)!important;
+  box-shadow:none!important; filter:drop-shadow(0 0 6px color-mix(in srgb,var(--spot) 55%,transparent))!important;
+  font:800 28px/1 Georgia,serif!important; color:#ffe39a!important; -webkit-text-fill-color:#ffe39a!important;
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"]:not(#gs) {
-  --gs-spotlight:#adc5e0;background:linear-gradient(95deg,#202e41 0%,#1e2531 55%,#141a23 100%)!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"]:not(#gs) {
-  --gs-spotlight:#ad78db;background:linear-gradient(95deg,#33203f 0%,#28213b 56%,#1a1924 100%)!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs)::before {
-  content:"";position:absolute;inset:0;z-index:0;border-radius:10px;pointer-events:none;overflow:hidden;
-  background:linear-gradient(90deg,#121923df 0%,#141923ab 34%,#14192357 75%,#131923b8 100%),url("/media/worlds/lineage-2/master-400.webp") 70% 45%/cover no-repeat;
-  opacity:.62;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="1"]:not(#gs)::before {
-  background-image:linear-gradient(90deg,#34200fc9 0%,#261d1ca5 48%,#28190970 100%),url("/media/worlds/lineage-2/essence-400.webp");
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"]:not(#gs)::before {
-  background-image:linear-gradient(90deg,#1c283aca 0%,#1b24309c 52%,#1924369c 100%),url("/media/worlds/lineage-2/interlude-400.webp");
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"]:not(#gs)::before {
-  background-image:linear-gradient(90deg,#382444d0 0%,#272038a5 55%,#202038a6 100%),url("/media/worlds/lineage-2/high-five-400.webp");
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] > :not(.fav):not(.gs-podium-person) {
-  position:relative;z-index:3;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] > .fav {z-index:5;}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-copy {
-  min-width:0;max-width:100%;overflow:hidden;align-self:center;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-name,.server-meta,.server-right strong,.server-right small) {
-  color:#f8f6f3!important;text-shadow:0 1px 8px #070a12ee!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] :is(.server-meta,.server-right small) {color:#cdd0da!important;}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-right {
-  position:relative;z-index:4;min-width:31px;margin-left:auto;padding:0!important;text-align:right!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:clamp(12px,1.05vw,15px);font-weight:760;}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs) {
-  width:38px!important;height:47px!important;align-self:center;justify-self:center;
-  position:relative;z-index:4;display:grid!important;place-items:center;
-  padding:0!important;margin:0!important;border-radius:5px 5px 16px 16px!important;
-  clip-path:polygon(50% 0%,88% 8%,98% 26%,92% 74%,50% 100%,8% 74%,2% 26%,12% 8%);
-  background:linear-gradient(145deg,#ffe6a1,#d19d3e 38%,#684211 66%,#fae1a7 100%)!important;
-  filter:drop-shadow(0 0 5px #dba9538a)!important;
-  box-shadow:inset 0 0 0 3px #f7d084,inset 0 0 0 6px #4f300e!important;
-  font:800 23px/1 Georgia,serif!important;color:#ffdf93!important;-webkit-text-fill-color:#ffdf93!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs) {
-  background:linear-gradient(145deg,#f6fbff,#91a8c5 43%,#526a87 70%,#e4f4ff)!important;
-  color:#f0f8ff!important;-webkit-text-fill-color:#f0f8ff!important;filter:drop-shadow(0 0 5px #9bb8ef6a)!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs) {
-  background:linear-gradient(145deg,#edc9fa,#b472d9 40%,#664383 72%,#eebcfd)!important;
-  color:#ffe3ff!important;-webkit-text-fill-color:#ffe3ff!important;filter:drop-shadow(0 0 5px #bc79e36a)!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs)::before {
-  content:"";display:block!important;position:absolute;z-index:0;inset:3px;
-  clip-path:inherit;border-radius:4px 4px 12px 12px;
-  background:linear-gradient(145deg,#271c16,#1e171a);box-shadow:inset 0 0 0 1px #ffffff63;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs)::after {display:none!important;}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium > span {
-  position:relative;z-index:1;-webkit-text-fill-color:inherit!important;
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {
-  display:block;position:absolute;z-index:2;pointer-events:none;
-  width:90px;height:64px;right:56px;bottom:0;
-  background-image:url("/media/ranks/l2-podium-characters-20261012.webp");
-  background-size:270px 114px;background-repeat:no-repeat;
-  -webkit-mask-image:linear-gradient(to bottom,#000 2%,#000 58%,transparent 100%);
-  mask-image:linear-gradient(to bottom,#000 2%,#000 58%,transparent 100%);
-  filter:drop-shadow(-7px 0 7px #0008);
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--1:not(#gs) {
-  height:114px;right:56px;background-position:0 100%;z-index:2;
-  filter:drop-shadow(-8px 0 9px #0009);
-}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--2:not(#gs) {background-position:-90px 0;}
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--3:not(#gs) {background-position:-180px 100%;}
-/* Preserve the original two-column/tablet break and right-side numbers. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs):not(#lb) { background:linear-gradient(150deg,#ffffff,#a9bdd6 40%,#4f6684 70%,#e8f3ff)!important; color:#eef6ff!important; -webkit-text-fill-color:#eef6ff!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs):not(#lb) { background:linear-gradient(150deg,#f6dcff,#bd80e2 40%,#5f3c80 72%,#f2c6ff)!important; color:#ffe8ff!important; -webkit-text-fill-color:#ffe8ff!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb)::before { content:""!important; display:block!important; position:absolute; inset:3px; clip-path:inherit!important; background:linear-gradient(160deg,#2a2018,#151018); }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb)::after { display:none!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium > span { position:relative; z-index:1; -webkit-text-fill-color:inherit!important; }
+
+/* Art layer: never a grid cell. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server > .gs-plaque:not(#gs):not(#lb) { position:absolute!important; inset:0!important; z-index:1!important; pointer-events:none; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-frame { position:absolute; inset:0; overflow:hidden; border-radius:13px; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-bg { position:absolute; inset:0; width:100%; height:100%; max-width:none; object-fit:cover; object-position:72% 50%; filter:blur(1.4px) saturate(1.12); transform:scale(1.05); }
+/* Calm dark side for text, scene on the right, a soft wash of the place colour. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-frame::after { content:""; position:absolute; inset:0; z-index:3;
+  background:linear-gradient(90deg,#0b0910f5 0%,#0b0910d6 30%,#0b091055 62%,#0b091080 100%),linear-gradient(90deg,transparent 40%,color-mix(in srgb,var(--spot) 14%,transparent)); }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-hero { position:absolute; max-width:none; width:auto; pointer-events:none;
+  filter:drop-shadow(0 0 8px color-mix(in srgb,var(--spot) 70%,transparent)) drop-shadow(0 0 22px color-mix(in srgb,var(--spot) 35%,transparent)); }
+/* Inside the plaque: head and shoulders in the gap left of the number. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-frame .gs-plaque-hero { z-index:4; right:110px; top:2px; height:250%; }
+/* First place: stands on the plaque's bottom edge and rises above it. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero { z-index:2; right:110px; bottom:0; height:168%; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-sparks { position:absolute; inset:0; z-index:5; mix-blend-mode:screen; opacity:.9;
+  background-image:radial-gradient(1.6px 1.6px at 58% 72%,var(--spot),transparent 70%),radial-gradient(1.2px 1.2px at 70% 38%,#fff,transparent 70%),radial-gradient(1.8px 1.8px at 80% 82%,var(--spot),transparent 70%),radial-gradient(1.2px 1.2px at 52% 30%,var(--spot),transparent 70%),radial-gradient(1.4px 1.4px at 88% 52%,#fff,transparent 70%);
+  animation:gs-embers 6s linear infinite; }
+@keyframes gs-embers { 0% { transform:translateY(12px); opacity:0 } 20% { opacity:.9 } 100% { transform:translateY(-22px); opacity:0 } }
+@media (prefers-reduced-motion:reduce) { html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-sparks { animation:none; } }
+
+/* Tablet keeps one column of plaques per shelf. */
 @media (min-width:601px) and (max-width:1150px) {
-  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .rows {display:block!important;}
-  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .server {grid-template-columns:43px minmax(0,1fr) auto!important;}
-  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .server-right {grid-column:auto!important;text-align:right!important;display:block!important;}
+  html[data-design="lobby"] body .l2a--lineage2 .gs-shelf-support .rows { display:block!important; }
 }
-@media(max-width:600px) {
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
-    grid-template-columns:39px minmax(0,1fr) auto!important;gap:7px!important;
-    min-height:64px!important;padding:8px 44px 8px 8px!important;
-  }
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs) {
-    width:37px!important;height:45px!important;font-size:21px!important;
-  }
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {right:47px;}
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:12px!important;}
+@media (max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) { grid-template-columns:46px minmax(0,1fr) auto 28px!important; column-gap:10px!important; min-height:92px!important; padding:8px 6px 8px 10px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { min-height:116px!important; margin-top:48px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) { width:46px!important; height:54px!important; font-size:23px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-name { font-size:16px; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .server-name { font-size:18px; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-frame .gs-plaque-hero { right:92px; height:225%; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero { right:92px; height:155%; }
 }
-@media(max-width:359px) {
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .server-name {font-size:11px!important;}
-  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {right:39px;opacity:.83;}
+/* Finished single images: sharp (no blur), lighter dimming so the character stays bright. */
+/* Wider than the plaque and shifted left, so the face (≈70% of the art) lands left of the number. */
+/* Zoomed out: the whole portrait fits, pinned right of centre, fading into the dark text side. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-bg { filter:saturate(1.08); left:auto!important; bottom:auto!important; right:64px!important; top:50%!important; transform:translateY(-50%)!important; height:145%; width:auto; aspect-ratio:3/1; object-fit:cover;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 38%,#000 92%,transparent 100%); mask-image:linear-gradient(90deg,transparent 0,#000 38%,#000 92%,transparent 100%); }
+@media (max-width:600px) { html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-bg { right:36px!important; height:125%; } }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-frame::after { background:linear-gradient(90deg,#0b0910f0 0%,#0b0910c0 32%,#0b091022 62%,#0b091040 100%); }
+
+/* Bigger numbers and meta inside the plaques. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-right strong { font-size:24px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .server-right strong { font-size:30px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-right small { font-size:12px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-meta { font-size:14px!important; margin-top:4px; }
+@media (max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-right strong { font-size:20px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .server-right strong { font-size:24px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .server-meta { font-size:12.5px!important; }
 }
+
+/* ---------- Places with a finished picture: the plaque takes the picture's 3:1 shape ---------- */
+/* Whole picture, no dimming; name and number sit on its calm dark left side. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) {
+  aspect-ratio:3 / 1; min-height:0!important; height:auto;
+  grid-template-columns:58px minmax(0,1fr) 34px!important; grid-template-rows:auto auto; align-content:center; row-gap:6px!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single) > .gs-rank-podium { grid-row:1 / span 2; align-self:center; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single) > .server-copy { grid-column:2; grid-row:1; align-self:end; max-width:52%; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single) > .server-right { grid-column:2; grid-row:2; align-self:start; text-align:left!important; display:flex!important; align-items:baseline; gap:6px; min-width:0; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single) > .fav:not(#gs):not(#lb) { grid-column:3; grid-row:1 / span 2; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-bg:not(#gs) {
+  inset:0!important; top:0!important; right:auto!important; transform:none!important; width:100%!important; height:100%!important; aspect-ratio:auto;
+  object-fit:cover; object-position:50% 50%!important; -webkit-mask-image:none!important; mask-image:none!important; filter:none!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-frame::after { background:linear-gradient(90deg,#05040a73 0%,#05040a26 34%,transparent 52%)!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-sparks { display:none; }
+
+/* Metal frame in the place colour: bright edge, darker middle, soft outer glow. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) {
+  border:2px solid transparent!important;
+  background:linear-gradient(#121019,#121019) padding-box,
+    linear-gradient(135deg,#ffffffd9 0%,var(--spot) 18%,color-mix(in srgb,var(--spot) 35%,#000) 50%,var(--spot) 82%,#ffffffb3 100%) border-box!important;
+  box-shadow:0 0 0 1px #0008, 0 0 18px -2px color-mix(in srgb,var(--spot) 55%,transparent), 0 12px 30px -16px #000!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque-frame { border-radius:12px!important; }
+@media (max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { grid-template-columns:46px minmax(0,1fr) 28px!important; row-gap:2px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single) > .server-copy { max-width:62%; }
+}
+/* First place stays the largest plaque. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { aspect-ratio:2.5 / 1; min-height:0!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero { height:128%!important; right:150px!important; }
+@media (max-width:600px) { html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero { right:90px!important; height:130%!important; } }
+/* Favourite stays visible on bright pictures: a small dark disc. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] > .fav:not(#gs):not(#lb) { width:34px!important; min-width:34px!important; height:34px!important; border-radius:50%!important; background:#07060cb3!important; color:#f4f1ea!important; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+/* Calmer balance: lower plaques that still show the faces, a thin frame and a faint glow. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { aspect-ratio:4.6 / 1; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { aspect-ratio:3.8 / 1; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-single .gs-plaque-bg:not(#gs):not(#lb) { object-position:50% 28%!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--3.is-single .gs-plaque-bg:not(#gs):not(#lb) { object-position:50% 20%!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) {
+  border-width:1px!important;
+  box-shadow:0 0 0 1px #0007, 0 0 10px -4px color-mix(in srgb,var(--spot) 45%,transparent), 0 10px 24px -18px #000!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) .server-name { font-size:18px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) .server-name { font-size:21px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) { width:46px!important; height:54px!important; font-size:23px!important; }
+@media (max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { aspect-ratio:3.7 / 1; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { aspect-ratio:3.2 / 1; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) .server-name { font-size:15px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) .server-name { font-size:16px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) { width:40px!important; height:48px!important; font-size:20px!important; }
+}
+/* Wide single-column shelves (tablet): the shape is capped so plaques never grow into banners. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { max-height:150px; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { max-height:180px; }
+/* Third place uses a 6:1 band picture: a low plaque that still shows the whole bust. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"]:has(.gs-plaque.is-single):not(#gs):not(#lb) { aspect-ratio:6 / 1; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--3.is-single .gs-plaque-bg:not(#gs):not(#lb) { object-position:50% 50%!important; }
+@media (max-width:600px) { html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"]:has(.gs-plaque.is-single):not(#gs):not(#lb) { aspect-ratio:4.6 / 1; } }
+/* The first-place character stands in front of every plaque layer (scene, dimming, sparks and the frame line). */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero:not(#gs):not(#lb) { z-index:6!important; }
+/* Owner tuning: a larger first-place character; the third-place picture a touch closer, centred on the face. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero:not(#gs):not(#lb) { height:165%!important; right:130px!important; }
+@media (max-width:600px) { html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero:not(#gs):not(#lb) { height:160%!important; right:80px!important; } }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--3.is-single .gs-plaque-bg:not(#gs):not(#lb) { transform:scale(1.12)!important; transform-origin:72% 45%; }
+@media (max-width:600px) {
+  /* Phones: the taller character gets air above the plaque instead of touching the shelf title. */
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"]:not(#gs):not(#lb) { margin-top:62px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque.is-pop > .gs-plaque-hero:not(#gs):not(#lb) { height:150%!important; }
+}
+
+/* First place: warm golden scene — the cover softly out of focus, gold light instead of a grey veil. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-bg:not(#gs):not(#lb) { filter:blur(5px) saturate(1.25) brightness(.95)!important; transform:scale(1.12)!important; object-position:50% 30%!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-frame::after { background:
+  radial-gradient(ellipse 60% 120% at 70% 100%,#ffc24a40,transparent 70%),
+  linear-gradient(90deg,#140c04e6 0%,#1a1006b3 34%,#2a180826 64%,#14090340 100%)!important; }
+
+/* Place medals: solid metal crest, engraved dark number, a highlight on top. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) {
+  background:linear-gradient(160deg,#fff6d6 0%,#f3cd6a 22%,#c7902e 52%,#8a5a17 78%,#e9c46e 100%)!important;
+  color:#3a2306!important; -webkit-text-fill-color:#3a2306!important; text-shadow:0 1px 0 #fff6, 0 -1px 0 #0003!important;
+  filter:drop-shadow(0 2px 4px #000a) drop-shadow(0 0 8px color-mix(in srgb,var(--spot) 50%,transparent))!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs):not(#lb) { background:linear-gradient(160deg,#ffffff 0%,#dfe7f2 22%,#9fb0c6 52%,#5d6f88 78%,#d8e3f0 100%)!important; color:#1d2633!important; -webkit-text-fill-color:#1d2633!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs):not(#lb) { background:linear-gradient(160deg,#fbeaff 0%,#dcaef5 22%,#a46ad0 52%,#5e3485 78%,#d9a8f2 100%)!important; color:#2c1240!important; -webkit-text-fill-color:#2c1240!important; }
+/* Inner bevel instead of the dark plate. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb)::before { inset:3px!important; background:linear-gradient(180deg,#ffffff55 0%,#ffffff10 45%,#00000018 100%)!important; }
+
+/* Rows 4+: separate cards with air between them. */
+html[data-design="lobby"] body .l2a .rows .server:not(.gs-top-row):not(#lb) { margin:8px 0!important; border:1px solid var(--lb-line)!important; border-radius:12px!important; }
+html[data-design="lobby"] body .l2a .rows .server.gs-top-row + .server:not(.gs-top-row):not(#lb) { margin-top:12px!important; }
+/* First place: owner's golden hall — sharp, only a light veil on the text side. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-bg:not(#gs):not(#lb) { filter:saturate(1.08)!important; transform:none!important; object-position:60% 45%!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-frame::after { background:linear-gradient(90deg,#0d0803cc 0%,#0d080366 32%,transparent 58%)!important; }
+/* Sky city: bright picture, so the text side gets a slightly deeper warm veil; a touch of softness. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-bg:not(#gs):not(#lb) { filter:blur(1px) saturate(1.05)!important; transform:scale(1.02)!important; object-position:62% 40%!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-plaque--1 .gs-plaque-frame::after { background:linear-gradient(90deg,#1a0e05e0 0%,#1a0e0599 30%,#1a0e0533 56%,transparent 72%)!important; }
+
+/* Drawn place emblems (owner art) replace the coded shields where they exist. */
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) {
+  width:72px!important; height:68px!important; clip-path:none!important; border:0!important; box-shadow:none!important;
+  background:center / contain no-repeat!important; color:transparent!important; -webkit-text-fill-color:transparent!important; text-shadow:none!important;
+  filter:drop-shadow(0 4px 8px #000b) drop-shadow(0 0 10px color-mix(in srgb,var(--spot) 45%,transparent))!important;
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-1-192.webp")!important; width:84px!important; height:80px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-2-192.webp")!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb)::before { display:none!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) { grid-template-columns:84px minmax(0,1fr) auto 34px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { grid-template-columns:84px minmax(0,1fr) 34px!important; }
+@media (max-width:600px) {
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb) { width:54px!important; height:52px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .gs-rank-podium:not(#gs):not(#lb) { width:62px!important; height:59px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) { grid-template-columns:62px minmax(0,1fr) auto 28px!important; }
+  html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { grid-template-columns:62px minmax(0,1fr) 28px!important; }
+}
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-3-192.webp")!important; }

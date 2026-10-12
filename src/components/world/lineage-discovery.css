@@ -147,10 +147,11 @@ html[data-color-mode] .gs-l2-aether-layout :is(.gs-coins-card,.gs-account-empty,
               linear-gradient(90deg, #07101bbb 0%, #07101b66 38%, transparent 83%);
 }
 @media (max-width: 767px) {
+  /* Portrait frame of the party art: full width from the top, faces above the shelves. */
   .l2a.l2a--sunset .scene::before {
-    background-position: 62% 0;
-    background-size: cover;
-    opacity: .83;
+    background-position: 50% 0;
+    background-size: 100% auto;
+    opacity: .9;
   }
   .l2a.l2a--sunset .scene::after {
     background: linear-gradient(180deg, #06101b66 0%, #06101b33 32%, var(--bg) 95%),

@@ -291,6 +291,7 @@ jobs:
         id: verify_edge
         continue-on-error: true
         run: |
+          node scripts/edge-release.mjs wait-live
           SEO_BASE_URL=https://gamescout.online npm run test:seo
           node scripts/run-browser-qa.mjs --live https://gamescout.online
       - name: Restore previous version after failed postflight

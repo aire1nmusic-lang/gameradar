@@ -2194,5 +2194,65 @@
     "checkedAt": "2026-10-10",
     "confidence": "confirmed",
     "notes": "Found automatically on 2026-10-10; official site answered and names the project."
+  },
+  {
+    "key": "l2:l2free.ru",
+    "game": "lineage2",
+    "name": "L2Free.Ru",
+    "website": "https://l2free.ru/",
+    "chronicle": "interlude",
+    "version": "Interlude",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://l2free.ru/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://l2free.ru/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39100"
+      }
+    ],
+    "checkedAt": "2026-10-12",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-12; official site answered and names the project."
+  },
+  {
+    "key": "l2:e-l2ares.ru",
+    "game": "lineage2",
+    "name": "E-l2ares.ru x1",
+    "website": "https://e-l2ares.ru/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://e-l2ares.ru/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://e-l2ares.ru/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39729"
+      }
+    ],
+    "checkedAt": "2026-10-12",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-12; official site answered and names the project."
   }
 ]

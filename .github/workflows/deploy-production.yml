@@ -269,7 +269,7 @@ jobs:
           test -n "$VITE_SUPABASE_PUBLISHABLE_KEY"
       - run: npm ci
       - run: npm run test:private
-      - run: node --test tests/emergency-preview-seo.test.mjs tests/edge-asset-retention.test.mjs tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs
+      - run: node --test tests/emergency-preview-seo.test.mjs tests/edge-asset-retention.test.mjs tests/edge-bundle-graph.test.mjs tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs
       - run: npm run build:catalog -- "$PUBLIC_API_ORIGIN"
       - name: Retain currently published hashed dependencies
         run: node scripts/retain-edge-assets.mjs

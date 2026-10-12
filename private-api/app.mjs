@@ -9,6 +9,7 @@ import { operationalSnapshot } from './operations.mjs'
 import { coinIntegrity } from './coin-monitor.mjs'
 import { emergencyBlocks, emergencyLimit } from './security.mjs'
 import { proofTarget, checkClaimProof } from './claim-proof.mjs'
+import { supabaseAuthConfiguration, verifiedSupabaseUser } from './supabase-auth.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
@@ -75,7 +76,8 @@ const audit = (tx,actor,action,target,details={}) => tx.query('INSERT INTO gs_au
 const voteRulesDto = row => ({windowHours:row.window_hours,maxPerWindow:row.max_per_window,
   ipDailyLimit:row.ip_daily_limit,deviceDailyLimit:row.device_daily_limit,asnDailyLimit:row.asn_daily_limit})
 
-export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify, proofCheck=checkClaimProof }) {
+export function createApp({ db, config, oauthExchange=exchangeProfile, publicFetch=fetch, captchaVerify, proofCheck=checkClaimProof, supabaseFetch=fetch }) {
+  const supabase = supabaseAuthConfiguration(config.supabaseUrl, config.supabasePublishableKey)
   if (!/^[a-f0-9]{64}$/.test(config.mailKey??'') || (config.rateKey??'').length<32) throw new Error('private_keys_required')
   if (!!config.turnstileSecret !== !!config.turnstileSiteKey) throw new Error('turnstile_key_pair_required')
   const origin = new URL(config.origin).origin
@@ -187,6 +189,50 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.get('/api/v1/auth/me',async c=>{
     const user=await queryUser(c)
     return c.json({user:user?await dto(user):null,providers:enabledProviders(oauthEnv),emailLogin:!!config.mailEnabled,registrationOpen:registrationOpen(),privateCore:true,devAuthEnabled:false})
+  })
+  app.post('/api/v1/auth/supabase',async c=>{
+    if (!supabase) fail(404,'provider_disabled','Новый вход ещё не подключён')
+    const body=await json(c)
+    if (body.link !== undefined && typeof body.link !== 'boolean') fail(400,'invalid_input','Некорректная привязка')
+    await limit(c,'supabase',digest(String(body.accessToken??'')),30)
+    let verified
+    try { verified=await verifiedSupabaseUser(supabase,body.accessToken,supabaseFetch) }
+    catch (error) {
+      if (error?.message==='supabase_unavailable' || ['TimeoutError','AbortError','TypeError'].includes(error?.name))
+        fail(503,'supabase_unavailable','Сервис входа временно недоступен. Попробуйте позже.')
+      fail(401,'supabase_verification_failed','Не удалось подтвердить сессию. Войдите повторно.')
+    }
+    const existing=await queryUser(c)
+    if (body.link && (!existing || Date.now()-new Date(existing.authenticated_at).getTime()>600000))
+      fail(401,'reauth_required','Войдите в прежний аккаунт перед привязкой')
+    const raw=await db.transaction(async tx=>{
+      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${supabase.provider}:${verified.subject}`])
+      const identity=(await tx.query('SELECT user_id FROM gs_identities WHERE provider=$1 AND subject=$2',[supabase.provider,verified.subject])).rows[0]
+      let userId=identity?.user_id
+      if (body.link) {
+        const me=(await tx.query(`SELECT u.id FROM gs_sessions s JOIN gs_users u ON u.id=s.user_id
+          WHERE s.token_hash=$1 AND s.expires_at>now() AND s.created_at>now()-interval '10 minutes' AND u.banned_at IS NULL FOR UPDATE OF u`,[sessionHash(c)])).rows[0]
+        if (!me || me.id!==existing.id) fail(401,'reauth_required','Войдите повторно')
+        if (userId && userId!==me.id) fail(409,'linked_elsewhere','Вход уже связан с другим аккаунтом')
+        userId=me.id
+      }
+      if (!userId) {
+        if (!registrationOpen()) closedRegistration()
+        // Serialize registrations with the same mailbox; never auto-merge existing users by email.
+        await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[verified.email])
+        if ((await tx.query('SELECT id FROM gs_users WHERE email=$1',[verified.email])).rows.length)
+          fail(409,'account_link_required','Эта почта есть в прежнем аккаунте. Войдите в него и привяжите новый вход.')
+        userId=token()
+        await tx.query('INSERT INTO gs_users(id,email,display_name,email_verified_at) VALUES($1,$2,$3,now())',[userId,verified.email,verified.displayName])
+      }
+      const user=(await tx.query('SELECT * FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
+      if (user.banned_at) fail(403,'banned','Аккаунт заблокирован')
+      if (!identity) await tx.query('INSERT INTO gs_identities(provider,subject,user_id) VALUES($1,$2,$3)',[supabase.provider,verified.subject,userId])
+      await audit(tx,userId,body.link?'identity.linked':'identity.login',supabase.provider)
+      return startSession(c,tx,userId,verified.method)
+    })
+    c.header('Set-Cookie',cookie('gs_private_session',raw,604800))
+    return c.json({ok:true})
   })
   const favoriteList = async userId => ({favorites:(await db.query(`SELECT r.slug FROM gs_favorites f JOIN gs_server_registry r ON r.server_id=f.server_id WHERE f.user_id=$1 ORDER BY f.created_at DESC,r.slug`,[userId])).rows.map(r=>r.slug)})
   app.get('/api/v1/me/favorites',async c=>{const user=await requireUser(c);return c.json(await favoriteList(user.id))})

@@ -13,6 +13,16 @@ import '@/theme/readability.css'
 import '@/theme/lobby.css'
 import '@/theme/worldFonts'
 
+// Earlier invitations may return to the Site URL. Keep their credentials on
+// the account route, where the Auth handler consumes and immediately removes them.
+if (import.meta.env.VITE_AUTH_BACKEND === 'supabase') {
+  const returned = new URL(location.href)
+  const fragment = new URLSearchParams(returned.hash.slice(1))
+  if (returned.pathname === '/account/' || (returned.pathname === '/' && (returned.searchParams.has('code') || returned.searchParams.has('error') || fragment.has('access_token') || fragment.has('error')))) {
+    history.replaceState(null, '', '/account' + returned.search + returned.hash)
+  }
+}
+
 // Design preview branch: the lobby look is on for everything except the hall.
 document.documentElement.dataset.design = 'lobby'
 applyAppearance(readAppearance())
@@ -43,7 +53,11 @@ function Bootstrap() {
 
     setError('')
 
-    initializeRepositories().then(() => {
+    // Account entry must remain usable when the public catalog is unavailable.
+    const initialization = initializeRepositories()
+    const accountEntry = import.meta.env.VITE_AUTH_BACKEND === 'supabase' && location.pathname === '/account'
+    if (accountEntry) void initialization.catch(() => undefined)
+    ;(accountEntry ? Promise.resolve() : initialization).then(() => {
       if (active) setReady(true)
     }).catch(errorValue => {
       if (!active) return

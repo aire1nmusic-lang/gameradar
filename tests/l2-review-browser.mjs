@@ -96,5 +96,5 @@ try{
   await page.goto(base+'/rating?game=lineage2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-support a[href^="/server/"]').first().waitFor();assert.equal(await page.getByRole('button',{name:'Поддержать сервер',exact:true}).isEnabled(),missing==='people');await context.close();console.log('PASS live aggregate 503 keeps cards,',missing)
  }
  await writeFile('output/l2-review-qa/report.json',JSON.stringify(report,null,2))
-}catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url())}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}
+}catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url());console.log('PAGE_DIAGNOSTIC',await active.evaluate(()=>({path:location.pathname,classes:document.documentElement.className,ready:document.readyState,h1:document.querySelector('h1')?.textContent,rows:document.querySelectorAll('.l2a a.server').length,error:document.querySelector('.gs-error')?.textContent,scripts:[...document.scripts].filter(s=>s.src).map(s=>new URL(s.src).pathname)})))}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}
 

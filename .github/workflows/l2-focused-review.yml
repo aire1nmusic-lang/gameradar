@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths: ['.github/workflows/l2-focused-review.yml', 'tests/l2-journey-browser.mjs', 'src/components/world/lineage-discovery.css', 'src/components/layout/world-glass-review.css', 'src/components/layout/FooterFaq.tsx', 'src/components/ui/top-ranks.css', 'src/components/ui/RankMedal.tsx', 'src/components/ui/TopRankArt.tsx', 'public/media/ranks/**', 'tests/l2-review-browser.mjs']
   workflow_dispatch:
+    inputs:
+      qa_base:
+        description: 'Optional read-only existing frontend URL for focused diagnosis'
+        type: string
+        default: ''
 permissions:
   contents: read
 jobs:
@@ -13,6 +18,8 @@ jobs:
     env:
       PUBLIC_API_ORIGIN: https://gamescout-public-catalog.aire1n-music.workers.dev/
       PUBLIC_SITE_ORIGIN: https://gamescout.online
+      REVIEW_QA_BASE_URL: ${{ inputs.qa_base }}
+      AETHER_QA_BASE_URL: ${{ inputs.qa_base }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +36,7 @@ jobs:
         run: |
           node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs
           node tests/l2-review-browser.mjs
+          node tests/aether-browser.mjs
       - name: Compact screenshot contact sheets for visual review
         run: |
           python -m pip install --quiet Pillow

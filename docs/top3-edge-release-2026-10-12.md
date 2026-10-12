@@ -20,9 +20,13 @@ Owner selected the existing Cloudflare frontend path, preserving Supabase and DN
 
 The Worker maps extensionless pages to the actual `path/index.html`; absent objects serve `404.html` at HTTP 404 with noindex/no-store. Private denial and public read-only service binding are preserved byte-for-byte. Supabase frontend integration is copied from the already live release, retaining project/session storage/callback handling; no SQL bridge is added in this release.
 
+HTML responses use `no-store, must-revalidate`. Explicit Worker-first patterns handle documents consistently; `/assets/*` and `/media/*` serve directly, preserving nosniff through `_headers` and reducing billable invocations. Before upload, the release keeps the currently published public hashed JS/CSS/font graph in the new asset manifest. It never copies old HTML, never overwrites different bytes under a current hash, and rejects HTML fallbacks, more than128 dependencies or more than8MiB. The real initial graph contained33 files/1.35MB. Bundle safety still scans all files for fixtures/readable old brand, and separately checks the actual current graph for duplicate migration keys.
+
 ## Gates and rollback
 
 Protected workflow runs private tests, public read tests, actual catalog build/SEO reconciliation, bundle check and all nine browser suites. It snapshots the active version, uploads an inactive candidate, verifies its HTTP SEO including unknown 404, refuses activation if another release changed the active version, then activates only that version. Canonical SEO and all nine live browser suites follow; failure restores the saved active version and fails the run.
+
+Before canonical SEO, a bounded120-second readiness check requires the new entry JS in the homepage, L2 and account slash/no-slash aliases, Minecraft and GTA RP, plus the exact missing-route404/noindex. This does not replace the unchanged SEO test or any live browser suite. A successful manual matrix alone does not override a failed automated postflight. Runs38278196034 and38281655931 exercised actual automatic rollback; rollback root HTML/entry JS availability was independently checked afterwards.
 
 Manual emergency rollback (run only if no other release replaced this candidate):
 

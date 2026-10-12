@@ -88,7 +88,7 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--1:not(#gs
   height:114px;right:56px;background-position:0 100%;z-index:2;
   filter:drop-shadow(-8px 0 9px #0009);
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--2:not(#gs) {background-position:-90px 100%;}
+html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--2:not(#gs) {background-position:-90px 0;}
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--3:not(#gs) {background-position:-180px 100%;}
 /* Preserve the original two-column/tablet break and right-side numbers. */
 @media (min-width:601px) and (max-width:1150px) {

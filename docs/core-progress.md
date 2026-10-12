@@ -1,3 +1,6 @@
+## 12.10.2026 — Continuity preflight: legacy-key count scoped to active graph, safety checks preserved
+
+Run38292004715 failedtest:bundle beforeupload/activation: multiple retainedgenerations legitimately eachcontainlegacy localStorage gameradar:favorites; previousglobalmax1 falselycountedbothgenerations. Updatedcheck-bundle toderiveactiveJSgraphfromcurrentHTML/actualimports, requireactiveHTTPAPIandatmostonelegacykeythere. AcrossALLJS (includingretained) fixtures/readableoldbrand stillforbidden andeverylowercasebrandoccurrence stillmustbeexactlegacykey. No marker/SEOgate disabled. LocalbundlePASS andedge/retention3/3PASS. Assetgraph33publicfiles/10extraonlyignored dist. SourceReact/CSS unchanged; existingoldfrontendbeaver stillactive. Nextprotectedretryallgates/diagnostics, no productionclaim. Cost0newresources; rollback unchanged.
 ## 12.10.2026 — Переход версий усилен; причина two live timeouts ещё HYPOTHESIS
 
 Focused immutablepreview run38286853188 SUCCESS: failedpreviouslyreview/aether nowfullPASS plusjourney/controls/studio. Readonlycanonicalrollbackrun38288090854 expectedfailsnewframeassert1!=3; diagnosticreadycomplete/classesdark/h1LineageII/rows90/oldJSindexD1, noJSbooterror. Это подтверждаетздоровуюстаруюверсию, не доказываетпричинуtransientnewversiontimeouts. Productioncurrentlybea, rootoldJS200text/javascriptverified.

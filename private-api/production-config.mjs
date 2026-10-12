@@ -15,6 +15,7 @@ export async function productionConfig(env=process.env) {
     RESEND_API_KEY:env.RESEND_API_KEY,UNISENDER_API_KEY:env.UNISENDER_API_KEY,
     SMTP_HOST:env.SMTP_HOST,SMTP_PORT:env.SMTP_PORT,SMTP_USER:env.SMTP_USER,SMTP_PASSWORD:env.SMTP_PASSWORD,SMTP_TLS:env.SMTP_TLS,SMTP_SEND:sendSmtp}
   const config={origin:env.PUBLIC_ORIGIN,environment:'production',mailKey:env.MAIL_ENCRYPTION_KEY,
+    supabaseUrl:env.SUPABASE_AUTH_URL,supabasePublishableKey:env.SUPABASE_AUTH_PUBLISHABLE_KEY,
     rateKey:env.RATE_HASH_KEY,mailEnabled:mailEnabled(mailEnv),mailEnv,publicApi:env.PUBLIC_CATALOG_ORIGIN,
     publicProjection:env.PUBLIC_PROJECTION_URL,projectionSecret:env.PUBLIC_PROJECTION_SECRET,
     turnstileSecret:env.TURNSTILE_SECRET,turnstileSiteKey:env.TURNSTILE_SITE_KEY,

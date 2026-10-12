@@ -12,6 +12,9 @@ import { ClaimProof } from '@/components/account/ClaimProof'
 import { GsMark } from '@/components/layout/Logo'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { SupabaseAccount } from '@/components/account/SupabaseAccount'
+import { authClient } from '@/lib/supabaseAuth'
 
 const Admin=lazy(()=>import('./Admin'))
 
@@ -27,6 +30,9 @@ const providerLabels:Record<string,string>={google:'Google',vk:'VK',yandex:'Ян
 export default function Account() {
   useSeo({title:'Аккаунт',path:'/account',noindex:true})
   const auth=useAuth(), profile=auth.user as (typeof auth.user & Profile)
+  const external=useSupabaseAuth()
+  const [legacyEntry,setLegacyEntry]=useState(false)
+  const [externalEntry,setExternalEntry]=useState(false)
   const {scoped}=useWorldNavigation()
   const [mode,setMode]=useState<'login'|'register'|'reset'>('login')
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState('')
@@ -66,10 +72,12 @@ export default function Account() {
     const path=mode==='register'?'/auth/register':mode==='reset'?'/auth/password/reset/request':'/auth/login'
     await run(()=>apiSend(path,{email,password,displayName:name}),mode==='login'?'Вы вошли.':'Проверьте почту. Если адрес подходит для этого действия, придёт ссылка на 20 минут.')
   }
+  if(external.enabled && (!auth.user || externalEntry || external.recovery) && !legacyEntry)
+    return <SupabaseAccount external={external} link={!!auth.user} refreshPrivate={async()=>{await auth.refresh();setExternalEntry(false)}} legacy={()=>{setLegacyEntry(true);setExternalEntry(false)}}/>
   if(auth.loading) return <main className="mx-auto max-w-2xl p-6">Проверяем сессию…</main>
-  if(!auth.privateCore) return <main className="mx-auto max-w-2xl p-6"><Notice tone="info">Новый аккаунт ещё не подключён в этом окружении.</Notice></main>
+  if(!auth.privateCore) return <main className="mx-auto max-w-2xl space-y-4 p-6"><Notice tone="info">Сервис прежних аккаунтов временно недоступен.</Notice>{external.enabled&&<Button full size="lg" variant="outline" onClick={()=>setLegacyEntry(false)}>Новый вход: Google, Discord и почта</Button>}</main>
   if(!auth.user)return <AccountEntry mode={mode} setMode={m=>{setMode(m);setError('');setMessage('')}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} name={name} setName={setName}
-    busy={busy} error={error} apiError={auth.error} message={message} registrationOpen={auth.registrationOpen} providers={auth.providers} submit={submit}
+    busy={busy} error={error} apiError={auth.error} alternateAction={external.enabled&&<Button full size="lg" variant="outline" onClick={()=>setLegacyEntry(false)}>Новый вход: Google, Discord и почта</Button>} message={message} registrationOpen={auth.registrationOpen} providers={auth.providers} submit={submit}
     confirmation={linkToken&&<section className="space-y-3 rounded-xl border border-signal-400/20 p-4"><h2>{purpose==='reset'?'Новый пароль':'Подтвердите email'}</h2>
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>
@@ -90,6 +98,7 @@ export default function Account() {
 
     {error&&<p role="alert" className="rounded-xl border border-danger-400/25 bg-danger-500/8 px-4 py-3 text-[13px] text-danger-300">{error}</p>}
     {message&&<p role="status" className="rounded-xl border border-signal-400/20 bg-signal-500/8 px-4 py-3 text-[13px] text-signal-400">{message}</p>}
+    {external.enabled&&<section className="gs-account-card rounded-[22px] border p-4"><p className="mb-3 text-sm">Подключите новый вход, сохранив этот профиль, избранное и права.</p><Button variant="outline" onClick={()=>{setLegacyEntry(false);setExternalEntry(true)}}>Подключить новый вход</Button></section>}
 
     {linkToken&&<section className="gs-account-card space-y-3 rounded-[22px] border p-5">
       <h2 className="text-[17px] font-semibold">Подтверждение {purpose==='reset'?'нового пароля':'email'}</h2>
@@ -162,7 +171,7 @@ export default function Account() {
     </div>
     </div>
     <div className="gs-account-exit flex justify-end pt-5">
-      <button type="button" disabled={busy} onClick={()=>run(()=>auth.logout(),'Вы вышли.')} className="gs-account-action inline-flex min-h-11 items-center gap-2 rounded-xl border px-5 text-sm disabled:opacity-50"><WorldIcon name="logout" size={17}/>Выйти из аккаунта</button>
+      <button type="button" disabled={busy} onClick={()=>run(async()=>{if(external.enabled){await (await authClient()).auth.signOut({scope:'local'});external.clearRecovery();await external.refresh()}await auth.logout();setLegacyEntry(false)},'Вы вышли.')} className="gs-account-action inline-flex min-h-11 items-center gap-2 rounded-xl border px-5 text-sm disabled:opacity-50"><WorldIcon name="logout" size={17}/>Выйти из аккаунта</button>
     </div>
   </main>
 }

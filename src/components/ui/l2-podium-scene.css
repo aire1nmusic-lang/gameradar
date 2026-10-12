@@ -3,11 +3,14 @@
 html[data-design="lobby"] body .l2a--lineage2 :is(.gs-shelf-support,.gs-shelf-people) {
   overflow:visible;
 }
+html[data-design="lobby"] body .l2a--lineage2 :is(.gs-shelf-support,.gs-shelf-people) .rows {
+  padding-top:24px;
+}
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
   --gs-spotlight:#e6b959;
   position:relative;isolation:isolate;overflow:visible!important;
   display:grid;grid-template-columns:43px minmax(0,1fr) auto;gap:8px;
-  min-height:64px!important;margin:4px 0!important;padding:9px 46px 9px 9px!important;
+  min-height:64px!important;margin:4px 0!important;padding:8px 52px 8px 9px!important;
   border:1px solid var(--gs-spotlight)!important;border-left:3px solid var(--gs-spotlight)!important;
   border-radius:12px!important;
   background:linear-gradient(95deg,#382918 0%,#242323 44%,#141a22 100%)!important;
@@ -76,7 +79,7 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-r
   position:relative;z-index:1;-webkit-text-fill-color:inherit!important;
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {
-  display:block;position:absolute;z-index:2;pointer-events:none;
+  display:block;position:absolute!important;z-index:2;pointer-events:none;
   width:90px;height:64px;right:56px;bottom:0;
   background-image:url("/media/ranks/l2-podium-characters-20261012.webp");
   background-size:270px 114px;background-repeat:no-repeat;
@@ -85,7 +88,7 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person:not(#gs) {
   filter:drop-shadow(-7px 0 7px #0008);
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--1:not(#gs) {
-  height:114px;right:56px;background-position:0 100%;z-index:2;
+  width:71px;height:90px;right:56px;background-size:213px 90px;background-position:0 100%;z-index:2;
   filter:drop-shadow(-8px 0 9px #0009);
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--2:not(#gs) {background-position:-90px 0;}
@@ -99,7 +102,7 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-podium-person--3:not(#gs
 @media(max-width:600px) {
   html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank]:not(#gs) {
     grid-template-columns:39px minmax(0,1fr) auto!important;gap:7px!important;
-    min-height:64px!important;padding:8px 44px 8px 8px!important;
+    min-height:64px!important;padding:8px 50px 8px 8px!important;
   }
   html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs) {
     width:37px!important;height:45px!important;font-size:21px!important;

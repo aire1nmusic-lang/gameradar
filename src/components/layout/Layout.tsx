@@ -1,7 +1,7 @@
 import { FavoritesSync } from '@/hooks/useFavorites'
 import { useAppearance } from '@/theme/appearance'
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { VisualDemoBanner } from './VisualDemoBanner'
 import { Header } from './Header'
 import { Footer } from './Footer'
@@ -25,6 +25,7 @@ function LayoutContent() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const { colorMode } = useAppearance()
   const { game } = useWorldNavigation()
   // One world shell for every game (design preview): same layout as Lineage 2.
@@ -51,7 +52,7 @@ function LayoutContent() {
   return (
         <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
           <FavoritesSync/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
-          <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
+          <Header onSearch={() => setSearchOpen(true)} onLogin={() => import.meta.env.VITE_AUTH_BACKEND === 'supabase' ? navigate('/account') : setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <VisualDemoBanner/>{!hall && location.pathname !== "/account" && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>
           </main>

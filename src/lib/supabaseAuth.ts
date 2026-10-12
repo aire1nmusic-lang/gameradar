@@ -33,7 +33,14 @@ export function consumeAuthCallback() {
     const client = await authClient()
     const { error } = code ? await client.auth.exchangeCodeForSession(code)
       : await client.auth.setSession({ access_token: accessToken!, refresh_token: refreshToken ?? '' })
-    if (error) throw new Error('Ссылка недействительна или открыта в другом браузере. Запросите новую ссылку.')
+    if (error) {
+      const known = ['pkce_code_verifier_not_found', 'flow_state_not_found', 'flow_state_expired', 'bad_code_verifier', 'invalid_grant']
+      // Diagnostic enums only: never log the URL, code, token, user or raw response.
+      console.warn('GameScout Auth callback', { reason: known.includes(error.code ?? '') ? error.code : 'other', status: error.status ?? 0 })
+      throw new Error(error.code === 'pkce_code_verifier_not_found'
+        ? 'Браузер не сохранил подтверждение входа. Начните вход ещё раз в этой вкладке.'
+        : 'Не удалось завершить вход. Попробуйте ещё раз; если ошибка повторится, запросите новую ссылку.')
+    }
     if (recovery) sessionStorage.setItem('gamescout-password-recovery', '1')
   })()
 }

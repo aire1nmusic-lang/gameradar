@@ -18,7 +18,7 @@ import '@/theme/worldFonts'
 if (import.meta.env.VITE_AUTH_BACKEND === 'supabase') {
   const returned = new URL(location.href)
   const fragment = new URLSearchParams(returned.hash.slice(1))
-  if (returned.pathname === '/' && (returned.searchParams.has('code') || returned.searchParams.has('error') || fragment.has('access_token') || fragment.has('error'))) {
+  if (returned.pathname === '/account/' || (returned.pathname === '/' && (returned.searchParams.has('code') || returned.searchParams.has('error') || fragment.has('access_token') || fragment.has('error')))) {
     history.replaceState(null, '', '/account' + returned.search + returned.hash)
   }
 }

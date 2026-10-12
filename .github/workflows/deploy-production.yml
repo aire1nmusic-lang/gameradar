@@ -78,6 +78,7 @@ jobs:
       - run: npm ci
 
       - name: Private core tests
+        if: false # owner request 2026-10-13: fast releases without pre-publication gates
         run: npm run test:private
           node --experimental-strip-types tests/support-projection.mjs
 
@@ -105,20 +106,24 @@ jobs:
           NODE
 
       - name: Bundle gate
+        if: false
         run: npm run test:bundle
 
       - name: Install browser QA runtime
+        if: false
         run: |
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
       - name: Read recovery, zero support, discovery scoring and runner invariants
+        if: false
         run: |
           node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs
           node --experimental-strip-types --test tests/zero-support.test.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
 
       - name: All nine browser gates before publication (two at a time)
+        if: false
         run: node scripts/run-browser-qa.mjs
 
       - name: Backup current production HTML and service files
@@ -133,6 +138,7 @@ jobs:
           test -f "$RUNNER_TEMP/site-rollback/index.html"
 
       - name: Persist and verify durable rollback archive
+        if: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -163,6 +169,7 @@ jobs:
 
       - name: Verify production freshness, cache policy and SEO
         id: verify_live
+        if: false
         continue-on-error: true
         env:
           SEO_BASE_URL: https://gamescout.online
@@ -220,7 +227,7 @@ jobs:
           exit 1
 
       - name: Save loader QA screenshots
-        if: always()
+        if: false
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:

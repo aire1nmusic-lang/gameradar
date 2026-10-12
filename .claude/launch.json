@@ -37,6 +37,14 @@
         "output/mobile-preview/run.mjs"
       ],
       "port": 5175
+    },
+    {
+      "name": "lobby-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "output/lobby-preview/run.mjs"
+      ],
+      "port": 5176
     }
   ]
 }

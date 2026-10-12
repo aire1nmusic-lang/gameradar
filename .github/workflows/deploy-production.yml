@@ -301,6 +301,7 @@ jobs:
         run: exit 1
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: edge-release-${{ github.sha }}
           retention-days: 14

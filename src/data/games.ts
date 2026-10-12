@@ -7,12 +7,21 @@ export const GAMES: Game[] = []
 export const GAMES_BY_ID: Record<string, Game> = {}
 export const GAMES_BY_SLUG: Record<string, Game> = {}
 export const THEMED_GAMES = GAMES
+let gamesRevision = 0
+const gameListeners = new Set<() => void>()
+export const getGamesRevision = () => gamesRevision
+export function subscribeGames(listener: () => void) {
+  gameListeners.add(listener)
+  return () => { gameListeners.delete(listener) }
+}
 
 export function hydrateGames(games: Game[]) {
   GAMES.splice(0, GAMES.length, ...games)
   for (const key of Object.keys(GAMES_BY_ID)) delete GAMES_BY_ID[key]
   for (const key of Object.keys(GAMES_BY_SLUG)) delete GAMES_BY_SLUG[key]
   for (const game of games) { GAMES_BY_ID[game.id] = game; GAMES_BY_SLUG[game.slug] = game }
+  gamesRevision += 1
+  for (const listener of gameListeners) listener()
 }
 const CACHE_KEY = 'gs.games.v1'
 const CACHE_MAX_AGE = 7 * 24 * 3_600_000

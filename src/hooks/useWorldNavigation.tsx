@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
-import { GAMES } from '@/data/games'
+import { GAMES, getGamesRevision, subscribeGames } from '@/data/games'
 import { useServer } from '@/hooks/data'
 import type { Game } from '@/models'
 
@@ -8,6 +8,8 @@ const WorldContext=createContext<{game?:Game;loading:boolean}>({loading:false})
 const LAST_WORLD_KEY='gs.lastWorld'
 
 export function WorldNavigationProvider({children}:{children:ReactNode}) {
+  // Independent account entry renders before catalogue metadata; adopt its world when the read finishes.
+  useSyncExternalStore(subscribeGames, getGamesRevision, getGamesRevision)
   const location=useLocation()
   const slug=location.pathname.startsWith('/server/')?location.pathname.split('/')[2]:undefined
   const {data:server}=useServer(slug)

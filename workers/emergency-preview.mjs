@@ -39,7 +39,7 @@ export default {
       headers.set('X-Robots-Tag','noindex, nofollow')
       headers.set('Cache-Control','no-store')
     } else if (headers.get('Content-Type')?.includes('text/html')) {
-      headers.set('Cache-Control','no-cache')
+      headers.set('Cache-Control','no-store, must-revalidate')
     }
     return new Response(response.body,{status,headers})
   }

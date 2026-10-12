@@ -36,12 +36,15 @@ if(phase==='upload'){
   let ready=false
   while(Date.now()<deadline){
     try {
-      const home=await fetch('https://gamescout.online/',{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(10000)})
-      const source=await home.text()
+      let freshBuild=true
+      for(const path of ['/','/lineage-2','/lineage-2/','/account','/account/','/minecraft','/gta-rp']){
+        const response=await fetch('https://gamescout.online'+path,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(10000)})
+        freshBuild=response.status===200&&(await response.text()).includes(expected)&&freshBuild
+      }
       const missing=await fetch('https://gamescout.online/nonexistent-seo-route-7249',{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(10000)})
       const missingBody=await missing.text()
-      ready=home.status===200&&source.includes(expected)&&missing.status===404&&missingBody.includes('noindex, nofollow')
-      console.log(JSON.stringify({freshBuild:source.includes(expected),missingStatus:missing.status,missingCache:missing.headers.get('CF-Cache-Status')}))
+      ready=freshBuild&&missing.status===404&&missingBody.includes('noindex, nofollow')
+      console.log(JSON.stringify({freshBuild,missingStatus:missing.status,missingCache:missing.headers.get('CF-Cache-Status')}))
       if(ready)break
     }catch { console.log('Waiting for canonical frontend readiness') }
     await delay(5000)

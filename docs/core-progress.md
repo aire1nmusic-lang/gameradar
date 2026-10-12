@@ -1,3 +1,11 @@
+## 12.10.2026 — VERIFIED L2 TOP-3 code and CI, BLOCKED production (API Gateway 404)
+
+VERIFIED: approved gold/silver/purple TOP-3 ranking presentation (Baium/Orc/Dwarf, counters on the right and artwork bound to rank) has already been merged to main `ea7722911de8268348a2c75934c1785ad2a7dfd3`, not a new change by this diagnostic session. CI `38247584462` and focused visual review `38247584512` PASSED. Production workflow `38247584399` passed all preflight tests, created a durable backup and uploaded HTML/assets, but **postflight returned HTTP 200 instead of 404 for `/nonexistent-seo-route-7249`**, failing `tests/seo-http.mjs:62`; the workflow then restored its previous HTML and exited failure. Website publication is therefore NOT VERIFIED. Do not disable that SEO gate or assume main merge means site updated.
+
+LIKELY root cause: active public catchall is serving SPA fallback 200 instead of SEO route 404. Repository `ru-proxy/yandex/gateway.vm-seo.template.yaml` correctly specifies 404 for missing object, whereas older `gateway.template.yaml` / `gateway.vm-min.template.yaml` specify index.html/200; the actual active Yandex API Gateway configuration remains UNVERIFIED. GitHub connector permits repository/CI actions but not read/update of active Yandex API Gateway, and a fresh independent live fetch from this session failed to resolve the site, so do not claim rollback verification beyond workflow logs. Separate action item: [#14](https://github.com/aire1nmusic-lang/gameradar/issues/14).
+
+Next: inspect active Yandex API Gateway specification using authorized ops access, reconcile only unknown-route 404 while preserving nested public pages and private routes; test HTTP 404 with noindex + existing pages 200; then explicitly rerun the protected production deploy and all postflight live checks. No DNS, credentials, payment or private data changes in this diagnostic. Rollback plan: saved active gateway specification and existing S3 archive; no extra deployments made here.
+
 ## 12.10.2026 — L2 premium top-3 podium (preview + design branch)
 
 Owner approved right-aligned dynamic GS Coins/vote counters in compact 64–66px rows, with rank-specific gold/silver/purple badges and Lineage II Baium/Orc/Dwarf art; first-place Baium may rise beyond the row edge.

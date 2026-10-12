@@ -30,6 +30,11 @@ const KIND_GLYPH: Record<string, LucideIcon> = {
   ragemp: Siren,
   altv: Navigation,
 }
+const DEFAULT_AVATAR: Record<string, string> = {
+  lineage2: '/media/ui/lineage2-default-avatar.webp',
+  minecraft: '/media/ui/minecraft-default-avatar.webp',
+  gtarp: '/media/ui/gtarp-default-avatar.webp',
+}
 const GLYPH_PX = { xs: 15, sm: 19, md: 22, lg: 28, xl: 38 } as const
 
 const SIZES = {
@@ -89,7 +94,9 @@ export function ServerLogo({
 
   // An approved server logo always wins; the default style only fills the gap.
   // Lineage 2 free/default avatar: approved neutral tree emblem. Paid/official logo always wins above it.
-  if (!showImage && forceGameGlyph && gameId === 'lineage2') {
+  // Minecraft and GTA RP: owner-approved base avatars for every server without its own logo.
+  const defaultAvatar = gameId && DEFAULT_AVATAR[gameId]
+  if (!showImage && defaultAvatar && (gameId !== 'lineage2' || forceGameGlyph)) {
     return (
       <div
         className={cn('relative grid shrink-0 place-items-center overflow-hidden text-white', SIZES[size], className)}
@@ -101,7 +108,7 @@ export function ServerLogo({
         aria-hidden
       >
         <img
-          src="/media/ui/lineage2-default-avatar.webp"
+          src={defaultAvatar}
           alt=""
           draggable={false}
           loading="lazy"

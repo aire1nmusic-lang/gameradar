@@ -65,10 +65,12 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-r
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs) {
   background:linear-gradient(145deg,#f6fbff,#91a8c5 43%,#526a87 70%,#e4f4ff)!important;
+  box-shadow:inset 0 0 0 3px #dce9fa,inset 0 0 0 6px #3f526a!important;
   color:#f0f8ff!important;-webkit-text-fill-color:#f0f8ff!important;filter:drop-shadow(0 0 5px #9bb8ef6a)!important;
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs) {
   background:linear-gradient(145deg,#edc9fa,#b472d9 40%,#664383 72%,#eebcfd)!important;
+  box-shadow:inset 0 0 0 3px #d9b0ee,inset 0 0 0 6px #4f2a69!important;
   color:#ffe3ff!important;-webkit-text-fill-color:#ffe3ff!important;filter:drop-shadow(0 0 5px #bc79e36a)!important;
 }
 html[data-design="lobby"] body .l2a--lineage2 .rows .gs-top-row[data-rank] .gs-rank-podium:not(#gs)::before {

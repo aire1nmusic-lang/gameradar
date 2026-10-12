@@ -31,6 +31,8 @@ try{
   const support=page.locator('.l2a .support')
   assert.equal(await support.locator('.server:visible').count(),5,'Five rows on every device')
   assert.equal(await support.locator('.gs-top-row').count(),3,'Distinct first three positions')
+  const medalFrames=await support.locator('.gs-top-row .gs-rank-podium').evaluateAll(els=>els.map(e=>getComputedStyle(e).boxShadow))
+  assert.equal(new Set(medalFrames).size,3,'Gold, silver and purple medal frames remain distinct')
   for(const row of await support.locator('.gs-top-row').all()){
     const favorite=row.locator('.fav')
     await favorite.evaluate(button=>button.scrollIntoView({block:'center',behavior:'instant'}))

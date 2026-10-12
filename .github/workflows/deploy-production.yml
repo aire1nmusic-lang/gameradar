@@ -24,6 +24,11 @@ on:
         description: 'Type DEPLOY to publish gamescout.online'
         required: true
         type: string
+      target:
+        description: 'Existing hosting target (no DNS changes)'
+        type: choice
+        default: yandex
+        options: [yandex, cloudflare-frontend]
 
 permissions:
   contents: read
@@ -40,7 +45,7 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY' }}
+    if: ${{ github.event.inputs.target != 'cloudflare-frontend' && (github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: production
@@ -237,6 +242,77 @@ jobs:
             output/favorites-qa
           retention-days: 14
           if-no-files-found: ignore
+
+  edge_frontend:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'DEPLOY' && github.event.inputs.target == 'cloudflare-frontend' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_AUTH_BACKEND: ${{ vars.VITE_AUTH_BACKEND }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Require existing hosting and Auth configuration
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test "$VITE_AUTH_BACKEND" = supabase
+          test -n "$VITE_SUPABASE_URL"
+          test -n "$VITE_SUPABASE_PUBLISHABLE_KEY"
+      - run: npm ci
+      - run: npm run test:private
+      - run: node --test tests/emergency-preview-seo.test.mjs tests/edge-asset-retention.test.mjs tests/edge-bundle-graph.test.mjs tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs
+      - run: npm run build:catalog -- "$PUBLIC_API_ORIGIN"
+      - name: Retain currently published hashed dependencies
+        run: node scripts/retain-edge-assets.mjs
+      - run: npm run test:bundle
+      - name: Install browser QA runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: All nine browser gates before publication
+        run: node scripts/run-browser-qa.mjs
+      - name: Save rollback version and upload inactive candidate
+        run: node scripts/edge-release.mjs upload
+      - name: Verify inactive version SEO HTTP including unknown 404
+        run: |
+          export SEO_BASE_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('output/edge-release.json')).preview)")
+          npm run test:seo
+      - name: Activate checked frontend version only
+        id: activate_edge
+        run: node scripts/edge-release.mjs deploy
+      - name: Verify canonical SEO and live browser gates
+        id: verify_edge
+        continue-on-error: true
+        run: |
+          node scripts/edge-release.mjs wait-live
+          SEO_BASE_URL=https://gamescout.online npm run test:seo
+          node scripts/run-browser-qa.mjs --live https://gamescout.online
+      - name: Restore previous version after failed postflight
+        if: steps.activate_edge.outcome == 'success' && steps.verify_edge.outcome == 'failure'
+        run: node scripts/edge-release.mjs rollback
+      - name: Fail after rollback
+        if: steps.verify_edge.outcome == 'failure'
+        run: exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: edge-release-${{ github.sha }}
+          retention-days: 14
+          path: |
+            output/edge-release.json
+            output/aether-qa
+            output/l2-review-qa
+            output/account-review-qa
 
 
 

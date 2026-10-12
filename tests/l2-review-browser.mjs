@@ -31,13 +31,21 @@ try{
   const support=page.locator('.l2a .support')
   assert.equal(await support.locator('.server:visible').count(),5,'Five rows on every device')
   assert.equal(await support.locator('.gs-top-row').count(),3,'Distinct first three positions')
+  const medalFrames=await support.locator('.gs-top-row .gs-rank-podium').evaluateAll(els=>els.map(e=>getComputedStyle(e).boxShadow))
+  assert.equal(new Set(medalFrames).size,3,'Gold, silver and purple medal frames remain distinct')
   for(const row of await support.locator('.gs-top-row').all()){
     const favorite=row.locator('.fav')
     await favorite.evaluate(button=>button.scrollIntoView({block:'center',behavior:'instant'}))
     await page.clock.runFor(32)
     const target=await favorite.evaluate(button=>{const r=button.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {clickable:hit===button||button.contains(hit),hit:hit?.outerHTML.slice(0,180),rect:{x:r.x,y:r.y,width:r.width,height:r.height}}})
     assert.equal(target.clickable,true,`Favorite remains above metrics and artwork: ${w}x${h}/${theme} ${JSON.stringify(target)}`)
-    assert.equal(await row.locator('.server-name').evaluate(e=>getComputedStyle(e).color),theme==='light'?'rgb(29, 27, 32)':'rgb(246, 243, 239)','Podium name uses the ink of its theme')
+    const luminance=await row.locator('.server-name').evaluate(e=>{
+      const rgb=getComputedStyle(e).color.match(/[\d.]+/g).slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4})
+      return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2]
+    })
+    assert.ok(luminance>.7,'Dark approved podium artwork retains light readable ink in both themes')
+    assert.equal(await row.locator('.gs-podium-person').evaluate(e=>getComputedStyle(e).position),'absolute','Portrait cannot stretch the grid')
+    assert.ok((await row.boundingBox()).height>=64&&(await row.boundingBox()).height<=66,'Compact approved podium row')
     assert.notEqual(await row.locator('.gs-rank-podium').evaluate(e=>getComputedStyle(e).backgroundImage),'none','Visible medal surface')
     const rect=await row.boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=w,'Podium remains in viewport')
   }
@@ -88,5 +96,5 @@ try{
   await page.goto(base+'/rating?game=lineage2',{waitUntil:'domcontentloaded'});await page.locator('.gs-rating-support a[href^="/server/"]').first().waitFor();assert.equal(await page.getByRole('button',{name:'Поддержать сервер',exact:true}).isEnabled(),missing==='people');await context.close();console.log('PASS live aggregate 503 keeps cards,',missing)
  }
  await writeFile('output/l2-review-qa/report.json',JSON.stringify(report,null,2))
-}catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url())}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}
+}catch(e){if(active&&!active.isClosed()){await active.screenshot({path:'output/l2-review-qa/failure.png',fullPage:true});console.log('FAILED',active.url());console.log('PAGE_DIAGNOSTIC',await active.evaluate(()=>({path:location.pathname,classes:document.documentElement.className,ready:document.readyState,h1:document.querySelector('h1')?.textContent,rows:document.querySelectorAll('.l2a a.server').length,error:document.querySelector('.gs-error')?.textContent,scripts:[...document.scripts].filter(s=>s.src).map(s=>new URL(s.src).pathname)})))}throw e}finally{await browser.close();if(server)await new Promise(r=>server.close(r))}
 

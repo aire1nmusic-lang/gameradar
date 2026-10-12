@@ -28,7 +28,20 @@ assert.equal(
   legacyKeyUses,
   'The only permitted "gameradar" occurrence is the legacy storage key ' + LEGACY_STORAGE_KEY,
 )
-assert.ok(legacyKeyUses <= 1, 'The legacy storage key must appear at most once')
+// Retained previous-generation chunks must not be mistaken for duplicate code in the current graph.
+const entry=readFileSync('dist/index.html','utf8').match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/)?.[1]
+assert.ok(entry,'Current HTML must identify its entry')
+const pending=[entry],active=new Set()
+while(pending.length){
+  const file=pending.shift()
+  if(active.has(file))continue
+  assert.ok(files.includes(file),'Active dependency must exist: '+file)
+  active.add(file)
+  const source=readFileSync('dist/assets/'+file,'utf8')
+  for(const match of source.matchAll(/["'](?:\.\/|\/?assets\/)([A-Za-z0-9_.-]+\.js)["']/g))pending.push(match[1])
+}
+const activeJs=[...active].map(file=>readFileSync('dist/assets/'+file,'utf8')).join('\n')
+assert.ok(activeJs.split(LEGACY_STORAGE_KEY).length-1<=1,'The active graph must contain at most one legacy storage key')
 
-assert.ok(js.includes('/api/v1'), 'Production path must use HTTP API')
+assert.ok(activeJs.includes('/api/v1'), 'Current production graph must use HTTP API')
 console.log('Production bundle: HTTP API present; no fixtures, no readable old brand.')

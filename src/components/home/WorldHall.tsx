@@ -20,7 +20,7 @@ import { cardSrc, reducedMotion, usePortalFlight } from './portal'
 const WORLDS = ['lineage2', 'minecraft', 'gtarp'] as const
 
 const cardSrcSet = (gameId: string) => `${cardSrc(gameId, 480)} 480w, ${cardSrc(gameId, 960)} 960w`
-const NAVE_SRCSET = [1280, 1920, 2000].map((w) => `/media/hub/observatory-${w}.webp ${w}w`).join(', ')
+const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/observatory-${w}.webp ${w}w`).join(', ')
 const NAVE_PHONE_SRCSET = '/media/hub/observatory-m-720.webp 720w, /media/hub/observatory-m-1080.webp 1080w'
 
 /** Cards lean towards the pointer: each card reads the pointer relative to its own centre. */

@@ -226,3 +226,6 @@ html[data-design="lobby"] body:has(.gs-server-fullbg) :is(.gs-page-main,main,.gs
 html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-world-backdrop{display:none!important}
 html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-site-footer:not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;position:relative;z-index:5}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > *:not(:has(nav,a)){display:none!important}
+html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2):not(#lb){height:64px!important}
+@media (max-width:767px){html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2):not(#lb){height:56px!important}}
+html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(3):not(#lb){margin-top:0!important}

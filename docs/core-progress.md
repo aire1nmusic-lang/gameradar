@@ -14,6 +14,7 @@
 - Back-to-top lime button (ToTop.tsx, after 1 screen); catalog promo slot spans the row and hides when empty (no hole in tiles); sticky catalog toolbar dense; worlds menu dense glass; footer «Найти свой сервер» → catalog#search (opens + focuses search), footer links scroll to top.
 - L2 server pages: one shared header = owner sea-cliff fortress at dusk (server-castle-v1 400/800/1600/2000, L2_SERVER_COVER); other worlds keep serverArt. Then: the fortress is a fixed full-page background (.gs-server-bg), hero art layers hidden, footer translucent.
 - Hall of worlds: owner observatory art (hub/observatory-{1280,1920,2000}, phone crop observatory-m-{720,1080} with the painted cards faded out); index.html preload updated; old nave-* kept (account entry still uses nave-1920).
+- Hall: owner 4K observatory (5504px source → 1280/1920/2560/3840) + owner vertical mobile (720/1080). Painted cards still in the desktop art (owner regenerating). L2 server page hero shrunk to 64px (56 phone), title block without negative margin — no empty band.
 - World search + epoch: no outer frame, two glass blocks of 64px, search centred; chronicles open as a dropdown panel under the epoch block (absolute, z above boards), layout does not move (≥768px; phones unchanged).
 - Header and live strip more transparent (rgba(16,18,24,.66→.56)).
 - Checked: 390 and 1440 dark, home/catalog/openings/rating/favorites/server; no horizontal overflow on openings at 390 (scrollWidth 390).

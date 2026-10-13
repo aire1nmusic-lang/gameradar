@@ -10,6 +10,7 @@
 - World pages: the art is a fixed full-page background (`.l2a .scene` fixed, even dark veil), footer is translucent over it (z-index above the world layer) — no navy/black bands. Header «Аккаунт» is pushed right again where the header search is hidden (spacer regression after removing the theme toggle).
 - One headline font site-wide: `--lb-display` = Philosopher (was Saira; the logo keeps Saira). Tailwind ink-300/400/500 warm greys. L2 world shell palette (`--aether-gold/muted/line`) mapped to lime/warm grey. Server page: section h2 Philosopher 20px, lime vote kicker, no mono values, no pink notice, play button without caps.
 - L2 world art = owner Tower of Insolence (tower-v1 desktop 800/1600/2000 from the owner 16:9, mobile 720/1080 from the hall-card vertical) — same tower as the hall card, so the portal lands on the same picture; replaces master-v9 (kept on disk, unused).
+- Fix: the world-enter animation used fill both and left an identity transform on .l2a after the portal, so the fixed art became page-relative and ended mid-page; now fill backwards (checked 2000×1000 direct and via portal: scene fixed, top 0, full height).
 - World search + epoch: no outer frame, two glass blocks of 64px, search centred; chronicles open as a dropdown panel under the epoch block (absolute, z above boards), layout does not move (≥768px; phones unchanged).
 - Header and live strip more transparent (rgba(16,18,24,.66→.56)).
 - Checked: 390 and 1440 dark, home/catalog/openings/rating/favorites/server; no horizontal overflow on openings at 390 (scrollWidth 390).

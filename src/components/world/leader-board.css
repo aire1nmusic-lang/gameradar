@@ -281,7 +281,7 @@ html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-more a:not(#a)
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:136px!important}
 
 /* ===== v10 (owner): no empty gap — the first plaque is taller, the character only slightly breaks the frame; subtitle on full width ===== */
-html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){height:250px!important;margin-top:52px!important}
-.gsb .p1 .gsb-hero{height:300px!important;right:0!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){height:250px!important;margin-top:10px!important}
+.gsb .p1 .gsb-hero{height:310px!important;right:0!important}
 .gsb .p1 .gsb-art img{object-position:40% 40%!important}
 .gsb .gsb-head p{max-width:none!important}

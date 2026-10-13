@@ -162,10 +162,10 @@ export function ServerTile({ server, rank, showGame = false }: { server: GameSer
       style={medal ? { borderColor: medal.ring } : undefined}
     >
       <div className="flex items-center gap-2.5">
-        {rank !== undefined && <RankMedal rank={rank} className="h-6 w-6 text-[12px]" />}
+        {rank !== undefined && <RankMedal rank={rank} className="gs-tile-rank h-6 w-6 text-[12px]" />}
         <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="xs" forceGameGlyph />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[14px] leading-5 font-semibold text-ink-50">{server.name}</div>
+          <div className="gs-tile-name truncate text-[14px] leading-5 font-semibold text-ink-50">{server.name}</div>
           <div className="truncate text-[11.5px] leading-4 text-ink-400">{sub.join(' · ')}</div>
         </div>
       </div>

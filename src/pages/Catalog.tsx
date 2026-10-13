@@ -1,5 +1,4 @@
 import type { Page, GameServer } from '@/models'
-import { RankMedal } from '@/components/ui/RankMedal'
 import { SelectMenu } from '@/components/ui/SelectMenu'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
@@ -14,8 +13,8 @@ import { useAsync, useFacets } from '@/hooks/data'
 import type { SortKey } from '@/models'
 import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
-import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
-import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
+import { ServerCardSkeleton } from '@/components/server/ServerCard'
+import { ServerRow, ServerRowSkeleton, ServerTile } from '@/components/server/ServerRow'
 import { CatalogPodium } from '@/components/world/CatalogPodium'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
@@ -218,7 +217,7 @@ export default function Catalog() {
           <Notice tone="warn">Не удалось загрузить каталог. <Button variant="outline" onClick={reload}>Повторить</Button></Notice>
         ) : loading && !page ? (
           view === 'grid' ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="gs-tile-grid grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 6 }).map((_, index) => (
                 <ServerCardSkeleton key={index} />
               ))}
@@ -247,15 +246,15 @@ export default function Catalog() {
             {view === 'grid' ? (
               <>
               {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="gs-tile-grid grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
                 {results.map((server, index) => podium && index < 3 ? null : (
                   <Fragment key={server.slug}>
                     {index === 6 && (
-                      <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
+                      <ThemeScope theme={adTheme} as="div" className="col-span-2 md:col-span-3 xl:col-span-4">
                         <InlinePromo gameId={filters.games[0]} />
                       </ThemeScope>
                     )}
-                    <div className={`relative ${ranked && index < 3 ? `gs-card-place gs-card-place-${index+1}` : ''}`}>{ranked && (index < 3 ? <img className="gs-card-medal" src={`/media/ranks/medal-${index+1}-glass-192.webp`} alt={`${index+1} место`} /> : <RankMedal rank={index+1} className="absolute top-3 right-3 z-10"/>)}<ServerCard server={server} /></div>
+                    <ServerTile server={server} rank={ranked ? index+1 : undefined} showGame={!world} />
                   </Fragment>
                 ))}
               </div>

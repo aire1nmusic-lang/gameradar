@@ -108,3 +108,8 @@ html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-row .gsb-fav:n
 /* catalog and every other list row / card: the same light glass */
 html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line,.gs-server-card,.surface,.gs-panel,.gs-empty,.gs-notice):not(.gsb-row):not(#lb):not(#gl):not(#p){background:var(--lt-glass)!important;border-color:var(--lt-bd)!important}
 html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gsb-row):not(#lb):not(#gl):not(#p):hover{background:var(--lt-glass-hi)!important}
+/* catalog tiles: on phones two per row — the place number hides, the name may take two lines */
+@media (max-width:640px){
+  html[data-design="lobby"] body .gs-tile-grid .gs-tile-rank:not(#lb){display:none!important}
+  html[data-design="lobby"] body .gs-tile-grid .gs-tile-name:not(#lb){white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;line-height:18px!important}
+}

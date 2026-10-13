@@ -323,3 +323,5 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-c
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b){font-family:"Philosopher","Noto Serif",Georgia,serif!important;font-weight:700!important;font-size:27px!important;background:linear-gradient(180deg,#fffbe8 0%,#ffe39a 35%,#e7b24e 65%,#fff0bf 82%,#b9822d 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.95))!important}
 @media (max-width:420px){html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b){font-size:24px!important}}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.gsb-name,.gsb-row-name):not(#a):not(#b){font-family:"Philosopher","Noto Serif",Georgia,serif!important;font-weight:700!important}
+/* owner colour pick: site lime for the board label */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b):not(#c){background:none!important;color:#d7ff4a!important;-webkit-text-fill-color:#d7ff4a!important}

@@ -129,3 +129,37 @@ html[data-design="lobby"] body .l2a .gsb .gsb-txt:not(#a):not(#b){text-align:lef
 html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){display:-webkit-box!important}
 /* Names wrap between words, never inside one. */
 html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){word-break:normal!important;overflow-wrap:break-word!important;hyphens:none}
+
+/* ===== v3 (owner): light frosted glass; medal up in the picture; picture runs under a light frosted bar; text from the left edge ===== */
+.gsb .gsb-frost{background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.13) 22%,rgba(235,240,250,.11))!important;
+  -webkit-backdrop-filter:blur(20px) saturate(160%) brightness(1.08)!important;backdrop-filter:blur(20px) saturate(160%) brightness(1.08)!important}
+.gsb .gsb-edge path{stroke:rgba(255,255,255,.42)!important}
+/* picture fills the whole plaque; the bar is a light frost over its lower part */
+html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-art:not(#a):not(#b){position:absolute!important;inset:0!important;height:auto!important;width:auto!important;border-radius:15px!important;z-index:0}
+.gsb .gsb-art::after{background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.18))!important}
+.gsb .p2 .gsb-art img{object-position:50% 22%}
+.gsb .p3 .gsb-art img{object-position:50% 38%}
+html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){margin-top:78px;padding:10px 10px 10px 14px!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,rgba(255,255,255,.26)),rgba(255,255,255,.14))!important;
+  -webkit-backdrop-filter:blur(10px) saturate(160%) brightness(1.05)!important;backdrop-filter:blur(10px) saturate(160%) brightness(1.05)!important;
+  border-top:1px solid rgba(255,255,255,.45)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1 .gsb-bar:not(#a):not(#b){margin-top:86px}
+/* medal centred in the picture zone, left */
+.gsb .gsb-medal{top:2px!important;left:8px!important;width:74px!important}
+.gsb .p1 .gsb-medal{top:5px!important}
+.gsb .gsb-medal img{width:74px!important}
+/* readability on the light frost */
+html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){filter:drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 0 6px rgba(0,0,0,.55))!important}
+html[data-design="lobby"] body .l2a .gsb .gsb-meta:not(#a):not(#b),
+html[data-design="lobby"] body .l2a .gsb .gsb-num small:not(#a):not(#b),
+html[data-design="lobby"] body .l2a .gsb .gsb-num strong:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
+/* rows 4+: same light frost */
+html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b){background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.12))!important;
+  -webkit-backdrop-filter:blur(16px) saturate(160%) brightness(1.06)!important;backdrop-filter:blur(16px) saturate(160%) brightness(1.06)!important;border-color:rgba(255,255,255,.3)!important}
+.gsb .gsb-hex path{fill:rgba(16,18,24,.45)}
+html[data-design="lobby"] body .l2a .gsb .gsb-row-name:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-row-meta:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
+.gsb .gsb-empty{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.12))!important;-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
+/* Full frame on the first place: frame above the bar, character above the frame, medal on top. */
+.gsb .p1 .gsb-glass{z-index:14!important}
+.gsb .p1 .gsb-hero{z-index:15!important}
+.gsb .p1 .gsb-medal{z-index:16!important}

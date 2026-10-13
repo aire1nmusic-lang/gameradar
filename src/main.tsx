@@ -11,6 +11,7 @@ import './index.css'
 import '@/theme/colorMode.css'
 import '@/theme/readability.css'
 import '@/theme/lobby.css'
+import '@/theme/glass.css'
 import '@/theme/worldFonts'
 
 // Design preview branch: the lobby look is on for everything except the hall.

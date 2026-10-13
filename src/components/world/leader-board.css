@@ -238,3 +238,40 @@ html[data-design="lobby"][data-color-mode="light"] body :is(.l2a,.gs-rating-page
 /* rating page: the two boards side by side on wide screens */
 .gs-rating-page .gsb-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start;margin-top:14px}
 @media (max-width:1023px){.gs-rating-page .gsb-pair{grid-template-columns:minmax(0,560px);justify-content:center}}
+
+/* ===== v7 (owner standard): every plaque = full picture, bottom third is one thin light film; same for 1–3 ===== */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque:not(#a):not(#b){position:relative;height:186px!important;display:block!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){height:196px!important;margin-top:56px!important}
+/* the whole picture, edge to edge, no colour fade */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.p1,.p2,.p3) .gsb-art img:not(#a):not(#b){inset:0!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:100%!important;object-fit:cover!important;-webkit-mask-image:none!important;mask-image:none!important;filter:none!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p1 .gsb-art img:not(#a):not(#b){object-position:60% 40%!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p2 .gsb-art img:not(#a):not(#b){object-position:72% 0!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p3 .gsb-art img:not(#a):not(#b){object-position:74% 0!important}
+.gsb .gsb-art::after{background:none!important}
+/* one film for all places: bottom third, inset inside the frame so the rim stays whole */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){position:absolute!important;left:2px;right:2px;bottom:2px;height:calc(33.4% - 2px);min-height:0!important;margin:0!important;padding:0 10px 0 12px!important;border-radius:0 0 14px 14px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.10))!important;border-top:1px solid rgba(255,255,255,.35)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}
+html[data-design="lobby"][data-color-mode="light"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){background:linear-gradient(180deg,rgba(18,20,28,.30),rgba(18,20,28,.24))!important;border-top-color:rgba(255,255,255,.3)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){font-size:16px!important;line-height:1.15!important}
+@media (max-width:420px){html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){font-size:15px!important}}
+.gsb .gsb-bar .gsb-meta{margin-top:2px!important}
+/* medal centred in the picture part */
+.gsb .gsb-medal{top:calc((66.6% - 74px)/2)!important}
+/* first place: the whole figure stands on the plaque floor, seen through the film, and rises above the frame */
+.gsb .p1 .gsb-hero{bottom:2px!important;height:250px!important;right:5%!important;z-index:12!important}
+.gsb .p1 .gsb-bar{z-index:13!important}
+.gsb .p1 .gsb-glass{z-index:11!important}
+.gsb .gsb-glass{z-index:14}
+/* the board label and title sit lower, near the panel */
+.gsb .gsb-strip{height:50px!important;align-items:flex-end!important;padding:0 16px 6px!important}
+.gsb .gsb-label{transform:none!important}
+.gsb .gsb-inner{padding-top:40px!important}
+.gsb .p1 .gsb-hero{height:224px!important;right:0!important}
+
+/* ===== v8: light theme — smoky dark glass deep enough for the gold title and light text ===== */
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-frost:not(#a):not(#b){background:linear-gradient(180deg,rgba(22,24,32,.58),rgba(22,24,32,.46) 30%,rgba(22,24,32,.42))!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-head p:not(#a){color:#ece6da!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-empty:not(#a):not(#b){background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.22)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-empty :is(b,span):not(#a){color:#f2ede4!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-more a:not(#a){color:#f2ede4!important}

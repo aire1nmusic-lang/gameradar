@@ -1,0 +1,76 @@
+/* GameScout glass system (owner standard, 13.10.2026).
+   Dark theme: light milky glass with a light tint. Light theme: smoky dark glass, never heavy.
+   No live blur anywhere except the leaderboard panels on desktop — blur over a scrolling page was the main jank.
+   Green (lime) buttons stay the accent. Loaded after lobby.css; every rule is scoped to the lobby design. */
+html[data-design="lobby"][data-color-mode="dark"] {
+  --g-bg:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));
+  --g-bg-strong:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.08));
+  --g-bg-solid:rgba(30,33,42,.88);
+  --g-bd:rgba(255,255,255,.16); --g-bd-hi:rgba(255,255,255,.30);
+  --g-hl:inset 0 1px 0 rgba(255,255,255,.18);
+  --g-ink:#f2f0ea; --g-muted:#c9c4ba;
+}
+html[data-design="lobby"][data-color-mode="light"] {
+  --g-bg:linear-gradient(180deg,rgba(26,28,36,.10),rgba(26,28,36,.06));
+  --g-bg-strong:linear-gradient(180deg,rgba(26,28,36,.14),rgba(26,28,36,.09));
+  --g-bg-solid:rgba(246,243,237,.94);
+  --g-bd:rgba(26,28,36,.16); --g-bd-hi:rgba(26,28,36,.30);
+  --g-hl:inset 0 1px 0 rgba(255,255,255,.55);
+  --g-ink:#1d1b20; --g-muted:#4c4840;
+}
+
+/* performance: no live blur on page surfaces */
+html[data-design="lobby"] body *:not(.gsb-frost):not(#gl){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+@media (max-width:1023px),(hover:none){html[data-design="lobby"] body .gsb-frost:not(#gl){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
+
+/* ---------- surfaces: panels, cards, rows, notices, empty states ---------- */
+html[data-design="lobby"] body :is(.surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,.gs-account-card,.gs-account-glass,.gs-coins-card,.gs-server-card,.gs-row,.gs-row-line,.gs-catalog-search,.gs-search-surface,.gs-owner-step,.gs-vote-panel,.gs-empty,.gs-notice,.l2a .discovery,.l2a .panel:not(.gsb),.l2a .owner,.metric,.gs-epoch-summary,.gs-ranking-availability,.gs-profile-cta-bar,.gs-support-launch):not(#lb):not(#gl){
+  background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;box-shadow:var(--g-hl),0 10px 26px -18px rgba(0,0,0,.6)!important;color:var(--g-ink)}
+html[data-design="lobby"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gs-top-row):not(#lb):not(#gl):hover{background:var(--g-bg-strong)!important;border-color:var(--g-bd-hi)!important}
+/* Tailwind dark slabs used by pages (bg-ink-*) become glass inside the page body */
+html[data-design="lobby"] body main :is([class~="bg-ink-900"],[class~="bg-ink-950"],[class~="bg-ink-850"],[class~="bg-ink-800"],[class*="bg-ink-950/"],[class*="bg-ink-900/"],[class*="bg-ink-850/"]):not(input):not(select):not(textarea):not(#lb):not(#gl){
+  background:var(--g-bg)!important;border-color:var(--g-bd)!important}
+/* sticky toolbars and bars keep a solid tinted glass so content does not show through text */
+html[data-design="lobby"] body :is(.gs-catalog-toolbar,.gs-site-header,.gs-live,.gs-mobile-nav):not(#lb):not(#gl){background:var(--g-bg-solid)!important;border-color:var(--g-bd)!important}
+html[data-design="lobby"] body .gs-catalog-toolbar:not(#lb):not(#gl){border-radius:16px;border:1px solid var(--g-bd)!important;box-shadow:var(--g-hl)!important}
+
+/* ---------- controls: inputs, selects, chips, segmented, secondary buttons ---------- */
+html[data-design="lobby"] body :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea):not(#lb):not(#gl){
+  background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;color:var(--g-ink)!important;border-radius:12px}
+html[data-design="lobby"] body :is(.gs-catalog-search,.l2a .search-box) input:not(#lb):not(#gl){background:transparent!important;border:0!important}
+html[data-design="lobby"] body :is(input,select,textarea):not(#lb):not(#gl):focus{border-color:var(--lb-lime)!important;outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--lb-lime) 22%,transparent)!important}
+html[data-design="lobby"] body select:not(#lb):not(#gl) option{background:var(--g-bg-solid);color:var(--g-ink)}
+html[data-design="lobby"] body :is(.gs-chip:not(.is-active),.gs-seg,.gs-filter-trigger,.gs-view-btn,.gs-list-more,.quiet-btn,.gs-rating-switch button[aria-pressed="false"]):not(#lb):not(#gl){
+  background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;color:var(--g-ink)!important;box-shadow:var(--g-hl)!important}
+html[data-design="lobby"] body :is(.gs-chip:not(.is-active),.gs-filter-trigger,.gs-view-btn,.gs-list-more,.quiet-btn):not(#lb):not(#gl):hover{border-color:var(--g-bd-hi)!important;background:var(--g-bg-strong)!important}
+html[data-design="lobby"] body .gs-seg .gs-seg-btn:not(.is-active):not(#lb):not(#gl){background:transparent!important;color:var(--g-muted)!important}
+/* active states and primary actions: the lime the owner likes */
+html[data-design="lobby"] body :is(.gs-chip.is-active,.gs-seg-btn.is-active,.gs-rating-switch button[aria-pressed="true"],.gs-view-btn[aria-pressed="true"]):not(#lb):not(#gl){
+  background:var(--lb-lime)!important;color:var(--lb-lime-ink)!important;border-color:var(--lb-lime)!important;box-shadow:0 0 18px -6px var(--lb-lime)!important}
+/* Button component variants rendered in pages and sheets */
+html[data-design="lobby"] body :is(main,.gs-sheet,dialog) :is(button,a)[class*="bg-ink-800"]:not(#lb):not(#gl),
+html[data-design="lobby"] body :is(main,.gs-sheet,dialog) :is(button,a)[class*="border-white/10"]:not(.gs-chip):not(.is-active):not(#lb):not(#gl){
+  background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;color:var(--g-ink)!important}
+
+/* ---------- filter sheet and dialogs: one glass sheet ---------- */
+html[data-design="lobby"] body .gs-sheet > :not(:first-child):not(#lb):not(#gl),
+html[data-design="lobby"] body dialog:not(#lb):not(#gl){background:var(--g-bg-solid)!important;border:1px solid var(--g-bd-hi)!important;box-shadow:var(--g-hl),0 30px 80px -20px rgba(0,0,0,.8)!important;color:var(--g-ink)}
+html[data-design="lobby"] body .gs-sheet > :not(:first-child) > :last-child:not(#lb):not(#gl){background:transparent!important;border-top:1px solid var(--g-bd)!important}
+html[data-design="lobby"] body .gs-filter-panel :is(.border-t,.border-b):not(#lb):not(#gl){border-color:var(--g-bd)!important}
+html[data-design="lobby"] body .gs-filter-panel :is(h3,h4,[class*="uppercase"]):not(#lb):not(#gl){color:var(--g-muted)!important}
+html[data-design="lobby"] body .gs-filter-panel button[role="switch"][aria-checked="true"]:not(#lb):not(#gl){background:var(--lb-lime)!important;border-color:var(--lb-lime)!important}
+html[data-design="lobby"] body .gs-filter-panel button[role="switch"][aria-checked="false"]:not(#lb):not(#gl){background:var(--g-bg-strong)!important;border-color:var(--g-bd-hi)!important}
+html[data-design="lobby"] body .gs-filter-panel .gs-range:not(#lb):not(#gl){accent-color:var(--lb-lime)}
+
+/* ---------- light theme text on glass ---------- */
+html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line,.gs-server-card,.surface,.gs-panel) :is(h1,h2,h3,strong):not(#lb):not(#gl){color:var(--g-ink)}
+
+/* ---------- catalog tiles: the top three are marked like the boards ---------- */
+.gs-card-place{position:relative;border-radius:18px}
+.gs-card-place::after{content:"";position:absolute;inset:-1px;border-radius:18px;pointer-events:none;border:1.5px solid var(--pc);box-shadow:0 0 22px -4px var(--pc),inset 0 0 18px -8px var(--pc)}
+.gs-card-place-1{--pc:#e8b964}.gs-card-place-2{--pc:#b8c9e0}.gs-card-place-3{--pc:#b77ee6}
+.gs-card-place .gs-card-medal{position:absolute;z-index:12;top:-14px;right:10px;width:64px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));pointer-events:none}
+
+/* light theme: the epoch picker sits over the dark part of the cover — smoky glass with light text, like the boards */
+html[data-design="lobby"][data-color-mode="light"] body .l2a .gs-epoch-summary:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(22,24,32,.58),rgba(22,24,32,.46))!important;border-color:rgba(255,255,255,.28)!important;color:#f2ede4!important}
+html[data-design="lobby"][data-color-mode="light"] body .l2a .gs-epoch-summary :is(.gs-epoch-text,.gs-epoch-text *,.gs-epoch-chevron):not(#lb):not(#gl){color:#f2ede4!important}

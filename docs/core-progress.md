@@ -1,3 +1,14 @@
+## 13.10.2026 — Owner glass standard, site-wide (VERIFIED locally, deploying via Worker)
+- L2 boards v7/v8: every plaque shows the full picture; the bottom third is one thin film; the top-1 hero is fully visible. Light theme uses smoky dark glass with a readable gold title.
+- New `src/theme/glass.css`: glass by theme (dark → milky light glass, light → smoky dark). Lime active buttons. No live blur except the desktop board frost (scroll lag fix).
+- Catalog: the top 3 tiles in ranked sorts get a glowing frame and a medal. Server page: `PlaceBanner` shows only with real coins or votes > 0.
+- Checked in the local preview (127.0.0.1:4199, dist):
+  - 1440 dark: home, catalog list/grid, filters, openings, favorites, copyright;
+  - 1440 light: catalog, home;
+  - 390 light and dark: home boards.
+- Not checked: 320/768/1024, landscape.
+- Blocked: LK login and opening without VPN need the Cloudflare DNS switch to Yandex (owner approval) plus an up-to-date Yandex bucket.
+
 ## 12.10.2026 — VERIFIED L2 TOP-3 code and CI, BLOCKED production (API Gateway 404)
 
 VERIFIED: approved gold/silver/purple TOP-3 ranking presentation (Baium/Orc/Dwarf, counters on the right and artwork bound to rank) has already been merged to main `ea7722911de8268348a2c75934c1785ad2a7dfd3`, not a new change by this diagnostic session. CI `38247584462` and focused visual review `38247584512` PASSED. Production workflow `38247584399` passed all preflight tests, created a durable backup and uploaded HTML/assets, but **postflight returned HTTP 200 instead of 404 for `/nonexistent-seo-route-7249`**, failing `tests/seo-http.mjs:62`; the workflow then restored its previous HTML and exited failure. Website publication is therefore NOT VERIFIED. Do not disable that SEO gate or assume main merge means site updated.

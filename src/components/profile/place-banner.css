@@ -1,0 +1,9 @@
+.gs-place-banner{--pc:#e8b964;position:relative;display:flex;align-items:center;gap:14px;height:96px;margin:14px 0 4px;padding:0 18px 0 8px;border-radius:16px;overflow:hidden;
+  border:1.5px solid var(--pc);box-shadow:0 0 22px -4px var(--pc),inset 0 1px 0 rgba(255,255,255,.35)}
+.gs-place-banner.pb2{--pc:#b8c9e0}.gs-place-banner.pb3{--pc:#b77ee6}
+.gs-place-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:72% 20%;z-index:0}
+.gs-place-banner::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(8,8,12,.75),rgba(8,8,12,.35) 45%,transparent 70%)}
+.gs-place-medal{position:relative;z-index:2;width:78px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.gs-place-text{position:relative;z-index:2;display:flex;flex-direction:column;gap:3px}
+.gs-place-text b{font:700 22px/1.1 "Noto Serif",Georgia,serif;color:#fff2cf;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.gs-place-text span{font:500 13px/1.2 Inter,system-ui,sans-serif;color:#ece6da;text-shadow:0 1px 3px rgba(0,0,0,.8)}

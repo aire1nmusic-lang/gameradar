@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { PlaceBanner } from '@/components/profile/PlaceBanner'
 import { Link, useParams } from 'react-router-dom'
 import {
   CalendarClock,
@@ -351,7 +352,7 @@ function Profile({ server: source }: { server: GameServer }) {
           </div>
         </div>
 
-        <RankStrip server={server} peers={peers} loading={peersLoading} />
+        <PlaceBanner server={server} peers={peers} /><RankStrip server={server} peers={peers} loading={peersLoading} />
 
         {server.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-1.5 sm:mt-6">

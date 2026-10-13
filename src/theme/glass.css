@@ -169,3 +169,20 @@ html[data-design="lobby"] body:has(.l2a) .gs-site-footer:not(#lb):not(#gl){backg
 html[data-design="lobby"] body:has(.l2a) :is(.gs-l2-aether-layout,#root > div):not(#lb):not(#gl){background:transparent!important}
 html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-account-btn{margin-left:auto!important}
 html[data-design="lobby"] body:has(.l2a) .gs-site-footer:not(#lb):not(#gl):not(#p){position:relative!important;z-index:5!important}
+
+/* ---------- one headline font site-wide (the boards' Philosopher instead of Saira; the logo keeps its own) and warm greys ---------- */
+html[data-design="lobby"] body{--lb-display:'Philosopher','Noto Serif',Georgia,serif;--color-ink-300:#d3cdc1;--color-ink-400:#b9b3a8;--color-ink-500:#958f86}
+/* server page: section labels in lime, values in the normal font, quiet notices, a calm play button */
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) .gs-profile-eyebrow{color:var(--lb-lime)!important;letter-spacing:.14em!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) :is(.font-mono,[class*="font-mono"]){font-family:Inter,system-ui,sans-serif!important;font-variant-numeric:tabular-nums}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) :is(.text-danger-300,.text-danger-400,[class*="text-rose"]){color:var(--g-muted)!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) :is(h1,h2,h3){font-family:var(--lb-display)!important;font-stretch:normal!important;letter-spacing:0!important}
+html[data-design="lobby"] body :is(.gs-server-profile,.gs-profile-cta-bar):not(#lb):not(#gl) :is(a,button)[class*="uppercase"]{text-transform:none!important;letter-spacing:.01em!important}
+/* the L2 world shell had its own palette (gold actives and labels, cool grey text): map it onto the site palette */
+html[data-design="lobby"][data-color-mode] body :is(.gs-l2-aether-layout,.gs-l2-filter-sheet):not(#lb){--aether-gold:var(--lb-lime);--aether-muted:#b9b3a8;--aether-ink:#f2efe9;--aether-line:rgba(255,255,255,.12)}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) .gs-profile-cta-bar :is(a,button),html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) a[href*="play"],html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) .uppercase:is(a,button,a *,button *){text-transform:none!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl):not(#p) h2{color:var(--p-ink,#f2efe9)!important;text-transform:none!important;letter-spacing:0!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) .gs-vote-panel > div.uppercase{color:var(--lb-lime)!important}
+html[data-design="lobby"] body :is(.gs-server-profile,.gs-profile-cta-bar):not(#lb):not(#gl):not(#p) .gt-btn{text-transform:none!important;letter-spacing:.01em!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl):not(#p):not(#q) h2{font:700 20px/1.2 var(--lb-display)!important}
+html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) [class*="font-display"]{font-family:var(--lb-display)!important;font-weight:700!important;letter-spacing:0!important}

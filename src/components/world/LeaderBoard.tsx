@@ -5,6 +5,7 @@ import type { Game, GameServer } from '@/models'
 import { chronicleOfVersion } from '@/data/games'
 import { formatNumber } from '@/lib/format'
 import { LaunchCountdown } from '@/components/server/LaunchCountdown'
+import { ServerLogo } from '@/components/ui/ServerLogo'
 import './leader-board.css'
 
 export type BoardKind = 'support' | 'opening' | 'people'
@@ -51,23 +52,26 @@ export function LeaderBoard({ game, kind, title, kicker, sub, rows, loading, err
   const meta = (s: GameServer) => [chronicleOfVersion(game.id, s.version)?.label ?? s.version, s.rates ? `x${String(s.rates).replace(/^[x×]/i, '')}` : ''].filter(Boolean).join(' · ')
   const fav = (s: GameServer) => <button type="button" className={`fav gsb-fav ${isFav(s.slug) ? 'selected' : ''}`} aria-pressed={isFav(s.slug)} aria-label={isFav(s.slug) ? `Убрать ${s.name} из избранного` : `${s.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggleFav(s.slug) }}><Heart size={14} fill={isFav(s.slug) ? 'currentColor' : 'none'} /></button>
   const num = (s: GameServer) => <span className="server-right gsb-num">{kind === 'support' && <img src="/media/ranks/coins.svg" alt="" />}<span><small>{unit}</small><strong>{value(s)}</strong></span></span>
+  // Rows: icon + number only, the unit is in the board title and the screen-reader label.
+  const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <img src="/media/ranks/coins.svg" alt="" /> : <svg className="gsb-vote" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h4v11H3zM9 21h8.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 19 10h-5l.8-4.2A1.8 1.8 0 0 0 13 3.6L9 9z" /></svg>}<strong>{value(s)}</strong></span>
+  const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
   const plaque = (s: GameServer, rank: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
     <span className="gsb-art" aria-hidden="true"><img src={PLACE[rank].bg} alt="" decoding="async" /></span>
     {PLACE[rank].hero && <img className="gsb-hero" src={PLACE[rank].hero} alt="" aria-hidden="true" decoding="async" />}
     <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-192.webp`} alt={`${rank} место`} /></span>
     <span className="gsb-bar">
-      <span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta(s)}</span></span>
+      {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta(s)}</span></span>
       {num(s)}{fav(s)}
     </span>
     <span className="gsb-glass" aria-hidden="true" />
   </Link>
   const row = (s: GameServer, index: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-row ${index >= 10 ? 'gsb-overflow' : ''}`}>
     <span className="gsb-hex"><svg viewBox="0 0 56 65" aria-hidden="true"><path d="M28 1.2 54.6 16.5v32L28 63.8 1.4 48.5v-32z" /></svg><span>{index + 1}</span></span>
-    <span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
+    {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
     {kind === 'opening' && s.launch
       ? <span className="server-right gsb-num"><span><small><LaunchCountdown at={s.launch.at} /></small><strong>{new Date(s.launch.at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', timeZone: 'Europe/Moscow' })}</strong></span></span>
-      : num(s)}
+      : rowNum(s)}
     {fav(s)}
   </Link>
 

@@ -51,9 +51,9 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const value = (s: GameServer) => formatNumber(kind === 'support' ? s.support?.coins ?? 0 : s.votes)
   const meta = (s: GameServer) => [chronicleOfVersion(game.id, s.version)?.label ?? s.version, s.rates ? `x${String(s.rates).replace(/^[x×]/i, '')}` : ''].filter(Boolean).join(' · ')
   const fav = (s: GameServer) => <button type="button" className={`fav gsb-fav ${isFav(s.slug) ? 'selected' : ''}`} aria-pressed={isFav(s.slug)} aria-label={isFav(s.slug) ? `Убрать ${s.name} из избранного` : `${s.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggleFav(s.slug) }}><Heart size={14} fill={isFav(s.slug) ? 'currentColor' : 'none'} /></button>
-  const num = (s: GameServer) => <span className="server-right gsb-num">{kind === 'support' ? <img className="gsb-coin" src="/media/ranks/coin-gold-96.webp" alt="" /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<span><small>{unit}</small><strong>{value(s)}</strong></span></span>
+  const num = (s: GameServer) => <span className="server-right gsb-num">{kind === 'support' ? <img className="gsb-coin" src="/media/ranks/coin-stack-96.webp" alt="" /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<span><small>{unit}</small><strong>{value(s)}</strong></span></span>
   // Rows: icon + number only, the unit is in the board title and the screen-reader label.
-  const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <img className="gsb-coin" src="/media/ranks/coin-gold-96.webp" alt="" /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<strong>{value(s)}</strong></span>
+  const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <img className="gsb-coin" src="/media/ranks/coin-stack-96.webp" alt="" /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<strong>{value(s)}</strong></span>
   const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
   const plaque = (s: GameServer, rank: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>

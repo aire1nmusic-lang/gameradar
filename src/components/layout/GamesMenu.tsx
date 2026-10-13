@@ -50,7 +50,7 @@ export function GamesMenu() {
       </button>
 
       {open && (
-        <div className="surface-raised absolute top-[calc(100%+10px)] left-0 z-50 max-h-[70svh] w-[min(400px,calc(100vw-100px))] animate-pop overflow-y-auto rounded-2xl p-3">
+        <div className="gs-games-menu surface-raised absolute top-[calc(100%+10px)] left-0 z-50 max-h-[70svh] w-[min(400px,calc(100vw-100px))] animate-pop overflow-y-auto rounded-2xl p-3">
           <p className="px-2 pb-2 text-xs text-ink-400">Сменить мир</p>
           <div className="grid gap-1">
             {GAMES.filter(g=>['lineage2','minecraft','gtarp'].includes(g.id)).map((game) => (

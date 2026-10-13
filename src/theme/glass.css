@@ -201,3 +201,16 @@ html[data-design="lobby"] body :is(.gs-site-header,.gs-live):not(.gs-hall-header
   html[data-design="lobby"] body .l2a .chronicle-picker .chronicle-row:not(#lb):not(#gl):not(#p){position:absolute!important;top:calc(100% + 8px)!important;right:0!important;width:min(880px,calc(100vw - 48px))!important;z-index:40;padding:12px!important;border-radius:18px!important;background:linear-gradient(180deg,rgba(18,20,26,.92),rgba(14,16,21,.9))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 30px 70px -24px rgba(0,0,0,.85)!important}
 }
 html[data-design="lobby"] body .l2a .discovery:not(#lb):not(#gl):not(#p):not(#q){position:relative!important;z-index:60!important}
+
+/* catalog tiles: the promo slot takes a whole row, and disappears when there is no creative (no empty cell) */
+html[data-design="lobby"] body .gs-tile-grid > .gs-tile-promo{grid-column:1/-1}
+html[data-design="lobby"] body .gs-tile-grid > .gs-tile-promo:not(:has(*)){display:none}
+/* sticky catalog toolbar: dense glass so cards don't show through it while scrolling */
+html[data-design="lobby"] body .gs-catalog-toolbar:not(#lb):not(#gl):not(#p){background:rgba(16,18,24,.9)!important}
+/* worlds menu in the header: dense glass, readable over the art */
+html[data-design="lobby"] body [role="menu"]:not(#lb):not(#gl),html[data-design="lobby"] body .gs-games-menu:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(18,20,26,.94),rgba(14,16,21,.92))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 30px 70px -24px rgba(0,0,0,.85)!important}
+/* back to top */
+.gs-to-top{position:fixed;right:18px;bottom:22px;z-index:45;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#11160a;background:var(--lb-lime,#c6ff52);box-shadow:0 10px 26px -10px rgba(0,0,0,.8),0 0 18px -6px var(--lb-lime,#c6ff52);border:0;cursor:pointer;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}
+.gs-to-top.is-on{opacity:1;transform:none;pointer-events:auto}
+@media (max-width:1023px){.gs-to-top{bottom:calc(84px + env(safe-area-inset-bottom));right:14px;width:42px;height:42px}}
+html[data-design="lobby"] body .gs-games-menu.surface-raised:not(#lb):not(#gl):not(#p):not(#q){background:linear-gradient(180deg,rgba(18,20,26,.95),rgba(14,16,21,.93))!important;border:1px solid rgba(255,255,255,.14)!important}

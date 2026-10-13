@@ -65,7 +65,9 @@ export default function Catalog() {
   const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [searchOpen,setSearchOpen]=useState(Boolean(params.get('q')))
+  const [searchOpen,setSearchOpen]=useState(()=>Boolean(params.get('q'))||(typeof window!=='undefined'&&window.location.hash==='#search'))
+  // footer «Найти свой сервер» lands here with #search: open the search and put the cursor in it
+  useEffect(()=>{if(window.location.hash!=='#search')return;setSearchOpen(true);const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
 
   const rotateSupport = world?.id === 'lineage2' && sort === 'support'
   const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
@@ -250,7 +252,7 @@ export default function Catalog() {
                 {results.map((server, index) => podium && index < 3 ? null : (
                   <Fragment key={server.slug}>
                     {index === 6 && (
-                      <ThemeScope theme={adTheme} as="div" className="col-span-2 md:col-span-3 xl:col-span-4">
+                      <ThemeScope theme={adTheme} as="div" className="gs-tile-promo">
                         <InlinePromo gameId={filters.games[0]} />
                       </ThemeScope>
                     )}

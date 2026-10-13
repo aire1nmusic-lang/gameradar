@@ -12,6 +12,7 @@ import { DesignPanel } from './DesignPanel'
 import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
+import { ToTop } from './ToTop'
 import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { WorldPageScope } from '@/components/world/WorldPageScope'
 import './review-refinement.css'
@@ -50,7 +51,7 @@ function LayoutContent() {
 
   return (
         <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
-          <FavoritesSync/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
+          <FavoritesSync/><ToTop/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>
             <VisualDemoBanner/>{!hall && location.pathname !== "/account" && <LiveTicker/>}<WorldPageScope><Outlet /></WorldPageScope>

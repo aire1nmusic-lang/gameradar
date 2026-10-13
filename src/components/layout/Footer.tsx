@@ -35,7 +35,7 @@ export function Footer() {
   const {game:world,loading:worldPending,scoped}=useWorldNavigation()
   const columns=loading?COLUMNS.filter(column=>column.title!=='Владельцам'):privateCore?COLUMNS.map(column=>column.title==='Владельцам'?{
     ...column,links:[
-      {label:'Найти свой сервер',to:'/catalog'},
+      {label:'Найти свой сервер',to:'/catalog#search'},
       {label:'Подтвердить права',to:'/account'},
       {label:'Возможности',to:'/owners'},
       {label:'Мои серверы',to:'/account'},
@@ -80,7 +80,7 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={['/catalog','/rating','/openings','/favorites','/account','/owners','/dashboard','/add-server'].includes(link.to)?scoped(link.to):link.to} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
+                    <Link to={['/catalog','/rating','/openings','/favorites','/account','/owners','/dashboard','/add-server'].includes(link.to.split('#')[0])?scoped(link.to.split('#')[0])+(link.to.includes('#')?'#'+link.to.split('#')[1]:''):link.to} onClick={()=>window.scrollTo({top:0,behavior:'smooth'})} className="text-[13.5px] text-ink-300 transition-colors hover:text-ink-50">
                       {link.label}
                     </Link>
                   </li>

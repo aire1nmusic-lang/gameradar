@@ -20,8 +20,8 @@ import { cardSrc, reducedMotion, usePortalFlight } from './portal'
 const WORLDS = ['lineage2', 'minecraft', 'gtarp'] as const
 
 const cardSrcSet = (gameId: string) => `${cardSrc(gameId, 480)} 480w, ${cardSrc(gameId, 960)} 960w`
-const NAVE_SRCSET = [1280, 1920, 2560, 3840].map((w) => `/media/hub/nave-${w}.webp ${w}w`).join(', ')
-const NAVE_PHONE_SRCSET = '/media/hub/nave-m-720.webp 720w, /media/hub/nave-m-1080.webp 1080w'
+const NAVE_SRCSET = [1280, 1920, 2000].map((w) => `/media/hub/observatory-${w}.webp ${w}w`).join(', ')
+const NAVE_PHONE_SRCSET = '/media/hub/observatory-m-720.webp 720w, /media/hub/observatory-m-1080.webp 1080w'
 
 /** Cards lean towards the pointer: each card reads the pointer relative to its own centre. */
 function useTilt(enabled: boolean) {
@@ -119,7 +119,7 @@ export function WorldHall() {
           style={{ transform: flightId ? 'scale(1.07)' : 'none', transition: 'transform 1300ms cubic-bezier(0.5, 0, 0.2, 1)' }}
         >
           <div className="absolute -inset-5 transition-transform duration-700 ease-out" style={{ transform: 'translate3d(var(--gs-px, 0px), var(--gs-py, 0px), 0)' }}>
-            <img data-boot-visual src="/media/hub/nave-1920.webp" srcSet={NAVE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
+            <img data-boot-visual src="/media/hub/observatory-1920.webp" srcSet={NAVE_SRCSET} sizes="100vw" alt="" className="gs-hall-drift absolute inset-0 h-full w-full object-cover" fetchPriority="high" decoding="async" />
           </div>
           <div className="absolute inset-x-0 top-0 h-28 gs-hall-shade-top bg-gradient-to-b from-[#08090d]/75 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-[38%] gs-hall-shade-bottom bg-gradient-to-t from-[#08090d] via-[#08090d]/60 to-transparent" />
@@ -153,7 +153,7 @@ export function WorldHall() {
       {/* ── phones and tablets ───────────────────────────────────────── */}
       {!desktop && <div className="relative flex min-h-[100svh] flex-col justify-start lg:hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
-          <img data-boot-visual src="/media/hub/nave-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
+          <img data-boot-visual src="/media/hub/observatory-m-720.webp" srcSet={NAVE_PHONE_SRCSET} sizes="100vw" alt=""  className="gs-hall-drift h-full w-full object-cover object-center" fetchPriority="high" decoding="async" />
           <div className="gs-hall-shade-mobile absolute inset-0 bg-gradient-to-b from-[#08090d]/30 via-[#08090d]/35 to-[#08090d]" />
         </div>
         <div className="gs-hall-phone-content pt-24 pb-6">

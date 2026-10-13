@@ -12,7 +12,7 @@
 - L2 world art = owner Tower of Insolence (tower-v1 desktop 800/1600/2000 from the owner 16:9, mobile 720/1080 from the hall-card vertical) — same tower as the hall card, so the portal lands on the same picture; replaces master-v9 (kept on disk, unused).
 - Fix: the world-enter animation used fill both and left an identity transform on .l2a after the portal, so the fixed art became page-relative and ended mid-page; now fill backwards (checked 2000×1000 direct and via portal: scene fixed, top 0, full height).
 - Back-to-top lime button (ToTop.tsx, after 1 screen); catalog promo slot spans the row and hides when empty (no hole in tiles); sticky catalog toolbar dense; worlds menu dense glass; footer «Найти свой сервер» → catalog#search (opens + focuses search), footer links scroll to top.
-- L2 server pages: one shared header = owner sea-cliff fortress at dusk (server-castle-v1 400/800/1600/2000, L2_SERVER_COVER); other worlds keep serverArt.
+- L2 server pages: one shared header = owner sea-cliff fortress at dusk (server-castle-v1 400/800/1600/2000, L2_SERVER_COVER); other worlds keep serverArt. Then: the fortress is a fixed full-page background (.gs-server-bg), hero art layers hidden, footer translucent.
 - World search + epoch: no outer frame, two glass blocks of 64px, search centred; chronicles open as a dropdown panel under the epoch block (absolute, z above boards), layout does not move (≥768px; phones unchanged).
 - Header and live strip more transparent (rgba(16,18,24,.66→.56)).
 - Checked: 390 and 1440 dark, home/catalog/openings/rating/favorites/server; no horizontal overflow on openings at 390 (scrollWidth 390).

@@ -214,3 +214,15 @@ html[data-design="lobby"] body [role="menu"]:not(#lb):not(#gl),html[data-design=
 .gs-to-top.is-on{opacity:1;transform:none;pointer-events:auto}
 @media (max-width:1023px){.gs-to-top{bottom:calc(84px + env(safe-area-inset-bottom));right:14px;width:42px;height:42px}}
 html[data-design="lobby"] body .gs-games-menu.surface-raised:not(#lb):not(#gl):not(#p):not(#q){background:linear-gradient(180deg,rgba(18,20,26,.95),rgba(14,16,21,.93))!important;border:1px solid rgba(255,255,255,.14)!important}
+
+/* ---------- L2 server page: the fortress is a fixed full-page background; the header strip is transparent over it ---------- */
+.gs-server-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:#0c0e13 url('/media/worlds/lineage-2/server-castle-v1-2000.webp') 62% 40%/cover no-repeat}
+.gs-server-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,14,.70) 0%,rgba(8,10,14,.30) 50%,rgba(8,10,14,.15) 100%),linear-gradient(0deg,rgba(8,10,14,.66),rgba(8,10,14,.32) 55%,rgba(8,10,14,.12))}
+@media (max-width:767px){.gs-server-bg{background-image:url('/media/worlds/lineage-2/server-castle-v1-800.webp');background-position:66% 30%}}
+html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > :first-child{opacity:0!important}
+html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2){background:transparent!important}
+html[data-design="lobby"] body .gs-server-fullbg :is(.gt-hero,[class*="ThemePattern"]){display:none!important}
+html[data-design="lobby"] body:has(.gs-server-fullbg) :is(.gs-page-main,main,.gs-site-footer,.gs-l2-aether-layout,.gs-world-backdrop):not(#lb):not(#gl){background:transparent!important}
+html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-world-backdrop{display:none!important}
+html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-site-footer:not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;position:relative;z-index:5}
+html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > *:not(:has(nav,a)){display:none!important}

@@ -230,7 +230,9 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className="gs-server-profile pb-28 lg:pb-16" >
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', server.gameId === 'lineage2' && 'gs-server-fullbg')} >
+      {/* Lineage 2: the shared fortress is the background of the whole page, like the world page */}
+      {server.gameId === 'lineage2' && <div aria-hidden className="gs-server-bg" />}
       {/* hero: art of the server's world */}
       <div className={cn('relative overflow-hidden', showcase ? 'h-[300px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
         <WorldArtSurface

@@ -200,3 +200,18 @@ html[data-design="lobby"] body .l2a .gsb .gsb-num-compact:not(#a):not(#b){gap:5p
 html[data-design="lobby"] body .l2a .gsb .gsb-num-compact strong:not(#a):not(#b){margin:0!important;font-size:16px!important}
 html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b){width:26px!important;min-width:26px!important;height:26px!important}
 html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-fav:not(#a):not(#b){top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;transform:none!important;align-self:center}
+
+/* ===== v5 (owner): labels and titles centred in their bands, larger first-place character, bigger 3D coins, lighter on phones ===== */
+.gsb .gsb-strip{height:44px!important;align-items:center!important;padding:0 16px!important}
+.gsb .gsb-label{transform:translateY(-4px)}
+.gsb .gsb-inner{padding-top:36px!important}
+.gsb .gsb-head{padding:0 12px 12px!important}
+.gsb .p1 .gsb-hero{height:156px!important;right:6%!important}
+html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:30px!important}
+.gsb .gsb-num img{width:28px!important;height:28px!important}
+.gsb .gsb-num-compact img{width:22px!important;height:22px!important}
+/* phones: one blur layer only (the panel); cards use solid frosted colour so scrolling stays smooth */
+@media (max-width:900px){
+  html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b),.gsb .gsb-empty{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:linear-gradient(180deg,rgba(86,92,110,.62),rgba(58,63,78,.62))!important}
+  html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){-webkit-backdrop-filter:blur(6px)!important;backdrop-filter:blur(6px)!important}
+}

@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#f2c14e"/><stop offset="1" stop-color="#9a6a14"/></linearGradient><linearGradient id="s" x1="0" x2="1"><stop offset="0" stop-color="#8a5c12"/><stop offset=".5" stop-color="#e7b544"/><stop offset="1" stop-color="#7a4f0e"/></linearGradient></defs>
-<g stroke="#5a3a08" stroke-width=".8">
-<g transform="translate(6 30)"><rect x="0" y="6" width="30" height="20" rx="1" fill="url(#s)"/><ellipse cx="15" cy="26" rx="15" ry="5" fill="url(#s)"/><ellipse cx="15" cy="6" rx="15" ry="5" fill="url(#g)"/><path d="M0 12h30M0 17h30M0 22h30" stroke="#6b4510" stroke-width=".7"/></g>
-<g transform="translate(26 18)"><rect x="0" y="6" width="30" height="32" rx="1" fill="url(#s)"/><ellipse cx="15" cy="38" rx="15" ry="5" fill="url(#s)"/><ellipse cx="15" cy="6" rx="15" ry="5" fill="url(#g)"/><path d="M0 12h30M0 17h30M0 22h30M0 27h30M0 32h30" stroke="#6b4510" stroke-width=".7"/><ellipse cx="15" cy="6" rx="9" ry="2.6" fill="none" stroke="#b07d1c"/></g>
-</g></svg>

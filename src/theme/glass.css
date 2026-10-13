@@ -113,3 +113,29 @@ html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line
   html[data-design="lobby"] body .gs-tile-grid .gs-tile-rank:not(#lb){display:none!important}
   html[data-design="lobby"] body .gs-tile-grid .gs-tile-name:not(#lb){white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;line-height:18px!important}
 }
+
+/* ---------- one green: the old mint "signal" becomes the site lime (trust marks, links, statuses) ---------- */
+html[data-design="lobby"]{--color-signal-200:#e6ffb3;--color-signal-300:#d6ff7d;--color-signal-400:#c6ff52;--color-signal-500:#aee63c;--color-signal-600:#8cc226;--color-signal-900:#1c2608}
+
+/* ---------- account: same palette as the site (glass, lime for actions, gold for coins), no purple theme ---------- */
+html[data-design="lobby"] body .gs-account-premium:not(#lb){--account-card:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));--account-border:rgba(255,255,255,.14);--account-soft:rgba(255,255,255,.05);--account-soft-border:rgba(255,255,255,.12);--account-accent:var(--lb-lime);--account-gold:#e8b964}
+html[data-design="lobby"] body .gs-account-premium:not(#lb)::before{background:none!important}
+html[data-design="lobby"] body .gs-account-kicker:not(#lb){color:var(--lb-lime)!important}
+html[data-design="lobby"] body .gs-account-hero:not(#lb){border-color:rgba(255,255,255,.14)!important}
+html[data-design="lobby"] body .gs-account-avatar:not(#lb){background:radial-gradient(circle at 35% 25%,color-mix(in srgb,var(--lb-lime) 18%,transparent),rgba(15,17,22,.92) 64%)!important;border-color:color-mix(in srgb,var(--lb-lime) 45%,transparent)!important;box-shadow:0 0 26px -14px var(--lb-lime)!important}
+html[data-design="lobby"] body .gs-account-status:not(#lb){color:var(--lb-lime)!important;background:color-mix(in srgb,var(--lb-lime) 12%,transparent)!important;border-color:color-mix(in srgb,var(--lb-lime) 26%,transparent)!important}
+html[data-design="lobby"] body :is(.gs-provider-tile,.gs-account-action):not(#lb):hover{border-color:color-mix(in srgb,var(--lb-lime) 45%,transparent)!important}
+html[data-design="lobby"] body .gs-coins-card:not(#lb){background:radial-gradient(80% 120% at 100% 100%,rgba(232,185,100,.16),transparent 56%),var(--account-card)!important}
+html[data-design="lobby"] body .gs-admin-action:not(#lb){background:color-mix(in srgb,var(--lb-lime) 10%,transparent)!important;border-color:color-mix(in srgb,var(--lb-lime) 45%,transparent)!important;color:var(--lb-lime)!important}
+html[data-design="lobby"] body .gs-account-wallet > summary:not(#lb){color:var(--g-ink)}
+/* sign-in card over the art: denser glass so the form reads; warm labels */
+html[data-design="lobby"] body .gs-account-glass:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(18,20,26,.82),rgba(14,16,21,.76))!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 70px -30px rgba(0,0,0,.9)!important}
+html[data-design="lobby"] body .gs-account-glass :is(label,.gs-account-back,a,p):not(#lb):not(#gl){color:var(--p-soft,#e6e0d5)}
+html[data-design="lobby"] body .gs-account-glass .gs-provider-button:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05))!important;border:1px solid rgba(255,255,255,.18)!important;color:var(--p-ink,#f2efe9)!important}
+/* account page over the bright hall image: dim the scene so glass and text read on every size */
+html[data-design="lobby"] body .gs-account-layout:not(#lb)::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(10,12,16,.55),rgba(10,12,16,.72) 45%,rgba(10,12,16,.82))}
+html[data-design="lobby"] body .gs-account-layout > :not(#lb){position:relative;z-index:1}
+html[data-design="lobby"] body .gs-account-layout > header:not(#lb),html[data-design="lobby"] body .gs-account-layout > nav:not(#lb){z-index:50}
+html[data-design="lobby"] body .gs-account-wallet > summary:not(#lb):not(#gl){background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;color:var(--g-ink)!important}
+html[data-design="lobby"] body .gs-account-empty :is(h3,p):not(#lb){color:var(--p-soft,#e6e0d5)!important;opacity:1!important}
+html[data-design="lobby"] body .gs-account-empty-icon:not(#lb):not(#gl){background:color-mix(in srgb,var(--lb-lime) 12%,transparent)!important;color:var(--lb-lime)!important;box-shadow:0 0 22px -10px var(--lb-lime)!important;border:1px solid color-mix(in srgb,var(--lb-lime) 28%,transparent)!important}

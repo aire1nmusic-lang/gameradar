@@ -78,6 +78,11 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   let body
   if (loading && !rows.length) body = <div className="gsb-empty" role="status"><b>Загружаем серверы…</b></div>
   else if (error && !rows.length) body = <div className="gsb-empty"><b>Не удалось загрузить данные</b><span>Проверь соединение и попробуй снова.</span><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div>
+  else if (!rows.length && kind === 'opening' && !filtered) body = <div className="server gsb-plaque p0 gsb-empty-plaque">
+    <span className="gsb-art" aria-hidden="true"><img src="/media/ranks/gold-v1.webp" alt="" decoding="async" /></span>
+    <span className="gsb-bar"><span className="gsb-txt"><span className="server-name gsb-name">{emptyTitle}</span><span className="server-meta gsb-meta">{emptyText}</span></span></span>
+    <span className="gsb-glass" aria-hidden="true" />
+  </div>
   else if (!rows.length) body = <div className="gsb-empty"><b>{filtered ? 'Ничего не найдено' : emptyTitle}</b><span>{filtered ? 'Попробуй другой запрос или сбрось фильтр.' : emptyText}</span></div>
   else if (kind === 'opening') body = rows.map((s, i) => row(s, i))
   else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>

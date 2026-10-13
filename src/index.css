@@ -853,7 +853,7 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
   from { transform: scale(1.045); }
   to { transform: none; }
 }
-.gs-world-enter > * { animation: gs-world-enter 1500ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; }
+.gs-world-enter > * { animation: gs-world-enter 1100ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both; }
 
 @media (prefers-reduced-motion: reduce) {
   .gs-hall-drift, .gs-world-enter > * { animation: none; }

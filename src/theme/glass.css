@@ -139,3 +139,21 @@ html[data-design="lobby"] body .gs-account-layout > header:not(#lb),html[data-de
 html[data-design="lobby"] body .gs-account-wallet > summary:not(#lb):not(#gl){background:var(--g-bg)!important;border:1px solid var(--g-bd)!important;color:var(--g-ink)!important}
 html[data-design="lobby"] body .gs-account-empty :is(h3,p):not(#lb){color:var(--p-soft,#e6e0d5)!important;opacity:1!important}
 html[data-design="lobby"] body .gs-account-empty-icon:not(#lb):not(#gl){background:color-mix(in srgb,var(--lb-lime) 12%,transparent)!important;color:var(--lb-lime)!important;box-shadow:0 0 22px -10px var(--lb-lime)!important;border:1px solid color-mix(in srgb,var(--lb-lime) 28%,transparent)!important}
+html[data-design="lobby"] body .gs-site-header.gs-hall-header:not(#lb):not(#gl){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+
+/* ---------- world hero: one type system with the boards (Philosopher), clean crumbs, one glass search field ---------- */
+html[data-design="lobby"] body .l2a .hero h1:not(#lb):not(#gl):not(#p){font-family:"Noto Serif",Georgia,serif!important;font-weight:700!important;letter-spacing:-.01em!important}
+html[data-design="lobby"] body .l2a .hero h1 em:not(#lb):not(#gl){font-style:normal!important;color:#e8b964!important}
+html[data-design="lobby"] body .l2a .edition:not(#lb):not(#gl){color:var(--p-soft,#e6e0d5)!important;opacity:.85;font-size:11px!important;letter-spacing:.18em!important;font-weight:600!important}
+html[data-design="lobby"] body .l2a .breadcrumb:not(#lb):not(#gl){color:var(--g-muted)!important;font-size:12.5px!important}
+html[data-design="lobby"] body .l2a .breadcrumb a:not(#lb):not(#gl){text-decoration:none!important;color:var(--g-muted)!important}
+html[data-design="lobby"] body .l2a .breadcrumb a:not(#lb):not(#gl):hover{color:var(--lb-lime)!important}
+html[data-design="lobby"] body .l2a .breadcrumb > span:not(#lb):not(#gl){width:14px!important;opacity:.5}
+/* search: the outer box is the glass field, the input inside has no box of its own */
+html[data-design="lobby"] body .l2a .search-box:not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.045))!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)!important}
+html[data-design="lobby"] body .l2a .search-box:not(#lb):not(#gl):focus-within{border-color:var(--lb-lime)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--lb-lime) 20%,transparent)!important}
+html[data-design="lobby"] body .l2a .search-box input:not(#lb):not(#gl):not(#p):not(#q){background:transparent!important;border:0!important;box-shadow:none!important;outline:none!important}
+html[data-design="lobby"] body .l2a .search-box input:not(#lb):not(#gl):not(#p):not(#q):focus{box-shadow:none!important;border:0!important}
+/* epoch picker: same glass, title in the board font, quiet kicker */
+html[data-design="lobby"] body .l2a .gs-epoch-title:not(#lb):not(#gl):not(#p){font:700 22px/1.15 "Philosopher","Noto Serif",Georgia,serif!important;letter-spacing:0!important;color:var(--p-ink,#f2efe9)!important}
+html[data-design="lobby"] body .l2a .gs-epoch-summary .section-kicker:not(#lb):not(#gl):not(#p){color:var(--g-muted)!important;letter-spacing:.16em!important}

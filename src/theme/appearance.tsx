@@ -82,12 +82,9 @@ export function readAppearance(): Appearance {
   }
 }
 
+/** The light theme is switched off by the owner (13.10.2026): the site is always dark. The light styles stay in the code. */
 export function readColorMode(): ColorMode {
-  try {
-    return localStorage.getItem(COLOR_MODE_KEY) === 'light' ? 'light' : 'dark'
-  } catch {
-    return 'dark'
-  }
+  return 'dark'
 }
 
 export function applyColorMode(mode: ColorMode) {
@@ -159,7 +156,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const setColorMode = useCallback((mode: ColorMode) => {
+  const setColorMode = useCallback((requested: ColorMode) => {
+    const mode: ColorMode = requested === 'light' ? 'dark' : requested
     setColorModeState(mode)
     applyColorMode(mode)
     try {

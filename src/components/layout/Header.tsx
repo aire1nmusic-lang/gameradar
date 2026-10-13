@@ -6,7 +6,6 @@ import { Container } from './Container'
 import { GamesMenu } from './GamesMenu'
 import { Logo } from './Logo'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
-import { useAppearance } from '@/theme/appearance'
 
 /**
  * Four places a player goes, and search in the middle. Owner links live in
@@ -23,7 +22,6 @@ const NAV = [
 export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLogin: () => void; bare?: boolean }) {
   const auth=useAuth()
   const {pathname}=useLocation()
-  const {colorMode,toggleColorMode}=useAppearance()
   const {game,scoped}=useWorldNavigation()
   const worldArt=['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
   const overArt=bare||pathname==='/account'||pathname.startsWith('/admin')||['/lineage-2','/minecraft','/gta-rp'].some(path=>pathname===path||pathname.startsWith(path+'/'))
@@ -71,15 +69,7 @@ export function Header({ onSearch, onLogin, bare }: { onSearch: () => void; onLo
         </button>}
 
         {!bare && <button type="button" className="gs-header-search" aria-label="Поиск" onClick={onSearch}><WorldIcon name="search" size={18}/></button>}
-        <button
-          type="button"
-          onClick={toggleColorMode}
-          aria-label={colorMode === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}
-          title={colorMode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-          className="gs-theme-toggle ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/[0.10] bg-white/[0.035] text-ink-200 backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.07] hover:text-ink-50 active:scale-95 md:ml-0"
-        >
-          {colorMode === 'dark' ? <WorldIcon name="sun" size={20} /> : <WorldIcon name="moon" size={20} />}
-        </button>
+        <span className="ml-auto md:ml-0" aria-hidden="true" />
 
         {auth.privateCore ? <Link to={scoped('/account')} aria-label={`Аккаунт: ${accountLabel}`} className={accountClass}>
           <WorldIcon name="profile" size={16} className="shrink-0" /><span className="truncate">{accountLabel}</span>

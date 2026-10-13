@@ -1,3 +1,9 @@
+## 13.10.2026 — One palette + light theme switched off (owner)
+- Palette (`src/theme/glass.css`, tail): dark glass + 2 text whites (#f2efe9/#e6e0d5) + ONE lime (--lb-lime #c6ff52) for actions (labels, «Все →», online dot, active chips) + gold only for awards (medals, crown, coins, frames). Chronicle tiles and live chips are glass.
+- Light theme switched off: `readColorMode()` always returns dark, `setColorMode('light')` maps to dark, the header toggle is removed (a spacer keeps the layout). Light CSS stays in the code for a later return; old `gs.color-mode.v1=light` users get dark.
+- Review sheets (not in the repo): `output/board-1v1/цвета-было-станет.html`, `страницы-темы.html`; shots script `output/perf-audit/pages.mjs` (playwright from the npx cache).
+- Checked: 390 and 1440 dark, home/catalog/openings/rating/favorites/server; no horizontal overflow on openings at 390 (scrollWidth 390).
+
 ## 13.10.2026 — Owner glass standard, site-wide (VERIFIED locally, deploying via Worker)
 - L2 boards v7/v8: every plaque shows the full picture; the bottom third is one thin film; the top-1 hero is fully visible. Light theme uses smoky dark glass with a readable gold title.
 - New `src/theme/glass.css`: glass by theme (dark → milky light glass, light → smoky dark). Lime active buttons. No live blur except the desktop board frost (scroll lag fix).

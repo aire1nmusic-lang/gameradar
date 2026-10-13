@@ -74,3 +74,37 @@ html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line
 /* light theme: the epoch picker sits over the dark part of the cover — smoky glass with light text, like the boards */
 html[data-design="lobby"][data-color-mode="light"] body .l2a .gs-epoch-summary:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(22,24,32,.58),rgba(22,24,32,.46))!important;border-color:rgba(255,255,255,.28)!important;color:#f2ede4!important}
 html[data-design="lobby"][data-color-mode="light"] body .l2a .gs-epoch-summary :is(.gs-epoch-text,.gs-epoch-text *,.gs-epoch-chevron):not(#lb):not(#gl){color:#f2ede4!important}
+
+/* ---------- one palette (owner, 13.10.2026): dark glass + warm white text, ONE lime for actions, gold only for awards ---------- */
+html[data-design="lobby"]{--p-ink:#f2efe9;--p-soft:#e6e0d5;--p-muted:#b9b3a8}
+/* the boards always sit on dark glass: one white for names and numbers, one soft white for details */
+html[data-design="lobby"] body .gsb :is(.gsb-name,.gsb-row-name,.gsb-num strong):not(#lb):not(#gl):not(#p){color:var(--p-ink)!important;-webkit-text-fill-color:var(--p-ink)!important}
+html[data-design="lobby"] body .gsb :is(.gsb-meta,.gsb-row-meta,.gsb-num small):not(#lb):not(#gl):not(#p){color:var(--p-soft)!important}
+/* one lime: labels, "all/calendar" links, live dots */
+html[data-design="lobby"] body .gsb .gsb-label:not(#lb):not(#gl):not(#p):not(#q){color:var(--lb-lime)!important;-webkit-text-fill-color:var(--lb-lime)!important}
+html[data-design="lobby"] body :is(.gsb .gsb-more a,.l2a .l2-all):not(#lb):not(#gl):not(#p){color:var(--lb-lime)!important}
+html[data-design="lobby"] body .l2a .metric .dot:not(#lb):not(#gl){background:var(--lb-lime)!important;box-shadow:0 0 8px var(--lb-lime)!important}
+/* quiet text: one muted tone instead of cool and warm greys */
+html[data-design="lobby"] body :is(.l2a .section-kicker,.l2a .breadcrumb a,.l2a .metric small,.gs-live-item > span):not(#lb):not(#gl){color:var(--g-muted)!important}
+/* no grey slabs: chronicle tiles and live-strip chips are glass */
+html[data-design="lobby"] body :is(.l2a .chron,.gs-live-item):not(#lb):not(#gl){background:var(--g-bg)!important;border:1px solid var(--g-bd)!important}
+html[data-design="lobby"] body .l2a .chron.active:not(#lb):not(#gl){border-color:var(--lb-lime)!important;box-shadow:0 0 0 1px var(--lb-lime),0 0 16px -6px var(--lb-lime)!important}
+/* light theme: the lime label sits on the light page — soft light halo instead of a black shadow */
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-label:not(#lb):not(#gl):not(#p):not(#q){filter:drop-shadow(0 1px 0 rgba(255,255,255,.9))!important}
+
+/* ---------- light theme = one light milky glass everywhere (boards, rows, catalog), dark text; picture plaques keep their film ---------- */
+html[data-design="lobby"][data-color-mode="light"]{--lt-glass:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.58));--lt-glass-hi:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.72));--lt-bd:rgba(26,28,36,.14);--lt-ink:#1d1b20;--lt-soft:#4c4840}
+/* board panel */
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-frost:not(#a):not(#b):not(#c):not(#d){background:linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,.34))!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-edge path:not(#a):not(#b){stroke:rgba(26,28,36,.18)!important}
+/* rows 4+ and empty boxes = the same light glass as catalog rows */
+html[data-design="lobby"][data-color-mode="light"] body :is(.gsb .gsb-row,.gsb .gsb-empty):not(#a):not(#b):not(#c):not(#d){background:var(--lt-glass)!important;border:1px solid var(--lt-bd)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 6px 16px -12px rgba(0,0,0,.35)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-row:hover:not(#a):not(#b):not(#c):not(#d){background:var(--lt-glass-hi)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb :is(.gsb-row-name,.gsb-row .gsb-num strong,.gsb-empty b):not(#lb):not(#gl):not(#p):not(#q){color:var(--lt-ink)!important;-webkit-text-fill-color:var(--lt-ink)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb :is(.gsb-row-meta,.gsb-empty span):not(#lb):not(#gl):not(#p):not(#q){color:var(--lt-soft)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-row .gsb-hex:not(#a):not(#b){color:#7a5212!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-row .gsb-hex svg path:not(#a):not(#b){fill:rgba(232,185,100,.22)!important;stroke:rgba(122,82,18,.45)!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-row .gsb-fav:not(#a):not(#b){color:var(--lt-soft)!important;background:rgba(26,28,36,.06)!important}
+/* catalog and every other list row / card: the same light glass */
+html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line,.gs-server-card,.surface,.gs-panel,.gs-empty,.gs-notice):not(.gsb-row):not(#lb):not(#gl):not(#p){background:var(--lt-glass)!important;border-color:var(--lt-bd)!important}
+html[data-design="lobby"][data-color-mode="light"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gsb-row):not(#lb):not(#gl):not(#p):hover{background:var(--lt-glass-hi)!important}

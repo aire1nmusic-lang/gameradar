@@ -42,9 +42,9 @@ function useFrost() {
   return ref
 }
 
-export function LeaderBoard({ game, kind, title, kicker, sub, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav }: {
+export function LeaderBoard({ game, kind, title, kicker, sub, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
   game: Game; kind: BoardKind; title: string; kicker: string; sub: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
-  emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void
+  emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void; showAll?: boolean
 }) {
   const inner = useFrost()
   const unit = kind === 'support' ? 'GS Coins' : 'голосов'
@@ -66,7 +66,7 @@ export function LeaderBoard({ game, kind, title, kicker, sub, rows, loading, err
     </span>
     <span className="gsb-glass" aria-hidden="true" />
   </Link>
-  const row = (s: GameServer, index: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-row ${index >= 10 ? 'gsb-overflow' : ''}`}>
+  const row = (s: GameServer, index: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
     <span className="gsb-hex"><svg viewBox="0 0 56 65" aria-hidden="true"><path d="M28 1.2 54.6 16.5v32L28 63.8 1.4 48.5v-32z" /></svg><span>{index + 1}</span></span>
     {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
     {kind === 'opening' && s.launch

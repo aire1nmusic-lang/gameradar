@@ -1,13 +1,13 @@
 /* Lineage II leaderboards — owner-approved variant B (matte glass). Clear outer board over the shared
    page background, frosted inner panel with a raised middle, plaques with the place picture on top and a
    frosted text bar below, frosted rows 4+. Every rule is scoped to .gsb and resets older shelf styles. */
-html[data-design="lobby"] body .l2a .gsb:not(#a):not(#b) {
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb:not(#a):not(#b) {
   --gold:#e8b964;--silver:#b8c9e0;--violet:#b77ee6;--serif:"Noto Serif",Georgia,serif;--sans:"Inter",system-ui,sans-serif;
   position:relative;overflow:visible!important;min-width:0;border-radius:24px!important;padding:0 10px 12px!important;color:#f3ecdf;
   background:rgba(255,255,255,.025)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
   border:1px solid rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 30px 60px -24px rgba(0,0,0,.6)!important}
-html[data-design="lobby"] body .l2a .gsb:not(#a):not(#b)::before,
-html[data-design="lobby"] body .l2a .gsb:not(#a):not(#b)::after{content:none!important;display:none!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb:not(#a):not(#b)::before,
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb:not(#a):not(#b)::after{content:none!important;display:none!important}
 .gsb a{color:inherit;text-decoration:none}
 
 .gsb .gsb-strip{height:40px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px}
@@ -23,21 +23,21 @@ html[data-design="lobby"] body .l2a .gsb:not(#a):not(#b)::after{content:none!imp
 .gsb .gsb-edge path{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.2}
 .gsb .gsb-inner>*:not(.gsb-frost):not(.gsb-edge){position:relative;z-index:1}
 .gsb .gsb-head{padding:2px 12px 14px;z-index:15!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-head h2:not(#a):not(#b),
-html[data-design="lobby"] body .l2a .gsb .gsb-head h2 a:not(#a):not(#b){margin:0;font:600 28px/1.12 "Noto Serif",Georgia,serif!important;letter-spacing:0!important;text-transform:none!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-head h2 a:not(#a):not(#b){background:linear-gradient(180deg,#fff3d2,#f4d79a 40%,#d9a456 75%,#b8823a)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-head h2:not(#a):not(#b),
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-head h2 a:not(#a):not(#b){margin:0;font:600 28px/1.12 "Noto Serif",Georgia,serif!important;letter-spacing:0!important;text-transform:none!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-head h2 a:not(#a):not(#b){background:linear-gradient(180deg,#fff3d2,#f4d79a 40%,#d9a456 75%,#b8823a)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
 .gsb .gsb-head p{margin:6px 0 0;font:400 12.5px/1.4 var(--sans);color:#ddd7cb;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 
 /* reset of the old shelf row styles */
-html[data-design="lobby"] body .l2a .gsb .server:not(#a):not(#b){position:relative;margin:0;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;min-height:0!important;grid-template-columns:none!important;color:inherit;transform:none!important;opacity:1}
-html[data-design="lobby"] body .l2a .gsb .server:not(#a):not(#b)::before,
-html[data-design="lobby"] body .l2a .gsb .server:not(#a):not(#b)::after{content:none!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .server:not(#a):not(#b){position:relative;margin:0;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;min-height:0!important;grid-template-columns:none!important;color:inherit;transform:none!important;opacity:1}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .server:not(#a):not(#b)::before,
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .server:not(#a):not(#b)::after{content:none!important}
 
 /* ===== plaques 1–3: picture on top, frosted text bar below ===== */
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque:not(#a):not(#b){--c:var(--gold);--cd:#3a2608;display:flex!important;flex-direction:column;margin:0 0 12px!important;border-radius:16px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:44px!important;z-index:3}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p2:not(#a):not(#b){--c:var(--silver);--cd:#1c2a3d;z-index:2}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p3:not(#a):not(#b){--c:var(--violet);--cd:#2f1747;z-index:1}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque:not(#a):not(#b){--c:var(--gold);--cd:#3a2608;display:flex!important;flex-direction:column;margin:0 0 12px!important;border-radius:16px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:44px!important;z-index:3}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p2:not(#a):not(#b){--c:var(--silver);--cd:#1c2a3d;z-index:2}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p3:not(#a):not(#b){--c:var(--violet);--cd:#2f1747;z-index:1}
 .gsb .gsb-art{position:relative;display:block;height:78px;border-radius:15px 15px 0 0;overflow:hidden;background:#0c0b10}
 .gsb .p1 .gsb-art{height:86px}
 .gsb .gsb-art img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover}
@@ -53,12 +53,12 @@ html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p3:not(#a):not(#b){--c:var(
   background:linear-gradient(180deg,color-mix(in srgb,var(--c) 14%,rgba(255,255,255,.14)),rgba(255,255,255,.06));
   -webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);border-top:1px solid rgba(255,255,255,.18)}
 .gsb .gsb-txt{display:block;min-width:0;flex:1}
-html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;margin:0;padding:0;max-width:none;white-space:normal;
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;margin:0;padding:0;max-width:none;white-space:normal;
   font:600 18px/1.2 "Noto Serif",Georgia,serif!important;text-shadow:none!important;
   background:linear-gradient(180deg,#fff2cf,#f0cd85 50%,#c98f3f);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
-html[data-design="lobby"] body .l2a .gsb .p2 .gsb-name:not(#a):not(#b){background:linear-gradient(180deg,#fff,#e1e8f2 50%,#a9b7c9);-webkit-background-clip:text;background-clip:text}
-html[data-design="lobby"] body .l2a .gsb .p3 .gsb-name:not(#a):not(#b){background:linear-gradient(180deg,#fff2e8,#f1c9b2 50%,#d79a8c);-webkit-background-clip:text;background-clip:text}
-html[data-design="lobby"] body .l2a .gsb .gsb-meta:not(#a):not(#b){display:block;margin-top:4px!important;font:400 12px/1.3 var(--sans)!important;color:#e8e2d6!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p2 .gsb-name:not(#a):not(#b){background:linear-gradient(180deg,#fff,#e1e8f2 50%,#a9b7c9);-webkit-background-clip:text;background-clip:text}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p3 .gsb-name:not(#a):not(#b){background:linear-gradient(180deg,#fff2e8,#f1c9b2 50%,#d79a8c);-webkit-background-clip:text;background-clip:text}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-meta:not(#a):not(#b){display:block;margin-top:4px!important;font:400 12px/1.3 var(--sans)!important;color:#e8e2d6!important;text-shadow:0 1px 3px rgba(0,0,0,.85)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gsb .gsb-glass{position:absolute;inset:0;z-index:16;border-radius:16px;pointer-events:none;
   background:linear-gradient(168deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.05) 20%,transparent 34%);
   border:1.5px solid color-mix(in srgb,var(--c) 90%,#fff 10%);
@@ -68,32 +68,32 @@ html[data-design="lobby"] body .l2a .gsb .gsb-meta:not(#a):not(#b){display:block
 .gsb .p1 .gsb-glass{z-index:11}
 
 /* numbers */
-html[data-design="lobby"] body .l2a .gsb .gsb-num:not(#a):not(#b){position:static;transform:none;display:flex!important;align-items:center;gap:6px;flex:none;padding:0!important;min-width:0!important;background:none!important;text-align:left!important;white-space:nowrap}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num:not(#a):not(#b){position:static;transform:none;display:flex!important;align-items:center;gap:6px;flex:none;padding:0!important;min-width:0!important;background:none!important;text-align:left!important;white-space:nowrap}
 .gsb .gsb-num img{width:20px;height:20px;flex:none}
 .gsb .gsb-num>span{display:block}
-html[data-design="lobby"] body .l2a .gsb .gsb-num small:not(#a):not(#b){display:block;font:400 10px/1 var(--sans)!important;color:#ddd5c4!important;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-html[data-design="lobby"] body .l2a .gsb .gsb-num strong:not(#a):not(#b){display:block;margin-top:3px;font:700 20px/1 "Noto Serif",Georgia,serif!important;color:#f3e2b8!important;-webkit-text-fill-color:#f3e2b8!important;background:none!important;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-html[data-design="lobby"] body .l2a .gsb .p2 .gsb-num strong:not(#a):not(#b){color:#e6edf6!important;-webkit-text-fill-color:#e6edf6!important}
-html[data-design="lobby"] body .l2a .gsb .p3 .gsb-num strong:not(#a):not(#b){color:#dcbcf5!important;-webkit-text-fill-color:#dcbcf5!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num small:not(#a):not(#b){display:block;font:400 10px/1 var(--sans)!important;color:#ddd5c4!important;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num strong:not(#a):not(#b){display:block;margin-top:3px;font:700 20px/1 "Noto Serif",Georgia,serif!important;color:#f3e2b8!important;-webkit-text-fill-color:#f3e2b8!important;background:none!important;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p2 .gsb-num strong:not(#a):not(#b){color:#e6edf6!important;-webkit-text-fill-color:#e6edf6!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p3 .gsb-num strong:not(#a):not(#b){color:#dcbcf5!important;-webkit-text-fill-color:#dcbcf5!important}
 
 /* favourite: inline, last column */
-html[data-design="lobby"] body .l2a .gsb .gsb-fav:not(#a):not(#b){position:static!important;flex:none;width:28px!important;min-width:28px!important;height:28px!important;padding:0!important;display:grid!important;place-items:center;border-radius:50%!important;border:0!important;background:rgba(7,6,12,.45)!important;color:#e9e2d4!important;opacity:1!important;transform:none!important;margin:0!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-fav.selected:not(#a):not(#b){color:#f0c46a!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-fav:not(#a):not(#b){position:static!important;flex:none;width:28px!important;min-width:28px!important;height:28px!important;padding:0!important;display:grid!important;place-items:center;border-radius:50%!important;border:0!important;background:rgba(7,6,12,.45)!important;color:#e9e2d4!important;opacity:1!important;transform:none!important;margin:0!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-fav.selected:not(#a):not(#b){color:#f0c46a!important}
 
 /* ===== rows 4+: frosted ===== */
-html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b){display:grid!important;grid-template-columns:40px minmax(0,1fr) auto 28px!important;align-items:center;column-gap:10px;min-height:56px!important;margin:0 0 8px!important;padding:8px 8px 8px 10px!important;border-radius:13px!important;
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b){display:grid!important;grid-template-columns:40px minmax(0,1fr) auto 28px!important;align-items:center;column-gap:10px;min-height:56px!important;margin:0 0 8px!important;padding:8px 8px 8px 10px!important;border-radius:13px!important;
   background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06))!important;-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);
   border:1px solid rgba(255,255,255,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.25),0 8px 16px -10px rgba(0,0,0,.6)!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b):hover{border-color:rgba(232,185,100,.45)!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row.gsb-overflow:not(#a):not(#b){display:none!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b):hover{border-color:rgba(232,185,100,.45)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row.gsb-overflow:not(#a):not(#b){display:none!important}
 .gsb .gsb-hex{position:relative;width:34px;height:38px;display:grid;place-items:center;font:400 17px/1 var(--serif);color:#efdcbc}
 .gsb .gsb-hex svg{position:absolute;inset:0;width:100%;height:100%}
 .gsb .gsb-hex path{fill:rgba(16,18,24,.6);stroke:#8a7a62;stroke-width:2.4}
 .gsb .gsb-hex span{position:relative}
-html[data-design="lobby"] body .l2a .gsb .gsb-row-name:not(#a):not(#b){display:block;font:600 15.5px/1.2 "Noto Serif",Georgia,serif!important;color:#f3f0ea!important;-webkit-text-fill-color:#f3f0ea!important;background:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row-meta:not(#a):not(#b){display:block;margin:3px 0 0!important;font:400 11px/1.2 var(--sans)!important;color:#cfc9bd!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-num strong:not(#a):not(#b){font-size:16px!important;color:#f0ece5!important;-webkit-text-fill-color:#f0ece5!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b){background:none!important;color:#b7b1a6!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row-name:not(#a):not(#b){display:block;font:600 15.5px/1.2 "Noto Serif",Georgia,serif!important;color:#f3f0ea!important;-webkit-text-fill-color:#f3f0ea!important;background:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row-meta:not(#a):not(#b){display:block;margin:3px 0 0!important;font:400 11px/1.2 var(--sans)!important;color:#cfc9bd!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-num strong:not(#a):not(#b){font-size:16px!important;color:#f0ece5!important;-webkit-text-fill-color:#f0ece5!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:not(#a):not(#b){background:none!important;color:#b7b1a6!important}
 
 .gsb .gsb-more{display:flex;justify-content:flex-end;padding:8px 10px 2px}
 .gsb .gsb-more a{font:500 12px/1 var(--sans);color:#e2d8c4;text-shadow:0 1px 3px rgba(0,0,0,.8)}
@@ -112,7 +112,7 @@ html[data-design="lobby"] body .l2a--lineage2 .catalog-grid>.gs-shelf-people:not
 @media (max-width:380px){
   .gsb .gsb-bar{padding-left:84px;gap:8px}
   .gsb .gsb-medal{width:72px}.gsb .gsb-medal img{width:68px}
-  html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){font-size:16.5px!important}
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){font-size:16.5px!important}
 }
 
 /* chronicle picker: one compact line on phones */
@@ -122,42 +122,42 @@ html[data-design="lobby"] body .l2a--lineage2 .catalog-grid>.gs-shelf-people:not
   html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb) .gs-epoch-title{font-size:17px!important}
 }
 /* Old shelf rules centre and shrink children: pin the plaque layout explicitly. */
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque:not(#a):not(#b){align-items:stretch!important;justify-content:flex-start!important;text-align:left!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-art:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){width:100%!important;align-self:stretch!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-bar:not(#a):not(#b){justify-content:flex-start!important;text-align:left!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-txt:not(#a):not(#b){text-align:left!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){display:-webkit-box!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque:not(#a):not(#b){align-items:stretch!important;justify-content:flex-start!important;text-align:left!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-art:not(#a):not(#b),html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){width:100%!important;align-self:stretch!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-bar:not(#a):not(#b){justify-content:flex-start!important;text-align:left!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-txt:not(#a):not(#b){text-align:left!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){display:-webkit-box!important}
 /* Names wrap between words, never inside one. */
-html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){word-break:normal!important;overflow-wrap:break-word!important;hyphens:none}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){word-break:normal!important;overflow-wrap:break-word!important;hyphens:none}
 
 /* ===== v3 (owner): light frosted glass; medal up in the picture; picture runs under a light frosted bar; text from the left edge ===== */
 .gsb .gsb-frost{background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,.13) 22%,rgba(235,240,250,.11))!important;
   -webkit-backdrop-filter:blur(20px) saturate(160%) brightness(1.08)!important;backdrop-filter:blur(20px) saturate(160%) brightness(1.08)!important}
 .gsb .gsb-edge path{stroke:rgba(255,255,255,.42)!important}
 /* picture fills the whole plaque; the bar is a light frost over its lower part */
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-art:not(#a):not(#b){position:absolute!important;inset:0!important;height:auto!important;width:auto!important;border-radius:15px!important;z-index:0}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-art:not(#a):not(#b){position:absolute!important;inset:0!important;height:auto!important;width:auto!important;border-radius:15px!important;z-index:0}
 .gsb .gsb-art::after{background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.18))!important}
 .gsb .p2 .gsb-art img{object-position:50% 22%}
 .gsb .p3 .gsb-art img{object-position:50% 38%}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){margin-top:78px;padding:10px 10px 10px 14px!important;
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){margin-top:78px;padding:10px 10px 10px 14px!important;
   background:linear-gradient(180deg,color-mix(in srgb,var(--c) 10%,rgba(255,255,255,.26)),rgba(255,255,255,.14))!important;
   -webkit-backdrop-filter:blur(10px) saturate(160%) brightness(1.05)!important;backdrop-filter:blur(10px) saturate(160%) brightness(1.05)!important;
   border-top:1px solid rgba(255,255,255,.45)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1 .gsb-bar:not(#a):not(#b){margin-top:86px}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1 .gsb-bar:not(#a):not(#b){margin-top:86px}
 /* medal centred in the picture zone, left */
 .gsb .gsb-medal{top:2px!important;left:8px!important;width:74px!important}
 .gsb .p1 .gsb-medal{top:5px!important}
 .gsb .gsb-medal img{width:74px!important}
 /* readability on the light frost */
-html[data-design="lobby"] body .l2a .gsb .gsb-name:not(#a):not(#b){filter:drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 0 6px rgba(0,0,0,.55))!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-meta:not(#a):not(#b),
-html[data-design="lobby"] body .l2a .gsb .gsb-num small:not(#a):not(#b),
-html[data-design="lobby"] body .l2a .gsb .gsb-num strong:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-name:not(#a):not(#b){filter:drop-shadow(0 1px 2px rgba(0,0,0,.95)) drop-shadow(0 0 6px rgba(0,0,0,.55))!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-meta:not(#a):not(#b),
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num small:not(#a):not(#b),
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num strong:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
 /* rows 4+: same light frost */
-html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b){background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.12))!important;
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b){background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.12))!important;
   -webkit-backdrop-filter:blur(16px) saturate(160%) brightness(1.06)!important;backdrop-filter:blur(16px) saturate(160%) brightness(1.06)!important;border-color:rgba(255,255,255,.3)!important}
 .gsb .gsb-hex path{fill:rgba(16,18,24,.45)}
-html[data-design="lobby"] body .l2a .gsb .gsb-row-name:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-row-meta:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row-name:not(#a):not(#b),html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row-meta:not(#a):not(#b){text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 6px rgba(0,0,0,.5)!important}
 .gsb .gsb-empty{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.12))!important;-webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%)}
 /* Full frame on the first place: frame above the bar, character above the frame, medal on top. */
 .gsb .p1 .gsb-glass{z-index:14!important}
@@ -165,11 +165,11 @@ html[data-design="lobby"] body .l2a .gsb .gsb-row-name:not(#a):not(#b),html[data
 .gsb .p1 .gsb-medal{z-index:16!important}
 /* Places 2 and 3: the picture keeps its own proportions, pinned to the right, sized so the whole
    head sits in the picture zone above the text bar; the left edge fades into the plaque. */
-html[data-design="lobby"] body .l2a .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){inset:auto!important;top:0!important;right:-6px!important;left:auto!important;height:124px!important;width:auto!important;max-width:none!important;object-fit:fill!important;
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){inset:auto!important;top:0!important;right:-6px!important;left:auto!important;height:124px!important;width:auto!important;max-width:none!important;object-fit:fill!important;
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%)}
 .gsb .p2 .gsb-art{background:linear-gradient(90deg,#0e1622,#16233a)!important}
 .gsb .p3 .gsb-art{background:linear-gradient(90deg,#140c20,#22163a)!important}
-@media (min-width:601px){html[data-design="lobby"] body .l2a .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){height:136px!important}}
+@media (min-width:601px){html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){height:136px!important}}
 
 /* ===== v4 (owner): compact head, label on the left, lighter panel, clickable cards, avatars, room for names ===== */
 .gsb .gsb-strip{justify-content:flex-start!important;height:36px!important;padding:0 14px!important}
@@ -177,29 +177,29 @@ html[data-design="lobby"] body .l2a .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#
 .gsb .gsb-frost{background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05) 25%,rgba(235,240,250,.04))!important;
   -webkit-backdrop-filter:blur(14px) saturate(150%)!important;backdrop-filter:blur(14px) saturate(150%)!important}
 .gsb .gsb-head{padding:0 10px 8px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-head h2:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-head h2 a:not(#a):not(#b){font-size:25px!important;white-space:nowrap}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-head h2:not(#a):not(#b),html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-head h2 a:not(#a):not(#b){font-size:25px!important;white-space:nowrap}
 .gsb .gsb-head p{max-width:62%;font-size:11.5px!important;margin-top:4px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:20px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:20px!important}
 .gsb .p1 .gsb-hero{height:128px!important;right:8%!important}
 /* the favourite's tap area is around the button only, never the whole card */
-html[data-design="lobby"] body .l2a .gsb .gsb-fav:not(#a):not(#b){position:relative!important;z-index:20}
-html[data-design="lobby"] body .l2a .gsb .gsb-fav:not(#a):not(#b)::before{inset:-6px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-fav:not(#a):not(#b){position:relative!important;z-index:20}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-fav:not(#a):not(#b)::before{inset:-6px!important}
 /* orc a little further away */
-html[data-design="lobby"] body .l2a .gsb .p2 .gsb-art img:not(#a):not(#b){height:108px!important;right:-2px!important}
-@media (min-width:601px){html[data-design="lobby"] body .l2a .gsb .p2 .gsb-art img:not(#a):not(#b){height:118px!important}}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p2 .gsb-art img:not(#a):not(#b){height:108px!important;right:-2px!important}
+@media (min-width:601px){html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p2 .gsb-art img:not(#a):not(#b){height:118px!important}}
 /* avatars */
-html[data-design="lobby"] body .l2a .gsb .gsb-avatar:not(#a):not(#b){flex:none;width:34px!important;height:34px!important;border-radius:9px!important;box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.18)}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-avatar:not(#a):not(#b){flex:none;width:34px!important;height:34px!important;border-radius:9px!important;box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.18)}
 .gsb .gsb-bar{gap:9px!important}
 /* rows: [number][avatar][name][count][heart] */
-html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b){grid-template-columns:30px 32px minmax(0,1fr) auto 26px!important;column-gap:8px!important;padding:7px 6px 7px 8px!important;min-height:52px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-avatar:not(#a):not(#b){width:32px!important;height:32px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b){grid-template-columns:30px 32px minmax(0,1fr) auto 26px!important;column-gap:8px!important;padding:7px 6px 7px 8px!important;min-height:52px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-avatar:not(#a):not(#b){width:32px!important;height:32px!important}
 .gsb .gsb-row .gsb-hex{width:30px;height:34px;font-size:15px}
-html[data-design="lobby"] body .l2a .gsb .gsb-num-compact:not(#a):not(#b){gap:5px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num-compact:not(#a):not(#b){gap:5px!important}
 .gsb .gsb-num-compact img{width:18px!important;height:18px!important}
 .gsb .gsb-vote{width:15px;height:15px;fill:#e8b964}
-html[data-design="lobby"] body .l2a .gsb .gsb-num-compact strong:not(#a):not(#b){margin:0!important;font-size:16px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b){width:26px!important;min-width:26px!important;height:26px!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b),html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-fav:not(#a):not(#b){top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;transform:none!important;align-self:center}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num-compact strong:not(#a):not(#b){margin:0!important;font-size:16px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:not(#a):not(#b){width:26px!important;min-width:26px!important;height:26px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:not(#a):not(#b),html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-fav:not(#a):not(#b){top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;transform:none!important;align-self:center}
 
 /* ===== v5 (owner): labels and titles centred in their bands, larger first-place character, bigger 3D coins, lighter on phones ===== */
 .gsb .gsb-strip{height:44px!important;align-items:center!important;padding:0 16px!important}
@@ -207,11 +207,34 @@ html[data-design="lobby"] body .l2a .gsb .gsb-row .gsb-fav:not(#a):not(#b),html[
 .gsb .gsb-inner{padding-top:36px!important}
 .gsb .gsb-head{padding:0 12px 12px!important}
 .gsb .p1 .gsb-hero{height:156px!important;right:6%!important}
-html[data-design="lobby"] body .l2a .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:30px!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:30px!important}
 .gsb .gsb-num img{width:28px!important;height:28px!important}
 .gsb .gsb-num-compact img{width:22px!important;height:22px!important}
 /* phones: one blur layer only (the panel); cards use solid frosted colour so scrolling stays smooth */
 @media (max-width:900px){
-  html[data-design="lobby"] body .l2a .gsb .gsb-row:not(#a):not(#b),.gsb .gsb-empty{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:linear-gradient(180deg,rgba(86,92,110,.62),rgba(58,63,78,.62))!important}
-  html[data-design="lobby"] body .l2a .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){-webkit-backdrop-filter:blur(6px)!important;backdrop-filter:blur(6px)!important}
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b),.gsb .gsb-empty{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:linear-gradient(180deg,rgba(86,92,110,.62),rgba(58,63,78,.62))!important}
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){-webkit-backdrop-filter:blur(6px)!important;backdrop-filter:blur(6px)!important}
 }
+
+
+/* ===== v6 (owner): glass by theme — dark theme: light milky transparent matte; light theme: dark, nearly transparent.
+   One blur layer per board (the inner panel) also on phones; cards use translucent colour without their own blur. ===== */
+html[data-design="lobby"] body .gsb .gsb-frost:not(#a){
+  background:linear-gradient(180deg,rgba(255,255,255,.17),rgba(255,255,255,.08) 30%,rgba(255,255,255,.06))!important;
+  -webkit-backdrop-filter:blur(10px) saturate(140%)!important;backdrop-filter:blur(10px) saturate(140%)!important}
+html[data-design="lobby"] body .gsb .gsb-edge path:not(#a){stroke:rgba(255,255,255,.45)!important}
+html[data-design="lobby"][data-color-mode="dark"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b),
+html[data-design="lobby"][data-color-mode="dark"] body .gsb .gsb-empty:not(#a){background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.08))!important;border-color:rgba(255,255,255,.26)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-design="lobby"][data-color-mode="dark"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){background:linear-gradient(180deg,color-mix(in srgb,var(--c) 12%,rgba(255,255,255,.2)),rgba(255,255,255,.1))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-frost:not(#a){background:linear-gradient(180deg,rgba(22,24,32,.22),rgba(22,24,32,.12) 30%,rgba(22,24,32,.1))!important}
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-edge path:not(#a){stroke:rgba(30,32,40,.28)!important}
+html[data-design="lobby"][data-color-mode="light"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row:not(#a):not(#b),
+html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-empty:not(#a){background:linear-gradient(180deg,rgba(22,24,32,.30),rgba(22,24,32,.22))!important;border-color:rgba(255,255,255,.35)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-design="lobby"][data-color-mode="light"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b){background:linear-gradient(180deg,color-mix(in srgb,var(--c) 14%,rgba(22,24,32,.38)),rgba(22,24,32,.30))!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-design="lobby"][data-color-mode="light"] body :is(.l2a,.gs-rating-page) .gsb:not(#a):not(#b){background:rgba(20,22,30,.05)!important;border-color:rgba(30,32,40,.2)!important}
+/* the phone rule that removes every blur keeps this one panel */
+@media (max-width:900px),(hover:none){html[data-design="lobby"] body .gsb .gsb-frost:not(#a):not(#lb){-webkit-backdrop-filter:blur(8px) saturate(140%)!important;backdrop-filter:blur(8px) saturate(140%)!important}}
+
+/* rating page: the two boards side by side on wide screens */
+.gs-rating-page .gsb-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start;margin-top:14px}
+@media (max-width:1023px){.gs-rating-page .gsb-pair{grid-template-columns:minmax(0,560px);justify-content:center}}

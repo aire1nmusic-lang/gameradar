@@ -188,3 +188,16 @@ html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl):not(#p):not(
 html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) [class*="font-display"]{font-family:var(--lb-display)!important;font-weight:700!important;letter-spacing:0!important}
 /* header and live strip: a little more transparent (owner) */
 html[data-design="lobby"] body :is(.gs-site-header,.gs-live):not(.gs-hall-header):not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(16,18,24,.66),rgba(16,18,24,.56))!important;border-color:rgba(255,255,255,.08)!important}
+
+/* ---------- world search + epoch: two neat glass blocks of one height; chronicles drop down from the epoch block, the layout does not move ---------- */
+@media (min-width:768px){
+  html[data-design="lobby"] body .l2a .discovery:not(#lb):not(#gl):not(#p){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;align-items:stretch!important;gap:14px!important}
+  html[data-design="lobby"] body .l2a .search-row:not(#lb):not(#gl){align-self:stretch;display:flex!important}
+  html[data-design="lobby"] body .l2a .search-box:not(#lb):not(#gl):not(#p){height:64px!important;min-height:64px!important;align-self:center;width:100%;align-items:center!important;padding:0 8px 0 18px!important;border-radius:16px!important}
+  html[data-design="lobby"] body .l2a .gs-epoch-summary:not(#lb):not(#gl):not(#p){min-height:64px!important;height:64px!important;padding-top:6px!important;padding-bottom:6px!important;border-radius:16px!important}
+  html[data-design="lobby"] body .l2a .chronicle-picker:not(#lb):not(#gl):not(#p),
+  html[data-design="lobby"] body .l2a .chronicle-picker[open]:not(#lb):not(#gl):not(#p){grid-column:auto!important;position:relative!important;z-index:30}
+  html[data-design="lobby"] body .l2a .chronicle-picker[open] .gs-epoch-summary:not(#lb):not(#gl):not(#p){border-color:var(--lb-lime)!important}
+  html[data-design="lobby"] body .l2a .chronicle-picker .chronicle-row:not(#lb):not(#gl):not(#p){position:absolute!important;top:calc(100% + 8px)!important;right:0!important;width:min(880px,calc(100vw - 48px))!important;z-index:40;padding:12px!important;border-radius:18px!important;background:linear-gradient(180deg,rgba(18,20,26,.92),rgba(14,16,21,.9))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 30px 70px -24px rgba(0,0,0,.85)!important}
+}
+html[data-design="lobby"] body .l2a .discovery:not(#lb):not(#gl):not(#p):not(#q){position:relative!important;z-index:60!important}

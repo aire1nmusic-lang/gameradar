@@ -186,3 +186,5 @@ html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) .gs-vote-pan
 html[data-design="lobby"] body :is(.gs-server-profile,.gs-profile-cta-bar):not(#lb):not(#gl):not(#p) .gt-btn{text-transform:none!important;letter-spacing:.01em!important}
 html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl):not(#p):not(#q) h2{font:700 20px/1.2 var(--lb-display)!important}
 html[data-design="lobby"] body .gs-server-profile:not(#lb):not(#gl) [class*="font-display"]{font-family:var(--lb-display)!important;font-weight:700!important;letter-spacing:0!important}
+/* header and live strip: a little more transparent (owner) */
+html[data-design="lobby"] body :is(.gs-site-header,.gs-live):not(.gs-hall-header):not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(16,18,24,.66),rgba(16,18,24,.56))!important;border-color:rgba(255,255,255,.08)!important}

@@ -329,3 +329,8 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a)
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label svg.gsb-label-ic:not(#a):not(#b):not(#c){width:26px!important;height:26px!important;flex:none;stroke:var(--lb-lime)!important;stroke-width:2!important;fill:none!important;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--lb-lime) 45%,transparent))}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num svg.gsb-val-ic:not(#a):not(#b){width:22px!important;height:22px!important;flex:none;stroke:var(--lb-lime)!important;fill:none!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact svg.gsb-val-ic:not(#a):not(#b){width:16px!important;height:16px!important}
+/* owner pick: glass place medals 1–3, metal gold coin for GS Coins */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num img.gsb-coin:not(#a):not(#b):not(#c){width:auto!important;height:24px!important;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact img.gsb-coin:not(#a):not(#b):not(#c){height:18px!important}
+.gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal img{width:84px!important}
+.gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal{top:calc((66.6% - 84px)/2)!important;left:10px!important;width:88px!important}

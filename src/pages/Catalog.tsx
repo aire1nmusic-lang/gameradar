@@ -250,7 +250,7 @@ export default function Catalog() {
                         <InlinePromo gameId={filters.games[0]} />
                       </ThemeScope>
                     )}
-                    <div className={`relative ${ranked && index < 3 ? `gs-card-place gs-card-place-${index+1}` : ''}`}>{ranked && (index < 3 ? <img className="gs-card-medal" src={`/media/ranks/medal-${index+1}-192.webp`} alt={`${index+1} место`} /> : <RankMedal rank={index+1} className="absolute top-3 right-3 z-10"/>)}<ServerCard server={server} /></div>
+                    <div className={`relative ${ranked && index < 3 ? `gs-card-place gs-card-place-${index+1}` : ''}`}>{ranked && (index < 3 ? <img className="gs-card-medal" src={`/media/ranks/medal-${index+1}-glass-192.webp`} alt={`${index+1} место`} /> : <RankMedal rank={index+1} className="absolute top-3 right-3 z-10"/>)}<ServerCard server={server} /></div>
                   </Fragment>
                 ))}
               </div>

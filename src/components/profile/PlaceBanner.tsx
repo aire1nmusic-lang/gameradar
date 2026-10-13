@@ -22,7 +22,7 @@ export function PlaceBanner({ server, peers }: { server: GameServer; peers: Game
   const { place, board } = found
   return <div className={`gs-place-banner pb${place}`} role="note">
     <img className="gs-place-art" src={ART[place]} alt="" aria-hidden="true" />
-    <img className="gs-place-medal" src={`/media/ranks/medal-${place}-192.webp`} alt={`${place} место`} />
+    <img className="gs-place-medal" src={`/media/ranks/medal-${place}-glass-192.webp`} alt={`${place} место`} />
     <span className="gs-place-text"><b>{place} место</b><span>{board === 'support' ? 'Лидеры поддержки' : 'Выбор игроков'} · Lineage 2</span></span>
   </div>
 }

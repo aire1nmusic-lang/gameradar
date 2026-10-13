@@ -198,8 +198,8 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank
   background:center / contain no-repeat!important; color:transparent!important; -webkit-text-fill-color:transparent!important; text-shadow:none!important;
   filter:drop-shadow(0 4px 8px #000b) drop-shadow(0 0 10px color-mix(in srgb,var(--spot) 45%,transparent))!important;
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-1-192.webp")!important; width:84px!important; height:80px!important; }
-html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-2-192.webp")!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="1"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-1-glass-192.webp")!important; width:84px!important; height:80px!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="2"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-2-glass-192.webp")!important; }
 html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank] .gs-rank-podium:not(#gs):not(#lb)::before { display:none!important; }
 html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) { grid-template-columns:84px minmax(0,1fr) auto 34px!important; }
 html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { grid-template-columns:84px minmax(0,1fr) 34px!important; }
@@ -209,4 +209,4 @@ html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank
   html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:not(#gs):not(#lb) { grid-template-columns:62px minmax(0,1fr) auto 28px!important; }
   html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank]:has(.gs-plaque.is-single):not(#gs):not(#lb) { grid-template-columns:62px minmax(0,1fr) 28px!important; }
 }
-html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-3-192.webp")!important; }
+html[data-design="lobby"] body .l2a--lineage2 .rows .server.gs-top-row[data-rank="3"] .gs-rank-podium:not(#gs):not(#lb) { background-image:url("/media/ranks/medal-3-glass-192.webp")!important; }

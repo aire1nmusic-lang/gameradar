@@ -7,6 +7,7 @@
   - 1440 light: catalog, home;
   - 390 light and dark: home boards.
 - Not checked: 320/768/1024, landscape.
+- Live: Worker c7d3723c (rollback 1f7c6c85). After that, v9: the top-1 hero went from 224 to 320px, p1 margin-top 136px (checked at 390 and 1440).
 - Blocked: LK login and opening without VPN need the Cloudflare DNS switch to Yandex (owner approval) plus an up-to-date Yandex bucket.
 
 ## 12.10.2026 — VERIFIED L2 TOP-3 code and CI, BLOCKED production (API Gateway 404)

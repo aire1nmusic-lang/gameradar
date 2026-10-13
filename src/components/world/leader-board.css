@@ -275,3 +275,7 @@ html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-head p:not(#a)
 html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-empty:not(#a):not(#b){background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.22)!important}
 html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-empty :is(b,span):not(#a){color:#f2ede4!important}
 html[data-design="lobby"][data-color-mode="light"] body .gsb .gsb-more a:not(#a){color:#f2ede4!important}
+
+/* ===== v9 (owner): first-place character much bigger — the top one ===== */
+.gsb .p1 .gsb-hero{height:320px!important;right:-2%!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p1:not(#a):not(#b){margin-top:136px!important}

@@ -18,7 +18,7 @@ const PLACE: Record<number, { bg: string; hero?: string }> = {
 }
 /* «Выбор игроков» has its own scenes for places 2 and 3, so the two boards differ at a glance. */
 const PEOPLE_PLACE: Record<number, { bg: string; hero?: string }> = {
-  1: PLACE[1],
+  1: { bg: '/media/ranks/l2-people1-1600.webp', hero: '/media/ranks/l2-people1-hero-600.webp' },
   2: { bg: '/media/ranks/l2-people2-1600.webp' },
   3: { bg: '/media/ranks/l2-people3-1600.webp' },
 }

@@ -316,3 +316,6 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label img.gsb
 .gsb .gsb-medal{width:100px!important}
 .gsb .gsb-medal img{width:96px!important}
 .gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal{top:calc((66.6% - 96px)/2)!important;left:4px!important}
+/* GS Coins art (owner pick 5): 26px on plaques, 20px in rows */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num img:not(#a):not(#b){width:auto!important;height:26px!important;object-fit:contain!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))!important}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact img:not(#a):not(#b){height:20px!important}

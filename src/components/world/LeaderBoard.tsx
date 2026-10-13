@@ -42,13 +42,6 @@ function useFrost() {
   return ref
 }
 
-const CROWNS = ['royal', 'elven', 'darkelf', 'imperial', 'laurel', 'warrior']
-/* crown art for the board label; ?crown=<name> previews another one */
-function crownName() {
-  const q = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('crown') : null
-  return q && CROWNS.includes(q) ? q : 'royal'
-}
-
 export function LeaderBoard({ game, kind, title, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
   game: Game; kind: BoardKind; title: string; kicker?: string; sub?: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
   emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void; showAll?: boolean
@@ -95,7 +88,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>
 
   return <section className={`panel gsb gs-shelf-${kind} ${kind === 'opening' ? 'openings' : kind === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${kind}`} data-game={game.id}>
-    <div className="gsb-strip"><span className="gsb-label"><img className="gsb-crown" src={`/media/ranks/crown-${crownName()}-128.webp`} alt="" aria-hidden="true" decoding="async" />{title}</span></div>
+    <div className="gsb-strip"><span className="gsb-label"><img className="gsb-crown" src="/media/ranks/crown-royal-128.webp" alt="" aria-hidden="true" decoding="async" />{title}</span></div>
     <div className="gsb-inner" ref={inner}>
       <span className="gsb-frost" aria-hidden="true" />
       <svg className="gsb-edge" aria-hidden="true"><path /></svg>

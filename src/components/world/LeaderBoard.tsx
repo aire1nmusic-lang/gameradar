@@ -42,8 +42,8 @@ function useFrost() {
   return ref
 }
 
-export function LeaderBoard({ game, kind, title, sub, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
-  game: Game; kind: BoardKind; title: string; kicker?: string; sub: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
+export function LeaderBoard({ game, kind, title, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
+  game: Game; kind: BoardKind; title: string; kicker?: string; sub?: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
   emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void; showAll?: boolean
 }) {
   const inner = useFrost()
@@ -83,11 +83,11 @@ export function LeaderBoard({ game, kind, title, sub, rows, loading, error, relo
   else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>
 
   return <section className={`panel gsb gs-shelf-${kind} ${kind === 'opening' ? 'openings' : kind === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${kind}`} data-game={game.id}>
-    <div className="gsb-strip"><span className="gsb-label"><svg viewBox="0 0 26 20" aria-hidden="true"><path d="M2 15h22l-1.6-10.5-5.6 4.4L13 1.5 8.2 8.9 2.6 4.5z" /><rect x="2" y="16.2" width="22" height="2.6" rx="1.2" /></svg>{title}</span></div>
+    <div className="gsb-strip"><span className="gsb-label">{title}</span></div>
     <div className="gsb-inner" ref={inner}>
       <span className="gsb-frost" aria-hidden="true" />
       <svg className="gsb-edge" aria-hidden="true"><path /></svg>
-      <header className="gsb-head"><h2 id={`l2-${kind}`} className="sr-only"><Link to={href}>{title}</Link></h2><p>{sub}</p></header>
+      <header className="gsb-head"><h2 id={`l2-${kind}`} className="sr-only"><Link to={href}>{title}</Link></h2></header>
       <div className="gsb-list" aria-busy={loading}>{body}</div>
       <div className="gsb-more"><Link to={href} className="l2-all">{kind === 'opening' ? 'Календарь' : 'Все'} →</Link></div>
     </div>

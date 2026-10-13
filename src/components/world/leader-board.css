@@ -310,3 +310,9 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque.p0:not
 .gsb .p0 .gsb-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 40%}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p0 .gsb-bar:not(#a):not(#b){height:auto!important;min-height:33.4%!important;padding:8px 14px!important}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .p0 .gsb-meta:not(#a):not(#b){white-space:normal!important;font-size:12px!important}
+/* crown art next to the board title */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label img.gsb-crown:not(#a):not(#b){width:auto!important;height:40px!important;flex:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.75))}
+/* place medals 1–3 larger (owner) */
+.gsb .gsb-medal{width:100px!important}
+.gsb .gsb-medal img{width:96px!important}
+.gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal{top:calc((66.6% - 96px)/2)!important;left:4px!important}

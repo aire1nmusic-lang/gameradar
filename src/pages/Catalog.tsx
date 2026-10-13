@@ -245,8 +245,10 @@ export default function Catalog() {
         ) : (
           <>
             {view === 'grid' ? (
+              <>
+              {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {results.map((server, index) => (
+                {results.map((server, index) => podium && index < 3 ? null : (
                   <Fragment key={server.slug}>
                     {index === 6 && (
                       <ThemeScope theme={adTheme} as="div" className="sm:col-span-2 xl:col-span-3">
@@ -257,6 +259,7 @@ export default function Catalog() {
                   </Fragment>
                 ))}
               </div>
+              </>
             ) : (
               <div className="space-y-1.5">
                 {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}

@@ -343,3 +343,4 @@ html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque:not(#a):not(#
   html[data-design="lobby"] body .gs-catalog-podium .gsb.gsb-plain .gsb-list:not(#a):not(#b):not(#c){grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:14px;padding-top:96px!important}
   html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque.p1:not(#a):not(#b):not(#c):not(#d){margin-top:0!important}
 }
+html[data-design="lobby"] body .gs-catalog-podium:not(#a){margin-bottom:14px}

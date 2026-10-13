@@ -13,7 +13,7 @@ export type BoardKind = 'support' | 'opening' | 'people'
 const PLACE: Record<number, { bg: string; hero?: string }> = {
   1: { bg: '/media/ranks/l2-top1-bg-1600.webp', hero: '/media/ranks/l2-top3-hero-600.webp' },
   2: { bg: '/media/ranks/l2-top2-1600.webp' },
-  3: { bg: '/media/ranks/l2-top3-band-1600.webp' },
+  3: { bg: '/media/ranks/l2-top3-1600.webp' },
 }
 
 /** Frosted inner panel: low on the sides, raised in the middle; the outline follows the real size. */

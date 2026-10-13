@@ -163,3 +163,10 @@ html[data-design="lobby"] body .l2a .gsb .gsb-row-name:not(#a):not(#b),html[data
 .gsb .p1 .gsb-glass{z-index:14!important}
 .gsb .p1 .gsb-hero{z-index:15!important}
 .gsb .p1 .gsb-medal{z-index:16!important}
+/* Places 2 and 3: the picture keeps its own proportions, pinned to the right, sized so the whole
+   head sits in the picture zone above the text bar; the left edge fades into the plaque. */
+html[data-design="lobby"] body .l2a .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){inset:auto!important;top:0!important;right:-6px!important;left:auto!important;height:124px!important;width:auto!important;max-width:none!important;object-fit:fill!important;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%)}
+.gsb .p2 .gsb-art{background:linear-gradient(90deg,#0e1622,#16233a)!important}
+.gsb .p3 .gsb-art{background:linear-gradient(90deg,#140c20,#22163a)!important}
+@media (min-width:601px){html[data-design="lobby"] body .l2a .gsb :is(.p2,.p3) .gsb-art img:not(#a):not(#b){height:136px!important}}

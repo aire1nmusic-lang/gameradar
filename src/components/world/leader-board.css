@@ -334,3 +334,12 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num img.gsb-c
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact img.gsb-coin:not(#a):not(#b):not(#c){height:18px!important}
 .gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal img{width:84px!important}
 .gsb .gsb-plaque:is(.p1,.p2,.p3) .gsb-medal{top:calc((66.6% - 84px)/2)!important;left:10px!important;width:88px!important}
+/* catalog list: the top three as bare plaques (no board panel), the first one leaves room for the character */
+html[data-design="lobby"] body .gs-catalog-podium .gsb.gsb-plain:not(#a):not(#b):not(#c){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 6px!important;overflow:visible!important}
+html[data-design="lobby"] body .gs-catalog-podium .gsb.gsb-plain .gsb-list:not(#a):not(#b){display:grid;gap:10px;padding:0!important}
+html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque.p1:not(#a):not(#b):not(#c){margin-top:96px!important}
+html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque:not(#a):not(#b):not(#c){width:100%!important}
+@media (min-width:768px){
+  html[data-design="lobby"] body .gs-catalog-podium .gsb.gsb-plain .gsb-list:not(#a):not(#b):not(#c){grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:14px;padding-top:96px!important}
+  html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque.p1:not(#a):not(#b):not(#c):not(#d){margin-top:0!important}
+}

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Coins, Crown, Heart, Hourglass, ThumbsUp } from 'lucide-react'
 import type { Game, GameServer } from '@/models'
@@ -42,6 +42,20 @@ function useFrost() {
   return ref
 }
 
+/** One top-3 plaque: place art, glass medal, film with the server. Shared by the boards and the catalog list. */
+export function PlacePlaque({ server: s, rank, meta, value, fav }: { server: GameServer; rank: number; meta: string; value: ReactNode; fav: ReactNode }) {
+  return <Link to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
+    <span className="gsb-art" aria-hidden="true"><img src={PLACE[rank].bg} alt="" decoding="async" /></span>
+    {PLACE[rank].hero && <img className="gsb-hero" src={PLACE[rank].hero} alt="" aria-hidden="true" decoding="async" />}
+    <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-glass-192.webp`} alt={`${rank} место`} /></span>
+    <span className="gsb-bar">
+      <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" /><span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta}</span></span>
+      {value}{fav}
+    </span>
+    <span className="gsb-glass" aria-hidden="true" />
+  </Link>
+}
+
 export function LeaderBoard({ game, kind, title, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
   game: Game; kind: BoardKind; title: string; kicker?: string; sub?: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
   emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void; showAll?: boolean
@@ -56,16 +70,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <img className="gsb-coin" src="/media/ranks/coin-stack-96.webp" alt="" /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<strong>{value(s)}</strong></span>
   const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
-  const plaque = (s: GameServer, rank: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
-    <span className="gsb-art" aria-hidden="true"><img src={PLACE[rank].bg} alt="" decoding="async" /></span>
-    {PLACE[rank].hero && <img className="gsb-hero" src={PLACE[rank].hero} alt="" aria-hidden="true" decoding="async" />}
-    <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-glass-192.webp`} alt={`${rank} место`} /></span>
-    <span className="gsb-bar">
-      {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta(s)}</span></span>
-      {num(s)}{fav(s)}
-    </span>
-    <span className="gsb-glass" aria-hidden="true" />
-  </Link>
+  const plaque = (s: GameServer, rank: number) => <PlacePlaque key={s.id} server={s} rank={rank} meta={meta(s)} value={num(s)} fav={fav(s)} />
   const row = (s: GameServer, index: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
     <span className="gsb-hex"><svg viewBox="0 0 56 65" aria-hidden="true"><path d="M28 1.2 54.6 16.5v32L28 63.8 1.4 48.5v-32z" /></svg><span>{index + 1}</span></span>
     {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>

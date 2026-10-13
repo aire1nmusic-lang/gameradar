@@ -16,6 +16,7 @@ import { Container } from '@/components/layout/Container'
 import { FilterPanel } from '@/components/catalog/FilterPanel'
 import { ServerCard, ServerCardSkeleton } from '@/components/server/ServerCard'
 import { ServerRow, ServerRowSkeleton } from '@/components/server/ServerRow'
+import { CatalogPodium } from '@/components/world/CatalogPodium'
 import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/overlays'
 import { EmptyState, Notice } from '@/components/ui/feedback'
@@ -53,6 +54,8 @@ export default function Catalog() {
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
   useEffect(() => { if (!authLoading && !privateCore && sort === 'support') setSort('recommended') },[authLoading,privateCore,sort])
   const ranked = ['recommended','online','votes','support','growth','rating'].includes(sort)
+  // Lineage 2 art: the list's top three are the same place plaques as on the boards
+  const podium = ranked && world?.id === 'lineage2'
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
@@ -256,8 +259,9 @@ export default function Catalog() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                {results.map((server, index) => (
-                  <ServerRow key={server.slug} server={server} rank={['recommended','online','votes','support','growth','rating'].includes(sort) ? index+1 : undefined} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} showGame={!world} />
+                {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
+                {results.map((server, index) => podium && index < 3 ? null : (
+                  <ServerRow key={server.slug} server={server} rank={ranked ? index+1 : undefined} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} showGame={!world} />
                 ))}
               </div>
             )}

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Coins, Crown, Heart, Hourglass, ThumbsUp } from 'lucide-react'
 import type { Game, GameServer } from '@/models'
 import { chronicleOfVersion } from '@/data/games'
 import { formatNumber } from '@/lib/format'
@@ -51,9 +51,9 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const value = (s: GameServer) => formatNumber(kind === 'support' ? s.support?.coins ?? 0 : s.votes)
   const meta = (s: GameServer) => [chronicleOfVersion(game.id, s.version)?.label ?? s.version, s.rates ? `x${String(s.rates).replace(/^[x×]/i, '')}` : ''].filter(Boolean).join(' · ')
   const fav = (s: GameServer) => <button type="button" className={`fav gsb-fav ${isFav(s.slug) ? 'selected' : ''}`} aria-pressed={isFav(s.slug)} aria-label={isFav(s.slug) ? `Убрать ${s.name} из избранного` : `${s.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggleFav(s.slug) }}><Heart size={14} fill={isFav(s.slug) ? 'currentColor' : 'none'} /></button>
-  const num = (s: GameServer) => <span className="server-right gsb-num">{kind === 'support' && <img src="/media/ranks/coins-gs-128.webp" alt="" />}<span><small>{unit}</small><strong>{value(s)}</strong></span></span>
+  const num = (s: GameServer) => <span className="server-right gsb-num">{kind === 'support' ? <Coins className="gsb-val-ic" aria-hidden /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<span><small>{unit}</small><strong>{value(s)}</strong></span></span>
   // Rows: icon + number only, the unit is in the board title and the screen-reader label.
-  const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <img src="/media/ranks/coins-gs-128.webp" alt="" /> : <svg className="gsb-vote" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h4v11H3zM9 21h8.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 19 10h-5l.8-4.2A1.8 1.8 0 0 0 13 3.6L9 9z" /></svg>}<strong>{value(s)}</strong></span>
+  const rowNum = (s: GameServer) => <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}>{kind === 'support' ? <Coins className="gsb-val-ic" aria-hidden /> : <ThumbsUp className="gsb-val-ic" aria-hidden />}<strong>{value(s)}</strong></span>
   const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
   const plaque = (s: GameServer, rank: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
@@ -88,7 +88,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>
 
   return <section className={`panel gsb gs-shelf-${kind} ${kind === 'opening' ? 'openings' : kind === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${kind}`} data-game={game.id}>
-    <div className="gsb-strip"><span className="gsb-label"><img className="gsb-crown" src="/media/ranks/crown-royal-128.webp" alt="" aria-hidden="true" decoding="async" />{title}</span></div>
+    <div className="gsb-strip"><span className="gsb-label">{kind === 'support' ? <Coins className="gsb-label-ic" aria-hidden /> : kind === 'opening' ? <Hourglass className="gsb-label-ic" aria-hidden /> : <Crown className="gsb-label-ic" aria-hidden />}{title}</span></div>
     <div className="gsb-inner" ref={inner}>
       <span className="gsb-frost" aria-hidden="true" />
       <svg className="gsb-edge" aria-hidden="true"><path /></svg>

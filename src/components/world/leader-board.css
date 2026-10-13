@@ -196,7 +196,7 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-avat
 .gsb .gsb-row .gsb-hex{width:30px;height:34px;font-size:15px}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num-compact:not(#a):not(#b){gap:5px!important}
 .gsb .gsb-num-compact img{width:18px!important;height:18px!important}
-.gsb .gsb-vote{width:15px;height:15px;fill:#e8b964}
+
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num-compact strong:not(#a):not(#b){margin:0!important;font-size:16px!important}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:not(#a):not(#b){width:26px!important;min-width:26px!important;height:26px!important}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:not(#a):not(#b),html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-fav:not(#a):not(#b){top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;transform:none!important;align-self:center}
@@ -325,3 +325,7 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a)
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.gsb-name,.gsb-row-name):not(#a):not(#b){font-family:"Philosopher","Noto Serif",Georgia,serif!important;font-weight:700!important}
 /* owner colour pick: site lime for the board label */
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b):not(#c){background:none!important;color:#d7ff4a!important;-webkit-text-fill-color:#d7ff4a!important}
+/* owner pick: thin lime line icons (style 1) — board labels by meaning, value icons on plaques and rows */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label svg.gsb-label-ic:not(#a):not(#b):not(#c){width:26px!important;height:26px!important;flex:none;stroke:var(--lb-lime)!important;stroke-width:2!important;fill:none!important;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--lb-lime) 45%,transparent))}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num svg.gsb-val-ic:not(#a):not(#b){width:22px!important;height:22px!important;flex:none;stroke:var(--lb-lime)!important;fill:none!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact svg.gsb-val-ic:not(#a):not(#b){width:16px!important;height:16px!important}

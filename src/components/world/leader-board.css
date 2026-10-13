@@ -319,3 +319,7 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label img.gsb
 /* GS Coins art (owner pick 5): 26px on plaques, 20px in rows */
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num img:not(#a):not(#b){width:auto!important;height:26px!important;object-fit:contain!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))!important}
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-num.gsb-num-compact img:not(#a):not(#b){height:20px!important}
+/* owner font pick 8: Philosopher bold for the board label and server names, brighter gold label */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b){font-family:"Philosopher","Noto Serif",Georgia,serif!important;font-weight:700!important;font-size:27px!important;background:linear-gradient(180deg,#fffbe8 0%,#ffe39a 35%,#e7b24e 65%,#fff0bf 82%,#b9822d 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.95))!important}
+@media (max-width:420px){html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-label:not(#a):not(#b){font-size:24px!important}}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb :is(.gsb-name,.gsb-row-name):not(#a):not(#b){font-family:"Philosopher","Noto Serif",Georgia,serif!important;font-weight:700!important}

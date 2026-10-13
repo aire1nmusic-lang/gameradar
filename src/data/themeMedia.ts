@@ -152,6 +152,9 @@ export function resolveWorldMedia(gameId?: string, chronicleId?: string): WorldM
   }
 }
 
+/** One shared header for every Lineage 2 server page (owner art): the fortress on the sea cliff at dusk. */
+export const L2_SERVER_COVER: WorldArt = art('lineage-2/server-castle-v1', 'Lineage 2 — крепость на морском утёсе на закате', 'medium', { desktop: '62% 45%', mobile: '66% 40%' }, [400, 800, 1600, 2000])
+
 /** One slot of a world. Returns undefined when the world has no key art. */
 export function worldArt(slot: ArtSlot, gameId?: string, chronicleId?: string): WorldArt | undefined {
   return resolveWorldMedia(gameId, chronicleId)[slot]

@@ -54,7 +54,7 @@ import { apiRequest } from '@/repositories/http/client'
 import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
-import { isShowcase, serverArt } from '@/data/themeMedia'
+import { isShowcase, L2_SERVER_COVER, serverArt } from '@/data/themeMedia'
 import {
   ThemeHorizon,
   ThemeParticles,
@@ -172,7 +172,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
   const theme = themeForGame(server.gameId, chronicle?.themeId)
-  const cover = serverArt(server)
+  const cover = server.gameId === 'lineage2' ? L2_SERVER_COVER : serverArt(server)
   // Showcase worlds get a full profile hero with the header laid over the art.
   const showcase = !!cover && isShowcase(server.gameId)
   const { has, toggle } = useFavorites()

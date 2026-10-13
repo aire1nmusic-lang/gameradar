@@ -54,7 +54,7 @@ export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support'
   const place = (art === 'people' ? PEOPLE_PLACE : PLACE)[rank]
   return <Link to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
     <span className="gsb-art" aria-hidden="true"><img src={place.bg} alt="" decoding="async" /></span>
-    {place.hero && <img className="gsb-hero" src={place.hero} alt="" aria-hidden="true" decoding="async" />}
+    {place.hero && <img className={`gsb-hero gsb-hero-${art}`} src={place.hero} alt="" aria-hidden="true" decoding="async" />}
     <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-glass-192.webp`} alt={`${rank} место`} /></span>
     <span className="gsb-bar">
       <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" /><span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta}</span></span>

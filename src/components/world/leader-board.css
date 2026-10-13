@@ -344,3 +344,7 @@ html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque:not(#a):not(#
   html[data-design="lobby"] body .gs-catalog-podium .gsb .gsb-plaque.p1:not(#a):not(#b):not(#c):not(#d){margin-top:0!important}
 }
 html[data-design="lobby"] body .gs-catalog-podium:not(#a){margin-bottom:14px}
+/* top-1 characters stand in one line with the characters of places 2 and 3 */
+.gsb .gsb-plaque.p1 .gsb-hero{right:5%!important}
+/* the players' choice warrior is cut at the image edge: fade that edge out */
+.gsb .gsb-plaque.p1 .gsb-hero.gsb-hero-people{right:1%!important;-webkit-mask-image:linear-gradient(to left,transparent 0,#000 14%);mask-image:linear-gradient(to left,transparent 0,#000 14%)}

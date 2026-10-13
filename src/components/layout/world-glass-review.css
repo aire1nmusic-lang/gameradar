@@ -152,7 +152,7 @@ html[data-color-mode] body .gs-l2-filter-sheet .gs-button-primary {background:co
 /* Lineage 2 inner-world routes share the approved sunset picture; keep mobile subject in frame. */
 @media (max-width: 767px) {
   .gs-world-backdrop.gs-world-backdrop--elf-sunset {
-    background-image: url('/media/worlds/lineage-2/master-v9-mobile-720.webp') !important;
+    background-image: url('/media/worlds/lineage-2/tower-v1-mobile-720.webp') !important;
     background-position: 50% 0 !important;
   }
 }

@@ -68,7 +68,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
 /** The cover the world page opens with, so the portal lands on exactly the same picture. */
 function worldCover(game: Game) {
   const narrow = window.innerWidth < 760
-  if (game.id === 'lineage2') return narrow ? '/media/worlds/lineage-2/master-v9-mobile-1080.webp' : '/media/worlds/lineage-2/master-v9-1600.webp'
+  if (game.id === 'lineage2') return narrow ? '/media/worlds/lineage-2/tower-v1-mobile-1080.webp' : '/media/worlds/lineage-2/tower-v1-1600.webp'
   const art = worldArt('hero', game.id)
   return art ? artSrc(art, narrow ? 960 : 1600) : cardSrc(game.id, 1600)
 }

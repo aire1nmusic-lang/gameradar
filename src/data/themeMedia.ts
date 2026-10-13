@@ -66,7 +66,7 @@ const ART = {
   // Full-page art stays high-resolution. Approved portrait crops are a separate card layer,
   // so chronicle tiles keep the selected images without forcing 192px artwork into page heroes.
   l2ElfSunset: art('lineage-2/elf-sunset-v1', 'Lineage 2 — эльфийская воительница над закатным городом', 'bright', { desktop: '50% 0%', mobile: '62% 0%' }, [768, 1536, 2048]),
-  l2Master: art('lineage-2/master-v9', 'Lineage 2 — отряд героев у замка: рыжеволосая рыцарша, эльфийка, разбойница, орк, древний великан и дракон', 'medium', { desktop: '56% 22%', mobile: '54% 20%' }, [800,1600,2000]),
+  l2Master: art('lineage-2/tower-v1', 'Lineage 2 — Башня Дерзости в грозовом вихре над руинами', 'medium', { desktop: '64% 30%', mobile: '50% 20%' }, [800,1600,2000]),
   l2InterludeHero: keyart('lineage-2/interlude', 'Lineage 2 Interlude — эльфийский мир на закате', 'medium', '68% 50%', '54% 50%'),
   l2HighFiveHero: keyart('lineage-2/high-five', 'Lineage 2 High Five — осада замка и герои', 'medium', '68% 50%', '55% 50%'),
   l2EssenceHero: keyart('lineage-2/essence', 'Lineage 2 Essence — герои над королевством', 'medium', '70% 50%', '55% 50%'),

@@ -848,10 +848,11 @@ html[data-hero='cinematic'] .gs-tile { height: 230px; }
 }
 .gs-hall-drift { animation: gs-hall-drift 26s ease-in-out infinite alternate; transform-origin: 50% 40%; }
 
-/* The world page settles in as the picture dissolves: a slow dolly out, no fade of its own. */
+/* The world page settles in as the picture dissolves. Opacity only: a transform on the wrapper would
+   make the fixed world art page-relative for the duration (black band under the header on phones). */
 @keyframes gs-world-enter {
-  from { transform: scale(1.045); }
-  to { transform: none; }
+  from { opacity: .55; }
+  to { opacity: 1; }
 }
 .gs-world-enter > * { animation: gs-world-enter 1100ms cubic-bezier(0.16, 1, 0.3, 1) 0ms backwards; }
 

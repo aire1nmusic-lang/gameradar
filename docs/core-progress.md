@@ -1,3 +1,11 @@
+## 14.10.2026 — Mobile UX owner report / quick fixes (branch; NOT deployed)
+- Owner supplied 11 issues from Android captures (~390px): unreadable TOP-3 text, old profile mobile art, translucent Claim/search/CTA, footer blocking «Играть», severe scroll jank, login header strip, Coins intent, «Главная» destination and sticky filter. Unique art per chronicle requested separately.
+- Recorded detailed requirements and acceptance criteria in GitHub issue #16. Scope priority: performance investigation and layer stacking first, then legibility/navigation; artworks require owner-approved assets.
+- VERIFIED (source code): Catalog.tsx used `sticky top-[60px]`; ServerProfile.tsx breadcrumb «Главная» used `to="/"`. Two isolated edits on branch `fix/mobile-ux-sticky-breadcrumbs-20261014`: catalog toolbar now flows with the page; server breadcrumb points to `/${game.slug}`. No edits to API, database, coins ledger, DNS or production.
+- VERIFIED (source code): current server mobile background points to `server-castle-v1-800.webp`; the recently added portrait `account-castle-m-1080.webp` is used on the account screen only. Do not substitute without owner art confirmation.
+- LIKELY but unconfirmed: layer blur/fixed backgrounds affect FPS. No runtime profiler has been run on a device, no visual QA, no claim of fixed performance. GitHub connector read/write only; local working tree status could not be checked. Branch created separately to avoid disturbing concurrent main work.
+- Next: draft PR / CI, manual Android 390 and 320/768/1024/1440 checks. Open issues #1–9 and #10 mobile nav behavior remain, #11 and #10 breadcrumbs are code-changed but NOT production-verified. Rollback: close PR / do not merge, or revert two file edits and this journal entry.
+
 ## 13.10.2026 — One palette + light theme switched off (owner)
 - Palette (`src/theme/glass.css`, tail): dark glass + 2 text whites (#f2efe9/#e6e0d5) + ONE lime (--lb-lime #c6ff52) for actions (labels, «Все →», online dot, active chips) + gold only for awards (medals, crown, coins, frames). Chronicle tiles and live chips are glass.
 - Light theme switched off: `readColorMode()` always returns dark, `setColorMode('light')` maps to dark, the header toggle is removed (a spacer keeps the layout). Light CSS stays in the code for a later return; old `gs.color-mode.v1=light` users get dark.

@@ -78,12 +78,12 @@ jobs:
             usesYandex: /storage\.yandexcloud|gamescout-ru-site/i.test(body),
             usesPages: /pages\.dev/i.test(body),
             moduleCount:(body.match(/Content-Disposition: form-data/g)||[]).length,
-            routesApi:/\\\/api\\\//.test(body),
-            routesIndex:/index\\.html/.test(body),
-            invokesAssetsFetch:/\\.ASSETS\\.fetch\\(/.test(body),
-            invokesGameApiFetch:/\\.GAME_API\\.fetch\\(/.test(body),
-            custom404:/\\b404\\b/.test(body),
-            importStatements:/^import /m.test(body)
+            routesApi:body.includes('/api/'),
+            routesIndex:body.includes('index.html'),
+            invokesAssetsFetch:body.includes('.ASSETS.fetch('),
+            invokesGameApiFetch:body.includes('.GAME_API.fetch('),
+            custom404:body.includes('404'),
+            importStatements:body.includes('import ')
           }))
           NODE
       - name: Read published Yandex index stamp (read only)

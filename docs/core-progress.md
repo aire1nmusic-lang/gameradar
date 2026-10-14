@@ -16,6 +16,7 @@
 - Hall of worlds: owner observatory art (hub/observatory-{1280,1920,2000}, phone crop observatory-m-{720,1080} with the painted cards faded out); index.html preload updated; old nave-* kept (account entry still uses nave-1920).
 - Hall: owner 4K observatory (5504px source → 1280/1920/2560/3840) + owner vertical mobile (720/1080). Desktop art replaced by the owner 4K version without painted cards. L2 server page hero shrunk to 64px (56 phone), title block without negative margin — no empty band.
 - World-enter animation is opacity-only (transform made the fixed art page-relative → black header band on phones during the entry). Hall header logo and account have no boxes.
+- Account on phones: owner vertical sea-cliff fortress (account-castle-m-720/1080) as a fixed background, lighter veil; desktop unchanged.
 - World search + epoch: no outer frame, two glass blocks of 64px, search centred; chronicles open as a dropdown panel under the epoch block (absolute, z above boards), layout does not move (≥768px; phones unchanged).
 - Header and live strip more transparent (rgba(16,18,24,.66→.56)).
 - Checked: 390 and 1440 dark, home/catalog/openings/rating/favorites/server; no horizontal overflow on openings at 390 (scrollWidth 390).

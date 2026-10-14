@@ -232,3 +232,10 @@ html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(3):not(#lb){mar
 /* hall of worlds header: logo and account sit straight on the art, no boxes */
 html[data-design="lobby"] body .gs-site-header.gs-hall-header:not(#lb):not(#gl) :is(a,button):not(#p){background:transparent!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html[data-design="lobby"] body .gs-site-header.gs-hall-header:not(#lb):not(#gl) :is(a,button){filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+
+/* account on phones: the owner's vertical sea-cliff fortress as a fixed full-screen background */
+@media (max-width:767px){
+  html[data-design="lobby"] body .gs-account-layout:not(#lb):not(#gl){background:#0c0e13 url('/media/worlds/lineage-2/account-castle-m-1080.webp') 50% 40%/cover no-repeat fixed!important}
+  html[data-design="lobby"] body .gs-account-layout :is(.gs-world-backdrop,.gs-account-entry > div[aria-hidden]):not(#lb){display:none!important}
+}
+@media (max-width:767px){html[data-design="lobby"] body .gs-account-layout:not(#lb):not(#p)::after{background:linear-gradient(180deg,rgba(10,12,16,.30),rgba(10,12,16,.48) 45%,rgba(10,12,16,.66))!important}}

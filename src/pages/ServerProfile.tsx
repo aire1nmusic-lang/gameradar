@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useLockBodyScroll } from '@/hooks/useUi'
 import { PlaceBanner } from '@/components/profile/PlaceBanner'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import {
@@ -838,6 +839,7 @@ function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) 
 
 /** Support right on the card: the list is loaded once and kept while the dialog is open, closing returns to the card. */
 function ProfileSupportDialog({ server, onClose }: { server: GameServer; onClose: () => void }) {
+  useLockBodyScroll(true)
   const demo = useVisualDemo()
   const ref = useRef<HTMLDialogElement>(null)
   const [servers, setServers] = useState<GameServer[] | null>(null)
@@ -857,3 +859,4 @@ function ProfileSupportDialog({ server, onClose }: { server: GameServer; onClose
       : <SupportStudio servers={servers} demo={demo} initialServer={server.id} onSupported={() => { invalidateDiscoveryCache() }} />}
   </dialog>
 }
+

@@ -17,16 +17,30 @@ const ICONS = {
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const {game,scoped}=useWorldNavigation()
   const [query, setQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   useLockBodyScroll(open)
 
-  const { data: suggestions = [] } = useAsync(() => buildSuggestions(query,7,game?.id), [query,game?.id], false)
+  // Do not load suggestions while the overlay is closed or on every keystroke.
+  useEffect(() => {
+    if (!open) return
+    const timer = window.setTimeout(() => setSearchQuery(query), 180)
+    return () => window.clearTimeout(timer)
+  }, [open, query])
+  const { data, loading, error } = useAsync(
+    () => open ? buildSuggestions(searchQuery, 7, game?.id) : Promise.resolve([]),
+    [open, searchQuery, game?.id],
+    false,
+  )
+  const pending = loading || query !== searchQuery
+  const suggestions = pending ? [] : data ?? []
 
   useEffect(() => {
     if (open) {
       setQuery('')
+      setSearchQuery('')
       setCursor(0)
       const timer = window.setTimeout(() => inputRef.current?.focus(), 40)
       return () => window.clearTimeout(timer)
@@ -65,7 +79,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
             onKeyDown={(event) => {
               if (event.key === 'ArrowDown') {
                 event.preventDefault()
-                setCursor((c) => Math.min(suggestions.length - 1, c + 1))
+                setCursor((c) => Math.max(0, Math.min(suggestions.length - 1, c + 1)))
               }
               if (event.key === 'ArrowUp') {
                 event.preventDefault()
@@ -87,9 +101,9 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 sm:px-2.5">
-          {suggestions.length === 0 ? (
+          {pending ? <p role="status" className="px-4 py-10 text-center text-[14px] text-ink-300">Ищем серверы…</p> : suggestions.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <p className="text-[14px] text-ink-200">Ничего не найдено по запросу «{query}»</p>
+              <p className="text-[14px] text-ink-200">{error ? 'Поиск сейчас недоступен' : `Ничего не найдено по запросу «${query}»`}</p>
               <p className="mt-1.5 text-[13px] text-ink-400">Попробуйте название игры, режим или регион</p>
               <button
                 onClick={() => go(scoped('/catalog'))}
@@ -199,3 +213,4 @@ export function SuggestionList({
     </div>
   )
 }
+

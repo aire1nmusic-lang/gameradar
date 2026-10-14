@@ -20,13 +20,18 @@ export function useIsMobile(): boolean {
   return useMediaQuery('(max-width: 1023px)')
 }
 
+let bodyScrollLocks = 0
+let unlockedOverflow = ''
+
 export function useLockBodyScroll(locked: boolean) {
   useEffect(() => {
     if (!locked) return
-    const previous = document.body.style.overflow
+    if (bodyScrollLocks === 0) unlockedOverflow = document.body.style.overflow
+    bodyScrollLocks += 1
     document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = previous
+      bodyScrollLocks -= 1
+      if (bodyScrollLocks === 0) document.body.style.overflow = unlockedOverflow
     }
   }, [locked])
 }
@@ -97,3 +102,4 @@ export function useTicker(startSeconds: number, resetAt = 60): number {
   }, [startSeconds, resetAt])
   return seconds
 }
+

@@ -247,7 +247,7 @@ html[data-design="lobby"] body .gs-search-overlay > button:not(#lb) {
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
 }
 html[data-design="lobby"] body .gs-search-overlay .gs-search-surface:not(#lb):not(#gl):not(#p) {
-  background:linear-gradient(150deg,rgba(35,39,49,.98),rgba(14,17,25,.99))!important;
+  background:linear-gradient(150deg,#232731,#0e1119)!important;
   border:1px solid rgba(255,255,255,.22)!important;color:#f5f1e9!important;
   box-shadow:0 24px 65px rgba(0,0,0,.75)!important;
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
@@ -263,7 +263,7 @@ html[data-design="lobby"] body .gs-ui-modal > .gs-ui-modal-panel:not(#lb):not(#g
 }
 html[data-design="lobby"] body .gs-profile-cta-bar:not(#lb):not(#gl):not(#p) {
   position:fixed!important;z-index:80!important;isolation:isolate;
-  background:linear-gradient(180deg,rgba(26,29,37,.98),rgba(10,13,20,.995))!important;
+  background:linear-gradient(180deg,#1a1d25,#0a0d14)!important;
   border-top:1px solid rgba(255,255,255,.25)!important;
   box-shadow:0 -12px 30px rgba(0,0,0,.45)!important;
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
@@ -291,13 +291,11 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
 }
 
 
-/* Mobile account: one continuous fortress scene behind the header, without the opaque horizontal strip. */
-@media (max-width: 767px) {
+/* Account: one continuous scene behind the header at every viewport width. */
   html[data-design="lobby"] body .gs-account-layout > header.gs-site-header:not(#lb):not(#gl) {
     background:transparent!important;border-color:transparent!important;box-shadow:none!important;
     -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
   }
-}
 
 /* Fixed BODY gradients cause repaints/jank on touch browsers; background stays visually unchanged. */
 @media (max-width:900px), (hover:none) {
@@ -322,3 +320,13 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
   }
   html[data-design="lobby"] body .gs-live-track > [aria-hidden="true"] {display:none!important;}
 }
+
+/* Minecraft/GTA shelves: the card opens its profile; Coins opens that server's support. */
+html[data-design="lobby"] body .l2a .server > .gs-shelf-hitbox:not(#lb):not(#gl) {position:absolute!important;inset:0;z-index:6!important;border-radius:inherit}
+.l2a .server > .gs-shelf-hitbox:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
+html[data-design="lobby"] body .l2a .server:has(> .gs-shelf-hitbox) > .fav:not(#lb):not(#gl) {z-index:8!important}
+html[data-design="lobby"] body .l2a .server:has(> .gs-shelf-hitbox) > .server-right:not(#lb):not(#gl) {position:relative;z-index:8!important;pointer-events:none}
+.l2a .server:has(> .gs-shelf-hitbox) .server-name {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;line-height:1.25}
+.l2a .server .gs-shelf-coins {position:relative;z-index:8;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:44px;min-height:44px;padding:4px;border-radius:8px;pointer-events:auto}
+.l2a .server .gs-shelf-coins:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
+

@@ -352,6 +352,7 @@ html[data-design="lobby"] body .gs-catalog-podium:not(#a){margin-bottom:14px}
 
 /* 14.10 mobile legibility: keep the illustrated plaques, make only the information film opaque enough. */
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {
+  width:auto!important;
   background:linear-gradient(180deg,rgba(16,19,28,.91),rgba(9,12,20,.97))!important;
   border-top:1px solid rgba(255,255,255,.4)!important;
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
@@ -372,6 +373,9 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:
   cursor:pointer;font:inherit;background:rgba(12,16,23,.62)!important;
 }
 .gsb .gsb-coins-action:focus-visible{outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
+@media(max-width:359px) {
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-avatar:not(#a):not(#b):not(#c) {display:none!important}
+}
 @media(max-width:420px) {
   html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {padding-inline:8px!important;gap:6px!important}
   html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:not(#a):not(#b) {gap:3px!important}
@@ -390,3 +394,4 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-b
 html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row > button:not(#a):not(#b):not(#c){
   position:relative!important;z-index:20!important;pointer-events:auto!important;
 }
+

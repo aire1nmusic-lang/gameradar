@@ -32,7 +32,7 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
   <div className="gs-support-form gs-panel p-4 sm:p-6 min-w-0">
 
 
-   <label className="mt-5 block text-sm">Сервер<select className="gs-support-select mt-2" value={serverId} onChange={e=>setServerId(e.target.value)}>{choices.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+   <label className="mt-5 block text-sm">Сервер<select aria-label="Сервер" className="gs-support-select mt-2" value={serverId} onChange={e=>setServerId(e.target.value)}>{choices.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
    <label className="mt-4 block text-sm">Количество Coins<input className="gs-support-amount mt-2" type="number" min={1} max={10000} step={1} value={Number.isNaN(amount)?'':amount} onChange={e=>setAmount(e.target.value===''?NaN:Number(e.target.value))}/></label>
    <div className="mt-3 flex flex-wrap gap-2" aria-label="Быстрый выбор Coins">{[5,10,25,50,100].map(n=><button className="gs-amount-preset" key={n} type="button" aria-pressed={amount===n} onClick={()=>setAmount(n)}>{n}</button>)}</div>
 
@@ -51,3 +51,4 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
   </div>
  </section>
 }
+

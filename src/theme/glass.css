@@ -218,7 +218,7 @@ html[data-design="lobby"] body .gs-games-menu.surface-raised:not(#lb):not(#gl):n
 /* ---------- L2 server page: the fortress is a fixed full-page background; the header strip is transparent over it ---------- */
 .gs-server-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:#0c0e13 url('/media/worlds/lineage-2/server-castle-v1-2000.webp') 62% 40%/cover no-repeat}
 .gs-server-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,14,.70) 0%,rgba(8,10,14,.30) 50%,rgba(8,10,14,.15) 100%),linear-gradient(0deg,rgba(8,10,14,.66),rgba(8,10,14,.32) 55%,rgba(8,10,14,.12))}
-@media (max-width:767px){.gs-server-bg{background-image:url('/media/worlds/lineage-2/server-castle-v1-800.webp');background-position:66% 30%}}
+@media (max-width:767px){.gs-server-bg{background-image:url('/media/worlds/lineage-2/account-castle-m-1080.webp');background-position:50% 35%}}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > :first-child{opacity:0!important}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2){background:transparent!important}
 html[data-design="lobby"] body .gs-server-fullbg :is(.gt-hero,[class*="ThemePattern"]){display:none!important}
@@ -239,3 +239,52 @@ html[data-design="lobby"] body .gs-site-header.gs-hall-header:not(#lb):not(#gl) 
   html[data-design="lobby"] body .gs-account-layout :is(.gs-world-backdrop,.gs-account-entry > div[aria-hidden]):not(#lb){display:none!important}
 }
 @media (max-width:767px){html[data-design="lobby"] body .gs-account-layout:not(#lb):not(#p)::after{background:linear-gradient(180deg,rgba(10,12,16,.30),rgba(10,12,16,.48) 45%,rgba(10,12,16,.66))!important}}
+
+
+/* 14.10 — important overlays cannot inherit the transparent global panel tint. */
+html[data-design="lobby"] body .gs-search-overlay > button:not(#lb) {
+  background:rgba(3,5,9,.86)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+html[data-design="lobby"] body .gs-search-overlay .gs-search-surface:not(#lb):not(#gl):not(#p) {
+  background:linear-gradient(150deg,rgba(35,39,49,.98),rgba(14,17,25,.99))!important;
+  border:1px solid rgba(255,255,255,.22)!important;color:#f5f1e9!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.75)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+html[data-design="lobby"] body .gs-ui-modal > button:not(#lb){background:rgba(3,5,9,.88)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-design="lobby"] body .gs-ui-modal > .surface-raised:not(#lb):not(#gl):not(#p){
+  background:linear-gradient(150deg,rgba(39,43,53,.98),rgba(14,17,25,.99))!important;
+  border:1px solid rgba(255,255,255,.23)!important;
+  box-shadow:0 25px 65px rgba(0,0,0,.8)!important;
+  color:#f4f1e9!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+html[data-design="lobby"] body .gs-profile-cta-bar:not(#lb):not(#gl):not(#p) {
+  position:fixed!important;z-index:80!important;isolation:isolate;
+  background:linear-gradient(180deg,rgba(26,29,37,.98),rgba(10,13,20,.995))!important;
+  border-top:1px solid rgba(255,255,255,.25)!important;
+  box-shadow:0 -12px 30px rgba(0,0,0,.45)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+/* Keep portal actions and footer independently clickable at the bottom. */
+html[data-design="lobby"] body .gs-profile-cta-bar :is(button,a) {position:relative;z-index:1}
+html[data-design="lobby"] body .gs-account-layout > header.gs-site-header:not(#lb) {
+  position:absolute!important;inset:0 0 auto;z-index:60!important;
+}
+html[data-design="lobby"] body .gs-account-layout > .gs-mobile-nav:not(#lb),
+html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {position:fixed!important;z-index:50!important}
+@media (max-width:767px) {
+  /* Mobile browsers repaint background-attachment:fixed on scroll. One viewport layer instead. */
+  html[data-design="lobby"] body .gs-account-layout:not(#lb):not(#gl):not(#p) {
+    background:#0c0e13!important;
+  }
+  html[data-design="lobby"] body .gs-account-layout:not(#lb)::before {
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(9,11,16,.28),rgba(9,11,16,.48) 45%,rgba(9,11,16,.74)),
+      url('/media/worlds/lineage-2/account-castle-m-1080.webp') 50% 38%/cover no-repeat;
+  }
+  html[data-design="lobby"] body .gs-account-layout:not(#lb)::after {display:none!important}
+  html[data-design="lobby"] body .gs-account-layout > .gs-world-backdrop {display:none!important}
+  html[data-design="lobby"] body .gs-account-layout > .gs-to-top {position:fixed!important}
+}

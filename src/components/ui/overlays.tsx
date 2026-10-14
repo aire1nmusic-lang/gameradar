@@ -90,7 +90,7 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[95] flex items-end justify-center p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true">
+    <div className="gs-ui-modal fixed inset-0 z-[95] flex items-end justify-center p-0 sm:items-center sm:p-6" role="dialog" aria-modal="true">
       <button
         aria-label="Закрыть"
         onClick={onClose}

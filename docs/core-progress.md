@@ -1,3 +1,8 @@
+## 14.10.2026 — Production retry after owner reported unblocked
+- VERIFIED: re-ran failed production run 38608883258 through GitHub connector. Attempt 2 started 19:42:08 UTC and failed 19:42:15 UTC, before steps; deploy job 116064801947 has no steps/log URL. Owner report does not establish that the runner rejection is resolved.
+- VERIFIED: main remains fe1ef92 (contains UI code 0a4df33). Live domain still returns old index-Crqid3F-.js and unstamped __GS_BUILD__. No source changes, payment writes or DNS modifications in this retry.
+- BLOCKED: exact annotation text remains unavailable through connector. Browser authentication not completed; do not infer success from provider choice or credential request submission. Next: authenticated Actions Summary/Annotations error text, then fix concrete rejection and deploy. Keep #16 open.
+
 ## 14.10.2026 — UI code published; primary-domain deployment remains BLOCKED
 - VERIFIED: code + responsive regression + progress committed directly to main as 0a4df339b155ca585f20ebfd6936b6c06175450c. No other source/assets overwritten; six unapproved chronicle previews remain outside production.
 - VERIFIED: new Deploy production site run 38608883258 FAILED; deploy job 116006791631 has no steps/log URL. CI 38608883187 also FAILED before execution. Cloudflare Pages building/success is a separate hosting target and must not be called publication to gamescout.online.

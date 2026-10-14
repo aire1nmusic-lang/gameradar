@@ -1,3 +1,10 @@
+## 14.10.2026 — Release of mobile UX changes into main (PR #17)
+- VERIFIED: owner requested direct publication into main; PR #17 was squash-merged as `8b63b0c7452fda1a39b5280e8c524b5f32cc5243`. Main branch points to that SHA. Cloudflare Pages reported **Deploy successful** for the same SHA, production Pages workflow. No DB/DNS/private API/payment writes.
+- Scope of source changes: rank TOP-3 bottom film contrast, portrait castle reuse for L2 server mobile profiles, opaque Claim/search overlays and mobile Play CTA, contextual game breadcrumbs, unstuck catalog toolbar, support deep link for selected server Coins, responsive account header offset, scroll animation reduction (touch LIVE ticker becomes manually swipeable). See PR #17 and issue #16.
+- Important: source edits and successful Cloudflare build/deploy do **not** establish that 11 owner-reported UI bugs are actually resolved. External live-site browser QA was not available in this session; Android FPS was not measured; do not close #16 yet. Unique chronicle artwork is ungenerated/unapproved, and real checkout is not enabled. Avoid asserting acceptance without measurements/screenshots.
+- GitHub Actions verify/deploy checks still fail before jobs get steps on both main and PR (potential runner/account problem); direct Cloudflare Pages check succeeded. Needs separate investigation; not proof of a TypeScript compile failure.
+- Release rollback: revert squash commit `8b63b0c` on main and await Cloudflare successful redeploy (only if site regressions are detected). Next: real-browser mobile regression matrix 320/390/768/1024/1440 and FPS traces; address confirmed differences directly in main per owner instruction.
+
 ## 14.10.2026 — Mobile UX slice 3 (PR #17, preview ONLY)
 - [x] After source review: support deep link (`?support=1`) on a profile now reacts to React Router search changes too; it already preselected the matching server's SupportStudio. This improves SPA navigation but does not enable production billing. Commit `f63e434`.
 

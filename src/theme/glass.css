@@ -288,3 +288,13 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
   html[data-design="lobby"] body .gs-account-layout > .gs-world-backdrop {display:none!important}
   html[data-design="lobby"] body .gs-account-layout > .gs-to-top {position:fixed!important}
 }
+
+
+/* Fixed BODY gradients cause repaints/jank on touch browsers; background stays visually unchanged. */
+@media (max-width:900px), (hover:none) {
+  html[data-design="lobby"][data-color-mode="dark"]:not(.gs-boot-pending):not(.gs-loader-visible) body:not(#lb) {
+    background-attachment:scroll!important;
+  }
+  /* The atmospheric particles are decorative; keep them static on slower touch devices. */
+  html[data-design="lobby"] body .gt-particles > span { animation:none!important; }
+}

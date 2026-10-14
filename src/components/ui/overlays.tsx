@@ -98,9 +98,18 @@ export function Modal({
       />
       <div
         className={cn(
-          'surface-raised relative w-full animate-pop overflow-hidden rounded-t-2xl sm:rounded-xl',
+          'gs-ui-modal-panel relative isolate flex w-full max-h-[calc(100dvh-12px)] animate-pop flex-col overflow-hidden rounded-t-2xl sm:rounded-xl',
           width,
         )}
+        style={{
+          // Must remain fully opaque even under the global glass theme.
+          // This portal is a dialog, not an ambient glass card.
+          background: '#191c24',
+          backgroundImage: 'none',
+          opacity: 1,
+          border: '1px solid rgba(255,255,255,0.24)',
+          boxShadow: '0 25px 70px rgba(0,0,0,0.85)',
+        }}
       >
         <div className="flex items-start justify-between gap-6 border-b border-white/6 px-6 py-5">
           <div>

@@ -262,7 +262,7 @@ function Profile({ server: source }: { server: GameServer }) {
         />
         <Container className="relative flex h-full items-start pt-4">
           <nav className="flex items-center gap-1.5 text-[12.5px] text-white/60">
-            <Link to="/" className="py-2 transition-colors hover:text-white">
+            <Link to={`/${game.slug}`} className="py-2 transition-colors hover:text-white">
               Главная
             </Link>
             <ChevronRight size={12} />

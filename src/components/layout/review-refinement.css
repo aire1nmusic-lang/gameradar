@@ -136,3 +136,4 @@ html[data-color-mode=light] .gs-l2-search-sheet>.gs-search-surface{background:li
 @media(max-height:500px){html[data-color-mode] .gs-l2-search-sheet>.gs-search-surface{margin-top:12px;max-height:calc(100dvh - 24px)}}
 
 .gs-ranking-availability{margin:0 0 12px;font-size:12px;line-height:18px;color:var(--aether-muted,var(--color-ink-400))}
+

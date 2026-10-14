@@ -348,3 +348,45 @@ html[data-design="lobby"] body .gs-catalog-podium:not(#a){margin-bottom:14px}
 .gsb .gsb-plaque.p1 .gsb-hero{right:5%!important}
 /* the players' choice warrior is cut at the image edge: fade that edge out */
 .gsb .gsb-plaque.p1 .gsb-hero.gsb-hero-people{right:1%!important;-webkit-mask-image:linear-gradient(to left,transparent 0,#000 14%);mask-image:linear-gradient(to left,transparent 0,#000 14%)}
+
+
+/* 14.10 mobile legibility: keep the illustrated plaques, make only the information film opaque enough. */
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {
+  background:linear-gradient(180deg,rgba(16,19,28,.91),rgba(9,12,20,.97))!important;
+  border-top:1px solid rgba(255,255,255,.4)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09)!important;
+}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-txt:not(#a):not(#b) {min-width:0; flex:1 1 0; overflow:hidden}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-name:not(#a):not(#b):not(#c) {
+  color:#fff7e9!important;-webkit-text-fill-color:#fff7e9!important;background:none!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.9)!important;filter:none!important;
+  overflow-wrap:anywhere!important;
+}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-meta:not(#a):not(#b):not(#c) {
+  color:#f1e8d8!important;text-shadow:0 1px 2px #000!important;
+}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:not(#a):not(#b) {
+  position:relative;z-index:20;flex-shrink:0;min-height:44px;
+  padding:4px!important;border:0!important;border-radius:9px;
+  cursor:pointer;font:inherit;background:rgba(12,16,23,.62)!important;
+}
+.gsb .gsb-coins-action:focus-visible{outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
+@media(max-width:420px) {
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {padding-inline:8px!important;gap:6px!important}
+  html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:not(#a):not(#b) {gap:3px!important}
+}
+
+
+/* Each plaque/row has one covering profile link; support and favourites are independent buttons. */
+.gsb .gsb-plaque .gsb-hitbox,
+.gsb .gsb-row .gsb-hitbox {position:absolute;inset:0;display:block;z-index:18;border-radius:inherit}
+.gsb .gsb-hitbox:focus-visible{outline:2px solid var(--lb-lime,#c6ff52);outline-offset:3px}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {
+  z-index:20!important;pointer-events:none!important;
+}
+.gsb .gsb-plaque .gsb-bar button {pointer-events:auto!important;position:relative;z-index:1}
+.gsb .gsb-row > :not(.gsb-hitbox):not(button){pointer-events:none}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row > button:not(#a):not(#b):not(#c){
+  position:relative!important;z-index:20!important;pointer-events:auto!important;
+}

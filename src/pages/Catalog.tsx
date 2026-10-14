@@ -163,7 +163,7 @@ export default function Catalog() {
       </Container>
 
       {/* the toolbar follows the list: filters, active chips, sort, view */}
-      <div className="gs-catalog-toolbar sticky top-[60px] z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
+      <div className="gs-catalog-toolbar relative z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
         <Container className="flex items-center gap-2">
           <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name={searchOpen?'close':'search'} size={17}/></button>
           <button

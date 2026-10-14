@@ -110,7 +110,7 @@ export function ThemeParticles({ className }: { className?: string }) {
   const style = PARTICLE_STYLE[kind]
 
   return (
-    <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
+    <div aria-hidden className={cn('gt-particles pointer-events-none absolute inset-0 overflow-hidden', className)}>
       {PARTICLE_SEEDS.map(([left, top, delay, duration], index) => (
         <span
           key={index}

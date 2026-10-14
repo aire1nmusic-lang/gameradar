@@ -43,7 +43,9 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const submit = () => {
     const target = suggestions[cursor]
     if (target) return go(target.to)
-    go(`${scoped('/catalog')}${game?'&':'?'}q=${encodeURIComponent(query)}`)
+    const url = new URL(scoped('/catalog'), window.location.origin)
+    url.searchParams.set('q', query)
+    go(`${url.pathname}${url.search}`)
   }
 
   return createPortal(

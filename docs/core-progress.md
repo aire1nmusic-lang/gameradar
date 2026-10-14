@@ -1,4 +1,6 @@
 ## 14.10.2026 — Mobile UX slice 3 (PR #17, preview ONLY)
+- [x] After source review: support deep link (`?support=1`) on a profile now reacts to React Router search changes too; it already preselected the matching server's SupportStudio. This improves SPA navigation but does not enable production billing. Commit `f63e434`.
+
 - VERIFIED in repository: corrected SearchOverlay target URL building with URL/searchParams; mobile account sign-in no longer overlaps the 60px header with a negative offset; account header is transparent over the single mobile fortress background.
 - Mobile LIVE ticker (experimental perf simplification): constant CSS marquee animation is disabled on touch / <=767px; horizontal swipe remains, duplicate hidden track removed. Design trade-off intentional; no device FPS trace, so mark LIKELY until benchmark.
 - PERF correction: earlier extra CSS targeting `.gs-bg-field` was a no-op because lobby.css already sets `.gs-bg-field{display:none!important}`; it was removed rather than counted as a real speed improvement. Other touch animation reductions remain in the preview branch.

@@ -376,3 +376,17 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:
   html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {padding-inline:8px!important;gap:6px!important}
   html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-coins-action:not(#a):not(#b) {gap:3px!important}
 }
+
+
+/* Each plaque/row has one covering profile link; support and favourites are independent buttons. */
+.gsb .gsb-plaque .gsb-hitbox,
+.gsb .gsb-row .gsb-hitbox {position:absolute;inset:0;display:block;z-index:18;border-radius:inherit}
+.gsb .gsb-hitbox:focus-visible{outline:2px solid var(--lb-lime,#c6ff52);outline-offset:3px}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-plaque .gsb-bar:not(#a):not(#b):not(#c) {
+  z-index:20!important;pointer-events:none!important;
+}
+.gsb .gsb-plaque .gsb-bar button {pointer-events:auto!important;position:relative;z-index:1}
+.gsb .gsb-row > :not(.gsb-hitbox):not(button){pointer-events:none}
+html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row > button:not(#a):not(#b):not(#c){
+  position:relative!important;z-index:20!important;pointer-events:auto!important;
+}

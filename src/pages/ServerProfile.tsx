@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { PlaceBanner } from '@/components/profile/PlaceBanner'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import {
   CalendarClock,
   Check,
@@ -181,6 +181,10 @@ function Profile({ server: source }: { server: GameServer }) {
   const [reviewOpen, setReviewOpen] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get('support') === '1')
+  const { search: profileSearch } = useLocation()
+  useEffect(() => {
+    if (new URLSearchParams(profileSearch).get('support') === '1') setSupportOpen(true)
+  }, [profileSearch])
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
   const { data: peers = [], loading: peersLoading } = useServers({ gameId: server.gameId, limit: 200 }, true)

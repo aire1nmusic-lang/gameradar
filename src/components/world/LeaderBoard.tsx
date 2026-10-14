@@ -52,7 +52,8 @@ function useFrost() {
 /** One top-3 plaque: place art, glass medal, film with the server. Shared by the boards and the catalog list. */
 export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support' }: { server: GameServer; rank: number; meta: string; value: ReactNode; fav: ReactNode; art?: PlaceArt }) {
   const place = (art === 'people' ? PEOPLE_PLACE : PLACE)[rank]
-  return <Link to={`/server/${s.slug}`} className={`server gsb-plaque p${rank}`}>
+  return <div className={`server gsb-plaque p${rank}`}>
+    <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
     <span className="gsb-art" aria-hidden="true"><img src={place.bg} alt="" decoding="async" /></span>
     {place.hero && <img className={`gsb-hero gsb-hero-${art}`} src={place.hero} alt="" aria-hidden="true" decoding="async" />}
     <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-glass-192.webp`} alt={`${rank} место`} /></span>
@@ -61,7 +62,7 @@ export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support'
       {value}{fav}
     </span>
     <span className="gsb-glass" aria-hidden="true" />
-  </Link>
+  </div>
 }
 
 export function LeaderBoard({ game, kind, title, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
@@ -81,14 +82,15 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
   const plaque = (s: GameServer, rank: number) => <PlacePlaque key={s.id} server={s} rank={rank} meta={meta(s)} value={num(s)} fav={fav(s)} art={kind === 'people' ? 'people' : 'support'} />
-  const row = (s: GameServer, index: number) => <Link key={s.id} to={`/server/${s.slug}`} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
+  const row = (s: GameServer, index: number) => <div key={s.id} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
+    <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
     <span className="gsb-hex"><svg viewBox="0 0 56 65" aria-hidden="true"><path d="M28 1.2 54.6 16.5v32L28 63.8 1.4 48.5v-32z" /></svg><span>{index + 1}</span></span>
     {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
     {kind === 'opening' && s.launch
       ? <span className="server-right gsb-num"><span><small><LaunchCountdown at={s.launch.at} /></small><strong>{new Date(s.launch.at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', timeZone: 'Europe/Moscow' })}</strong></span></span>
       : rowNum(s)}
     {fav(s)}
-  </Link>
+  </div>
 
   let body
   if (loading && !rows.length) body = <div className="gsb-empty" role="status"><b>Загружаем серверы…</b></div>

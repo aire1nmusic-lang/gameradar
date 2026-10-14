@@ -16,7 +16,7 @@ function ProviderIcon({provider}:{provider:string}) {
 export function AccountEntry(p:Props) {
   const [visible,setVisible]=useState(false)
   const title=p.confirmation?'Подтверждение аккаунта':p.mode==='reset'?'Вернём доступ':p.mode==='register'?'Твоя история начинается здесь':'С возвращением'
-  return <div className="gs-account-entry -mt-[60px] relative isolate flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-4 py-10 sm:py-16">
+  return <div className="gs-account-entry relative isolate flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-4 py-10 sm:py-16">
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"><img src="/media/hub/nave-1920.webp" alt="" className="h-full w-full object-cover opacity-90"/><div className="absolute inset-0 bg-gradient-to-b from-ink-950/15 via-ink-950/20 to-ink-950/50"/></div>
     <section className="grid w-full max-w-[440px] overflow-hidden rounded-[24px] gs-account-glass">
       <div className="gs-account-body min-w-0 p-6 sm:p-10">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { PlaceBanner } from '@/components/profile/PlaceBanner'
 import { Link, useParams } from 'react-router-dom'
 import {
@@ -179,7 +180,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
-  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get('support') === '1')
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
   const { data: peers = [], loading: peersLoading } = useServers({ gameId: server.gameId, limit: 200 }, true)
@@ -404,7 +405,7 @@ function Profile({ server: source }: { server: GameServer }) {
       </Container>
 
       {/* the one bottom bar on a phone: the navigation steps aside for it */}
-      {(playableAddress || site) && <div className="gs-profile-cta-bar safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-ink-950/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
+      {(playableAddress || site) && createPortal(<div className="gs-profile-cta-bar safe-bottom fixed inset-x-0 bottom-0 z-[80] border-t border-white/8 bg-ink-950/95 px-4 py-2.5 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <div className="num truncate text-[17px] leading-tight font-semibold text-ink-50">
@@ -433,7 +434,7 @@ function Profile({ server: source }: { server: GameServer }) {
             </Button>
           )}
         </div>
-      </div>}
+      </div>, document.body)}
 
       <Modal
         open={reviewOpen}

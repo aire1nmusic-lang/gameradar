@@ -124,3 +124,19 @@ jobs:
             try{const r=await fetch('https://gamescout.online'+path,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});const b=await r.text();console.log('PRIMARY_OBSERVATION',JSON.stringify({path,status:r.status,build:b.match(/name="gs-build" content="([^"]+)"/)?.[1],cache:r.headers.get('cf-cache-status')}))}catch(e){console.log('PRIMARY_OBSERVATION_ERROR',e.message)}
           }
           NODE
+
+      - name: Inspect edge cache rules and existing preview availability (read only)
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://api.cloudflare.com/client/v4'
+          async function get(path){const r=await fetch(base+path,{headers:{Authorization:'Bearer '+process.env.CF_TOKEN}});if(!r.ok){console.log('READ_STATUS',path.split('/').at(-1),r.status);return null}return (await r.json()).result}
+          const zones=await get('/zones?name=gamescout.online')
+          if(zones?.length){const rules=await get('/zones/'+zones[0].id+'/rulesets/phases/http_request_cache_settings/entrypoint');console.log('CACHE_RULES',JSON.stringify(rules?.rules?.map(r=>({description:r.description,enabled:r.enabled,expression:r.expression,action:r.action,parameters:r.action_parameters}))))}
+          const account=await get('/accounts/'+process.env.CF_ACCOUNT+'/workers/subdomain')
+          const sub=await get('/accounts/'+process.env.CF_ACCOUNT+'/workers/scripts/gamescout-emergency-preview/subdomain')
+          console.log('PREVIEW_AVAILABILITY',JSON.stringify({enabled:sub?.enabled,previews:sub?.previews_enabled}))
+          if(sub?.previews_enabled&&account?.subdomain){const u='https://1ab202d8-gamescout-emergency-preview.'+account.subdomain+'.workers.dev/';const r=await fetch(u,{signal:AbortSignal.timeout(20000)});const b=await r.text();console.log('UPLOADED_VERSION_BUILD',JSON.stringify({status:r.status,build:b.match(/name="gs-build" content="([^"]+)"/)?.[1]}))}
+          NODE

@@ -1,0 +1,41 @@
+name: Check Russian ingress readiness
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/private-ingress-readiness.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read existing origins and DNS metadata only
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'NODE'
+          const gateway='https://d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net'
+          const primary='https://gamescout.online'
+          await Promise.all([primary,gateway].flatMap(origin=>['/','/api/v1/health','/api/v1/auth/me','/api/v1/people-rating?limit=1','/api/v1/payments/test/config'].map(async path=>{
+            try {
+              const response=await fetch(origin+path,{credentials:'omit',headers:{Accept:'application/json,text/html'},signal:AbortSignal.timeout(20000),redirect:'error'})
+              const html=path==='/'?await response.text():null
+              const json=path==='/'?null:await response.json().catch(()=>null)
+              console.log('ORIGIN',JSON.stringify({origin:origin===primary?'primary':'existing-russian-gateway',path,status:response.status,build:html?.match(/name="gs-build" content="([^"]+)"/)?.[1],code:json?.error?.code,privateCore:json?.privateCore,registrationOpen:json?.registrationOpen,testAvailable:json?.available,realSalesEnabled:json?.realSalesEnabled,rows:Array.isArray(json)?json.length:undefined}))
+            }catch(error){console.log('ORIGIN',JSON.stringify({origin:origin===primary?'primary':'existing-russian-gateway',path,error:error.name}))}
+          })))
+          if(!process.env.CF_TOKEN||!process.env.CF_ACCOUNT){console.log('DNS_READ_BLOCKED: existing credentials unavailable');process.exit(0)}
+          async function get(path){const response=await fetch('https://api.cloudflare.com/client/v4'+path,{headers:{Authorization:'Bearer '+process.env.CF_TOKEN},signal:AbortSignal.timeout(15000)});if(!response.ok){console.log('CF_READ_BLOCKED',path.includes('dns_records')?'apex DNS':'zone/domain',response.status);return null}const body=await response.json();return body.success?body.result:null}
+          const zones=await get('/zones?name=gamescout.online')
+          if(zones?.length){const records=await get('/zones/'+zones[0].id+'/dns_records?name=gamescout.online');if(records)console.log('APEX_DNS',JSON.stringify(records.map(r=>({type:r.type,name:r.name,content:r.content,proxied:r.proxied,ttl:r.ttl,managed:r.meta?.managed_by_apps||r.meta?.managed_by_argo_tunnel||false}))))}
+          const domains=await get('/accounts/'+process.env.CF_ACCOUNT+'/workers/domains')
+          if(domains)console.log('CURRENT_CUSTOM_DOMAIN',JSON.stringify(domains.filter(d=>d.hostname==='gamescout.online').map(d=>({hostname:d.hostname,service:d.service,environment:d.environment}))))
+          console.log('READ_ONLY: no DNS, domain, route, API, payment or database changes')
+          NODE

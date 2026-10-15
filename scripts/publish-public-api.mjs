@@ -48,6 +48,15 @@ async function main() {
   }
   const version = ((upload.stdout || '') + (upload.stderr || '')).match(/Worker Version ID:\s*([a-f0-9-]{36})/)?.[1]
   assert.ok(version, 'Explicit uploaded version required')
+  const preview = ((upload.stdout || '') + (upload.stderr || '')).match(/Version Preview URL:\s*(https:\/\/[^\s]+)/)?.[1]
+  if (preview) {
+    const target = new URL(preview)
+    assert.ok(target.hostname.startsWith(version.slice(0, 8) + '-gamescout-api.') && target.hostname.endsWith('.workers.dev'), 'Unexpected preview address')
+    const r = await fetch(target.origin + '/api/v1/people-rating?limit=1', { signal: AbortSignal.timeout(15000) })
+    const value = await r.json().catch(() => null)
+    assert.ok(r.ok && Array.isArray(value), `Inactive public vote preflight: HTTP ${r.status} ${value?.error?.code || ''}`)
+    console.log('VERIFIED inactive public vote endpoint')
+  }
   console.log('Uploaded public API version', version)
   const resource = await api('/versions/' + version)
   const identity = bindings => bindings.map(b => [b.name, b.type, b.id ?? b.service ?? null]).sort((a, b) => a[0].localeCompare(b[0]))

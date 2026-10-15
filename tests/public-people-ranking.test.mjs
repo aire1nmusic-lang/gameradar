@@ -5,7 +5,9 @@ const params = query => new URLSearchParams(query)
 const json = rows => new Response(JSON.stringify(rows), { headers: { 'content-type': 'application/json' } })
 test('vote totals come only from the fixed Russian endpoint and expose an explicit public DTO', async () => {
   const rows = await publicPeopleRanking(params('offset=100&limit=2'), async (url, init) => {
-    assert.equal(url, 'https://priv.gamescout.online/api/v1/people-rating?limit=2&offset=100')
+    const source = new URL(url)
+    assert.ok(['priv.gamescout.online', 'd5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net'].includes(source.hostname))
+    assert.equal(source.pathname + source.search, '/api/v1/people-rating?limit=2&offset=100')
     assert.equal(init.credentials, 'omit'); assert.equal(init.redirect, 'error')
     assert.deepEqual(init.headers, { Accept: 'application/json' })
     assert.equal(init.method, 'GET'); assert.ok(init.signal)
@@ -18,8 +20,19 @@ test('invalid pages and arbitrary upstream/identity parameters never initiate a 
     await assert.rejects(publicPeopleRanking(params(query), () => assert.fail('must not fetch')), { status: 400 })
 })
 test('outage, HTML fallback, duplicate IDs and malformed totals fail visibly without fabricating zeros', async () => {
-  for (const response of [new Response('down', { status: 503 }), new Response('<html/>'), json({}), json([{ server_id: 'a', votes: -1 }]), json([{ server_id: 'a', votes: '1' }]), json([{ server_id: 'a', votes: 1 }, { server_id: 'a', votes: 2 }]), json([{ server_id: 'a', votes: 1 }, { server_id: 'b', votes: 2 }]), new Response(' '.repeat(65537), { headers: { 'content-type': 'application/json' } })])
-    await assert.rejects(publicPeopleRanking(params('limit=1'), async () => response), { status: 503, code: 'ranking_unavailable' })
+  for (const response of [() => new Response('down', { status: 503 }), () => new Response('<html/>'), () => json({}), () => json([{ server_id: 'a', votes: -1 }]), () => json([{ server_id: 'a', votes: '1' }]), () => json([{ server_id: 'a', votes: 1 }, { server_id: 'a', votes: 2 }]), () => json([{ server_id: 'a', votes: 1 }, { server_id: 'b', votes: 2 }]), () => new Response(' '.repeat(65537), { headers: { 'content-type': 'application/json' } })])
+    await assert.rejects(publicPeopleRanking(params('limit=1'), async () => response()), { status: 503, code: 'ranking_unavailable' })
   await assert.rejects(publicPeopleRanking(params(''), async () => { throw new Error('timeout') }), { code: 'ranking_unavailable' })
   assert.deepEqual(await publicPeopleRanking(params(''), async () => json([])), [])
+})
+
+test('existing Russian gateway can answer if the direct VM path is unreachable', async () => {
+  const paths = []
+  const rows = await publicPeopleRanking(params('limit=1'), async (url) => {
+    paths.push(new URL(url).hostname)
+    if (url.startsWith('https://priv.')) throw new Error('direct VM path unavailable')
+    return json([{ server_id: 'existing', votes: 7 }])
+  })
+  assert.equal(paths.length, 2)
+  assert.deepEqual(rows, [{ server_id: 'existing', votes: 7 }])
 })

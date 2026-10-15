@@ -1,0 +1,35 @@
+name: Release public vote totals
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/lib/people-ranking.ts'
+      - 'scripts/publish-public-api.mjs'
+      - '.github/workflows/release-public-votes.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-cloudflare
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Verify public vote boundary
+        run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-api-release.test.mjs
+      - name: Release code without DNS, route or database migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: node scripts/publish-public-api.mjs

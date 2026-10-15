@@ -12,6 +12,7 @@
  *     is handed to a server exactly once.
  */
 import { Hono } from 'hono'
+import { publicPeopleRanking } from './lib/people-ranking.ts'
 import {
   ApiError,
   badRequest,
@@ -123,7 +124,7 @@ app.use('*', async (c, next) => {
   }
 
   if (c.env.PUBLIC_ONLY === 'true' && !(c.req.method === 'GET' && (
-    /^\/api\/v1\/(health|games|rating|support\/ranking|servers(?:\/[^/]+(?:\/online-history)?)?|sitemap\.xml)$/.test(c.req.path) || c.req.path==='/sitemap.xml'
+    /^\/api\/v1\/(health|games|rating|people-rating|support\/ranking|servers(?:\/[^/]+(?:\/online-history)?)?|sitemap\.xml)$/.test(c.req.path) || c.req.path==='/sitemap.xml'
   ))) throw new ApiError(503,'Приватный API обслуживается в Yandex Cloud','private_api_required')
 
   const proxyAuth = c.req.header(PROXY_AUTH_HEADER)
@@ -231,6 +232,9 @@ app.get('/api/v1/games', c => cachedList(c, 60_000, async () => {
 }))
 
 /* ── catalogue ────────────────────────────────────────────────────────────── */
+
+app.get('/api/v1/people-rating', c => cachedList(c, 15_000,
+  () => publicPeopleRanking(new URL(c.req.url).searchParams)))
 
 app.get('/api/v1/support/ranking', c => {
   const limit=Number(c.req.query('limit')??100),offset=Number(c.req.query('offset')??0)

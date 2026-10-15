@@ -177,11 +177,34 @@ jobs:
           node --test tests/primary-worker-release.test.mjs
           node scripts/publish-primary-worker.mjs
 
+      # Avoid hundreds of metadata requests on an ordinary source-only release.
+      - name: Check whether media cache metadata can have changed
+        id: media_cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          node --input-type=module <<'NODE'
+          import {appendFile} from 'node:fs/promises'
+          let needed=true
+          const before=process.env.BEFORE_SHA,head=process.env.GITHUB_SHA
+          if(/^[a-f0-9]{40}$/.test(before||'')&&!/^0+$/.test(before)){
+            try{
+              const response=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+before+'...'+head,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(15000)})
+              if(response.ok){const data=await response.json();if(Array.isArray(data.files)&&data.files.length<300)needed=data.files.some(file=>[file.filename,file.previous_filename||''].some(path=>path.startsWith('public/media/')||path.startsWith('.github/scripts/cache-public-media')))}
+            }catch{ /* If comparison is unavailable, retain full maintenance. */ }
+          }
+          await appendFile(process.env.GITHUB_OUTPUT,`needed=${needed}\n`)
+          console.log(needed?'Media cache maintenance needed':'Source-only release: existing media metadata retained')
+          NODE
+
       # Same job/lock: cache maintenance must never replace a pending site release.
       - name: Verify image cache maintenance guards
+        if: steps.media_cache.outputs.needed == 'true'
         run: node --test .github/scripts/cache-public-media.test.mjs
 
       - name: Refresh public image cache metadata after publication
+        if: steps.media_cache.outputs.needed == 'true'
         continue-on-error: true # A metadata failure must not undo a verified site release.
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}

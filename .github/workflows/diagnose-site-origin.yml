@@ -51,7 +51,7 @@ jobs:
           const names=[...new Set([...ownDomains.map(d=>d.service),...routes.filter(r=>r.pattern?.startsWith('gamescout.online/')&&!r.pattern?.startsWith('gamescout.online/api/')).map(r=>r.script)].filter(Boolean))]
           for(const name of names){
             const settings=await get('/accounts/'+process.env.CF_ACCOUNT+'/workers/scripts/'+encodeURIComponent(name)+'/settings')
-            if(settings)console.log('SITE_SETTINGS',JSON.stringify({name,bindings:(settings.bindings||[]).map(b=>({name:b.name,type:b.type})),assets:settings.assets,compatibility_date:settings.compatibility_date}))
+            if(settings)console.log('SITE_SETTINGS',JSON.stringify({name,bindings:(settings.bindings||[]).map(b=>({name:b.name,type:b.type,...(b.service?{service:b.service}:{}),...(b.environment?{environment:b.environment}:{})})),assets:settings.assets,compatibility_date:settings.compatibility_date}))
           }
           NODE
       - name: Inspect the bound site's Worker code shape (read only)

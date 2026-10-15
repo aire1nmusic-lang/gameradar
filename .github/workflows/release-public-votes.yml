@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - name: Verify public vote boundary
-        run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-api-release.test.mjs
+        run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-api-release.test.mjs
       - name: Release code without DNS, route or database migrations
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

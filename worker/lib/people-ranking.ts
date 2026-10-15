@@ -11,12 +11,11 @@ export async function publicPeopleRanking(params: URLSearchParams, fetcher: type
     throw badRequest('Некорректная страница рейтинга')
   // This endpoint's canonical paging is global, just like the private core.
   // gameId is tolerated for older clients; the catalogue joins by server ID.
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 6000)
-  const origins = ['https://d5d9pl6cgdpfk52duoa2.fovt0b64.apigw.yandexcloud.net', 'https://priv.gamescout.online']
-  const read = async (origin: string) => {
-    const response = await fetcher(`${origin}/api/v1/people-rating?limit=${limit}&offset=${offset}`, { method: 'GET', credentials: 'omit', redirect: 'error',
-      headers: { Accept: 'application/json' }, signal: controller.signal })
+  const url = `https://priv.gamescout.online/api/v1/people-rating?limit=${limit}&offset=${offset}`
+  try {
+    // workerd supports manual/follow only. Reject 3xx via response.ok; never follow it.
+    const response = await fetcher(url, { method: 'GET', credentials: 'omit', redirect: 'manual',
+      headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(6000) })
     if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('upstream')
     const reader = response.body?.getReader()
     if (!reader) throw new Error('empty')
@@ -44,11 +43,7 @@ export async function publicPeopleRanking(params: URLSearchParams, fetcher: type
       // Explicit DTO: no names, users, sessions, IPs or unexpected upstream fields.
       return { server_id: row.server_id, votes: row.votes as number }
     })
-  }
-  try {
-    // Two existing Russian entry points, same private ledger, no credential forwarding.
-    return await Promise.any(origins.map(read))
   } catch {
     throw new ApiError(503, 'Голоса игроков временно недоступны. Попробуйте позже.', 'ranking_unavailable')
-  } finally { clearTimeout(timeout); controller.abort() }
+  }
 }

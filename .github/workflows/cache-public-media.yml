@@ -1,13 +1,8 @@
-name: Cache public artwork after successful release
+name: Cache public artwork manually
+# Automatic cache work runs inside Deploy production site under the same lock.
+# A separate workflow_run queued under production-site could cancel a pending release.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/cache-public-media.yml'
-      - '.github/scripts/cache-public-media*'
-  workflow_run:
-    workflows: [Deploy production site]
-    types: [completed]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -18,7 +13,6 @@ env:
   YC_S3_ENDPOINT: https://storage.yandexcloud.net
 jobs:
   cache:
-    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production

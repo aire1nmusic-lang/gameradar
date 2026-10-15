@@ -21,6 +21,16 @@ export function workerConfig(settings, directory) {
     assets: { directory, binding: assets.name, run_worker_first: true },
   }
 }
+export async function originalHandler(response) {
+  const form = await response.formData()
+  // Cloudflare returns the JS part without a filename, so Node exposes it as text.
+  const modules = [...form.entries()].filter(([name]) => name !== 'metadata')
+  assert.equal(modules.length, 1, 'Worker module shape changed; stop')
+  const value = modules[0][1]
+  const code = typeof value === 'string' ? value : await value.text()
+  assert.ok(code.includes('.ASSETS.fetch(') && code.includes('.GAME_API.fetch('), 'Unexpected live routing handler')
+  return code
+}
 export function uploadedVersion(output) {
   const id = output.match(/Worker Version ID:\s*([a-f0-9-]{36})/)?.[1]
   assert.ok(id, 'Wrangler did not report the uploaded version ID')
@@ -75,11 +85,7 @@ async function main() {
   let activated = false, version
   try {
     // The existing live Worker has one self-contained module. Refuse unexpected shapes.
-    const form = await response.formData()
-    const modules = [...form.entries()].filter(([, value]) => typeof value !== 'string')
-    assert.equal(modules.length, 1, 'Worker module shape changed; stop')
-    const code = await modules[0][1].text()
-    assert.ok(code.includes('.ASSETS.fetch(') && code.includes('.GAME_API.fetch('), 'Unexpected live routing handler')
+    const code = await originalHandler(response)
     await writeFile(join(dir, 'handler.mjs'), code, { mode: 0o600 })
     await writeFile(join(dir, 'wrangler.json'), JSON.stringify(workerConfig(settings, resolve('dist'))), { mode: 0o600 })
     await writeFile(join(dir, 'rollback.json'), JSON.stringify(previous), { mode: 0o600 })

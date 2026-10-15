@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { workerConfig, uploadedVersion, verifySite } from '../scripts/publish-primary-worker.mjs'
+import { workerConfig, originalHandler, uploadedVersion, verifySite } from '../scripts/publish-primary-worker.mjs'
 const settings = { compatibility_date: '2026-10-10', bindings: [{ type: 'assets', name: 'ASSETS' }, { type: 'service', name: 'GAME_API', service: 'current-api', environment: 'production' }] }
 test('release retains live API and handler routing without domain/route configuration', () => {
   const c = workerConfig(settings, '/tmp/dist')
@@ -31,4 +31,14 @@ test('old primary HTML fails even when object upload succeeded', async () => { a
 test('SPA fallback masquerading as JS and failed public API both reject release', async () => {
   await assert.rejects(verifySite(sha, fixture({ htmlAsset: true })), /Missing asset/)
   await assert.rejects(verifySite(sha, fixture({ apiError: true })), /Public API/)
+})
+
+test('Cloudflare multipart modules support text fields without filenames and file fields', async () => {
+  const code = 'export default {fetch(r,env){return env.ASSETS.fetch(r) || env.GAME_API.fetch(r)}}'
+  for (const part of [code, new Blob([code], { type: 'application/javascript' })]) {
+    const form = new FormData(); form.set('index.js', part)
+    assert.equal(await originalHandler(new Response(form)), code)
+  }
+  const form = new FormData(); form.set('other.js', 'export default {}')
+  await assert.rejects(originalHandler(new Response(form)), /Unexpected live routing handler/)
 })

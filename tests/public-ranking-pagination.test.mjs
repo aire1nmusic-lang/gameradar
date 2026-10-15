@@ -30,3 +30,37 @@ test('failed later pages and repeated pages reject instead of displaying partial
     await assert.rejects(readPublicRanking('/support/ranking'), /ответ/)
   } finally { globalThis.fetch = originalFetch }
 })
+
+test('responsive profile panels share only concurrent reads, with fresh totals after completion', async () => {
+  try {
+    let calls = 0, release
+    globalThis.fetch = async () => { calls++; if (calls === 1) return new Promise(resolve => { release = () => resolve(json([{ server_id: 'one', votes: 1 }])) }); return json([{ server_id: 'one', votes: 2 }]) }
+    const first = readPeopleRanking(), second = readPeopleRanking()
+    assert.equal(calls, 1)
+    release()
+    assert.deepEqual(await first, await second)
+    assert.equal((await readPeopleRanking())[0].votes, 2, 'Never cache a pre-vote total after the request finishes')
+    assert.equal(calls, 2)
+    globalThis.fetch = async () => new Response('{}', { status: 503 })
+    const failed = await Promise.allSettled([readPeopleRanking(), readPeopleRanking()])
+    assert.ok(failed.every(row => row.status === 'rejected'))
+    globalThis.fetch = async () => json([])
+    assert.deepEqual(await readPeopleRanking(), [], 'Failed shared request cannot poison retries')
+  } finally { globalThis.fetch = originalFetch }
+})
+
+test('post-vote refresh bypasses an older in-flight total and its cleanup cannot erase the fresh read', async () => {
+  try {
+    let calls=0, releaseOld, releaseFresh
+    globalThis.fetch=async()=>{
+      calls++
+      if(calls===1)return new Promise(resolve=>{releaseOld=()=>resolve(json([{server_id:'one',votes:1}]))})
+      return new Promise(resolve=>{releaseFresh=()=>resolve(json([{server_id:'one',votes:2}]))})
+    }
+    const old=readPeopleRanking(),fresh=readPeopleRanking(true)
+    assert.equal(calls,2)
+    releaseOld();assert.equal((await old)[0].votes,1)
+    const joinedFresh=readPeopleRanking();assert.equal(calls,2,'Old cleanup must retain the current request')
+    releaseFresh();assert.equal((await fresh)[0].votes,2);assert.equal((await joinedFresh)[0].votes,2)
+  }finally{globalThis.fetch=originalFetch}
+})

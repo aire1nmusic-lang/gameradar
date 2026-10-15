@@ -14,10 +14,13 @@ type Eligibility={eligible:boolean;used:number;limit:number;windowHours:number;c
 export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?:boolean}) {
   const auth=useAuth(), [eligibility,setEligibility]=useState<Eligibility>(),[votes,setVotes]=useState<number>(),[position,setPosition]=useState<number>(),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const [captchaRequired,setCaptchaRequired]=useState(false),[captcha,setCaptcha]=useState(''),[widgetKey,setWidgetKey]=useState(0)
+  const ratingRevision=useRef(0)
   const key=useRef(crypto.randomUUID())
   const openedAt=useRef(Date.now())
   async function refreshRating() {
-    const rows=await readPeopleRanking()
+    const revision=++ratingRevision.current
+    const rows=await readPeopleRanking(true)
+    if(revision!==ratingRevision.current)return
     setError('')
     const ranked=rows.filter(row=>row.votes>0)
     const index=ranked.findIndex(row=>row.server_id===server.id)
@@ -26,15 +29,16 @@ export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?
   }
   useEffect(()=>{
     let live=true
+    const revision=++ratingRevision.current
     setVotes(undefined);setPosition(undefined);setError('')
     readPeopleRanking().then(rows=>{
-      if(live) {
+      if(live&&revision===ratingRevision.current) {
         const ranked=rows.filter(row=>row.votes>0)
         const index=ranked.findIndex(row=>row.server_id===server.id)
         setVotes(rows.find(row=>row.server_id===server.id)?.votes??0)
         setPosition(index<0?undefined:index+1)
       }
-    }).catch(()=>{if(live)setError('Голоса игроков сейчас недоступны')})
+    }).catch(()=>{if(live&&revision===ratingRevision.current)setError('Голоса игроков сейчас недоступны')})
     if(auth.user && auth.user.emailVerified) apiRequest<Eligibility>(`/people-rating/eligibility?serverId=${encodeURIComponent(server.id)}`)
       .then(value=>{if(live)setEligibility(value)}).catch(()=>{})
     return ()=>{live=false}

@@ -3,8 +3,20 @@ import { apiRequest } from '@/repositories/http/client'
 export type PeopleRankingRow = { server_id: string; votes: number }
 export type SupportRankingRow = { server_id: string; coins: number; participants: number }
 
+type RankingPath = '/people-rating' | '/support/ranking'
+const inFlight = new Map<RankingPath, Promise<unknown[]>>()
+/** Hidden responsive panels may mount together. Share only their in-flight public read. */
+export function readPublicRanking<T extends { server_id: string }>(path: RankingPath, fresh = false): Promise<T[]> {
+  const hit = inFlight.get(path)
+  if (hit && !fresh) return hit as Promise<T[]>
+  const request = fetchPublicRanking<T>(path)
+  inFlight.set(path, request)
+  const clear = () => { if (inFlight.get(path) === request) inFlight.delete(path) }
+  void request.then(clear, clear)
+  return request
+}
 /** Both public rankings are paginated globally. A profile must read past page one too. */
-export async function readPublicRanking<T extends { server_id: string }>(path: '/people-rating' | '/support/ranking'): Promise<T[]> {
+async function fetchPublicRanking<T extends { server_id: string }>(path: RankingPath): Promise<T[]> {
   const rows: T[] = []
   const seen = new Set<string>()
   for (let offset = 0; offset <= 1_000_000; offset += 100) {
@@ -19,4 +31,4 @@ export async function readPublicRanking<T extends { server_id: string }>(path: '
   }
   throw new Error('Рейтинг слишком большой. Попробуйте позже.')
 }
-export const readPeopleRanking = () => readPublicRanking<PeopleRankingRow>('/people-rating')
+export const readPeopleRanking = (fresh = false) => readPublicRanking<PeopleRankingRow>('/people-rating', fresh)

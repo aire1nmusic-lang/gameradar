@@ -1,6 +1,6 @@
-## 15.10.2026 — First Worker publication stopped safely; multipart reader corrected
-- VERIFIED production run 38677733191 / job 116235056547 built and uploaded Yandex successfully, then stopped BEFORE Worker upload/activation: JS multipart part has no filename, so Node returns text rather than File. Original primary remains untouched; no rollback required.
-- Corrected original-handler parser to support both multipart text and File forms without changing handler bytes. Added actual-shape regression. Seven local tests and syntax PASS. Next: republish and verify primary; do not claim successful domain update yet. No DNS/private API/payment/DB changes or new resources.
+## 15.10.2026 — Uploaded Worker version rolled back after primary freshness failed
+- VERIFIED run 38677978618 / job 116235816580: seven tests and asset upload PASS; activated 1ab202d8-830b-40af-8214-0a4db6fa2707 for 7715298, but primary freshness returned incorrect build/transient fetch failures. Automatic rollback restored the previous deployment before workflow failed. Primary publication NOT accepted.
+- Added read-only deployment/version/handler behavior diagnostics; no new write or authentication attempt. Need distinguish version configuration/cache from propagation before repeating activation. No DNS/API/payment/DB changes; costs existing hosting only.
 
 ## 15.10.2026 — Actual primary target diagnosed; asset publication repair prepared
 - VERIFIED diagnostic 38640536162: primary domain uses gamescout-emergency-preview ASSETS snapshot; Yandex contains 0a4df33 but is not its origin. Added production Worker assets release using unchanged live handler/API binding, inactive version upload, concurrency guard, primary-domain postflight and previous-version rollback. No DNS/routes/private API/payment/DB mutations or new resources/subscriptions.

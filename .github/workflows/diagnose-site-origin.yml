@@ -99,3 +99,28 @@ jobs:
           const body=readFileSync(process.env.RUNNER_TEMP+'/production-index.html','utf8')
           console.log('YANDEX_INDEX',JSON.stringify({build:body.match(/<meta name="gs-build" content="([^"]+)"/)?.[1],assets:[...body.matchAll(/(?:src|href)="(\/assets\/[^"?]+\.(?:js|css))"/g)].map(m=>m[1])}))
           NODE
+
+      - name: Inspect primary deployment and asset-version consistency (read only)
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://api.cloudflare.com/client/v4/accounts/'+process.env.CF_ACCOUNT+'/workers/scripts/gamescout-emergency-preview'
+          async function get(path){const r=await fetch(base+path,{headers:{Authorization:'Bearer '+process.env.CF_TOKEN}});if(!r.ok)throw new Error('Provider read HTTP '+r.status);return (await r.json()).result}
+          const deployments=await get('/deployments')
+          console.log('DEPLOYMENT_IDS',JSON.stringify(deployments.deployments.slice(0,3).map(d=>({id:d.id,versions:d.versions}))))
+          const ids=[...new Set([...deployments.deployments.slice(0,2).flatMap(d=>d.versions.map(v=>v.version_id)),'1ab202d8-830b-40af-8214-0a4db6fa2707'])]
+          for(const id of ids){
+            const v=await get('/versions/'+id)
+            console.log('VERSION_SHAPE',JSON.stringify({id,keys:Object.keys(v),resourceKeys:Object.keys(v.resources||{}),scriptKeys:Object.keys(v.resources?.script||{}),script:{etag:v.resources?.script?.etag,handlers:v.resources?.script?.handlers},assetsConfig:v.resources?.assets?.config,assetKeys:Object.keys(v.resources?.assets||{}),bindings:(v.resources?.bindings||[]).map(b=>({name:b.name,type:b.type}))}))
+          }
+          const source=await fetch(base,{headers:{Authorization:'Bearer '+process.env.CF_TOKEN}})
+          const form=await source.formData()
+          const [part]=[...form.entries()].filter(([name])=>name!=='metadata')
+          const code=typeof part[1]==='string'?part[1]:await part[1].text()
+          console.log('HANDLER_BEHAVIOR',JSON.stringify({caches:code.includes('caches.'),cacheMatch:code.includes('.match('),cachePut:code.includes('.put('),globalFetch:/(?:await|return)\\s+fetch\\(/.test(code),usesURLRewrite:code.includes('new URL'),usesIndex:code.includes('index.html'),bindingNames:[...new Set([...code.matchAll(/\\.([A-Z_]{3,})/g)].map(m=>m[1]))]}))
+          for(const path of ['/','/index.html','/?gs-fresh='+process.env.GITHUB_SHA]){
+            try{const r=await fetch('https://gamescout.online'+path,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});const b=await r.text();console.log('PRIMARY_OBSERVATION',JSON.stringify({path,status:r.status,build:b.match(/name="gs-build" content="([^"]+)"/)?.[1],cache:r.headers.get('cf-cache-status')}))}catch(e){console.log('PRIMARY_OBSERVATION_ERROR',e.message)}
+          }
+          NODE

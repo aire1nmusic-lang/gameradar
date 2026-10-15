@@ -1,3 +1,7 @@
+## 15.10.2026 — Actual primary target diagnosed; asset publication repair prepared
+- VERIFIED diagnostic 38640536162: primary domain uses gamescout-emergency-preview ASSETS snapshot; Yandex contains 0a4df33 but is not its origin. Added production Worker assets release using unchanged live handler/API binding, inactive version upload, concurrency guard, primary-domain postflight and previous-version rollback. No DNS/routes/private API/payment/DB mutations or new resources/subscriptions.
+- VERIFIED LOCAL: six release tests, Node syntax and workflow YAML PASS. Actual publication and primary browser acceptance pending. Previous workstation-only deploy experiments excluded. Physical Android freezing remains unverified; artwork postponed. Next: direct main commit, await release, actual-domain UI checks.
+
 ## 15.10.2026 — Public repository restored runner execution; origin mismatch remains
 - VERIFIED metadata: repository is now public following the owner's change. Re-ran production 38608883258; attempt 3, job 116105812351 SUCCESS, including catalog build, Yandex read access, local rollback copy and both uploads. Prior account/runner rejection no longer prevents this run. Disabled postflight/browser gates remained skipped per existing workflow.
 - VERIFIED actual browser after completed upload: https://gamescout.online/ still serves __GS_BUILD__, index-Crqid3F-.js / index-C2OMeLLN.css. A fresh unique gs-deploy query returns the same old pair. Therefore successful Yandex upload is NOT primary-domain publication acceptance. UI #16 stays open.

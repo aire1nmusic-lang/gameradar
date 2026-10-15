@@ -167,6 +167,15 @@ jobs:
           aws s3 cp dist/index.html "s3://$YC_BUCKET/index.html"             --endpoint-url "$YC_S3_ENDPOINT"             --content-type "text/html; charset=utf-8"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
         # Old hashed assets intentionally stay available for rollback.
 
+      - name: Publish and verify the Worker actually serving the primary domain
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          node --test tests/primary-worker-release.test.mjs
+          node scripts/publish-primary-worker.mjs
+
       - name: Verify production freshness, cache policy and SEO
         id: verify_live
         if: false

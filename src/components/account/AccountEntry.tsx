@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input } from '@/components/ui/controls'
 
 type Mode='login'|'register'|'reset'
-type Props={mode:Mode;setMode:(mode:Mode)=>void;email:string;setEmail:(v:string)=>void;password:string;setPassword:(v:string)=>void;name:string;setName:(v:string)=>void;busy:boolean;error:string;message:string;registrationOpen:boolean;providers:string[];submit:(e:FormEvent)=>void;confirmation:ReactNode;apiError:string}
+type Props={mode:Mode;setMode:(mode:Mode)=>void;email:string;setEmail:(v:string)=>void;password:string;setPassword:(v:string)=>void;name:string;setName:(v:string)=>void;busy:boolean;error:string;message:string;registrationOpen:boolean;providers:string[];submit:(e:FormEvent)=>void;confirmation:ReactNode;apiError:string;onRetry:()=>Promise<void>}
 const labels:Record<string,string>={google:'Google',discord:'Discord',vk:'VK',yandex:'Яндекс'}
 // Provider silhouettes stay recognizable; the surrounding controls match the game UI.
 function ProviderIcon({provider}:{provider:string}) {
@@ -15,6 +15,7 @@ function ProviderIcon({provider}:{provider:string}) {
 }
 export function AccountEntry(p:Props) {
   const [visible,setVisible]=useState(false)
+  const [retrying,setRetrying]=useState(false)
   const title=p.confirmation?'Подтверждение аккаунта':p.mode==='reset'?'Вернём доступ':p.mode==='register'?'Твоя история начинается здесь':'С возвращением'
   return <div className="gs-account-entry relative isolate flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-4 py-10 sm:py-16">
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10"><img src="/media/hub/nave-1920.webp" alt="" className="h-full w-full object-cover opacity-90"/><div className="absolute inset-0 bg-gradient-to-b from-ink-950/15 via-ink-950/20 to-ink-950/50"/></div>
@@ -27,6 +28,7 @@ export function AccountEntry(p:Props) {
         <div className="gs-account-actions mt-6 space-y-4">
           {p.confirmation}
           {(p.error||p.apiError)&&<p role="alert" className="rounded-xl border border-danger-400/20 bg-danger-400/5 p-3 text-sm text-danger-300">{p.error||p.apiError}</p>}
+          {p.apiError&&<Button type="button" full disabled={retrying} onClick={()=>{setRetrying(true);void p.onRetry().finally(()=>setRetrying(false))}}>{retrying?'Проверяем…':'Повторить подключение'}</Button>}
           {p.message&&<p role="status" className="rounded-xl border border-signal-400/20 bg-signal-400/5 p-3 text-sm text-signal-300">{p.message}</p>}
           {!p.confirmation&&<>
           {p.mode!=='reset'&&p.providers.length>0&&<><div className={`grid gap-2 ${p.providers.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>{p.providers.map(provider=><Button key={provider} type="button" full variant="outline" disabled={p.busy||!!p.apiError} size="lg" className="gs-provider-button rounded-xl border-white/25 bg-white/10"

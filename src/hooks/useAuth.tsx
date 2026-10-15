@@ -24,11 +24,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Until the session endpoint answers, keep legacy write flows closed.
   // A private API outage must not silently send users back to D1 ownership/payment paths.
   const [privateCore, setPrivateCore] = useState(true)
-  const [registrationOpen, setRegistrationOpen] = useState(true)
+  const [registrationOpen, setRegistrationOpen] = useState(false)
   const [error, setError] = useState('')
   const refresh = async () => {
     try { const session = await repo.users.session(); setUser(session.user); setEnabled(session.devAuthEnabled); setProviders(session.providers ?? []); setPrivateCore(session.privateCore ?? false); setRegistrationOpen(session.registrationOpen !== false); setError('') }
-    catch (e) { setUser(null); setError(e instanceof Error ? e.message : 'Ошибка авторизации') }
+    catch (e) {
+      setUser(null);setRegistrationOpen(false);setProviders([]);setEnabled(false)
+      setError(e instanceof Error && 'code' in e && e.code === 'private_api_required'
+        ? 'Вход временно недоступен. Попробуйте позже.'
+        : e instanceof Error ? e.message : 'Ошибка авторизации')
+    }
     finally { setLoading(false) }
   }
   useEffect(() => { void refresh() }, [])

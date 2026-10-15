@@ -45,12 +45,14 @@ try {
     const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 1024, hasTouch: width < 1024, reducedMotion: 'reduce' })
     const page = await context.newPage()
     let writes = 0
+    let authUnavailable = false
     const errors = []
     page.on('pageerror', e => errors.push(e.message))
     await page.route('**/api/v1/**', async route => {
       const req = route.request(), url = new URL(req.url()), path = url.pathname
       if (req.method() !== 'GET') { writes++; return route.abort() }
       let json = []
+      if (path.endsWith('/auth/me') && authUnavailable) return route.fulfill({ status: 503, json: {error:{code:'private_api_required',message:'Private upstream is not a user-facing explanation'}} })
       if (path.endsWith('/games')) json = games
       else if (path.endsWith('/auth/me')) json = { privateCore: true, user: null, providers: [], registrationOpen: true }
       else if (path.endsWith('/people-rating')) json = cards.map(s => ({ server_id: s.id, votes: s.votes }))
@@ -132,6 +134,17 @@ try {
     assert.equal(await page.locator('.gs-account-layout > header').evaluate(e => getComputedStyle(e).backgroundColor), 'rgba(0, 0, 0, 0)')
     await noOverflow()
     await page.screenshot({ path: `${output}/account-${width}.png` })
+    // A private API outage must not advertise open registration; recover without a reload.
+    authUnavailable = true
+    await page.reload()
+    await page.getByText('Вход временно недоступен. Попробуйте позже.', { exact: true }).waitFor()
+    assert.equal(await page.getByRole('button', { name: 'Создать', exact: true }).count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Войти', exact: true }).isDisabled(), true)
+    await noOverflow()
+    authUnavailable = false
+    await page.getByRole('button', { name: 'Повторить подключение', exact: true }).click()
+    await page.getByRole('button', { name: 'Создать', exact: true }).waitFor()
+    assert.equal(await page.getByRole('button', { name: 'Войти', exact: true }).isEnabled(), true)
     assert.equal(writes, 0)
     assert.deepEqual(errors, [])
     await context.close()

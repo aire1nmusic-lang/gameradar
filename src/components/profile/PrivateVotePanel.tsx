@@ -5,18 +5,20 @@ import { WorldArtSurface } from '@/components/media/WorldArt'
 import type { GameServer } from '@/models'
 import { ApiRequestError, apiRequest } from '@/repositories/http/client'
 import { useAuth } from '@/hooks/useAuth'
+import { readPeopleRanking } from '@/services/publicRanking'
+import { invalidateDiscoveryCache } from '@/services/catalogService'
 import { Button } from '@/components/ui/Button'
 import { TurnstileWidget } from './TurnstileWidget'
 
 type Eligibility={eligible:boolean;used:number;limit:number;windowHours:number;captchaSiteKey:string|null}
-type RankingRow={server_id:string;votes:number}
 export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?:boolean}) {
   const auth=useAuth(), [eligibility,setEligibility]=useState<Eligibility>(),[votes,setVotes]=useState<number>(),[position,setPosition]=useState<number>(),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const [captchaRequired,setCaptchaRequired]=useState(false),[captcha,setCaptcha]=useState(''),[widgetKey,setWidgetKey]=useState(0)
   const key=useRef(crypto.randomUUID())
   const openedAt=useRef(Date.now())
   async function refreshRating() {
-    const rows=await apiRequest<RankingRow[]>('/people-rating')
+    const rows=await readPeopleRanking()
+    setError('')
     const ranked=rows.filter(row=>row.votes>0)
     const index=ranked.findIndex(row=>row.server_id===server.id)
     setVotes(rows.find(row=>row.server_id===server.id)?.votes??0)
@@ -24,7 +26,8 @@ export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?
   }
   useEffect(()=>{
     let live=true
-    apiRequest<RankingRow[]>('/people-rating').then(rows=>{
+    setVotes(undefined);setPosition(undefined);setError('')
+    readPeopleRanking().then(rows=>{
       if(live) {
         const ranked=rows.filter(row=>row.votes>0)
         const index=ranked.findIndex(row=>row.server_id===server.id)
@@ -46,7 +49,7 @@ export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?
       key.current=crypto.randomUUID()
       setCaptchaRequired(false);setCaptcha('')
       const updated=await apiRequest<Eligibility>(`/people-rating/eligibility?serverId=${encodeURIComponent(server.id)}`)
-      setEligibility(updated);await refreshRating()
+      setEligibility(updated);invalidateDiscoveryCache();await refreshRating()
     } catch(e) {
       if(e instanceof ApiRequestError && e.code==='captcha_required') setCaptchaRequired(true)
       if(e instanceof ApiRequestError && e.code==='captcha_invalid') {setCaptcha('');setWidgetKey(value=>value+1)}

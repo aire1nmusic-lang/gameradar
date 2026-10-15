@@ -8,8 +8,8 @@ export async function verifyPublicRanking(fetcher = fetch) {
   const origin = 'https://gamescout.online/api/v1'
   for (const path of ['/health', '/games', '/servers?limit=1', '/support/ranking?limit=1', '/people-rating?limit=1']) {
     const r = await fetcher(origin + path, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(15000) })
-    assert.ok(r.ok && r.headers.get('content-type')?.includes('application/json'), `${path}: HTTP ${r.status}`)
-    const value = await r.json()
+    const value = await r.json().catch(() => null)
+    assert.ok(r.ok && r.headers.get('content-type')?.includes('application/json'), `${path}: HTTP ${r.status} ${value?.error?.code || ''} marker=${r.headers.get('x-gs-public-votes') || 'missing'}`)
     if (path.includes('people-rating')) {
       assert.ok(Array.isArray(value) && value.length <= 1, 'Invalid ranking response')
       for (const row of value) assert.ok(typeof row.server_id === 'string' && Number.isSafeInteger(row.votes) && row.votes >= 0 && Object.keys(row).sort().join(',') === 'server_id,votes', 'Invalid public vote DTO')
@@ -48,17 +48,19 @@ async function main() {
   }
   const version = ((upload.stdout || '') + (upload.stderr || '')).match(/Worker Version ID:\s*([a-f0-9-]{36})/)?.[1]
   assert.ok(version, 'Explicit uploaded version required')
+  console.log('Uploaded public API version', version)
   const resource = await api('/versions/' + version)
   const identity = bindings => bindings.map(b => [b.name, b.type, b.id ?? b.service ?? null]).sort((a, b) => a[0].localeCompare(b[0]))
   assert.deepEqual(identity(resource.resources.bindings), identity(settings.bindings), 'Bindings changed; refuse activation')
   assert.equal((await api('/deployments')).deployments[0].id, previous.id, 'Concurrent deployment; stop')
   const deploy = versions => api('/deployments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ strategy: 'percentage', versions }) })
   await deploy([{ version_id: version, percentage: 100 }])
+  console.log('Activated public API version', version)
   try {
     let failure
-    for (let attempt = 0; attempt < 12; attempt++) {
+    for (let attempt = 0; attempt < 30; attempt++) {
       try { await verifyPublicRanking(); failure = null; break } catch (error) { failure = error; console.log('Waiting for public API:', error.message) }
-      if (attempt < 11) await new Promise(r => setTimeout(r, 3000))
+      if (attempt < 29) await new Promise(r => setTimeout(r, 3000))
     }
     if (failure) throw failure
     console.log('VERIFIED public votes, catalog and support; private D1 stays closed. Version', version, 'rollback', previous.versions.map(v => v.version_id).join(','))

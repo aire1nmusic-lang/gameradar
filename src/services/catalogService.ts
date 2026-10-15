@@ -1,6 +1,6 @@
 import { repo } from '@/repositories'
 import type { GameServer, Page, ServerQuery, SortKey } from '@/models'
-import { apiRequest } from '@/repositories/http/client'
+import { readPublicRanking } from './publicRanking'
 import type { CatalogFilters } from './filterState'
 import { visualDemo } from './visualDemo'
 import { balancedCatalog } from './discoveryRanking'
@@ -102,15 +102,7 @@ async function demoSortedServers(query:ServerQuery):Promise<Page<GameServer>>{
 }
 async function loadDiscoveryServers(query: ServerQuery, publish: (servers: GameServer[]) => void): Promise<GameServer[]> {
   type Row = { server_id: string; votes?: number; coins?: number; participants?: number }
-  const load = async (path: string): Promise<Row[]> => {
-    const rows: Row[] = []
-    for (let offset = 0; ; offset += 100) {
-      const page = await apiRequest<Row[]>(`${path}?limit=100&offset=${offset}`, { signal: AbortSignal.timeout(8000) })
-      if (!Array.isArray(page)) throw new Error('Некорректный ответ рейтинга')
-      rows.push(...page)
-      if (page.length < 100) return rows
-    }
-  }
+  const load = (path: '/people-rating' | '/support/ranking') => readPublicRanking<Row>(path)
   let items: GameServer[] | undefined
   let people: Row[] | undefined, support: Row[] | undefined
   let peoplePending = true, supportPending = true

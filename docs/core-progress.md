@@ -1,3 +1,8 @@
+## 15.10.2026 — Binding diagnosis complete; distinguish stale routing from upstream failure
+- VERIFIED diagnostic 38680325512: both /api/* zone route and primary GAME_API service target gamescout-api (production). First rollback was not a different service target. Retry adds explicit uploaded/active version logging and response code/route marker; bounded propagation window expanded. It does not change routing or loosen the postflight.
+- VERIFIED synthetic account scroll: 4x CPU, 390x844 touch, base/layer/layer/base with three samples each; p95 roughly 17.6–19.1ms in both. Promoting background did not demonstrate improvement, so speculative CSS is NOT shipped. Physical Android gate remains OPEN.
+- Profile ranking pagination now reads all public pages; tests cover server 101, genuine zero, outage on later page and repeated-page rejection. Build/TypeScript and seven ranking/recovery tests PASS. Responsive regression running; source not yet published in this checkpoint.
+
 ## 15.10.2026 — First public API attempt rolled back; isolate target before retry
 - VERIFIED run 38680148460: code uploaded with identical binding identities, but main-domain people-rating remained 503 throughout postflight. Previous API version automatically restored. No successful public-ranking publication claimed. Need inspect the primary GAME_API service name before further activation; gamescout-api was the catalog-build source, not yet proven to be the primary service target.
 - VERIFIED LOCAL: all 57 private-core tests PASS, including three-game votes/support, ledger races, refund, test Robokassa signature/idempotency/reconciliation and restricted private access. This is isolated PGlite/workerd, NOT physical Android or live payment acceptance.

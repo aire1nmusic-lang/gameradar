@@ -233,8 +233,10 @@ app.get('/api/v1/games', c => cachedList(c, 60_000, async () => {
 
 /* ── catalogue ────────────────────────────────────────────────────────────── */
 
-app.get('/api/v1/people-rating', c => cachedList(c, 15_000,
-  () => publicPeopleRanking(new URL(c.req.url).searchParams)))
+app.get('/api/v1/people-rating', c => {
+  c.header('X-GS-Public-Votes', '1')
+  return cachedList(c, 15_000, () => publicPeopleRanking(new URL(c.req.url).searchParams))
+})
 
 app.get('/api/v1/support/ranking', c => {
   const limit=Number(c.req.query('limit')??100),offset=Number(c.req.query('offset')??0)

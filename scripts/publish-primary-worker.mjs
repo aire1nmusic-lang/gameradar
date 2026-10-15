@@ -18,7 +18,8 @@ export function workerConfig(settings, directory) {
     compatibility_date: settings.compatibility_date,
     compatibility_flags: settings.compatibility_flags || [],
     services: [{ binding: service.name, service: service.service, ...(service.environment ? { environment: service.environment } : {}), ...(service.entrypoint ? { entrypoint: service.entrypoint } : {}) }],
-    assets: { directory, binding: assets.name, run_worker_first: true },
+    // The existing handler resolves /index.html itself; automatic canonical redirects loop.
+    assets: { directory, binding: assets.name, run_worker_first: true, html_handling: 'none', not_found_handling: 'none' },
   }
 }
 export async function originalHandler(response) {
@@ -36,13 +37,12 @@ export function uploadedVersion(output) {
   assert.ok(id, 'Wrangler did not report the uploaded version ID')
   return id
 }
-export async function verifySite(sha, fetcher = fetch) {
-  const origin = 'https://gamescout.online'
+export async function verifySite(sha, fetcher = fetch, origin = 'https://gamescout.online', checkApi = true) {
   for (const path of ['/', '/lineage-2', '/minecraft', '/gta-rp', '/catalog', '/account']) {
     const r = await fetcher(origin + path, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(20000) })
     assert.ok(r.ok, `${path}: HTTP ${r.status}`)
     const body = await r.text()
-    assert.ok(body.includes(`<meta name="gs-build" content="${sha}"`), `${path}: incorrect build`)
+    assert.ok(body.includes(`<meta name="gs-build" content="${sha}"`), `${path}: incorrect build (${body.match(/name="gs-build" content="([^"]+)"/)?.[1] || 'missing'})`)
     if (path === '/') {
       const assets = [...new Set([...body.matchAll(/(?:src|href)="(\/assets\/[^"?]+\.(?:js|css))"/g)].map(m => m[1]))]
       assert.ok(assets.length >= 2, 'Missing built assets')
@@ -52,7 +52,7 @@ export async function verifySite(sha, fetcher = fetch) {
       }
     }
   }
-  for (const path of ['/health', '/games', '/servers?limit=1']) {
+  if (checkApi) for (const path of ['/health', '/games', '/servers?limit=1']) {
     const r = await fetcher(origin + '/api/v1' + path, { signal: AbortSignal.timeout(20000) })
     assert.ok(r.ok, `Public API ${path}: HTTP ${r.status}`)
     assert.ok(await r.json(), `Public API ${path}: empty JSON`)
@@ -100,16 +100,23 @@ async function main() {
       console.error(detail.slice(-6000))
       throw new Error('Primary asset version upload failed before activation')
     }
-    version = uploadedVersion((result.stdout || '') + (result.stderr || ''))
+    const output = (result.stdout || '') + (result.stderr || '')
+    version = uploadedVersion(output)
+    const preview = output.match(/Version Preview URL:\s*(https:\/\/[^\s]+)/)?.[1]
+    assert.ok(preview, 'Existing version previews required for safe asset preflight')
+    const previewURL = new URL(preview)
+    assert.ok(previewURL.hostname.startsWith(version.slice(0, 8) + '-' + workerName + '.') && previewURL.hostname.endsWith('.workers.dev'), 'Unexpected provider preview URL')
+    await verifySite(sha, fetch, previewURL.origin, false)
+    console.log('VERIFIED inactive version: six pages and JS/CSS without redirect loops')
     assert.equal((await api(script + '/deployments')).deployments[0].id, previous.id, 'Another deployment happened; refuse overwrite')
     const deploy = versions => api(script + '/deployments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ strategy: 'percentage', versions }) })
     await deploy([{ version_id: version, percentage: 100 }])
     activated = true
     console.log('Primary Worker activated version', version, 'for', sha)
     let failure
-    for (let attempt = 0; attempt < 8; attempt++) {
+    for (let attempt = 0; attempt < 20; attempt++) {
       try { await verifySite(sha); failure = null; break } catch (e) { failure = e; console.log('Waiting for primary propagation:', e.message) }
-      if (attempt < 7) await new Promise(r => setTimeout(r, 3000))
+      if (attempt < 19) await new Promise(r => setTimeout(r, 3000))
     }
     if (failure) throw failure
     if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `\nPrimary domain verified: ${sha}. Worker version ${version}. Rollback version(s): ${previous.versions.map(v => v.version_id).join(', ')}. No DNS/routes/API configuration changes.\n`)

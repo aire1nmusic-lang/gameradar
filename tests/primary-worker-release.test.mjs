@@ -7,6 +7,8 @@ test('release retains live API and handler routing without domain/route configur
   assert.deepEqual(c.services, [{ binding: 'GAME_API', service: 'current-api', environment: 'production' }])
   assert.equal(c.no_bundle, true)
   assert.equal(c.assets.run_worker_first, true)
+  assert.equal(c.assets.html_handling, 'none')
+  assert.equal(c.assets.not_found_handling, 'none')
   for (const forbidden of ['routes', 'route', 'workers_dev', 'account_id', 'vars', 'd1_databases']) assert.ok(!(forbidden in c))
 })
 test('unexpected live bindings stop before publishing', () => {
@@ -41,4 +43,12 @@ test('Cloudflare multipart modules support text fields without filenames and fil
   }
   const form = new FormData(); form.set('other.js', 'export default {}')
   await assert.rejects(originalHandler(new Response(form)), /Unexpected live routing handler/)
+})
+
+test('inactive version is verified independently before activation, without private/API writes', async () => {
+  const seen = []
+  const fake = fixture()
+  await verifySite(sha, async url => { seen.push(url); return fake(url) }, 'https://inactive.workers.dev', false)
+  assert.ok(seen.length >= 8)
+  assert.ok(seen.every(url => url.startsWith('https://inactive.workers.dev/') && !url.includes('/api/')))
 })

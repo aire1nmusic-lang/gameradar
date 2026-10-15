@@ -1,3 +1,8 @@
+## 15.10.2026 — Redirect loop isolated on the uploaded version; preflight added
+- VERIFIED read-only run 38678476031: existing preview URLs enabled; the uploaded 1ab202d8 preview fails with redirect count exceeded. Source uses no caches/global fetch. Existing token cannot read zone cache rules (403); no permissions were changed or requested.
+- LIKELY cause: default static-asset HTML canonical redirects conflict with existing handler's explicit index.html lookup. Release config now sets html_handling=none and not_found_handling=none, leaving route decisions to the retained handler. All six preview HTML paths and JS/CSS must pass on the provider's exact version URL BEFORE activation; primary has propagation retries and previous-version rollback.
+- VERIFIED LOCAL: 8 tests and syntax PASS. Actual preview/main acceptance pending. No DNS/routes/security/payment/private API/DB changes, new resources or subscriptions. Next: publish guarded fix and test UI only after actual primary SHA matches.
+
 ## 15.10.2026 — Uploaded Worker version rolled back after primary freshness failed
 - VERIFIED run 38677978618 / job 116235816580: seven tests and asset upload PASS; activated 1ab202d8-830b-40af-8214-0a4db6fa2707 for 7715298, but primary freshness returned incorrect build/transient fetch failures. Automatic rollback restored the previous deployment before workflow failed. Primary publication NOT accepted.
 - Added read-only deployment/version/handler behavior diagnostics; no new write or authentication attempt. Need distinguish version configuration/cache from propagation before repeating activation. No DNS/API/payment/DB changes; costs existing hosting only.

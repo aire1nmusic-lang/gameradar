@@ -119,7 +119,7 @@ jobs:
           const form=await source.formData()
           const [part]=[...form.entries()].filter(([name])=>name!=='metadata')
           const code=typeof part[1]==='string'?part[1]:await part[1].text()
-          console.log('HANDLER_BEHAVIOR',JSON.stringify({caches:code.includes('caches.'),cacheMatch:code.includes('.match('),cachePut:code.includes('.put('),globalFetch:/(?:await|return)\\s+fetch\\(/.test(code),usesURLRewrite:code.includes('new URL'),usesIndex:code.includes('index.html'),bindingNames:[...new Set([...code.matchAll(/\\.([A-Z_]{3,})/g)].map(m=>m[1]))]}))
+          console.log('HANDLER_BEHAVIOR',JSON.stringify({caches:code.includes('caches.'),cacheMatch:code.includes('.match('),cachePut:code.includes('.put('),globalFetch:code.includes('return fetch(')||code.includes('await fetch('),usesURLRewrite:code.includes('new URL'),usesIndex:code.includes('index.html')}))
           for(const path of ['/','/index.html','/?gs-fresh='+process.env.GITHUB_SHA]){
             try{const r=await fetch('https://gamescout.online'+path,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000)});const b=await r.text();console.log('PRIMARY_OBSERVATION',JSON.stringify({path,status:r.status,build:b.match(/name="gs-build" content="([^"]+)"/)?.[1],cache:r.headers.get('cf-cache-status')}))}catch(e){console.log('PRIMARY_OBSERVATION_ERROR',e.message)}
           }

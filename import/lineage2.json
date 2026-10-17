@@ -2254,5 +2254,35 @@
     "checkedAt": "2026-10-12",
     "confidence": "confirmed",
     "notes": "Found automatically on 2026-10-12; official site answered and names the project."
+  },
+  {
+    "key": "l2:la2byfly.by",
+    "game": "lineage2",
+    "name": "La2byfly.by x1200",
+    "website": "https://la2byfly.by/",
+    "chronicle": null,
+    "version": "Gracia Epilogue",
+    "rates": "x1200",
+    "openedAt": "2026-10-30",
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://la2byfly.by/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://la2byfly.by/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39221"
+      }
+    ],
+    "checkedAt": "2026-10-17",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-17; official site answered and names the project."
   }
 ]

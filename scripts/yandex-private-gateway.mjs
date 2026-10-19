@@ -15,6 +15,7 @@ export const apiRoutes = [
   { path:'/api/v1/auth/{path+}', method:'any', target:'private', param:'path' },
   { path:'/api/v1/me/{path+}', method:'any', target:'private', param:'path' },
   { path:'/api/v1/claims', method:'any', target:'private' },
+  { path:'/api/v1/claims/{path+}', method:'any', target:'private', param:'path' },
   { path:'/api/v1/owners/{path+}', method:'any', target:'private', param:'path' },
   { path:'/api/v1/servers/{id}/manage-access', method:'any', target:'private', param:'id' },
   { path:'/api/v1/people-rating', method:'any', target:'private' },

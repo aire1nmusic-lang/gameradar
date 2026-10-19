@@ -64,6 +64,12 @@ test('only catalog reads reach legacy D1 relay; retired writes fail closed',()=>
   assert.equal(chosen('/api/v1/support/servers/card','get'),'private')
 })
 
+test('claim creation and nested proof verification reach the private API',()=>{
+  for (const path of ['/api/v1/claims','/api/v1/claims/claim-id/proof','/api/v1/claims/claim-id/proof/check'])
+    assert.equal(chosen(path,'post'),'private',path)
+  assert.equal(chosen('/api/v1/claims-other/claim-id/proof','post'),'deny')
+})
+
 test('VM candidate sends every private route over HTTPS with the gateway secret and no container',()=>{
   const staticSpec=lf(readFileSync('ru-proxy/yandex/gateway.prerender.template.yaml','utf8'))
   const vm=lf(readFileSync('ru-proxy/yandex/gateway.vm.template.yaml','utf8'))

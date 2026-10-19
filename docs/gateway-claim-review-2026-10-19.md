@@ -29,7 +29,11 @@ VERIFIED 19.10: `yc serverless api-gateway get-spec --id d5d9pl6cgdpfk52duoa2` �
 +      timeouts: { connect: 3, read: 25 }
 ```
 
-`output/gateway-audit/candidate-spec.yaml`: SHA256 `9eba8e50677ff3fb7a6e29302a64bbde25fc14b64e38ce3337f28ee16d64b8f3`. Он не загружался в Yandex. Локально проходят проверки маршрутизации всех объявленных private endpoints, включая proof/check. Отдельный облачный тестовый шлюз и внешняя проверка кандидата на нём пока **не выполнены**; это не VERIFIED staging.
+`output/gateway-audit/candidate-spec.yaml`: SHA256 `9eba8e50677ff3fb7a6e29302a64bbde25fc14b64e38ce3337f28ee16d64b8f3`. В production не загружался. Локально проходят проверки всех объявленных private endpoints, включая proof/check.
+
+VERIFIED staging19.10: использован уже существующий `gamescout-vm-test` (`d5dmbf3mjn990b0u3pv7`), ACTIVE, без custom domains. Сохранён его исходный spec (SHA256 `3e0720651d302288ee70b1fdf8304905183d6094b590897254a1756e24c7332f`). На кандидате health/auth/me/games/people-rating/lineage-2 ответили200; POST к proof и proof/check без cookie/авторизации ответили401 unauthorized; неизвестный URL404. После проверки исходная тестовая спецификация восстановлена и структурно сверена. Учётные записи, Claim, голос, платёж или другие приватные данные не создавались. Это приёмка маршрутизации и fail-closed авторизации, а не authenticated player/owner/admin journey.
+
+Первая строгая проверка кандидата остановилась: Yandex перегенерирует OpenAPI `servers` под hostname тестового Gateway (в production spec два URL, у тестового один). Независимый diff подтвердил только `/servers/0/url` и `/servers/1`; сравнение всех остальных полей осталось строгим, а единственный server URL дополнительно сверен с metadata test.domain. После такого уточнения проверка и восстановление завершены. Тестовый ресурс не оставлен с production-кандидатом.
 
 ## Риск и откат
 

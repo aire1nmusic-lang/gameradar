@@ -29,7 +29,22 @@ jobs:
           node --experimental-strip-types tests/support-projection.mjs
       - name: Public ranking boundary and pagination
         run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-api-release.test.mjs tests/public-ranking-pagination.test.mjs tests/l2-read-recovery.test.mjs
+      - name: Gateway, HTTP SEO and primary release safety
+        run: node --test tests/yandex-private-gateway.test.mjs tests/seo-http-gate.test.mjs tests/primary-worker-release.test.mjs tests/release-backup.test.mjs
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- https://gamescout-public-catalog.aire1n-music.workers.dev/
       - name: Bundle gate
         run: npm run test:bundle
+      - name: Current responsive and account recovery browser gate
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+          node tests/mobile-ux-browser.mjs
+      - name: Preserve responsive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-ux-${{ github.sha }}
+          path: output/mobile-ux-qa
+          if-no-files-found: warn
+          retention-days: 14

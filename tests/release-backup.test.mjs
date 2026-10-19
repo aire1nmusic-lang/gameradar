@@ -9,7 +9,7 @@ function fake({ corrupt = false, uploadError = false } = {}) {
   return { calls, run: async (command, args) => {
     calls.push({ command, args })
     if (command === 'sha256sum') return { stdout: (corrupt && ++hashes === 2 ? 'c'.repeat(64) : checksum) + '  archive\n' }
-    if (uploadError && command === 'aws' && args[2].startsWith('/tmp/')) throw new Error('Storage unavailable')
+    if (uploadError && command === 'aws' && args[0] === 's3' && args[1] === 'cp' && !args[2].startsWith('s3://')) throw new Error('Storage unavailable')
     return { stdout: '' }
   } }
 }

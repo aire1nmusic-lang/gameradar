@@ -30,7 +30,7 @@ jobs:
       - name: Public ranking boundary and pagination
         run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-api-release.test.mjs tests/public-ranking-pagination.test.mjs tests/l2-read-recovery.test.mjs
       - name: Gateway, HTTP SEO and primary release safety
-        run: node --test tests/yandex-private-gateway.test.mjs tests/seo-http-gate.test.mjs tests/primary-worker-release.test.mjs tests/release-backup.test.mjs
+        run: node --test tests/yandex-private-gateway.test.mjs tests/seo-http-gate.test.mjs tests/primary-worker-release.test.mjs tests/release-backup.test.mjs tests/release-restore.test.mjs
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- https://gamescout-public-catalog.aire1n-music.workers.dev/
       - name: Bundle gate

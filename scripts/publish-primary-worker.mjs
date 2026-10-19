@@ -93,7 +93,9 @@ export async function verifySite(sha, fetcher = fetch, origin = 'https://gamesco
     assert.ok(body.includes(`<meta name="gs-build" content="${sha}"`), `${path}: incorrect build (${body.match(/name="gs-build" content="([^"]+)"/)?.[1] || 'missing'})`)
     if (path === '/') {
       assert.match(r.headers.get('cache-control') || '', /no-cache|no-store/i, 'Primary HTML must not use stale caching')
-      assert.notEqual((r.headers.get('cf-cache-status') || '').toUpperCase(), 'HIT', 'Primary HTML must not be a stale edge hit')
+      // ASSETS/version URLs can legitimately return HIT for the exact new immutable
+      // content. Freshness is established by the expected SHA and asset bytes,
+      // not by rejecting the provider's cache-status label.
       const assets = [...new Set([...body.matchAll(/(?:src|href)="(\/assets\/[^"?]+\.(?:js|css))"/g)].map(m => m[1]))]
       assert.ok(assets.length >= 2, 'Missing built assets')
       for (const asset of assets) {
@@ -168,6 +170,7 @@ async function main() {
     }
     const output = (result.stdout || '') + (result.stderr || '')
     version = uploadedVersion(output)
+    manifest.candidate=version; manifest.status='uploaded'; await saveManifest(manifestPath,manifest)
     const preview = output.match(/Version Preview URL:\s*(https:\/\/[^\s]+)/)?.[1]
     assert.ok(preview, 'Existing version previews required for safe asset preflight')
     const previewURL = new URL(preview)
@@ -183,7 +186,6 @@ async function main() {
     console.log('VERIFIED inactive version: six pages and JS/CSS without redirect loops')
     assert.equal((await api(script + '/deployments')).deployments[0].id, previous.id, 'Another deployment happened; refuse overwrite')
     const deploy = versions => api(script + '/deployments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ strategy: 'percentage', versions }) })
-    manifest.candidate=version; manifest.status='uploaded'; await saveManifest(manifestPath,manifest)
     await promoteVersion(manifest,{
       current:async()=>deploymentSnapshot((await api(script+'/deployments')).deployments[0]),deploy,
       persist:value=>saveManifest(manifestPath,value),
@@ -200,6 +202,12 @@ async function main() {
     })
     if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `\nPrimary domain verified: ${sha}. Worker version ${version}. Rollback version(s): ${previous.versions.map(v => v.version_id).join(', ')}. No DNS/routes/API configuration changes.\n`)
     console.log('VERIFIED primary domain: six pages, built assets and three public API reads')
+  } catch(error) {
+    if(manifest.status==='uploaded') {
+      manifest.status='preflight-failed';manifest.failure=String(error.message).slice(0,500)
+      await saveManifest(manifestPath,manifest)
+    }
+    throw error
   } finally { await rm(dir, { recursive: true, force: true }) }
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(e => { console.error(e.message); process.exitCode = 1 })

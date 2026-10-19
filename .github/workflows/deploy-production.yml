@@ -116,7 +116,7 @@ jobs:
 
       - name: Read recovery, zero support, discovery scoring and runner invariants
         run: |
-          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs
+          node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs tests/release-restore.test.mjs
           node --test tests/yandex-private-gateway.test.mjs tests/seo-http-gate.test.mjs tests/primary-worker-release.test.mjs
           node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-ranking-pagination.test.mjs
           node --experimental-strip-types --test tests/zero-support.test.mjs
@@ -239,7 +239,7 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: |
           echo "::warning::Live verification failed; restoring previous non-asset files"
-          aws s3 sync "$RUNNER_TEMP/site-rollback/" "s3://$YC_BUCKET/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
+          node scripts/restore-release-backup.mjs
 
       - name: Fail workflow after rollback
         if: always() && (steps.publish_primary.outcome == 'failure' || steps.upload_assets.outcome == 'failure' || steps.upload_html.outcome == 'failure')

@@ -40,6 +40,23 @@ const browser = await chromium.launch(process.env.GS_CHROMIUM_EXECUTABLE_PATH ? 
 const output = resolve('output/mobile-ux-qa')
 await mkdir(output, { recursive: true })
 const results = []
+// A geometry-only pass can capture a black placeholder before the CSS scene has decoded.
+const mediaReady = page => page.evaluate(async () => {
+  const sources = new Set()
+  for (const element of document.querySelectorAll('.gs-account-layout,.gs-server-bg,.gs-shelf-support .server,img')) {
+    if (element instanceof HTMLImageElement && element.src) sources.add(element.currentSrc || element.src)
+    for (const pseudo of [null,'::before','::after']) {
+      for (const match of getComputedStyle(element,pseudo).backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g)) sources.add(match[1])
+    }
+  }
+  const local = [...sources].map(source=>new URL(source,location.href)).filter(url=>url.origin===location.origin&&url.pathname.startsWith('/media/'))
+  await Promise.all(local.map(url=>new Promise((resolve,reject)=>{
+    const image=new Image(),timer=setTimeout(()=>reject(Error('Media decode timed out: '+url.pathname)),15000)
+    image.src=url.href
+    image.decode().then(()=>{clearTimeout(timer);resolve()}).catch(()=>{clearTimeout(timer);reject(Error('Media decode failed: '+url.pathname))})
+  })))
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))
+})
 try {
   for (const [width, height] of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]]) {
     const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 1024, hasTouch: width < 1024, reducedMotion: 'reduce' })
@@ -74,6 +91,7 @@ try {
       await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
       await noOverflow()
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
+      await mediaReady(page)
       if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
       const box = await plaque.locator('.server-name').boundingBox()
       assert.ok(box.width > 40, `name squeezed ${width} ${game.id}`)
@@ -131,6 +149,19 @@ try {
     await noOverflow()
     await page.goto(base + '/account?game=lineage2')
     await page.locator('.gs-account-entry').waitFor()
+    await mediaReady(page)
+    if (width < 768) {
+      const clip={x:0,y:80,width,height:100}
+      const scene=await page.screenshot({clip,animations:'disabled'})
+      const hidden=await page.addStyleTag({content:'#root .gs-account-layout:not(#qa-hide-scene)::before{background-image:none!important}'})
+      const withoutScene=await page.screenshot({clip,animations:'disabled'})
+      await hidden.evaluate(element=>element.remove())
+      if(scene.equals(withoutScene)) {
+        await page.screenshot({path:`${output}/account-scene-failure-${width}.png`})
+        console.error(await page.locator('.gs-account-layout').evaluate(e=>({width:innerWidth,design:document.documentElement.dataset.design,world:document.documentElement.dataset.world,isolation:getComputedStyle(e).isolation,before:getComputedStyle(e,'::before').background,htmlClass:document.documentElement.className})))
+      }
+      assert.equal(scene.equals(withoutScene),false,'Decoded account scene is actually painted, rather than covered by a black page')
+    }
     assert.equal(await page.locator('.gs-account-layout > header').evaluate(e => getComputedStyle(e).backgroundColor), 'rgba(0, 0, 0, 0)')
     await noOverflow()
     await page.screenshot({ path: `${output}/account-${width}.png` })

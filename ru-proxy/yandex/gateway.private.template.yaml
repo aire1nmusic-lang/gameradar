@@ -110,6 +110,18 @@ paths:
         type: serverless_containers
         container_id: __PRIVATE_CONTAINER_ID__
         service_account_id: __PRIVATE_GATEWAY_SERVICE_ACCOUNT_ID__
+  /api/v1/claims/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: serverless_containers
+        container_id: __PRIVATE_CONTAINER_ID__
+        service_account_id: __PRIVATE_GATEWAY_SERVICE_ACCOUNT_ID__
   /api/v1/owners/{path+}:
     x-yc-apigateway-any-method:
       parameters:

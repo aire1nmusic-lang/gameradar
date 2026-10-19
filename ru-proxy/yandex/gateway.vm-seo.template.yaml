@@ -151,6 +151,28 @@ paths:
         timeouts:
           connect: 3
           read: 25
+  /api/v1/claims/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: http
+        url: __PRIVATE_ORIGIN__/api/v1/claims/{path}
+        headers:
+          '*': '*'
+          Host: __PRIVATE_HOST__
+          X-GS-Gateway: __PRIVATE_GATEWAY_SECRET__
+        query:
+          '*': '*'
+        omitEmptyHeaders: true
+        omitEmptyQueryParameters: true
+        timeouts:
+          connect: 3
+          read: 25
   /api/v1/owners/{path+}:
     x-yc-apigateway-any-method:
       parameters:

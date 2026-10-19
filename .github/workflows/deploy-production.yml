@@ -41,7 +41,7 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY' }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: production
@@ -79,8 +79,8 @@ jobs:
       - run: npm ci
 
       - name: Private core tests
-        if: false # owner request 2026-10-13: fast releases without pre-publication gates
-        run: npm run test:private
+        run: |
+          npm run test:private
           node --experimental-strip-types tests/support-projection.mjs
 
       - name: Build from live public catalog and verify SEO
@@ -107,25 +107,24 @@ jobs:
           NODE
 
       - name: Bundle gate
-        if: false
         run: npm run test:bundle
 
       - name: Install browser QA runtime
-        if: false
         run: |
           npm install --no-save --package-lock=false playwright@1.58.2
           npx playwright install --with-deps chromium
 
       - name: Read recovery, zero support, discovery scoring and runner invariants
-        if: false
         run: |
           node --test tests/l2-read-recovery.test.mjs tests/public-catalog-read.test.mjs tests/public-qa-data.test.mjs tests/browser-qa-runner.test.mjs tests/release-backup.test.mjs
+          node --test tests/yandex-private-gateway.test.mjs tests/seo-http-gate.test.mjs tests/primary-worker-release.test.mjs
+          node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-ranking-pagination.test.mjs
           node --experimental-strip-types --test tests/zero-support.test.mjs
           node --experimental-strip-types tests/discovery-scoring.mjs
 
-      - name: All nine browser gates before publication (two at a time)
-        if: false
-        run: node scripts/run-browser-qa.mjs
+      # The legacy nine-suite runner targets the retired light theme/old layout.
+      - name: Current responsive and account recovery browser gate
+        run: node tests/mobile-ux-browser.mjs
 
       - name: Backup current production HTML and service files
         env:
@@ -139,7 +138,6 @@ jobs:
           test -f "$RUNNER_TEMP/site-rollback/index.html"
 
       - name: Persist and verify durable rollback archive
-        if: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -147,7 +145,22 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: node scripts/persist-release-backup.mjs
 
+      - name: Snapshot current primary Worker before upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/publish-primary-worker.mjs --snapshot
+
+      - name: Preserve primary rollback manifest before activation
+        uses: actions/upload-artifact@v4
+        with:
+          name: primary-rollback-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/primary-release/rollback.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload versioned assets first
+        id: upload_assets
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -157,6 +170,7 @@ jobs:
           aws s3 sync dist/assets/ "s3://$YC_BUCKET/assets/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "public,max-age=31536000,immutable"             --only-show-errors
 
       - name: Upload HTML and mutable public files without stale caching
+        id: upload_html
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -169,6 +183,8 @@ jobs:
         # Old hashed assets intentionally stay available for rollback.
 
       - name: Publish and verify the Worker actually serving the primary domain
+        id: publish_primary
+        continue-on-error: true # Restore the bucket too, then fail the run below.
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -180,6 +196,7 @@ jobs:
       # Avoid hundreds of metadata requests on an ordinary source-only release.
       - name: Check whether media cache metadata can have changed
         id: media_cache
+        if: steps.publish_primary.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           BEFORE_SHA: ${{ github.event.before }}
@@ -213,50 +230,8 @@ jobs:
           AWS_EC2_METADATA_DISABLED: "true"
         run: node .github/scripts/cache-public-media.mjs
 
-      - name: Verify production freshness, cache policy and SEO
-        id: verify_live
-        if: false
-        continue-on-error: true
-        env:
-          SEO_BASE_URL: https://gamescout.online
-        run: |
-          npm run test:seo
-          node <<'NODE'
-          const origin='https://gamescout.online'
-          const expected=process.env.GITHUB_SHA
-          let response,html
-          for(let attempt=1;attempt<=6;attempt++){
-            response=await fetch(origin+'/',{signal:AbortSignal.timeout(15000)})
-            html=await response.text()
-            const build=html.match(/<meta name="gs-build" content="([^"]+)"/)?.[1]
-            if(response.ok && build===expected) break
-            if(attempt===6) throw new Error(`Live HTML is not current build: expected ${expected}, got ${build||'missing'}`)
-            await new Promise(r=>setTimeout(r,2000))
-          }
-
-          const cacheControl=response.headers.get('cache-control')||''
-          if(!/(no-cache|no-store)/i.test(cacheControl)) {
-            throw new Error(`HTML cache-control is unsafe: ${cacheControl||'missing'}`)
-          }
-          const cfStatus=(response.headers.get('cf-cache-status')||'').toUpperCase()
-          if(cfStatus==='HIT') throw new Error('Cloudflare served index.html from stale edge cache (CF-Cache-Status: HIT)')
-
-
-          const refs=[...new Set([...html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)].map(m=>m[1]))]
-          if(!refs.length) throw new Error('No built JS/CSS asset references found on live home page')
-          for(const path of refs){
-            const r=await fetch(origin+path,{signal:AbortSignal.timeout(15000)})
-            if(!r.ok) throw new Error(`${path}: HTTP ${r.status}`)
-            const body=await r.arrayBuffer()
-            if(!body.byteLength) throw new Error(`${path}: empty response`)
-          }
-          console.log(`Production verified: current build, safe cache policy, ${refs.length} assets`)
-          NODE
-          # Each suite retains its own live target, isolation and acceptance assertions.
-          node scripts/run-browser-qa.mjs --live https://gamescout.online
-
       - name: Roll back public HTML if verification failed
-        if: steps.verify_live.outcome == 'failure'
+        if: always() && (steps.publish_primary.outcome == 'failure' || steps.upload_assets.outcome == 'failure' || steps.upload_html.outcome == 'failure')
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
@@ -267,18 +242,19 @@ jobs:
           aws s3 sync "$RUNNER_TEMP/site-rollback/" "s3://$YC_BUCKET/"             --endpoint-url "$YC_S3_ENDPOINT"             --cache-control "no-cache, no-store, must-revalidate"             --only-show-errors
 
       - name: Fail workflow after rollback
-        if: steps.verify_live.outcome == 'failure'
+        if: always() && (steps.publish_primary.outcome == 'failure' || steps.upload_assets.outcome == 'failure' || steps.upload_html.outcome == 'failure')
         run: |
           echo "::error::Production verification failed and rollback was attempted."
           exit 1
 
-      - name: Save loader QA screenshots
-        if: false
-        continue-on-error: true
+      - name: Save release evidence and responsive screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: loader-browser-qa-${{ github.sha }}
+          name: primary-release-result-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            output/primary-release/rollback.json
+            output/mobile-ux-qa
             output/loader-qa
             output/account-review-qa
             output/discovery-qa
@@ -289,7 +265,7 @@ jobs:
             output/studio-qa
             output/favorites-qa
           retention-days: 14
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
 
 

@@ -58,6 +58,12 @@ test('current build marker cannot hide corrupt asset bytes or stale HTML cache',
   const cached=async url=>{const r=await fixture()(url);r.headers.set('cache-control','public,max-age=3600');return r}
   await assert.rejects(verifySite(sha,cached),/stale caching/)
 })
+test('provider cache HIT is valid only when the expected build and exact asset bytes match',async()=>{
+  const cached=async url=>{const response=await fixture()(url);response.headers.set('cf-cache-status','HIT');return response}
+  await verifySite(sha,cached,'https://inactive.workers.dev',false,async()=>Buffer.from('asset'))
+  await assert.rejects(verifySite('b'.repeat(40),cached),/incorrect build/)
+  await assert.rejects(verifySite(sha,cached,'https://inactive.workers.dev',false,async()=>Buffer.from('stale asset')),/Incorrect asset bytes/)
+})
 
 const oldA='11111111-1111-1111-1111-111111111111',oldB='22222222-2222-2222-2222-222222222222',candidate='33333333-3333-3333-3333-333333333333'
 function promotion({lostResponse=false,failedCheck=false,concurrent=false,failedPersist=false,failedRollbackCheck=false}={}) {

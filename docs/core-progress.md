@@ -1,3 +1,7 @@
+## 20.10.2026 — Inspected actual CI mobile screenshots; fixed heading contrast
+- VERIFIED screenshot artifacts from first browser run: six approved artworks render correctly in390px grid; profile avatar straight and contained in dossier. Support layout phone readable overall, but two headings remained white due to a more-specific legacy full-background selector. Increased specificity only for Support heading ink and added an actual computed dark-ink assertion to every matrix iteration. Tablet grid-area fix retained.
+- Primary still6068a95; no publication claimed. Next full gate and live verification. No new resources, private/DNS/payment changes.
+
 ## 20.10.2026 — Pre-upload gate caught tablet Support overlap; corrected grid areas
 - VERIFIED CI39476857929:320x568 and390x844 all3games PASS. At768px the actual click on forecast disclosure was intercepted by checkout. Cause: inherited two-row preview grid-area conflicted with new full-width checkout column. Explicit desktop form/preview then checkout/checkout areas and single-column mobile areas now replace legacy placement. Interaction and geometry assertions retained unchanged.
 - Release4e8037c blocked before upload; primary still6068a95. All six approved artworks are committed, not yet live. Next: repeat full guarded CI/browser matrix, publish and primary screenshot/readback. No DNS/private/payment changes or new resources; rollback8c2e256.

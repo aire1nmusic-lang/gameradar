@@ -1,0 +1,44 @@
+name: Inspect site storage capacity
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/site-storage-inventory.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Inventory public site objects and deployment archives (read only)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          python - <<'PY'
+          import subprocess,json,collections
+          endpoint='https://storage.yandexcloud.net'
+          bucket='gamescout-ru-site'
+          def read(operation):
+              result=subprocess.run(['aws','s3api',operation,'--bucket',bucket,'--endpoint-url',endpoint,'--output','json'],capture_output=True,text=True,timeout=180)
+              if result.returncode:
+                  print(operation,'UNAVAILABLE',result.stderr[-500:]);return {}
+              return json.loads(result.stdout)
+          objects=read('list-objects-v2').get('Contents',[])
+          groups=collections.defaultdict(lambda: {'objects':0,'bytes':0})
+          backups=[]
+          for obj in objects:
+              key=obj['Key'];group=key.split('/')[0] if '/' in key else '(root)'
+              groups[group]['objects']+=1;groups[group]['bytes']+=obj['Size']
+              if key.startswith('_deployment-backups/'):
+                  backups.append({'key':key,'bytes':obj['Size'],'modified':obj['LastModified']})
+          print('BUCKET_TOTAL',json.dumps({'objects':len(objects),'bytes':sum(x['Size'] for x in objects)}))
+          print('PREFIX_TOTALS',json.dumps(dict(groups),sort_keys=True))
+          print('DEPLOYMENT_ARCHIVES',json.dumps(sorted(backups,key=lambda x:x['modified'])))
+          uploads=read('list-multipart-uploads').get('Uploads',[])
+          print('INCOMPLETE_MULTIPART',json.dumps([{'key':x['Key'],'uploadId':x['UploadId'],'initiated':x['Initiated']} for x in uploads]))
+          PY

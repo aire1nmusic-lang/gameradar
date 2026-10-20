@@ -1,0 +1,27 @@
+/* Scoped to the approved L2 variant. Other game pickers keep their current layout. */
+html[data-design="lobby"] body .l2a .discovery.discovery--inline:not(#lb):not(#gl):not(#p):not(#q){display:block!important;position:relative!important;z-index:auto!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+html[data-design="lobby"] body .l2a .chronicle-picker.gs-inline-picker:not(#lb):not(#gl):not(#p){position:relative!important;z-index:auto!important;grid-column:auto!important;margin:14px 0 0!important;padding:0!important;overflow:hidden;border:1px solid rgba(255,255,255,.32)!important;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.27),rgba(255,255,255,.19))!important;box-shadow:inset 0 1px rgba(255,255,255,.16)!important}
+.gs-inline-summary{display:flex;align-items:center;gap:14px;min-height:76px;padding:16px 22px;list-style:none;cursor:pointer;user-select:none;color:#f3f0e9}
+.gs-inline-summary::-webkit-details-marker{display:none}
+.gs-inline-heading{display:grid;gap:3px;flex:1;min-width:0}
+.gs-inline-kicker{font:700 10px/1.3 var(--font-sans, sans-serif);letter-spacing:.16em;text-transform:uppercase;color:var(--lb-lime,#c8ff55)}
+.gs-inline-title{font:700 23px/1.2 var(--lb-display,Georgia,serif)}
+.gs-inline-current{flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;padding:5px 12px;border:1px solid rgba(255,255,255,.38);border-radius:999px;background:rgba(255,255,255,.07)}
+.gs-inline-chevron{flex:none;transition:transform .18s}
+.gs-inline-picker[open] .gs-inline-chevron{transform:rotate(90deg)}
+.gs-inline-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 20px 20px;min-width:0}
+.gs-inline-tile{position:relative;display:block;min-width:0;min-height:112px;aspect-ratio:16/9;overflow:hidden;border:1px solid rgba(255,255,255,.36);border-radius:12px;background:#18232b;color:#fff;text-decoration:none}
+.gs-inline-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gs-inline-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,14,23,.92),rgba(5,14,23,.1) 85%);pointer-events:none}
+.gs-inline-caption{position:absolute;bottom:13px;left:15px;right:10px;z-index:1;font:700 23px/1.2 var(--lb-display,Georgia,serif);color:#fff;text-shadow:0 1px 3px #000;overflow-wrap:anywhere}
+.gs-inline-check{position:absolute;z-index:1;top:10px;right:10px;color:var(--lb-lime,#c8ff55);filter:drop-shadow(0 1px 2px #000)}
+.gs-inline-tile[aria-current="page"]{border-color:var(--lb-lime,#c8ff55);box-shadow:inset 0 0 0 1px var(--lb-lime,#c8ff55)}
+.gs-inline-tile[aria-current="page"] .gs-inline-caption{color:var(--lb-lime,#c8ff55)}
+.gs-inline-summary:focus-visible,.gs-inline-tile:focus-visible{outline:3px solid var(--lb-lime,#c8ff55);outline-offset:-3px}
+html[data-color-mode="light"] .gs-inline-summary{color:#28343d}
+html[data-color-mode="light"] .gs-inline-kicker{color:#456016}
+html[data-design="lobby"][data-color-mode="light"] body .l2a .chronicle-picker.gs-inline-picker:not(#lb):not(#gl):not(#p){background:linear-gradient(145deg,rgba(255,253,247,.86),rgba(247,244,235,.76))!important;border-color:rgba(74,70,58,.22)!important}
+html[data-color-mode="light"] .gs-inline-current{border-color:rgba(74,70,58,.25);background:rgba(255,255,255,.2)}
+@media(max-width:767px){.gs-inline-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 14px 16px}.gs-inline-summary{padding:15px 16px;gap:10px;min-height:72px}.gs-inline-title{font-size:21px}.gs-inline-caption{font-size:20px;left:12px;bottom:12px}.gs-inline-current{font-size:12px;padding:4px 9px;max-width:36%}}
+@media(max-width:359px){.gs-inline-summary{gap:7px;padding-inline:12px}.gs-inline-title{font-size:18px}.gs-inline-current{font-size:11px;padding-inline:7px;max-width:33%}.gs-inline-caption{font-size:18px}.gs-inline-grid{padding-inline:12px}}
+@media(prefers-reduced-motion:reduce){.gs-inline-chevron{transition:none}}

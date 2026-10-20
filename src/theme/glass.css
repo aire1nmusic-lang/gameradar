@@ -307,17 +307,28 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
   html[data-design="lobby"] body .gt-particles > span { animation:none!important; }
 }
 
-/* Touch performance: no continuously repainted ticker while scrolling the page.
-   People can swipe the LIVE strip horizontally; desktop keeps the marquee. */
+/* The owner requests an active LIVE strip on touch screens too.
+   Animate only the transform; ignore sticky touch-hover and pause during a press. */
 @media (max-width: 767px), (hover: none) {
   html[data-design="lobby"] body .gs-live-view:not(#lb) {
-    overflow-x:auto!important;overflow-y:hidden!important;
+    overflow:hidden!important;
     -webkit-mask-image:none!important;mask-image:none!important;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;
   }
-  html[data-design="lobby"] body .gs-live-view::-webkit-scrollbar { display:none; }
   html[data-design="lobby"] body .gs-live-track:not(#lb) {
-    animation:none!important;transform:none!important;width:max-content;
+    animation-play-state:running!important;will-change:transform;width:max-content;
+  }
+  html[data-design="lobby"] body .gs-live-view:active .gs-live-track:not(#lb) {
+    animation-play-state:paused!important;
+  }
+}
+/* Reduced-motion users retain a readable swipeable strip instead of autoplay. */
+@media (prefers-reduced-motion:reduce) {
+  html[data-design="lobby"] body .gs-live-view:not(#lb) {
+    overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;
+  }
+  html[data-design="lobby"] body .gs-live-view::-webkit-scrollbar {display:none;}
+  html[data-design="lobby"] body .gs-live-track:not(#lb) {
+    animation:none!important;transform:none!important;will-change:auto;
   }
   html[data-design="lobby"] body .gs-live-track > [aria-hidden="true"] {display:none!important;}
 }

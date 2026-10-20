@@ -90,6 +90,23 @@ try {
       await page.goto(base + '/' + game.slug)
       await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
       await noOverflow()
+      // LIVE must actually advance on touch, while respecting reduced motion.
+      const liveTrack=page.locator('.gs-live-track')
+      await liveTrack.waitFor({state:'visible'})
+      await page.emulateMedia({reducedMotion:'no-preference'})
+      const motion=await liveTrack.evaluate(e=>({name:getComputedStyle(e).animationName,state:getComputedStyle(e).animationPlayState,transform:getComputedStyle(e).transform}))
+      assert.notEqual(motion.name,'none','LIVE autoplay is enabled without a reduced-motion preference')
+      assert.equal(motion.state,'running','LIVE is not frozen by mobile hover styles')
+      await page.waitForTimeout(180)
+      assert.notEqual(await liveTrack.evaluate(e=>getComputedStyle(e).transform),motion.transform,'LIVE content advances rather than showing a static badge')
+      if(width<1024) {
+        await page.locator('.gs-live-view').hover()
+        assert.equal(await liveTrack.evaluate(e=>getComputedStyle(e).animationPlayState),'running','Touch hover does not leave the ticker paused')
+        await page.mouse.move(0,0)
+      }
+      await page.emulateMedia({reducedMotion:'reduce'})
+      assert.equal(await liveTrack.evaluate(e=>getComputedStyle(e).animationName),'none','Reduced motion keeps the strip static')
+      await noOverflow()
       if (game.id === 'lineage2') {
         const picker = page.locator('.gs-inline-picker')
         const summary = picker.locator('summary')

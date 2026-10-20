@@ -382,7 +382,7 @@ html[data-design="lobby"] body .gs-support-dialog .gs-projection-target:not(#lb)
 
 /* Full-scene profile: opaque text and a small glyph shadow over white glass.
    Keep light-mode dark ink and semantic action/status colors intact. */
-html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:not(#lb):not(#gl):not(#p):not(#q) :is(h1,h2,h3,.text-ink-50,.text-ink-100,.text-ink-200) {
+html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:not(#lb):not(#gl):not(#p):not(#q) :is(h1,h2,h3,.text-ink-50,.text-ink-100,.text-ink-200):not(.is-active) {
   color:#fff!important;text-shadow:0 1px 2px rgba(4,9,16,.95),0 0 4px rgba(4,9,16,.55);
 }
 html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:not(#lb):not(#gl):not(#p):not(#q) :is(.text-ink-300,.text-ink-400,.text-ink-500,th,td,.gs-seg-btn:not(.is-active)) {

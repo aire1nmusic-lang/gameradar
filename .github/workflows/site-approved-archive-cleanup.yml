@@ -1,0 +1,57 @@
+name: Remove owner-approved old deployment archives
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/site-approved-archive-cleanup.yml']
+permissions:
+  contents: read
+concurrency:
+  group: site-approved-archive-cleanup
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Delete only the 13 archives approved on 20 October 2026
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          python - <<'PY'
+          import subprocess,json,re
+          bucket='gamescout-ru-site'
+          endpoint='https://storage.yandexcloud.net'
+          remove=json.loads("[{\"key\":\"_deployment-backups/05448b8eb89065feeeeec1f7dc47590798974470/37828488515-1/site-rollback.tar.gz\",\"bytes\":35155340,\"modified\":\"2026-10-08T19:15:31.333000+00:00\"},{\"key\":\"_deployment-backups/0f94c7b1e62aee44cb0f2b33a98ff5bbebb7f63f/37978498068-1/site-rollback.tar.gz\",\"bytes\":35155783,\"modified\":\"2026-10-09T19:43:28.581000+00:00\"},{\"key\":\"_deployment-backups/153bd7c20790de68fa631e6f4e7ab97f48680722/38048472694-1/site-rollback.tar.gz\",\"bytes\":35156775,\"modified\":\"2026-10-10T11:42:54.336000+00:00\"},{\"key\":\"_deployment-backups/6bbca34e310956bc3576474743ec7f3331fe541d/38058916087-1/site-rollback.tar.gz\",\"bytes\":35160092,\"modified\":\"2026-10-10T14:30:45.651000+00:00\"},{\"key\":\"_deployment-backups/4f17e7f17cb44d33a0ca3f994179105eff979e49/38081457541-1/site-rollback.tar.gz\",\"bytes\":35160110,\"modified\":\"2026-10-10T20:05:07.497000+00:00\"},{\"key\":\"_deployment-backups/57c0dbbd1c90a1c30d39d58e05e3ef7a02b672da/38083617016-1/site-rollback.tar.gz\",\"bytes\":35164644,\"modified\":\"2026-10-10T20:42:23.969000+00:00\"},{\"key\":\"_deployment-backups/987ce0c951833f7b163aa522032ba9e7b0bfa8b4/38092534850-1/site-rollback.tar.gz\",\"bytes\":35164363,\"modified\":\"2026-10-10T22:57:51.648000+00:00\"},{\"key\":\"_deployment-backups/b97fd9933f8062980d8d0638e98258af06bc3c31/38118883530-1/site-rollback.tar.gz\",\"bytes\":35170001,\"modified\":\"2026-10-11T06:56:31.713000+00:00\"},{\"key\":\"_deployment-backups/ea7722911de8268348a2c75934c1785ad2a7dfd3/38247584399-1/site-rollback.tar.gz\",\"bytes\":35711898,\"modified\":\"2026-10-12T12:25:40.472000+00:00\"},{\"key\":\"_deployment-backups/6af484339b4a8f47b43357995e87bdc03bbe5ac6/38290228156-1/site-rollback.tar.gz\",\"bytes\":35717346,\"modified\":\"2026-10-12T18:34:02.756000+00:00\"},{\"key\":\"_deployment-backups/59d48447f14fcb8048a407fbb617827e8e3f9338/39306808805-1/site-rollback.tar.gz\",\"bytes\":41187362,\"modified\":\"2026-10-19T19:02:34.101000+00:00\"},{\"key\":\"_deployment-backups/d136b4a0d0ee4b15e8d81d48c61f3b97aad5a0b2/39312538792-1/site-rollback.tar.gz\",\"bytes\":82715392,\"modified\":\"2026-10-19T19:41:56.303000+00:00\"},{\"key\":\"_deployment-backups/1c0918553aa37edb6e1415fef010c6d851540d53/39376723592-1/site-rollback.tar.gz\",\"bytes\":82715464,\"modified\":\"2026-10-20T05:51:41.323000+00:00\"}]")
+          keep=json.loads("[{\"key\":\"_deployment-backups/d85745a3132b9ac818d1d73ec1c255102cbedeb1/39403140177-1/site-rollback.tar.gz\",\"bytes\":82715342,\"modified\":\"2026-10-20T09:51:13.389000+00:00\"},{\"key\":\"_deployment-backups/50b43cb42acb4e0ce74162560ef4995c9a4a6de3/39405417026-1/site-rollback.tar.gz\",\"bytes\":84010005,\"modified\":\"2026-10-20T10:13:21.237000+00:00\"},{\"key\":\"_deployment-backups/9a090b0e44275baefe547f3409da5269e0c56703/39407955177-1/site-rollback.tar.gz\",\"bytes\":84010155,\"modified\":\"2026-10-20T10:31:55.154000+00:00\"},{\"key\":\"_deployment-backups/a4fc87f3eac5fcba0beb3c195bad643a2b1ca8a2/39410411474-1/site-rollback.tar.gz\",\"bytes\":84011097,\"modified\":\"2026-10-20T10:52:38.746000+00:00\"},{\"key\":\"_deployment-backups/8559de3dc1b86ac1e5943e3d72194785abacf583/39411294614-1/site-rollback.tar.gz\",\"bytes\":83982396,\"modified\":\"2026-10-20T11:00:34.402000+00:00\"}]")
+          assert len(remove)==13 and len(keep)==5
+          assert len({x['key'] for x in remove+keep})==18
+          assert all(re.fullmatch(r'_deployment-backups/[a-f0-9]{40}/[0-9]+-[0-9]+/site-rollback.tar.gz',x['key']) for x in remove+keep)
+          def aws(*args):
+              r=subprocess.run(['aws','s3api',*args,'--bucket',bucket,'--endpoint-url',endpoint,'--output','json'],capture_output=True,text=True,timeout=180)
+              if r.returncode: raise RuntimeError(r.stderr[-600:])
+              return json.loads(r.stdout) if r.stdout.strip() else {}
+          def listing():
+              return {x['Key']:x for x in aws('list-objects-v2','--prefix','_deployment-backups/').get('Contents',[])}
+          before=listing()
+          for x in keep:
+              assert x['key'] in before and before[x['key']]['Size']==x['bytes'],'Retained archive missing or changed'
+              h=aws('head-object','--key',x['key'])
+              assert h['ContentLength']==x['bytes'] and re.fullmatch('[a-f0-9]{64}',h.get('Metadata',{}).get('sha256','')),'Retained archive metadata invalid'
+          for x in remove:
+              if x['key'] in before: assert before[x['key']]['Size']==x['bytes'],'Deletion target changed'
+          deleted=0
+          for x in remove:
+              if x['key'] not in before: continue
+              aws('delete-object','--key',x['key'])
+              print('DELETED_APPROVED_ARCHIVE',x['key'],x['bytes'])
+              deleted+=x['bytes']
+          after=listing()
+          assert all(x['key'] not in after for x in remove),'Approved archive still present'
+          assert all(x['key'] in after and after[x['key']]['Size']==x['bytes'] for x in keep),'Retained archive lost'
+          print('CLEANUP_VERIFIED',json.dumps({'approvedObjects':13,'bytesFreedThisRun':deleted,'retainedApprovedArchives':5,'archiveObjectsNow':len(after)}))
+          
+          PY

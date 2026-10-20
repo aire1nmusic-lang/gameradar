@@ -1,3 +1,8 @@
+## 20.10.2026 — Bare Coins controls and readable profile text
+- Owner screenshot: remove all Coins button tiles/frames. Leaderboard Coins controls now transparent with border0/shadow:none;44px targets and keyboard focus indication retained on every viewport.
+- Profile screenshot: low-contrast grey text disappears over white glass/scenery. Scoped L2 full-background profile typography uses opaque white primary, cool near-white secondary and a small dark glyph shadow; secondary labels weight500. Existing white panel film, light-mode dark text, semantic status/accent colors and layout retained.
+- VERIFIED LOCAL TypeScript/build/prerender/bundle/diff PASS; production/CI and actual primary readback required. No DNS/private data/payment changes, cost0. Rollback285068a. Next: build, publish, verify world controls and server text; physical Android remains untested.
+
 ## 20.10.2026 — Owner correction: WHITE matte glass, not dark tint
 - Owner rejected the previous dark profile/Support tint. Corrected dark-mode profile film to translucent WHITE22/14%, Support20/12%, inner preview rows/header to white6.5/8%; existing light-mode milky palette retained. No new scrolling backdrop blur. TOP-3 information bars now white22/14% instead of91/97% dark slabs; Coins buttons retain44px target but use white7% rather than black62%.
 - Logo: explicit CSS palette defaults independent of @property/animation, SVG stop-color fallbacks and path paint-server fallback colors added. Screenshot black-mark cause not yet reproduced; do not present inferred compatibility fix as proven root cause. Approved shape, gradients and palette animation retained.

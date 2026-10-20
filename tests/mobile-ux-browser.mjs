@@ -162,6 +162,7 @@ try {
       const studio = page.locator('.gs-support-studio')
       for (const heading of await page.locator('.gs-support-dialog-head h2,.gs-support-preview h3').all()) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(35, 50, 59)','Support headings use readable dark ink on pale matte')
       assert.equal(await studio.locator('.gs-projection-row').count(), 3, 'Compact forecast initially shows three positions')
+      for (const caption of await studio.locator('.gs-projection-coins').all()) assert.equal(await caption.evaluate(e=>getComputedStyle(e).color),'rgb(89, 104, 114)','Forecast coin captions remain readable on white matte')
       await studio.getByRole('button', { name: '25', exact: true }).click()
       assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
       await studio.getByRole('button', { name: 'Увеличить количество Coins', exact: true }).click()

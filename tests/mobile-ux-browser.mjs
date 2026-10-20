@@ -104,8 +104,10 @@ try {
           const grid = picker.getByRole('navigation', { name: 'Выбрать хроники', exact: true })
           await grid.waitFor({ state: 'visible' })
           const gridBox = await grid.boundingBox()
+          const pickerBox = await picker.boundingBox()
           const searchBox = await search.boundingBox()
           const summaryBox = await summary.boundingBox()
+          assert.ok(summaryBox.width >= pickerBox.width - 3, 'The entire panel heading is clickable, not a narrow generic button')
           assert.ok(summaryBox.y >= searchBox.y + searchBox.height - 1, 'Picker is below search at every width')
           assert.ok(gridBox.y >= summaryBox.y + summaryBox.height - 1, 'Grid is below its heading')
           const after = await page.locator('#l2-catalog').evaluate(e => e.getBoundingClientRect().top + scrollY)
@@ -115,6 +117,7 @@ try {
           for (const tile of await grid.locator('a').all()) {
             const r = await tile.boundingBox()
             assert.ok(r.width >= 44 && r.height >= 44, 'Chronicle touch target')
+            assert.ok(r.height <= 160, 'Desktop tiles stay compact like approved variant A')
           }
           await grid.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())))
           await noOverflow()

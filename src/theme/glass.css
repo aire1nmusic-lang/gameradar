@@ -335,8 +335,8 @@ html[data-design="lobby"] body .l2a .server:has(> .gs-shelf-hitbox) > .server-ri
 /* Owner readability pass, 20.10: light white milk glass on profile panels and Support dialog.
    Page panels use tint rather than live blur to preserve mobile scrolling. */
 html[data-design="lobby"] {
-  --profile-frost:linear-gradient(155deg,rgba(255,255,255,.22),rgba(255,255,255,.14));
-  --support-frost:linear-gradient(145deg,rgba(255,255,255,.20),rgba(255,255,255,.12));
+  --profile-frost:linear-gradient(155deg,rgba(255,255,255,.30),rgba(255,255,255,.23));
+  --support-frost:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.21));
   --support-inner:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
   --support-row:rgba(255,255,255,.065);
   --support-head:rgba(255,255,255,.08);

@@ -283,7 +283,7 @@ function Profile({ server: source }: { server: GameServer }) {
 
       <Container className={cn('relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
         <div className={cn("gs-profile-head flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between", showcase && "gs-profile-over-hero")}>
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-end">
+          <div className="gs-profile-identity flex items-start gap-3 sm:items-end sm:gap-4">
             <ServerLogo
               name={server.name}
               gameId={server.gameId}
@@ -292,9 +292,9 @@ function Profile({ server: source }: { server: GameServer }) {
               src={server.logoUrl}
               forceGameGlyph
               size="xl"
-              className="shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] ring-4 ring-ink-950"
+              className="gs-profile-avatar"
             />
-            <div className="pb-1">
+            <div className="gs-profile-copy min-w-0 pb-1">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <StatusBadge status={server.online.status} launching={!!server.launch} />
               </div>

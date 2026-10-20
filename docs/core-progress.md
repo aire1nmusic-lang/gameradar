@@ -1,3 +1,9 @@
+## 20.10.2026 — Mobile profile identity and stable scenery
+- Owner Android screenshots: avatar stranded above name/double frame; mobile identity is now avatar72px (60px below360) beside status/title, flexible wrapping copy, no extra ring/shadow. Desktop88px identity retained.
+- Removed decorative WorldArtSurface and imports from PrivateVotePanel: no transparent character illustration behind Player Choice on any viewport/game; votes/auth behavior untouched.
+- HYPOTHESIS mobile background shift: fixed inset0 cover rescales as browser URL bar changes viewport. Background now top-fixed with stable100lvh height (100vh fallback), no transform/animation. No touch listeners/parallax found on this profile. Physical Android swipe still requires owner acceptance.
+- VERIFIED LOCAL TypeScript/build/prerender/bundle/diff PASS; CI six-size/three-game gate and actual primary readback required. Cost0; no DNS/private data/payment changes. Rollback942e8c2. Chronicle expansion remains undecided, unchanged.
+
 ## 20.10.2026 — Bare Coins controls and readable profile text
 - Owner screenshot: remove all Coins button tiles/frames. Leaderboard Coins controls now transparent with border0/shadow:none;44px targets and keyboard focus indication retained on every viewport.
 - Profile screenshot: low-contrast grey text disappears over white glass/scenery. Scoped L2 full-background profile typography uses opaque white primary, cool near-white secondary and a small dark glyph shadow; secondary labels weight500. Existing white panel film, light-mode dark text, semantic status/accent colors and layout retained.

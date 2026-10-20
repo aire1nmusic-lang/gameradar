@@ -388,3 +388,17 @@ html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:
 html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:not(#lb):not(#gl):not(#p):not(#q) :is(.text-ink-300,.text-ink-400,.text-ink-500,th,td,.gs-seg-btn:not(.is-active)) {
   color:#f1f5f9!important;font-weight:500;text-shadow:0 1px 2px rgba(4,9,16,.95),0 0 4px rgba(4,9,16,.55);
 }
+
+/* Stable profile scenery: mobile URL-bar collapse must not rescale the cover. */
+.gs-server-bg{bottom:auto;height:100vh;height:100lvh;transform:none;animation:none}
+.gs-profile-identity{min-width:0}
+.gs-profile-copy{overflow-wrap:anywhere}
+.gs-profile-avatar{align-self:flex-start;box-shadow:none!important}
+@media(max-width:639px){
+  .gs-profile-identity .gs-profile-avatar{width:72px;height:72px;border-radius:12px}
+  .gs-profile-copy h1{font-size:24px;line-height:1.15}
+}
+@media(max-width:359px){
+  .gs-profile-identity .gs-profile-avatar{width:60px;height:60px}
+  .gs-profile-copy h1{font-size:22px}
+}

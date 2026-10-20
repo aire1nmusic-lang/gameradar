@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Trophy } from 'lucide-react'
-import { serverArt } from '@/data/themeMedia'
-import { WorldArtSurface } from '@/components/media/WorldArt'
 import type { GameServer } from '@/models'
 import { ApiRequestError, apiRequest } from '@/repositories/http/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -63,7 +61,6 @@ export function PrivateVotePanel({server,anchor=true}:{server:GameServer;anchor?
   }
   return <section id={anchor?"vote":undefined} className="gs-vote-panel relative isolate space-y-3 overflow-hidden rounded-2xl border p-4 sm:p-6"
     style={{ borderColor: 'color-mix(in oklab, var(--gt-primary) 42%, transparent)', background: 'linear-gradient(140deg, color-mix(in oklab, var(--gt-primary) 16%, var(--color-ink-900)), var(--color-ink-900) 72%)' }}>
-    <span aria-hidden className="pointer-events-none absolute inset-0 -z-10 opacity-[0.22] [mask-image:linear-gradient(to_left,#000,transparent_75%)]"><WorldArtSurface art={serverArt(server)} scrim="none" sizes="500px" width={800} /></span>
     <div className="flex items-center gap-2 text-[11.5px] font-medium tracking-[0.12em] uppercase" style={{ color: 'var(--gt-primary)' }}><Trophy size={14} /> Выбор игроков</div>
     <div className="flex items-end gap-6">
       <div><div className="num font-display text-[44px] leading-none font-semibold text-ink-50">{votes===undefined?'…':votes}</div><div className="mt-1.5 text-[12.5px] text-ink-300">голосов игроков</div></div>

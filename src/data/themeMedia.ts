@@ -113,7 +113,15 @@ const L2_CHRONICLE_ART: Record<string, WorldArt> = {
 
 /** The All tile has its own banner without replacing the main world's approved backdrop. */
 export function chronicleTileArt(gameId: string, chronicleId?: string): WorldArt | undefined {
-  return gameId === 'lineage2' ? L2_CHRONICLE_ART[chronicleId ?? 'all'] : worldArt('hero',gameId,chronicleId) ?? worldArt('card',gameId,chronicleId)
+  if (gameId !== 'lineage2') return worldArt('hero',gameId,chronicleId) ?? worldArt('card',gameId,chronicleId)
+  const item = L2_CHRONICLE_ART[chronicleId ?? 'all']
+  if (!item) return undefined
+  // Tile crops differ from full-page backgrounds: protect the top of every head.
+  // Mobile narrows the scene around the right-hand subject; desktop keeps the wider view.
+  return { ...item, focus: {
+    desktop: chronicleId === undefined || chronicleId === 'all' ? '72% 0%' : '75% 0%',
+    mobile: chronicleId === undefined || chronicleId === 'all' ? '80% 0%' : '85% 0%',
+  } }
 }
 
 const WORLDS: Record<string, Partial<WorldMedia>> = {

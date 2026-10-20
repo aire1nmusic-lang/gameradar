@@ -117,12 +117,29 @@ try {
           for (const tile of await grid.locator('a').all()) {
             const r = await tile.boundingBox()
             assert.ok(r.width >= 44 && r.height >= 44, 'Chronicle touch target')
-            assert.ok(r.height <= 160, 'Desktop tiles stay compact like approved variant A')
+            const expectedRatio = width < 768 ? 16/9 : 21/9
+            assert.ok(Math.abs(r.width/r.height-expectedRatio)<.04, 'Chronicle frame follows image-friendly desktop/mobile ratio')
+            const framing = await tile.locator('img').evaluate(image => {
+              const css=getComputedStyle(image),mobile=matchMedia('(max-width:767px)').matches
+              const expected=image.style.getPropertyValue(mobile?'--chronicle-focus-mobile':'--chronicle-focus-desktop').trim()
+              return {actual:css.objectPosition,expected}
+            })
+            assert.equal(framing.actual,framing.expected,'Mobile and desktop use their own subject framing')
+            assert.ok(framing.actual.endsWith('0%'),'The top of the artwork is preserved rather than cutting off heads')
           }
           await grid.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())))
+          const thumbnails=await grid.locator('img').evaluateAll(images=>images.map(image=>image.currentSrc))
+          assert.equal(new Set(thumbnails).size,6,'All six chronicle thumbnails have different source images')
+          assert.ok(await grid.getByRole('link',{name:'Classic',exact:true}).locator('img').getAttribute('src').then(src=>src.includes('chronicle-classic-dwarf-v2')),'Classic uses the approved dwarf')
+          assert.ok(await grid.getByRole('link',{name:'Essence',exact:true}).locator('img').getAttribute('src').then(src=>src.includes('chronicle-classic-approved-v1')),'Essence uses the approved village traveller')
           await noOverflow()
           assert.equal(await search.inputValue(), 'QA', 'Expanding keeps the search query')
           await page.screenshot({ path: `${output}/chronicles-${width}-${mode}.png` })
+          // Small cropped render proof in the logs supports visual review without a local browser.
+          if(mode==='dark'&&[390,1440].includes(width)) {
+            const proof=await picker.screenshot({type:'jpeg',quality:78})
+            console.log('CHRONICLE_CROP_PROOF '+width+' '+proof.toString('base64'))
+          }
           await grid.getByRole('link', { name: 'Все', exact: true }).press('Escape')
           assert.equal(await picker.getAttribute('open'), null)
           assert.equal(await summary.evaluate(e => e === document.activeElement), true, 'Escape restores summary focus')

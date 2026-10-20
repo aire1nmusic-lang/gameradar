@@ -106,8 +106,8 @@ const L2_CHRONICLE_ART: Record<string, WorldArt> = {
   all: art('lineage-2/chronicle-all-approved-v1', 'Все хроники — дракон над крепостью', 'medium', {desktop:'72% 40%',mobile:'72% 40%'}, [400,800,1600]),
   interlude: art('lineage-2/chronicle-interlude-approved-v1', 'Interlude — ведьма в магическом городе', 'medium', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
   'high-five': art('lineage-2/chronicle-high-five-approved-v1', 'High Five — воительница над сияющим городом', 'bright', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
-  essence: art('lineage-2/chronicle-essence-approved-v1', 'Essence — ведьма с магическим шаром', 'medium', {desktop:'78% 35%',mobile:'78% 35%'}, [400,800,1600]),
-  classic: art('lineage-2/chronicle-classic-approved-v1', 'Classic — рогатый странник в утренней деревне', 'bright', {desktop:'75% 45%',mobile:'75% 45%'}, [400,800,1600]),
+  essence: art('lineage-2/chronicle-classic-approved-v1', 'Essence — рогатый странник в утренней деревне', 'bright', {desktop:'75% 45%',mobile:'75% 45%'}, [400,800,1600]),
+  classic: art('lineage-2/chronicle-classic-dwarf-v2', 'Classic — гном-кузнец в солнечной мастерской', 'bright', {desktop:'75% 0%',mobile:'75% 0%'}, [400,800,1600]),
   gracia: art('lineage-2/chronicle-gracia-approved-v1', 'Gracia Final — воин у горящей крепости', 'medium', {desktop:'75% 25%',mobile:'75% 25%'}, [400,800,1600]),
 }
 

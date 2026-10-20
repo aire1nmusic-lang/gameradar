@@ -1,8 +1,11 @@
 name: Remove owner-approved old deployment archives
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/site-approved-archive-cleanup.yml']
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DELETE_13_APPROVED_ARCHIVES to delete the exact approved allowlist'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -10,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   cleanup:
+    if: ${{ github.event.inputs.confirm == 'DELETE_13_APPROVED_ARCHIVES' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: production
@@ -41,8 +45,8 @@ jobs:
               assert x['key'] in before and before[x['key']]['Size']==x['bytes'],'Retained archive missing or changed'
               h=aws('head-object','--key',x['key'])
               metadata={k.lower():v for k,v in h.get('Metadata',{}).items()}
-          print('RETAINED_HEAD',json.dumps({'key':x['key'],'length':h['ContentLength'],'metadata':metadata}))
-          assert h['ContentLength']==x['bytes'] and re.fullmatch('[a-f0-9]{64}',metadata.get('sha256','')),'Retained archive metadata invalid'
+              print('RETAINED_HEAD',json.dumps({'key':x['key'],'length':h['ContentLength'],'metadata':metadata}))
+              assert h['ContentLength']==x['bytes'] and re.fullmatch('[a-f0-9]{64}',metadata.get('sha256','')),'Retained archive metadata invalid'
           for x in remove:
               if x['key'] in before: assert before[x['key']]['Size']==x['bytes'],'Deletion target changed'
           deleted=0

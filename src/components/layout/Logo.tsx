@@ -27,16 +27,16 @@ export function GsMark({ height = 30, live = false, className }: { height?: numb
     >
       <defs>
         <linearGradient id={`${id}a`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--gs-a0)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--gs-a1)' }} />
+          <stop offset="0" style={{ stopColor: 'var(--gs-a0, #f5f7fa)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-a1, #8d96a3)' }} />
         </linearGradient>
         <linearGradient id={`${id}b`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--gs-b0)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--gs-b1)' }} />
+          <stop offset="0" style={{ stopColor: 'var(--gs-b0, #6ff7ff)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--gs-b1, #10c3e3)' }} />
         </linearGradient>
       </defs>
-      <path d={MARK_G} fill={`url(#${id}a)`} />
-      <path d={MARK_S} fill={`url(#${id}b)`} className="gs-logo__glow" />
+      <path d={MARK_G} fill={`url(#${id}a) #f5f7fa`} />
+      <path d={MARK_S} fill={`url(#${id}b) #10c3e3`} className="gs-logo__glow" />
     </svg>
   )
 }

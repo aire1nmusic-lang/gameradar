@@ -703,6 +703,10 @@
 @property --gs-glow { syntax: '<color>'; inherits: true; initial-value: rgb(24 217 242 / 0.55); }
 
 .gs-logo {
+  /* Explicit defaults also work without CSS @property registration or animation. */
+  --gs-a0: #f5f7fa; --gs-a1: #8d96a3;
+  --gs-b0: #6ff7ff; --gs-b1: #10c3e3;
+  --gs-glow: rgb(24 217 242 / .55);
   --gs-w0: #ffffff;
   --gs-w1: #b9c0ca;
   overflow: visible;

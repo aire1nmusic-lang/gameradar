@@ -332,14 +332,14 @@ html[data-design="lobby"] body .l2a .server:has(> .gs-shelf-hitbox) > .server-ri
 .l2a .server .gs-shelf-coins:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
 
 
-/* Owner readability pass, 20.10: denser page glass; lightly frosted support dialog.
+/* Owner readability pass, 20.10: light white milk glass on profile panels and Support dialog.
    Page panels use tint rather than live blur to preserve mobile scrolling. */
 html[data-design="lobby"] {
-  --profile-frost:linear-gradient(155deg,rgba(25,30,37,.64),rgba(16,21,28,.76));
-  --support-frost:linear-gradient(145deg,rgba(31,36,44,.76),rgba(18,23,30,.82));
+  --profile-frost:linear-gradient(155deg,rgba(255,255,255,.22),rgba(255,255,255,.14));
+  --support-frost:linear-gradient(145deg,rgba(255,255,255,.20),rgba(255,255,255,.12));
   --support-inner:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
-  --support-row:rgba(12,17,24,.32);
-  --support-head:rgba(27,32,40,.92);
+  --support-row:rgba(255,255,255,.065);
+  --support-head:rgba(255,255,255,.08);
 }
 html[data-design="lobby"][data-color-mode="light"] {
   --profile-frost:linear-gradient(155deg,rgba(253,250,244,.89),rgba(244,240,232,.83));

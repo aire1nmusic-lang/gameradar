@@ -331,3 +331,51 @@ html[data-design="lobby"] body .l2a .server:has(> .gs-shelf-hitbox) > .server-ri
 .l2a .server .gs-shelf-coins {position:relative;z-index:8;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:44px;min-height:44px;padding:4px;border-radius:8px;pointer-events:auto}
 .l2a .server .gs-shelf-coins:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px}
 
+
+/* Owner readability pass, 20.10: denser page glass; lightly frosted support dialog.
+   Page panels use tint rather than live blur to preserve mobile scrolling. */
+html[data-design="lobby"] {
+  --profile-frost:linear-gradient(155deg,rgba(25,30,37,.64),rgba(16,21,28,.76));
+  --support-frost:linear-gradient(145deg,rgba(31,36,44,.76),rgba(18,23,30,.82));
+  --support-inner:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+  --support-row:rgba(12,17,24,.32);
+  --support-head:rgba(27,32,40,.92);
+}
+html[data-design="lobby"][data-color-mode="light"] {
+  --profile-frost:linear-gradient(155deg,rgba(253,250,244,.89),rgba(244,240,232,.83));
+  --support-frost:linear-gradient(145deg,rgba(253,250,244,.86),rgba(240,236,228,.90));
+  --support-inner:linear-gradient(160deg,rgba(255,255,255,.38),rgba(255,255,255,.20));
+  --support-row:rgba(42,37,29,.055);
+  --support-head:rgba(247,243,235,.94);
+}
+html[data-design="lobby"] body .gs-server-profile :is(.surface,.surface-raised,.gs-vote-panel):not(#lb):not(#gl):not(#p) {
+  background:var(--profile-frost)!important;
+  border-color:var(--g-bd-hi)!important;
+  box-shadow:var(--g-hl),0 12px 32px -22px rgba(0,0,0,.65)!important;
+}
+html[data-design="lobby"] body dialog.gs-support-dialog:not(#lb):not(#gl):not(#p) {
+  background:var(--support-frost)!important;
+  border:1px solid var(--g-bd-hi)!important;
+  box-shadow:var(--g-hl),0 28px 72px -20px rgba(0,0,0,.65)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(.9)!important;
+  backdrop-filter:blur(16px) saturate(.9)!important;
+}
+html[data-design="lobby"] body dialog.gs-support-dialog::backdrop {
+  background:rgba(5,8,13,.44);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+html[data-design="lobby"] body .gs-support-dialog :is(.gs-support-form,.gs-support-preview):not(#lb):not(#gl):not(#p) {
+  background:var(--support-inner)!important;
+  border-color:var(--g-bd)!important;box-shadow:var(--g-hl)!important;
+}
+html[data-design="lobby"] body .gs-support-dialog-head:not(#lb):not(#gl):not(#p) {
+  background:var(--support-head)!important;border-bottom:1px solid var(--g-bd);
+}
+html[data-design="lobby"] body .gs-support-dialog :is(.gs-position-summary,.gs-projection-row):not(.gs-projection-target):not(#lb):not(#gl):not(#p) {
+  background:var(--support-row)!important;border-color:var(--g-bd)!important;
+}
+html[data-design="lobby"] body .gs-support-dialog .gs-projection-target:not(#lb):not(#gl):not(#p) {
+  background:color-mix(in srgb,var(--lb-lime) 12%,transparent)!important;border-color:var(--lb-lime)!important;
+}
+@supports not (backdrop-filter:blur(1px)) {
+  html[data-design="lobby"] body dialog.gs-support-dialog:not(#lb):not(#gl):not(#p) {background:var(--g-bg-solid)!important}
+}

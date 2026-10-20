@@ -1,3 +1,8 @@
+## 20.10.2026 — Approved warm L2 server-page artwork replacement
+- Owner approved the supplied landscape and then explicitly selected their supplied vertical JPEG for phones; generated alternative is NOT used. New versioned summer-v2 WebP assets: landscape400/800/1600/2000, portrait720x1280/1080x1920; minimal aspect correction under1%, no stretching. Registry and fixed page background point to approved new art; mobile uses dedicated9:16 image-set below768px. Account artwork, ratings, layout and private services unchanged. Original assets retained for source rollback.
+- VERIFIED LOCAL: TypeScript, production build/prerender and bundle guard PASS. Source image inspected. Local Chromium matrix could not run: environment denies browser singleton socket creation (EPERM); do NOT claim local responsive browser acceptance. Existing production workflow runs the full320/390/768/1024/1440/844 responsive matrix before activation. Publication and live readback pending.
+- Scope: source/public assets only; no DNS, API/data writes or paid infrastructure. Next: guarded production CI/release, actual new SHA and asset readback. Rollback: restore prior art registry/CSS from1c09185; old image URLs remain available.
+
 ## 20.10.2026 — Максимальная независимая приёмка ядра (в работе)
 
 - VERIFIED read-only: origin/main24ade8a, опубликованный frontend d136b4a/production39312538792 SUCCESS; main200/rating200/unknown404/auth503, direct Gateway/VM health+auth200, registrationOpen:false. Новые DNS/Gateway/VM/платёжные изменения не разрешались и не выполнялись. Чужие root untracked файлы сохранены; продолжение на codex/core-readiness-20261020 в той же рабочей копии.

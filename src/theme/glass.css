@@ -216,9 +216,9 @@ html[data-design="lobby"] body [role="menu"]:not(#lb):not(#gl),html[data-design=
 html[data-design="lobby"] body .gs-games-menu.surface-raised:not(#lb):not(#gl):not(#p):not(#q){background:linear-gradient(180deg,rgba(18,20,26,.95),rgba(14,16,21,.93))!important;border:1px solid rgba(255,255,255,.14)!important}
 
 /* ---------- L2 server page: the fortress is a fixed full-page background; the header strip is transparent over it ---------- */
-.gs-server-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:#0c0e13 url('/media/worlds/lineage-2/server-castle-v1-2000.webp') 62% 40%/cover no-repeat}
+.gs-server-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;background:#0c0e13 url('/media/worlds/lineage-2/server-castle-summer-v2-2000.webp') 62% 40%/cover no-repeat}
 .gs-server-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,14,.70) 0%,rgba(8,10,14,.30) 50%,rgba(8,10,14,.15) 100%),linear-gradient(0deg,rgba(8,10,14,.66),rgba(8,10,14,.32) 55%,rgba(8,10,14,.12))}
-@media (max-width:767px){.gs-server-bg{background-image:url('/media/worlds/lineage-2/account-castle-m-1080.webp');background-position:50% 35%}}
+@media (max-width:767px){.gs-server-bg{background-image:url('/media/worlds/lineage-2/server-castle-summer-v2-mobile-1080.webp');background-image:image-set(url('/media/worlds/lineage-2/server-castle-summer-v2-mobile-720.webp') 1x,url('/media/worlds/lineage-2/server-castle-summer-v2-mobile-1080.webp') 2x);background-position:50% 40%}}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > :first-child{opacity:0!important}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2){background:transparent!important}
 html[data-design="lobby"] body .gs-server-fullbg :is(.gt-hero,[class*="ThemePattern"]){display:none!important}

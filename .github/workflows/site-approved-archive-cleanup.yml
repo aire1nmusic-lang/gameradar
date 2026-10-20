@@ -40,7 +40,9 @@ jobs:
           for x in keep:
               assert x['key'] in before and before[x['key']]['Size']==x['bytes'],'Retained archive missing or changed'
               h=aws('head-object','--key',x['key'])
-              assert h['ContentLength']==x['bytes'] and re.fullmatch('[a-f0-9]{64}',h.get('Metadata',{}).get('sha256','')),'Retained archive metadata invalid'
+              metadata={k.lower():v for k,v in h.get('Metadata',{}).items()}
+          print('RETAINED_HEAD',json.dumps({'key':x['key'],'length':h['ContentLength'],'metadata':metadata}))
+          assert h['ContentLength']==x['bytes'] and re.fullmatch('[a-f0-9]{64}',metadata.get('sha256','')),'Retained archive metadata invalid'
           for x in remove:
               if x['key'] in before: assert before[x['key']]['Size']==x['bytes'],'Deletion target changed'
           deleted=0

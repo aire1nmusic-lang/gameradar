@@ -4,6 +4,7 @@ import {spawnSync} from 'node:child_process'
 import {PGlite} from '@electric-sql/pglite'
 import {migrate} from '../private-api/db.mjs'
 import {rehearseCoreScenarios} from '../private-api/rehearsal-scenarios.mjs'
+import {rehearseVoteRisk} from '../private-api/vote-risk-rehearsal.mjs'
 
 test('PostgreSQL rehearsal refuses to load credentials or connect without explicit opt-in',()=>{
   const env={...process.env,PRIVATE_REHEARSAL:'0',DATABASE_URL:'deliberately-not-a-database-url'}
@@ -30,4 +31,13 @@ test('same isolated acceptance journey exercises proof, recovery, test payments,
   assert.equal(Number((await db.query('SELECT count(*) n FROM gs_claim_proofs WHERE consumed_at IS NOT NULL')).rows[0].n),3)
   assert.equal(Number((await db.query("SELECT count(*) n FROM gs_audit WHERE action='copyright.restore'")).rows[0].n),3)
   await assert.rejects(()=>rehearseCoreScenarios(db),/empty disposable database/)
+})
+
+test('concurrent shared IP, device and ASN signals require recheck before accepting another vote',async t=>{
+  const pg=new PGlite(),db={query:(sql,args=[])=>pg.query(sql,args),transaction:fn=>pg.transaction(fn)}
+  t.after(()=>pg.close());await migrate(db)
+  const result=await rehearseVoteRisk(db)
+  assert.deepEqual(result.map(row=>row.kind),['ip','device','asn'])
+  assert.ok(result.every(row=>row.concurrentUncheckedAccepted===1&&row.challenged===1&&row.verifiedChallengeAccepted===1&&row.replay))
+  assert.deepEqual(result[0].idempotencyConflict,[201,409]);assert.equal(result[0].unknownIngressChallenged,true)
 })

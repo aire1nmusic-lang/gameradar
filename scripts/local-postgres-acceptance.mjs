@@ -77,6 +77,8 @@ export async function localPostgresAcceptance(){
     }
     assert.ok(ready,'Disposable PostgreSQL did not become ready')
     assert.equal((await control.query('SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()')).rows[0].ssl,true)
+    const untrusted=postgresStore(url.href,'not-the-disposable-CA')
+    try{await assert.rejects(()=>untrusted.query('SELECT 1'),/certificate|PEM|SSL/i)}finally{await untrusted.close()}
     const database=`gamescout_e2e_${Date.now()}_${randomBytes(4).toString('hex')}`,restore=database+'_restore'
     await control.query(`CREATE DATABASE "${database}"`);url.pathname='/'+database
     db=postgresStore(url.href,ca);await migrate(db);await migrate(db)
@@ -101,7 +103,7 @@ export async function localPostgresAcceptance(){
     await assert.rejects(()=>restored.query('DELETE FROM gs_coin_ledger'),/append.only|immutable/)
     await assert.rejects(()=>restored.query('DELETE FROM gs_audit'),/append.only/)
     report={scope:'local-disposable-real-postgresql',imageId:(await command('docker',['image','inspect','--format','{{.Id}}',image])).stdout.trim(),postgresVersion:(await control.query('SHOW server_version')).rows[0].server_version,
-      tlsVerified:true,migrations:before.counts.migrations,scenarios,voteRisk,encryptedRestore:{dumpSha256:sha(dump),
+      tlsVerified:true,untrustedCaRejected:true,migrations:before.counts.migrations,scenarios,voteRisk,encryptedRestore:{dumpSha256:sha(dump),
         encryptedBytes:(await readFile(join(dir,'test.dump.gpg'))).length,restoredCounts:before.counts,immutableTriggersVerified:true},
       externalProvidersInvoked:false,productionDataChanged:false,newCloudResources:0}
   }finally{

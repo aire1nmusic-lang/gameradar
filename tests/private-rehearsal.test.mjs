@@ -39,4 +39,5 @@ test('concurrent shared IP, device and ASN signals require recheck before accept
   const result=await rehearseVoteRisk(db)
   assert.deepEqual(result.map(row=>row.kind),['ip','device','asn'])
   assert.ok(result.every(row=>row.concurrentUncheckedAccepted===1&&row.challenged===1&&row.verifiedChallengeAccepted===1&&row.replay))
+  assert.deepEqual(result[0].idempotencyConflict,[201,409]);assert.equal(result[0].unknownIngressChallenged,true)
 })

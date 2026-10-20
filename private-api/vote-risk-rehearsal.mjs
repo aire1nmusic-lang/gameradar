@@ -37,7 +37,19 @@ export async function rehearseVoteRisk(db){
     const loser=race.findIndex(r=>r.status===403);assert.equal(race[loser].body.error.code,'captcha_required')
     assert.equal((await cast(users[loser],'valid')).status,201)
     assert.equal((await cast(users[loser])).body.replay,true,'accepted replay must not consume another challenge')
-    results.push({kind,concurrentUncheckedAccepted:1,challenged:1,verifiedChallengeAccepted:1,replay:true})
+    const result={kind,concurrentUncheckedAccepted:1,challenged:1,verifiedChallengeAccepted:1,replay:true}
+    if(kind==='ip'){
+      const servers=[token(),token(),token()]
+      for(const id of servers)await db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES($1,'minecraft',$1,$1)",[id])
+      const sharedKey=token()
+      const conflict=await Promise.all(servers.slice(0,2).map(server=>cast({...users[0],server,key:sharedKey},'valid')))
+      result.idempotencyConflict=conflict.map(r=>r.status).sort()
+      assert.deepEqual(result.idempotencyConflict,[201,409],'concurrent reuse across cards must conflict, never fail with a uniqueness500')
+      const unknown=await cast({...users[1],server:servers[2],key:token(),ip:'unknown'})
+      assert.equal(unknown.status,403);assert.equal(unknown.body.error.code,'captcha_required')
+      result.unknownIngressChallenged=true
+    }
+    results.push(result)
   }return results}finally{
     await db.query('UPDATE gs_vote_rules SET ip_daily_limit=$1,device_daily_limit=$2,asn_daily_limit=$3 WHERE id=1',
       [rules.ip_daily_limit,rules.device_daily_limit,rules.asn_daily_limit])

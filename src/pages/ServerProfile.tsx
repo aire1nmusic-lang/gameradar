@@ -67,6 +67,7 @@ import {
 import { ServerList } from '@/components/server/ServerRow'
 import { breadcrumbs, useSeo } from '@/lib/seo'
 import { SupportStudio } from '@/components/rating/SupportStudio'
+import '@/components/profile/profile-identity.css'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
@@ -282,7 +283,7 @@ function Profile({ server: source }: { server: GameServer }) {
       </div>
 
       <Container className={cn('relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
-        <div className={cn("gs-profile-head flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between", showcase && "gs-profile-over-hero")}>
+        <div className={cn("gs-profile-head gs-profile-dossier flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between", showcase && "gs-profile-over-hero")}>
           <div className="gs-profile-identity flex items-start gap-3 sm:items-end sm:gap-4">
             <ServerLogo
               name={server.name}
@@ -299,32 +300,16 @@ function Profile({ server: source }: { server: GameServer }) {
                 <StatusBadge status={server.online.status} launching={!!server.launch} />
               </div>
               <h1 className="text-[26px] leading-tight sm:text-[34px]">{server.name}</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: game.accent }} />
-                  {game.name} · {chronicle?.label ?? server.version}
-                </span>
-                <span className="text-ink-600">•</span>
-                {server.rates && (
-                  <>
-                    <span className="text-ink-200">Рейты {server.rates}</span>
-                    <span className="text-ink-600">•</span>
-                  </>
-                )}
-                {(server.country || server.region) && (
-                  <>
-                    <span>
-                      {server.flag} {[server.country, server.region].filter(Boolean).join(' · ')}
-                    </span>
-                    <span className="text-ink-600">•</span>
-                  </>
-                )}
-                <Rating value={server.rating} count={server.reviewsCount} size="sm" />
+              <div className="gs-profile-facts">
+                <span>{game.name} · {chronicle?.label ?? server.version}</span>
+                {server.rates && <span>Рейты {server.rates}</span>}
+                {(server.country || server.region) && <span>{server.flag} {[server.country, server.region].filter(Boolean).join(' · ')}</span>}
+                <span><Rating value={server.rating} count={server.reviewsCount} size="sm" /></span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pb-1">
+          <div className="gs-profile-actions flex items-center gap-2 pb-1">
             <button
               onClick={() => toggle(server.slug)}
               aria-label="В избранное"

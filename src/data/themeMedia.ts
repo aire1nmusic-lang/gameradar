@@ -101,16 +101,30 @@ const SHARED: WorldMedia = {
 
 const solo = (item: WorldArt): Partial<WorldMedia> => ({ hero: item, card: item, promo: item, gallery: [item] })
 
+/** Owner-approved individual chronicle banners, 20 Oct 2026. */
+const L2_CHRONICLE_ART: Record<string, WorldArt> = {
+  all: art('lineage-2/chronicle-all-approved-v1', 'Все хроники — дракон над крепостью', 'medium', {desktop:'72% 40%',mobile:'72% 40%'}, [400,800,1600]),
+  interlude: art('lineage-2/chronicle-interlude-approved-v1', 'Interlude — ведьма в магическом городе', 'medium', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
+  'high-five': art('lineage-2/chronicle-high-five-approved-v1', 'High Five — воительница над сияющим городом', 'bright', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
+  essence: art('lineage-2/chronicle-essence-approved-v1', 'Essence — ведьма с магическим шаром', 'medium', {desktop:'78% 35%',mobile:'78% 35%'}, [400,800,1600]),
+  classic: art('lineage-2/chronicle-classic-approved-v1', 'Classic — рогатый странник в утренней деревне', 'bright', {desktop:'75% 45%',mobile:'75% 45%'}, [400,800,1600]),
+  gracia: art('lineage-2/chronicle-gracia-approved-v1', 'Gracia Final — воин у горящей крепости', 'medium', {desktop:'75% 25%',mobile:'75% 25%'}, [400,800,1600]),
+}
+
+/** The All tile has its own banner without replacing the main world's approved backdrop. */
+export function chronicleTileArt(gameId: string, chronicleId?: string): WorldArt | undefined {
+  return gameId === 'lineage2' ? L2_CHRONICLE_ART[chronicleId ?? 'all'] : worldArt('hero',gameId,chronicleId) ?? worldArt('card',gameId,chronicleId)
+}
+
 const WORLDS: Record<string, Partial<WorldMedia>> = {
   // ── Lineage 2 — one master, one look per chronicle ───────────────────────
   lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFiveHero, gallery: [ART.l2Master, ART.l2InterludeHero, ART.l2HighFiveHero, ART.l2ClassicHero, ART.l2EssenceHero] },
-  'lineage2:interlude': { hero: ART.l2InterludeHero, card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
-  'lineage2:high-five': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
-  'lineage2:classic': { hero: ART.l2ClassicHero, card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
-  'lineage2:essence': { hero: ART.l2EssenceHero, card: ART.l2EssenceTile, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
-  // Gracia Final stays text-only in the compact rail for now, but its route gets a full-resolution era image.
-  // Gracia has no portrait yet: its tile uses the siege key art so it never repeats the High Five portrait.
-  'lineage2:gracia': { hero: ART.l2HighFiveHero, card: ART.l2HighFiveHero, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
+  'lineage2:interlude': { hero: L2_CHRONICLE_ART['interlude'], card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
+  'lineage2:high-five': { hero: L2_CHRONICLE_ART['high-five'], card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
+  'lineage2:classic': { hero: L2_CHRONICLE_ART['classic'], card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
+  'lineage2:essence': { hero: L2_CHRONICLE_ART['essence'], card: ART.l2EssenceTile, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
+  // Approved individual chronicle art; secondary historical slots are retained.
+  'lineage2:gracia': { hero: L2_CHRONICLE_ART['gracia'], card: ART.l2HighFiveHero, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
 
   // ── Minecraft — the survival world fronts the game, modes vary ───────────
   minecraft: { hero: ART.mcMaster, card: ART.mcMaster, promo: ART.mcSkyBlock, gallery: [ART.mcMaster, ART.mcSkyBlock, ART.mcMinigames, ART.mcAnarchy] },

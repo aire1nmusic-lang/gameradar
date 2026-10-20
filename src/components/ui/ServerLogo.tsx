@@ -3,6 +3,7 @@ import { Axe, BedDouble, Biohazard, Car, Cloud, Crosshair, Crown, Flame, Gamepad
 import { cn } from '@/lib/utils'
 import { GAMES_BY_ID } from '@/data/games'
 import { useAppearance } from '@/theme/appearance'
+import './server-logo.css'
 
 /** The game's sign for servers without their own logo (default icon styles "glyph" and "crest"). */
 const GAME_GLYPH: Record<string, LucideIcon> = {
@@ -106,6 +107,7 @@ export function ServerLogo({
           ...style,
         }}
         aria-hidden
+        data-default-avatar={gameId}
       >
         <img
           src={defaultAvatar}

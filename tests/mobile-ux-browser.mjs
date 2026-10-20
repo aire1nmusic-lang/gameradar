@@ -15,7 +15,7 @@ const cards = ['lineage2', 'minecraft', 'gtarp'].flatMap(gameId => {
   return Array.from({ length: 12 }, (_, i) => ({ ...sample,
     id: `qa-${gameId}-${i}`, slug: `qa-${gameId}-${i}`,
     name: i === 0 ? 'QA Очень длинное название игрового сервера с хрониками x1000' : `QA ${gameId} ${i}`,
-    gameId, votes: 20 - i, support: { coins: 30 - i, participants: 1 },
+    logoUrl: '', gameId, votes: 20 - i, support: { coins: 30 - i, participants: 1 },
     links: { site: 'https://example.invalid/', discord: '' }, address: '',
     launch: i === 11 ? { at: new Date(Date.now() + 86400000).toISOString() } : undefined,
   }))
@@ -159,6 +159,40 @@ try {
         throw error
       })
       assert.equal(selectedServer, `qa-${game.id}-0`)
+      const studio = page.locator('.gs-support-studio')
+      assert.equal(await studio.locator('.gs-projection-row').count(), 3, 'Compact forecast initially shows three positions')
+      await studio.getByRole('button', { name: '25', exact: true }).click()
+      assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
+      await studio.getByRole('button', { name: 'Увеличить количество Coins', exact: true }).click()
+      assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '26')
+      await studio.getByRole('button', { name: 'Уменьшить количество Coins', exact: true }).click()
+      assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
+      await studio.getByRole('button', { name: 'Ещё позиции', exact: true }).click()
+      assert.equal(await studio.locator('.gs-projection-row').count(), 7)
+      await studio.getByRole('button', { name: 'Свернуть список', exact: true }).click()
+      await studio.getByLabel('Сервер', { exact: true }).selectOption(`qa-${game.id}-11`)
+      await studio.getByLabel('Количество Coins', { exact: true }).fill('1')
+      assert.equal(await studio.locator('.gs-projection-row').count(), 3)
+      assert.equal(await studio.locator('.gs-projection-target').getAttribute('data-preview-id'), `qa-${game.id}-11`, 'Compact window includes selected server even at bottom of ranking')
+      await studio.getByLabel('Количество Coins', { exact: true }).fill('0')
+      await studio.getByRole('alert').waitFor()
+      assert.equal(await studio.locator('.gs-position-next').count(), 0, 'Invalid amount has no forecast')
+      await studio.getByLabel('Количество Coins', { exact: true }).fill('10')
+      await studio.getByLabel('Сервер', { exact: true }).selectOption(`qa-${game.id}-0`)
+      const dialogBox = await page.locator('.gs-support-dialog').boundingBox()
+      assert.ok(dialogBox.x >= 0 && dialogBox.y >= 0 && dialogBox.x + dialogBox.width <= width + 1 && dialogBox.y + dialogBox.height <= height + 1, 'Support dialog fits viewport')
+      const regions = await studio.evaluate(e => {
+        const box = selector => { const r=e.querySelector(selector).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom} }
+        return {form:box('.gs-support-form'),preview:box('.gs-support-preview'),checkout:box('.gs-support-checkout')}
+      })
+      if (width < 768) assert.ok(regions.preview.y >= regions.form.bottom - 1, 'Forecast follows amount without overlap')
+      else assert.ok(regions.preview.x >= regions.form.right - 1, 'Desktop forecast is beside amount')
+      assert.ok(regions.checkout.y >= Math.max(regions.form.bottom, regions.preview.bottom) - 1, 'Checkout follows both sections')
+      for (const button of await studio.locator('.gs-amount-preset,.gs-support-stepper>button').all()) {
+        const r=await button.boundingBox();assert.ok(r.width>=44&&r.height>=44, 'Coin controls have 44px touch targets')
+      }
+      await page.screenshot({ path: `${output}/support-redesign-${game.id}-${width}.png` })
+
       assert.equal(await page.evaluate(() => document.body.style.overflow), 'hidden')
       await noOverflow()
       await page.keyboard.press('Escape')
@@ -167,6 +201,19 @@ try {
       await page.goto(base + `/server/qa-${game.id}-0`)
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).waitFor()
       assert.equal(await page.locator('.gs-server-profile nav a').first().getAttribute('href'), '/' + game.slug)
+      const dossier = page.locator('.gs-profile-dossier')
+      const dossierBox = await dossier.boundingBox()
+      const avatar = page.locator('.gs-profile-avatar')
+      const avatarBox = await avatar.boundingBox()
+      assert.ok(Math.abs(avatarBox.width-avatarBox.height)<1, 'Avatar cell stays square')
+      assert.ok(avatarBox.x>=dossierBox.x&&avatarBox.y>=dossierBox.y&&avatarBox.x+avatarBox.width<=dossierBox.x+dossierBox.width&&avatarBox.y+avatarBox.height<=dossierBox.y+dossierBox.height, 'Avatar stays within framed server identity')
+      assert.equal(await avatar.evaluate(e=>getComputedStyle(e).transform),'none')
+      const image=avatar.locator('img')
+      if(await image.count()) assert.equal(await image.evaluate(e=>{const m=new DOMMatrixReadOnly(getComputedStyle(e).transform);return Math.abs(m.b)<.001&&Math.abs(m.c)<.001}),true,'Avatar bitmap has no rotation or skew')
+      const titleBox=await page.getByRole('heading',{level:1}).boundingBox()
+      assert.ok(titleBox.x>=avatarBox.x+avatarBox.width-1,'Server name has its own column beside avatar')
+      await page.screenshot({ path: `${output}/identity-redesign-${game.id}-${width}.png` })
+
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).click()
       await page.locator('.gs-ui-modal-panel').waitFor()
       assert.equal(await page.locator('.gs-ui-modal-panel').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(25, 28, 36)')

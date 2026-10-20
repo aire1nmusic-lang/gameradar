@@ -1,0 +1,2 @@
+/* Crop the slightly uneven painted frame from the L2 fallback; only identity/forecast cells. */
+.gs-profile-avatar[data-default-avatar="lineage2"]>img,.gs-support-studio [data-default-avatar="lineage2"]>img{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important;object-position:50% 50%!important;transform:scale(1.14)!important}

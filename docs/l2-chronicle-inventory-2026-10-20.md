@@ -1,36 +1,24 @@
 # Хроники и версии серверов Lineage 2 — 20.10.2026
 
-Источник: свежий публичный GET https://gamescout.online/api/v1/servers?gameId=lineage2&limit=100&offset=0 . Получены все66записей из66, уникальные ID66. Это подсчёт версии, указанной в каталоге; сайты66проектов отдельно не перепроверялись.
+Источник: свежий публичный GET https://gamescout.online/api/v1/servers?gameId=lineage2&limit=100&offset=0 . Получены все 66 записей из 66, уникальные ID — 66. Это подсчёт версии, указанной в каталоге; сайты 66 проектов отдельно не перепроверялись.
 
 |Хроника / версия в каталоге|Серверов|
-
 |---|---:|
-
 |Interlude|25|
-
 |High Five|20|
-
 |Essence|9|
-
 |C4|3|
-
 |Gracia Epilogue|3|
-
 |Classic|2|
-
 |Remastered|2|
-
 |C1|1|
-
 |C3|1|
-
 |Gracia Final|0|
-
 |**Итого**|**66**|
 
 ## Несоответствие текущего выбора хроник
 
-В /api/v1/games опубликованы Interlude25, High Five20, Essence9, Classic2, Gracia Final0. Ещё10серверов имеют chronicleId=null: C1(1), C3(1), C4(3), Gracia Epilogue(3), Remastered(2). Они видны во Все, но для них нет отдельных плиток. Gracia Epilogue не объединялась с Gracia Final; C4 не объединялась с Classic. Метка Remastered оставлена как в исходных данных.
+В /api/v1/games опубликованы Interlude25, High Five20, Essence9, Classic2, Gracia Final0. Ещё 10 серверов имеют chronicleId=null: C1(1), C3(1), C4(3), Gracia Epilogue(3), Remastered(2). Они видны во Все, но для них нет отдельных плиток. Gracia Epilogue не объединялась с Gracia Final; C4 не объединялась с Classic. Метка Remastered оставлена как в исходных данных.
 
 ## Все серверы по версии
 

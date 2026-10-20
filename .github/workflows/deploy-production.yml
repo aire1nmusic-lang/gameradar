@@ -86,6 +86,11 @@ jobs:
       - name: Build from live public catalog and verify SEO
         run: npm run build:catalog -- "${PUBLIC_API_ORIGIN}"
 
+      - name: Disposable real PostgreSQL and encrypted restore
+        env:
+          PRIVATE_LOCAL_POSTGRES_REHEARSAL: "1"
+        run: node scripts/local-postgres-acceptance.mjs
+
       - name: Stamp production build version
         run: |
           node <<'NODE'

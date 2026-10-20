@@ -1,5 +1,9 @@
 # Запуск личного кабинета: что осталось сделать владельцу
 
+## Проверка 20.10.2026
+
+[Матрица приёмки и готовые команды](core-acceptance-2026-10-20.md): настоящий локальный PostgreSQL17/TLS/24migrations/3game journeys/financial+vote races и encrypted fixture dump/restore проверены. Это не принятие production БД. В проверенном backup bucket последняя копия07.10, fresh cron/backup/restore BLOCKED доступом к действующей VM; encrypted cold copy скачана и хеш сверён без recovery key. Первое действие оператора после SSH — свежая копия и восстановление, затем применение совместимого private API. Новые исправления risk/monitoring не считать действующими на VM по merge/frontend release.
+
 ## Уточнение проверки 19.10.2026
 
 Текущую приёмку читать в верхней сводке [core-progress.md](core-progress.md). Историческая машина `gamescout-private-staging` ниже остановлена; запускать её по старому описанию нельзя. Действующая `gamescout-private-d` отвечает health/auth по HTTPS. Ключ хоста независимо подтверждён через Yandex; подходящая локальная операторская SSH identity не найдена. Поэтому PostgreSQL, текущие миграции, ежедневный encrypted backup и новое тестовое восстановление на этой машине **BLOCKED**, старые результаты сентября их не подтверждают.

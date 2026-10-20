@@ -17,14 +17,15 @@ concurrency:
 
 env:
   VM_SSH_HOST: priv.gamescout.online
-  VM_SSH_USER: spl23071994
-  VM_DEPLOY_PATH: /home/spl23071994/gamescout-staging
+  VM_SSH_USER: ${{ vars.VM_SSH_USER }}
+  VM_DEPLOY_PATH: ${{ vars.VM_DEPLOY_PATH }}
 
 jobs:
   check:
     if: ${{ github.event.inputs.confirm == 'CHECK_VM' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: production
     steps:
       - name: Require VM SSH secrets
         env:
@@ -33,6 +34,8 @@ jobs:
         run: |
           test -n "$VM_SSH_PRIVATE_KEY" || { echo "::error::Missing VM_SSH_PRIVATE_KEY"; exit 1; }
           test -n "$VM_SSH_KNOWN_HOSTS" || { echo "::error::Missing VM_SSH_KNOWN_HOSTS"; exit 1; }
+          [[ "$VM_SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]{0,31}$ ]] || { echo "::error::Set verified VM_SSH_USER variable"; exit 1; }
+          [[ "$VM_DEPLOY_PATH" =~ ^/[a-zA-Z0-9_/-]+$ ]] || { echo "::error::Set verified VM_DEPLOY_PATH variable"; exit 1; }
 
       - name: Prepare SSH
         env:
@@ -48,7 +51,7 @@ jobs:
 
       - name: Read-only production VM reality check
         run: |
-          ssh -i ~/.ssh/id_gamescout -o BatchMode=yes -o StrictHostKeyChecking=yes "${VM_SSH_USER}@${VM_SSH_HOST}"             "DEPLOY_PATH='${VM_DEPLOY_PATH}' bash -s" <<'REMOTE'
+          ssh -i ~/.ssh/id_gamescout -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes "${VM_SSH_USER}@${VM_SSH_HOST}"             "DEPLOY_PATH='${VM_DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
           echo "host=$(hostname)"
           echo "user=$(id -un)"

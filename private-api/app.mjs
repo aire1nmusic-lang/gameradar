@@ -550,16 +550,20 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     await limit(c,'vote',user.id,20)
     const existing=(await db.query('SELECT id,server_id,review_status FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
     if(existing) { if(existing.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован для другого сервера');return c.json({id:existing.id,accepted:existing.review_status==='ACCEPTED',replay:true}) }
-    const rules=(await db.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
-    const totals=(await db.query(`SELECT
+    const assessRisk=async store=>{
+      const rules=(await store.query('SELECT * FROM gs_vote_rules WHERE id=1')).rows[0]
+      const totals=(await store.query(`SELECT
       count(*) FILTER(WHERE ip_hash=$1 AND created_at>now()-interval '1 day')::integer AS ip_count,
       count(*) FILTER(WHERE device_hash=$2 AND created_at>now()-interval '1 day')::integer AS device_count,
       count(*) FILTER(WHERE asn=$3 AND created_at>now()-interval '1 day')::integer AS asn_count
       FROM gs_votes WHERE created_at>now()-interval '1 day'`,[ipHash,deviceHash,asn])).rows[0]
-    // Browser signals are weak evidence: they raise scrutiny, never establish a unique person.
-    const suspicious=!deviceHash || pageAgeMs===null || pageAgeMs<2000 || totals.ip_count>=rules.ip_daily_limit
-      || totals.device_count>=rules.device_daily_limit || (asn && totals.asn_count>=rules.asn_daily_limit)
-    if(suspicious) {
+      // Browser signals raise scrutiny; they never establish a unique person.
+      return {rules,suspicious:ip==='unknown'||!deviceHash||pageAgeMs===null||pageAgeMs<2000
+        ||totals.ip_count>=rules.ip_daily_limit||totals.device_count>=rules.device_daily_limit
+        ||!!(asn&&totals.asn_count>=rules.asn_daily_limit)}
+    }
+    let captchaVerified=false
+    if((await assessRisk(db)).suspicious) {
       if(!config.turnstileSecret || typeof body.captcha!=='string' || body.captcha.length>2048) fail(403,'captcha_required','Требуется дополнительная проверка')
       let valid=false
       try {
@@ -568,12 +572,19 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
         valid=result.success===true && result.hostname===new URL(origin).hostname && result.action==='vote'
       } catch {}
       if(!valid) fail(403,'captcha_invalid','Дополнительная проверка не пройдена')
+      captchaVerified=true
     }
     const result=await db.transaction(async tx=>{
-      // Serialize a user's votes to this card even if two requests hit different replicas.
-      await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`${user.id}:${serverId}`])
+      // Stable global ordering prevents cycles across overlapping risk signals.
+      // Captcha network verification above never holds these database locks.
+      const locks=[`vote:user:${user.id}`,`vote:ip:${ipHash}`,
+        ...(deviceHash?[`vote:device:${deviceHash}`]:[]),...(asn?[`vote:asn:${asn}`]:[])].sort()
+      for(const lock of locks)await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',[lock])
       const replay=(await tx.query('SELECT id,server_id,review_status FROM gs_votes WHERE user_id=$1 AND idempotency_key=$2',[user.id,idem])).rows[0]
       if(replay) { if(replay.server_id!==serverId) fail(409,'idempotency_conflict','Ключ уже использован'); return {id:replay.id,replay:true,accepted:replay.review_status==='ACCEPTED'} }
+      // Another account/card may have consumed a shared threshold since preflight.
+      const {rules,suspicious}=await assessRisk(tx)
+      if(suspicious&&!captchaVerified)fail(403,'captcha_required','Требуется дополнительная проверка')
       const server=(await tx.query('SELECT 1 FROM gs_server_registry WHERE server_id=$1',[serverId])).rows[0]
       if(!server) fail(404,'not_found','Сервер не найден')
       const count=(await tx.query(`SELECT count(*)::integer AS n FROM gs_votes WHERE user_id=$1 AND server_id=$2

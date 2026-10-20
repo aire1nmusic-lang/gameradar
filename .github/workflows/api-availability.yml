@@ -29,16 +29,19 @@ jobs:
         env:
           VM_SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           VM_SSH_KNOWN_HOSTS: ${{ secrets.VM_SSH_KNOWN_HOSTS }}
+          VM_SSH_USER: ${{ vars.VM_SSH_USER }}
+          VM_DEPLOY_PATH: ${{ vars.VM_DEPLOY_PATH }}
         run: |
           if [ -z "$VM_SSH_PRIVATE_KEY" ] || [ -z "$VM_SSH_KNOWN_HOSTS" ]; then echo "VM check BLOCKED: missing existing SSH credentials"; exit 0; fi
+          if [[ ! "$VM_SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]{0,31}$ ]] || [[ ! "$VM_DEPLOY_PATH" =~ ^/[a-zA-Z0-9_/-]+$ ]]; then echo "VM check BLOCKED: set verified VM user and deploy-path variables"; exit 0; fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_gamescout
           chmod 600 ~/.ssh/id_gamescout
           printf '%s\n' "$VM_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/id_gamescout -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=8 spl23071994@priv.gamescout.online 'bash -s' <<'REMOTE'
+          ssh -i ~/.ssh/id_gamescout -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=8 "${VM_SSH_USER}@priv.gamescout.online" "DEPLOY_PATH='${VM_DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
-          cd /home/spl23071994/gamescout-staging/deploy/vm
+          cd "$DEPLOY_PATH/deploy/vm"
           compose() { if docker compose version >/dev/null 2>&1; then docker compose "$@"; else sudo -n docker compose "$@"; fi; }
           compose ps
           compose exec -T api node --input-type=module -e "for(const path of ['/api/v1/health','/api/v1/auth/me','/api/v1/people-rating?gameId=lineage2']){const t=performance.now();try{const r=await fetch('http://127.0.0.1:8080'+path,{signal:AbortSignal.timeout(8000)});const b=await r.json().catch(()=>null);console.log(JSON.stringify({path,status:r.status,ms:Math.round(performance.now()-t),code:b?.error?.code,privateCore:b?.privateCore}));}catch(e){console.log(path,e.name)}}"

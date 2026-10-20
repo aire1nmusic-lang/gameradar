@@ -47,10 +47,11 @@ export async function checkStoppedJobs(db) {
     openedEvent:'operations.jobs_stalled',closedEvent:'operations.jobs_recovered',
     openedMessage:'GameScout: задания остановлены после лимита попыток',
     closedMessage:'GameScout: остановленных заданий больше нет'})
-  if(snapshot.backup.status!=='unknown')await transitionSystemAlert(db,{key:'backup_upload_stale',
-    active:snapshot.backup.status==='stale',snapshot:{ageSeconds:snapshot.backup.ageSeconds},
+  // A replacement VM with no backup heartbeat must not remain silently healthy.
+  await transitionSystemAlert(db,{key:'backup_upload_stale',
+    active:snapshot.backup.status!=='upload_verified',snapshot:{status:snapshot.backup.status,ageSeconds:snapshot.backup.ageSeconds},
     openedEvent:'backup.upload_stale',closedEvent:'backup.upload_recovered',
-    openedMessage:'GameScout: резервная копия давно не загружалась',
+    openedMessage:'GameScout: свежая загрузка резервной копии не подтверждена',
     closedMessage:'GameScout: загрузка резервной копии восстановлена'})
   return snapshot
 }

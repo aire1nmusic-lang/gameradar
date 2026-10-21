@@ -46,6 +46,10 @@ export function publicPages(records = publicRecords()) {
   for (const game of games) {
     const subset = records.filter(record => record.game === game)
     pages.push({ path: `/${GAME_SLUG[game]}`, title: `${GAME_NAME[game]} — серверы GameScout`, description: `Каталог серверов ${GAME_NAME[game]} с проверенными характеристиками.`, body: `<h1>Серверы ${GAME_NAME[game]}</h1><p>Актуальный онлайн загружается отдельно.</p><ul class="seo-cards">${cards(subset)}</ul><p><a href="/catalog?game=${game}">Каталог с фильтрами</a></p>` })
+    if (game === 'lineage2') {
+      const others = subset.filter(record => !['Interlude', 'High Five', 'Essence'].includes(record.version))
+      pages.push({ path: '/lineage-2/other', title: 'Lineage 2 — Другие хроники — GameScout', description: 'Classic, ранние хроники и другие версии Lineage 2.', body: `<h1>Lineage 2 — Другие хроники</h1><ul class="seo-cards">${cards(others)}</ul><p><a href="/lineage-2">Все серверы Lineage 2</a></p>` })
+    }
     for (const chronicle of [...new Set(subset.map(record => record.chronicle).filter(Boolean))]) {
       const items = subset.filter(record => record.chronicle === chronicle)
       pages.push({ path: `/${GAME_SLUG[game]}/${chronicle}`, title: `${GAME_NAME[game]} ${chronicle} — GameScout`, description: `Серверы ${GAME_NAME[game]}: ${chronicle}.`, body: `<h1>${escapeHtml(GAME_NAME[game])} — ${escapeHtml(chronicle)}</h1><ul class="seo-cards">${cards(items)}</ul><p><a href="/${GAME_SLUG[game]}">Все серверы ${GAME_NAME[game]}</a></p>` })

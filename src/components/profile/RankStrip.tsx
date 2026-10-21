@@ -1,4 +1,5 @@
 import { CalendarClock, Flame, Trophy } from 'lucide-react'
+import './rank-strip.css'
 import { cn } from '@/lib/utils'
 import { formatCountdown } from '@/lib/format'
 import { getGame } from '@/data/games'
@@ -22,7 +23,7 @@ export function RankStrip({ server, peers, loading = false }: { server: GameServ
   if (loading && !peers.length && (measured(server) || server.votes > 0 || opening)) return <div className="mt-5 h-8" aria-hidden="true" />
   if (!onlineRank && !voteRank && !opening) return null
 
-  const chip = 'inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] py-1 pr-3.5 pl-1.5 text-[13px] text-ink-100'
+  const chip = 'gs-profile-rank-chip inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] py-1 pr-3.5 pl-1.5 text-[13px] text-ink-100'
   return (
     <div className="mt-5 flex flex-wrap gap-2">
       {onlineRank > 0 && (

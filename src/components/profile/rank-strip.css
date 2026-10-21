@@ -1,0 +1,2 @@
+/* Same translucent surface as the surrounding server profile. */
+html[data-design="lobby"] body .gs-profile-rank-chip:not(#lb):not(#gl):not(#p):not(#q){background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.36)!important;color:#fff7e9!important;box-shadow:inset 0 1px rgba(255,255,255,.16)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);text-shadow:0 1px 3px rgba(0,0,0,.55)}

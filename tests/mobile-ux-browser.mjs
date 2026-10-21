@@ -15,7 +15,7 @@ const cards = ['lineage2', 'minecraft', 'gtarp'].flatMap(gameId => {
   return Array.from({ length: 12 }, (_, i) => ({ ...sample,
     id: `qa-${gameId}-${i}`, slug: `qa-${gameId}-${i}`,
     name: i === 0 ? 'QA Очень длинное название игрового сервера с хрониками x1000' : `QA ${gameId} ${i}`,
-    logoUrl: '', gameId, votes: 20 - i, support: { coins: 30 - i, participants: 1 },
+    logoUrl: '', gameId, ...(gameId === 'lineage2' ? { version: ['Interlude', 'High Five', 'Essence', 'C4'][i % 4], chronicleId: i % 4 === 3 ? undefined : ['interlude', 'high-five', 'essence'][i % 4] } : {}), votes: 20 - i, support: { coins: 30 - i, participants: 1 },
     links: { site: 'https://example.invalid/', discord: '' }, address: '',
     launch: i === 11 ? { at: new Date(Date.now() + 86400000).toISOString() } : undefined,
   }))
@@ -130,7 +130,7 @@ try {
           const after = await page.locator('#l2-catalog').evaluate(e => e.getBoundingClientRect().top + scrollY)
           assert.ok(after - before >= gridBox.height - 3, 'Open grid pushes shelves down instead of covering them')
           assert.equal(await grid.evaluate(e => getComputedStyle(e).position), 'static')
-          assert.equal(await grid.locator('a').count(), game.chronicles.length + 1)
+          assert.equal(await grid.locator('a').count(), 4)
           for (const tile of await grid.locator('a').all()) {
             const r = await tile.boundingBox()
             assert.ok(r.width >= 44 && r.height >= 44, 'Chronicle touch target')
@@ -146,8 +146,8 @@ try {
           }
           await grid.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())))
           const thumbnails=await grid.locator('img').evaluateAll(images=>images.map(image=>image.currentSrc))
-          assert.equal(new Set(thumbnails).size,6,'All six chronicle thumbnails have different source images')
-          assert.ok(await grid.getByRole('link',{name:'Classic',exact:true}).locator('img').getAttribute('src').then(src=>src.includes('chronicle-classic-dwarf-v2')),'Classic uses the approved dwarf')
+          assert.equal(new Set(thumbnails).size,4,'All four chronicle thumbnails have different source images')
+          assert.ok(await grid.getByRole('link',{name:'Другие хроники',exact:true}).locator('img').getAttribute('src').then(src=>src.includes('chronicle-classic-dwarf-v2')),'Other chronicles use the approved dwarf')
           assert.ok(await grid.getByRole('link',{name:'Essence',exact:true}).locator('img').getAttribute('src').then(src=>src.includes('chronicle-classic-approved-v1')),'Essence uses the approved village traveller')
           await noOverflow()
           assert.equal(await search.inputValue(), 'QA', 'Expanding keeps the search query')
@@ -157,11 +157,11 @@ try {
             const proof=await picker.screenshot({type:'jpeg',quality:78})
             console.log('CHRONICLE_CROP_PROOF '+width+' '+proof.toString('base64'))
           }
-          await grid.getByRole('link', { name: 'Все', exact: true }).press('Escape')
+          await picker.getByRole('link', { name: 'Все серверы', exact: true }).press('Escape')
           assert.equal(await picker.getAttribute('open'), null)
           assert.equal(await summary.evaluate(e => e === document.activeElement), true, 'Escape restores summary focus')
           await summary.press('Enter')
-          await grid.getByRole('link', { name: 'Все', exact: true }).click()
+          await picker.getByRole('link', { name: 'Все серверы', exact: true }).click()
           assert.equal(await picker.getAttribute('open'), null, 'Selecting current era closes without route change')
         }
         await page.evaluate(() => { document.documentElement.dataset.colorMode = 'dark' })
@@ -175,7 +175,13 @@ try {
         await page.locator('.gs-inline-summary').click()
         assert.equal(await page.getByRole('navigation', { name: 'Выбрать хроники', exact: true }).getByRole('link', { name: target.label, exact: true }).getAttribute('aria-current'), 'page')
         await noOverflow()
-        await page.goto(base + '/' + game.slug)
+        await page.getByRole('navigation', { name: 'Выбрать хроники', exact: true }).getByRole('link', { name: 'Другие хроники', exact: true }).click()
+        await page.waitForURL(base + '/' + game.slug + '/other')
+        await page.locator('.gs-shelf-people .server:not(.is-skeleton)').first().waitFor()
+        assert.equal(await page.locator('.gs-shelf-people .server:not(.is-skeleton)').count(), 3, 'Other chronicles includes all unassigned C4 cards and excludes the three main versions')
+        await page.locator('.gs-inline-summary').click()
+        await page.getByRole('link', { name: 'Все серверы', exact: true }).click()
+        await page.waitForURL(base + '/' + game.slug)
         await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
       }
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
@@ -194,9 +200,10 @@ try {
       })
       assert.equal(selectedServer, `qa-${game.id}-0`)
       const studio = page.locator('.gs-support-studio')
-      for (const heading of await page.locator('.gs-support-dialog-head h2,.gs-support-preview h3').all()) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(35, 50, 59)','Support headings use readable dark ink on pale matte')
+      for (const heading of await page.locator('.gs-support-dialog-head h2,.gs-support-preview h3').all()) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(255, 247, 233)','Support headings remain readable on smoked glass')
+      assert.equal(await page.locator('.gs-support-login').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(200, 255, 85)', 'Support action keeps the vivid lime brand accent')
       assert.equal(await studio.locator('.gs-projection-row').count(), 3, 'Compact forecast initially shows three positions')
-      for (const caption of await studio.locator('.gs-projection-coins').all()) assert.equal(await caption.evaluate(e=>getComputedStyle(e).color),'rgb(89, 104, 114)','Forecast coin captions remain readable on white matte')
+      for (const caption of await studio.locator('.gs-projection-coins').all()) assert.equal(await caption.evaluate(e=>getComputedStyle(e).color),'rgb(199, 208, 213)','Forecast captions remain readable on smoked glass')
       await studio.getByRole('button', { name: '25', exact: true }).click()
       assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
       await studio.getByRole('button', { name: 'Увеличить количество Coins', exact: true }).click()
@@ -204,10 +211,12 @@ try {
       await studio.getByRole('button', { name: 'Уменьшить количество Coins', exact: true }).click()
       assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
       await studio.getByRole('button', { name: 'Ещё позиции', exact: true }).click()
+      assert.equal(await page.locator('.gs-support-login').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(200, 255, 85)', 'Support action keeps the vivid lime brand accent')
       assert.equal(await studio.locator('.gs-projection-row').count(), 7)
       await studio.getByRole('button', { name: 'Свернуть список', exact: true }).click()
       await studio.getByLabel('Сервер', { exact: true }).selectOption(`qa-${game.id}-11`)
       await studio.getByLabel('Количество Coins', { exact: true }).fill('1')
+      assert.equal(await page.locator('.gs-support-login').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(200, 255, 85)', 'Support action keeps the vivid lime brand accent')
       assert.equal(await studio.locator('.gs-projection-row').count(), 3)
       assert.equal(await studio.locator('.gs-projection-target').getAttribute('data-preview-id'), `qa-${game.id}-11`, 'Compact window includes selected server even at bottom of ranking')
       await studio.getByLabel('Количество Coins', { exact: true }).fill('0')

@@ -9,7 +9,7 @@ html[data-design="lobby"] body .l2a .gs-inline-picker>summary.gs-inline-summary:
 .gs-inline-current{flex:none;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;padding:5px 12px;border:1px solid rgba(255,255,255,.38);border-radius:999px;background:rgba(255,255,255,.07)}
 .gs-inline-chevron{flex:none;transition:transform .18s}
 .gs-inline-picker[open] .gs-inline-chevron{transform:rotate(90deg)}
-.gs-inline-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 20px 20px;min-width:0}
+.gs-inline-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0 20px 20px;min-width:0}
 .gs-inline-tile{position:relative;display:block;min-width:0;min-height:0;height:auto;aspect-ratio:21/9;overflow:hidden;border:1px solid rgba(255,255,255,.36);border-radius:12px;background:#18232b;color:#fff;text-decoration:none}
 .gs-inline-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--chronicle-focus-desktop,75% 0%)}
 .gs-inline-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,14,23,.92),rgba(5,14,23,.1) 85%);pointer-events:none}
@@ -25,3 +25,6 @@ html[data-color-mode="light"] .gs-inline-current{border-color:rgba(74,70,58,.25)
 @media(max-width:767px){.gs-inline-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 14px 16px}html[data-design="lobby"] body .l2a .gs-inline-picker>summary.gs-inline-summary:not(#lb):not(#gl):not(#p){padding:15px 16px!important;gap:10px!important;min-height:72px!important}.gs-inline-tile{aspect-ratio:16/9}.gs-inline-tile img{object-position:var(--chronicle-focus-mobile,85% 0%)}.gs-inline-title{font-size:21px}.gs-inline-caption{font-size:20px;left:12px;bottom:12px}.gs-inline-current{font-size:12px;padding:4px 9px;max-width:36%}}
 @media(max-width:359px){html[data-design="lobby"] body .l2a .gs-inline-picker>summary.gs-inline-summary:not(#lb):not(#gl):not(#p){gap:7px!important;padding-inline:12px!important}.gs-inline-title{font-size:18px}.gs-inline-current{font-size:11px;padding-inline:7px;max-width:33%}.gs-inline-caption{font-size:18px}.gs-inline-grid{padding-inline:12px}}
 @media(prefers-reduced-motion:reduce){.gs-inline-chevron{transition:none}}
+
+.gs-inline-reset{display:inline-flex;align-items:center;min-height:44px;margin:0 20px 8px;color:inherit;text-decoration:underline;text-underline-offset:3px}
+.gs-inline-picker:not([open])>.gs-inline-reset{display:none}

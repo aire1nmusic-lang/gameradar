@@ -107,6 +107,7 @@ const L2_CHRONICLE_ART: Record<string, WorldArt> = {
   interlude: art('lineage-2/chronicle-interlude-approved-v1', 'Interlude — ведьма в магическом городе', 'medium', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
   'high-five': art('lineage-2/chronicle-high-five-approved-v1', 'High Five — воительница над сияющим городом', 'bright', {desktop:'75% 30%',mobile:'75% 30%'}, [400,800,1600]),
   essence: art('lineage-2/chronicle-classic-approved-v1', 'Essence — рогатый странник в утренней деревне', 'bright', {desktop:'75% 45%',mobile:'75% 45%'}, [400,800,1600]),
+  other: art('lineage-2/chronicle-classic-dwarf-v2', 'Другие хроники — гном-кузнец в солнечной мастерской', 'bright', {desktop:'75% 0%',mobile:'75% 0%'}, [400,800,1600]),
   classic: art('lineage-2/chronicle-classic-dwarf-v2', 'Classic — гном-кузнец в солнечной мастерской', 'bright', {desktop:'75% 0%',mobile:'75% 0%'}, [400,800,1600]),
   gracia: art('lineage-2/chronicle-gracia-approved-v1', 'Gracia Final — воин у горящей крепости', 'medium', {desktop:'75% 25%',mobile:'75% 25%'}, [400,800,1600]),
 }
@@ -129,6 +130,7 @@ const WORLDS: Record<string, Partial<WorldMedia>> = {
   lineage2: { hero: ART.l2Master, card: ART.l2Master, promo: ART.l2HighFiveHero, gallery: [ART.l2Master, ART.l2InterludeHero, ART.l2HighFiveHero, ART.l2ClassicHero, ART.l2EssenceHero] },
   'lineage2:interlude': { hero: L2_CHRONICLE_ART['interlude'], card: ART.l2InterludeCard, promo: ART.l2InterludeHero, gallery: [ART.l2InterludeHero] },
   'lineage2:high-five': { hero: L2_CHRONICLE_ART['high-five'], card: ART.l2HighFiveCard, promo: ART.l2HighFiveHero, gallery: [ART.l2HighFiveHero] },
+  'lineage2:other': solo(L2_CHRONICLE_ART['other']),
   'lineage2:classic': { hero: L2_CHRONICLE_ART['classic'], card: ART.l2ClassicCard, promo: ART.l2ClassicHero, gallery: [ART.l2ClassicHero] },
   'lineage2:essence': { hero: L2_CHRONICLE_ART['essence'], card: ART.l2EssenceTile, promo: ART.l2EssenceHero, gallery: [ART.l2EssenceHero] },
   // Approved individual chronicle art; secondary historical slots are retained.

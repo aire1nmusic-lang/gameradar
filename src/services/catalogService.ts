@@ -1,3 +1,4 @@
+import { isOtherL2Version } from '@/data/l2Chronicles'
 import { repo } from '@/repositories'
 import type { GameServer, Page, ServerQuery, SortKey } from '@/models'
 import { readPublicRanking } from './publicRanking'
@@ -68,6 +69,10 @@ type DiscoveryEntry = { at: number; result: Promise<GameServer[]>; snapshot?: Ga
 const discoveryCache = new Map<string, DiscoveryEntry>()
 export function invalidateDiscoveryCache() { discoveryCache.clear(); invalidatePublicReads() }
 export function discoveryServers(query: ServerQuery = {}, demo = false, publish?: (servers: GameServer[]) => void): Promise<GameServer[]> {
+  if (query.gameId === 'lineage2' && query.chronicleId === 'other') {
+    const select = (servers: GameServer[]) => servers.filter(server => isOtherL2Version(server.version))
+    return discoveryServers({ ...query, chronicleId: undefined }, demo, publish ? servers => publish(select(servers)) : undefined).then(select)
+  }
   const key = JSON.stringify(query)
   let entry = discoveryCache.get(key)
   if (!entry || Date.now() - entry.at >= 15000) {

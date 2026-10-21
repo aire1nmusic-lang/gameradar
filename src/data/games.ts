@@ -1,4 +1,5 @@
 import type { Chronicle, Game } from '@/models'
+import { otherL2Chronicle } from './l2Chronicles'
 import { isLiveGame } from './liveGames'
 
 /** API-hydrated catalogue metadata shared with synchronous theme resolution.
@@ -49,7 +50,7 @@ export function getGame(id: string): Game {
   return game
 }
 export function getGameBySlug(slug: string | undefined): Game | undefined { return slug ? GAMES_BY_SLUG[slug] : undefined }
-export function getChronicle(game: Game | undefined, slug: string | undefined): Chronicle | undefined { return game?.chronicles.find(c => c.slug === slug) }
+export function getChronicle(game: Game | undefined, slug: string | undefined): Chronicle | undefined { return game?.id === 'lineage2' && slug === 'other' ? otherL2Chronicle(game) : game?.chronicles.find(c => c.slug === slug) }
 export function chronicleOfVersion(gameId: string, version: string): Chronicle | undefined { return GAMES_BY_ID[gameId]?.chronicles.find(c => c.versions.includes(version)) }
 export const REGIONS = ['EU', 'RU / CIS', 'NA', 'SEA'] as const
 export const LANGUAGES = ['Русский', 'English', 'Українська', 'Polski'] as const

@@ -1,3 +1,10 @@
+## 21.10.2026 — VERIFIED LIVE: approved compact chronicle cards published
+
+- User selected first preview. Source be21d0f130cb3d3a32dc536953cc9d8c35f646ff is on main and primary. CI39629974559/job119325289389 SUCCESS; production39629974682/job119325290558 SUCCESS including durable rollback archive verification, independent inactive-version checks and primary-domain readback. No backup bypass or new resources/costs.
+- Browser regression PASS320x568/390x844/768x1024/1024x768/1440x900/844x390 across3games with zeroAPIwrites. L2 checks dark/light, compact artwork/card heights, separate matte caption bounds/readable dark text, image framing, four unique images and routes/reset/keyboard behavior. Actual CI crop proofs390+1440 visually inspected. Physical phone still unverified.
+- Independent fresh https://gamescout.online/lineage-2 browser confirms gs-build be21d0f, four tiles in one row at1363px, each144px high with94px artwork, all four decoded, dark caption rgb(23,33,40) below art and no horizontal overflow. Actual live screenshot docs/design-review/compact-chronicles-live-1792598512218.jpg saved and inspected with site context. Production evidence artifact12358857764 retained by workflow.
+- Changed src/components/world/InlineChroniclePicker.tsx, inline-chronicle-picker.css, existing tests/mobile-ux-browser.mjs and this log. No auth/private/payment/DNS changes. Rollback previous3d49f5d/production2b9f488 or verified release archive. Completed approved visual slice; next owner visual review.
+
 ## 21.10.2026 — Approved compact chronicle cards: preparing publication
 
 - Owner chose first preview («Компактные карточки»). Four columns desktop, two mobile; artwork94px/90px and a separate white matte caption strip, dark bold text. Existing four images/routes and disclosure preserved; visible Other label shortened to «Другие», accessible name remains «Другие хроники». Selection uses lime border/check while caption stays dark for contrast. Responsive image sizes updated to25vw desktop/50vw mobile.

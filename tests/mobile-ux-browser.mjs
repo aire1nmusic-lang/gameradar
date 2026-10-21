@@ -191,6 +191,7 @@ try {
       const box = await plaque.locator('.server-name').boundingBox()
       assert.ok(box.width > 40, `name squeezed ${width} ${game.id}`)
       await plaque.screenshot({ path: `${output}/top-${game.id}-${width}.png` })
+      if (game.id === 'lineage2') await page.locator('.gs-shelf-people .server:not(.is-skeleton)').first().screenshot({ path: `${output}/top-people-${game.id}-${width}.png` })
       const profileLink = plaque.getByRole('link', { name: /^Открыть сервер/ })
       assert.equal(await profileLink.evaluate(e => getComputedStyle(e).position), 'absolute')
       await plaque.getByRole('button', { name: /^Поддержать .* за GS Coins$/ }).click()

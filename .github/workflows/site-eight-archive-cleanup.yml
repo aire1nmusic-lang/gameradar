@@ -1,0 +1,25 @@
+name: Clean eight owner-approved old site archives
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/site-eight-archive-cleanup.yml', '.github/scripts/cleanup-eight-archives.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: production-site
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify retained backups, remove only the eight approved archives, verify space
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: 'true'
+        run: python .github/scripts/cleanup-eight-archives.py

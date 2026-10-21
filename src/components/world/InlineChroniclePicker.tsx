@@ -39,9 +39,9 @@ export function InlineChroniclePicker({ game, chronicle }: { game: Game; chronic
         {choices.map(choice => {
           const active = choice.id === (chronicle?.id ?? 'all')
           const thumbnail = chronicleTileArt(game.id, choice.id === 'all' ? undefined : choice.id)
-          return <Link key={choice.id} to={`/${game.slug}${choice.slug ? '/' + choice.slug : ''}`} className="gs-inline-tile" aria-current={active ? 'page' : undefined} onClick={choose}>
-            {thumbnail && <img src={artSrc(thumbnail, 400)} srcSet={thumbnail.widths.map(width => `${artSrc(thumbnail, width)} ${width}w`).join(', ')} sizes="(max-width: 639px) 50vw, 50vw" alt="" width={400} height={170} decoding="async" style={{ '--chronicle-focus-desktop': thumbnail.focus.desktop, '--chronicle-focus-mobile': thumbnail.focus.mobile } as CSSProperties} />}
-            <span className="gs-inline-caption">{choice.label}</span>
+          return <Link key={choice.id} to={`/${game.slug}${choice.slug ? '/' + choice.slug : ''}`} className="gs-inline-tile" aria-label={choice.label} aria-current={active ? 'page' : undefined} onClick={choose}>
+            {thumbnail && <img src={artSrc(thumbnail, 400)} srcSet={thumbnail.widths.map(width => `${artSrc(thumbnail, width)} ${width}w`).join(', ')} sizes="(max-width: 767px) 50vw, 25vw" alt="" width={400} height={170} decoding="async" style={{ '--chronicle-focus-desktop': thumbnail.focus.desktop, '--chronicle-focus-mobile': thumbnail.focus.mobile } as CSSProperties} />}
+            <span className="gs-inline-caption">{choice.id === 'other' ? 'Другие' : choice.label}</span>
             {active && <Check className="gs-inline-check" size={18} aria-hidden="true" />}
           </Link>
         })}

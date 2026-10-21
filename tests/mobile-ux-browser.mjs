@@ -134,8 +134,14 @@ try {
           for (const tile of await grid.locator('a').all()) {
             const r = await tile.boundingBox()
             assert.ok(r.width >= 44 && r.height >= 44, 'Chronicle touch target')
-            const expectedRatio = width < 768 ? 16/9 : 21/9
-            assert.ok(Math.abs(r.width/r.height-expectedRatio)<.04, 'Chronicle frame follows image-friendly desktop/mobile ratio')
+            assert.ok(r.height <= 155, 'Compact chronicles leave room for the catalog at every width')
+            const imageBox = await tile.locator('img').boundingBox()
+            const captionBox = await tile.locator('.gs-inline-caption').boundingBox()
+            assert.ok(imageBox.height <= 95, 'Chronicle illustration stays compact on desktop and mobile')
+            assert.ok(captionBox.y >= imageBox.y + imageBox.height - 1, 'Chronicle name has its own matte strip below the artwork')
+            assert.ok(captionBox.height >= 44 && captionBox.x >= r.x && captionBox.x + captionBox.width <= r.x + r.width + 1, 'Readable label stays inside the card')
+            assert.equal(await tile.locator('.gs-inline-caption').evaluate(e => e.scrollWidth <= e.clientWidth), true, 'Chronicle label is not clipped')
+            assert.equal(await tile.locator('.gs-inline-caption').evaluate(e => getComputedStyle(e).color), 'rgb(23, 33, 40)', 'Both themes retain dark readable text on white matte')
             const framing = await tile.locator('img').evaluate(image => {
               const css=getComputedStyle(image),mobile=matchMedia('(max-width:767px)').matches
               const expected=image.style.getPropertyValue(mobile?'--chronicle-focus-mobile':'--chronicle-focus-desktop').trim()

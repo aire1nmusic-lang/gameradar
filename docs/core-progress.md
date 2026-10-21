@@ -1,3 +1,8 @@
+## 21.10.2026 — Approved compact chronicle cards: preparing publication
+
+- Owner chose first preview («Компактные карточки»). Four columns desktop, two mobile; artwork94px/90px and a separate white matte caption strip, dark bold text. Existing four images/routes and disclosure preserved; visible Other label shortened to «Другие», accessible name remains «Другие хроники». Selection uses lime border/check while caption stays dark for contrast. Responsive image sizes updated to25vw desktop/50vw mobile.
+- Existing six-viewport browser gate updated from old giant image aspect ratios to compact artwork/card height, caption separation/bounds and dark readable text in both themes. LOCAL typecheck/build/prerender137, bundle, JS syntax and diff checks PASS; CI/browser matrix and primary publication PENDING. No auth/private/payment/DNS/resource changes or new costs. Rollback previous main3d49f5d. Next build, push scoped files and verify CI+primary release.
+
 ## 21.10.2026 — VERIFIED LIVE: matte TOP3, four chronicles, support/profile and touch ticker released
 - CI39611942525/job119262781611 SUCCESS; guarded production39611942482/job119262779897 SUCCESS. All6viewports320x568/390x844/768x1024/1024x768/1440x900/844x390 ×3games PASS, zeroAPIwrites. Both support/people TOP1 screenshot proofs390+1440visually inspected from artifact12351421574. LOCAL build/typecheck/prerender137/bundle/syntax/diffPASS.
 - Owner Windows cleanup screenshot135332 reports8deleted/3retained/670731933bytes freed. Subsequent production durable rollback archive verified, assets/HTML uploaded and primary Worker activated successfully: prior BucketMaxSizeExceeded resolved without IAM/quota/tariff change. Exact8cleanup not repeated.

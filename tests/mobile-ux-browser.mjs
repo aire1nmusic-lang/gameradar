@@ -141,7 +141,7 @@ try {
             assert.ok(captionBox.y >= imageBox.y + imageBox.height - 1, 'Chronicle name has its own matte strip below the artwork')
             assert.ok(captionBox.height >= 44 && captionBox.x >= r.x && captionBox.x + captionBox.width <= r.x + r.width + 1, 'Readable label stays inside the card')
             assert.equal(await tile.locator('.gs-inline-caption').evaluate(e => e.scrollWidth <= e.clientWidth), true, 'Chronicle label is not clipped')
-            assert.equal(await tile.locator('.gs-inline-caption').evaluate(e => getComputedStyle(e).color), 'rgb(23, 33, 40)', 'Both themes retain dark readable text on white matte')
+            assert.equal(await tile.locator('.gs-inline-caption').evaluate(e => getComputedStyle(e).color), mode === 'dark' ? 'rgb(255, 247, 233)' : 'rgb(23, 33, 40)', 'Chronicle captions keep readable theme-appropriate contrast on matte glass')
             const framing = await tile.locator('img').evaluate(image => {
               const css=getComputedStyle(image),mobile=matchMedia('(max-width:767px)').matches
               const expected=image.style.getPropertyValue(mobile?'--chronicle-focus-mobile':'--chronicle-focus-desktop').trim()

@@ -1,3 +1,8 @@
+## 22.10.2026 — Chronicle cards: matching the existing glass/matte style
+
+- Owner screenshot145100 highlights opaque white chronicle footers against the translucent world/rating UI. Replaced solid pale card/label fills with smoked translucent base, white matte gradient(.32/.24), subtle upper separator/inset highlight and the same warm cream text/shadow as TOP3 names. Light mode retains translucent champagne matte with dark readable labels. Existing compact geometry, four images, selection, routes and focus preserved; no blur or animation added.
+- LOCAL typecheck/build/prerender137, bundle, JS syntax and diff checks PASS. Existing six-viewport/browser gate updated only for theme-appropriate label color. CI, visual proofs and primary publication PENDING. Files:inline-chronicle-picker.css, tests/mobile-ux-browser.mjs and this log. No new resources/costs or private/auth/payment/DNS changes. Rollback7cd991ee. Next push scoped change, inspect responsive proofs and independently verify primary.
+
 ## 21.10.2026 — VERIFIED LIVE: approved compact chronicle cards published
 
 - User selected first preview. Source be21d0f130cb3d3a32dc536953cc9d8c35f646ff is on main and primary. CI39629974559/job119325289389 SUCCESS; production39629974682/job119325290558 SUCCESS including durable rollback archive verification, independent inactive-version checks and primary-domain readback. No backup bypass or new resources/costs.

@@ -43,7 +43,7 @@ const results = []
 // A geometry-only pass can capture a black placeholder before the CSS scene has decoded.
 const mediaReady = page => page.evaluate(async () => {
   const sources = new Set()
-  for (const element of document.querySelectorAll('.gs-account-layout,.gs-server-bg,.gs-shelf-support .server,img')) {
+  for (const element of document.querySelectorAll('.gs-account-layout,.gs-server-bg,.l2a .scene,.gs-shelf-support .server,img')) {
     if (element instanceof HTMLImageElement && element.src) sources.add(element.currentSrc || element.src)
     for (const pseudo of [null,'::before','::after']) {
       for (const match of getComputedStyle(element,pseudo).backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g)) sources.add(match[1])
@@ -191,6 +191,33 @@ try {
         await page.waitForURL(base + '/' + game.slug)
         await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
       }
+      if (game.id === 'minecraft') {
+        const picker = page.locator('.gs-inline-picker')
+        const search = page.getByRole('searchbox', { name: 'Поиск по названию или рейтам', exact: true })
+        const searchBox = await search.boundingBox()
+        const summaryBox = await picker.locator('summary').boundingBox()
+        assert.ok(summaryBox.y >= searchBox.y + searchBox.height - 1, 'Minecraft modes follow search without overlap')
+        assert.ok((await page.locator('.l2a--minecraft .hero').boundingBox()).height < 340, 'Minecraft hero stays compact')
+        await picker.locator('summary').click()
+        const modes = picker.getByRole('navigation', { name: 'Выбрать режим', exact: true })
+        await modes.waitFor({ state: 'visible' })
+        assert.equal(await modes.getByRole('link').count(), game.chronicles.length)
+        await noOverflow()
+        if (game.chronicles.length) {
+          const target = game.chronicles[0]
+          await modes.getByRole('link', { name: target.label, exact: true }).click()
+          await page.waitForURL(base + '/' + game.slug + '/' + target.slug)
+          await page.locator('.gs-inline-current').filter({hasText:target.label}).waitFor()
+          assert.equal(await page.locator('.gs-inline-picker').getAttribute('open'), null)
+          await page.locator('.gs-inline-summary').click()
+          await page.getByRole('link', {name:'Все серверы',exact:true}).click()
+          await page.waitForURL(base + '/' + game.slug)
+          await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
+        } else await picker.locator('summary').press('Escape')
+        await mediaReady(page)
+        await page.screenshot({path:`${output}/minecraft-world-${width}.png`})
+        if ([390,1440].includes(width)) console.log('MINECRAFT_PROOF '+width+' '+(await page.screenshot({type:'jpeg',quality:70})).toString('base64'))
+      }
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
       await mediaReady(page)
       if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
@@ -301,6 +328,42 @@ try {
     await toolbar.waitFor()
     assert.equal(await toolbar.evaluate(e => getComputedStyle(e).position), 'relative')
     await noOverflow()
+    for (const mode of ['dark','light']) {
+      await page.evaluate(mode=>{document.documentElement.dataset.colorMode=mode},mode)
+      const sort = toolbar.getByRole('button',{name:'Сортировка',exact:true})
+      await sort.click()
+      const menu = toolbar.getByRole('listbox',{name:'Сортировка',exact:true})
+      await menu.waitFor({state:'visible'})
+      const menuBox = await menu.boundingBox()
+      assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=width+1,'Sort menu fits the phone and desktop')
+      await noOverflow()
+      await page.screenshot({path:`${output}/catalog-sort-${width}-${mode}.png`})
+      if (mode==='dark'&&[390,1440].includes(width)) console.log('CONTROL_PROOF catalog-'+width+' '+(await toolbar.screenshot({type:'jpeg',quality:75})).toString('base64'))
+      await menu.getByRole('option',{name:'Онлайн',exact:true}).click()
+      await menu.waitFor({state:'detached'})
+      assert.match(await sort.innerText(),/Онлайн/)
+      await sort.click()
+      await menu.getByRole('option',{name:'Общий топ',exact:true}).waitFor()
+      await sort.press('Escape')
+      await menu.waitFor({state:'detached'})
+      const matte = await toolbar.evaluate(e=>getComputedStyle(e).backgroundImage)
+      await page.goto(base + '/rating?game=lineage2')
+      const tabs=page.locator('.gs-rating-switch')
+      await page.evaluate(mode=>{document.documentElement.dataset.colorMode=mode},mode)
+      if (width<768) {
+        await tabs.waitFor({state:'visible'})
+        assert.equal(await tabs.evaluate(e=>getComputedStyle(e).backgroundImage),matte,'Catalog toolbar and rating switch share the same matte surface')
+        await tabs.getByRole('button',{name:'Голоса',exact:true}).click()
+        assert.equal(await tabs.getByRole('button',{name:'Голоса',exact:true}).getAttribute('aria-pressed'),'true')
+        await tabs.getByRole('button',{name:'Поддержка',exact:true}).click()
+        if(mode==='dark'&&width===390) console.log('CONTROL_PROOF rating-'+width+' '+(await page.locator('.gs-rating-tools').screenshot({type:'jpeg',quality:75})).toString('base64'))
+      }
+      await noOverflow()
+      await page.screenshot({path:`${output}/rating-controls-${width}-${mode}.png`})
+      await page.goto(base + '/catalog?game=lineage2')
+      await toolbar.waitFor()
+    }
+    await page.evaluate(()=>{document.documentElement.dataset.colorMode='dark'})
     await page.goto(base + '/account?game=lineage2')
     await page.locator('.gs-account-entry').waitFor()
     await mediaReady(page)

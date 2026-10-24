@@ -2,7 +2,7 @@
 html[data-design="lobby"] body .l2a--minecraft .wrap:not(#lb):not(#gl):not(#p) {width:min(1440px,calc(100% - 64px))}
 html[data-design="lobby"] body .l2a--minecraft .hero:not(#lb):not(#gl):not(#p) {min-height:0;display:block}
 html[data-design="lobby"] body .l2a--minecraft .hero-copy:not(#lb):not(#gl):not(#p) {max-width:720px;padding:24px 0 20px}
-html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb):not(#gl):not(#p) {
+html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb):not(#gl):not(#p):not(#mc) {
   font:600 clamp(40px,5vw,68px)/1.05 'Pixelify Sans','Inter Tight',system-ui,sans-serif!important;letter-spacing:0!important;
 }
 html[data-design="lobby"] body .l2a--minecraft .hero .edition:not(#lb):not(#gl):not(#p) {display:block;color:#c8ff55;font:700 10px/1.4 var(--font-sans,sans-serif);letter-spacing:.12em;margin:0 0 7px}
@@ -30,7 +30,7 @@ html[data-design="lobby"][data-color-mode="light"] body .l2a--minecraft :is(.her
 @media(max-width:767px) {
   html[data-design="lobby"] body .l2a--minecraft .wrap:not(#lb):not(#gl):not(#p) {width:calc(100% - 28px)}
   html[data-design="lobby"] body .l2a--minecraft .hero-copy:not(#lb):not(#gl):not(#p) {padding:18px 0 16px}
-  html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb):not(#gl):not(#p) {font-size:42px!important;overflow-wrap:anywhere}
+  html[data-design="lobby"] body .l2a--minecraft .hero h1:not(#lb):not(#gl):not(#p):not(#mc) {font-size:42px!important;overflow-wrap:anywhere}
   html[data-design="lobby"] body .l2a--minecraft .breadcrumb:not(#lb):not(#gl):not(#p) {margin-bottom:10px;font-size:11px}
   html[data-design="lobby"] body .l2a--minecraft .metrics:not(#lb):not(#gl):not(#p) {gap:5px!important}
   html[data-design="lobby"] body .l2a--minecraft .metric:not(#lb):not(#gl):not(#p) {padding:7px 8px!important;gap:4px}

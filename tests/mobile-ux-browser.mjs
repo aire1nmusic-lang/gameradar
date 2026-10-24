@@ -198,6 +198,7 @@ try {
         const summaryBox = await picker.locator('summary').boundingBox()
         assert.ok(summaryBox.y >= searchBox.y + searchBox.height - 1, 'Minecraft modes follow search without overlap')
         assert.ok((await page.locator('.l2a--minecraft .hero').boundingBox()).height < 340, 'Minecraft hero stays compact')
+        assert.match(await page.locator('.l2a--minecraft .hero h1').evaluate(e=>getComputedStyle(e).fontFamily), /Pixelify Sans/, 'Minecraft retains its own block display face instead of the shared fantasy font')
         await picker.locator('summary').click()
         const modes = picker.getByRole('navigation', { name: 'Выбрать режим', exact: true })
         await modes.waitFor({ state: 'visible' })

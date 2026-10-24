@@ -1,3 +1,8 @@
+## 25.10.2026 — Initial release verified; Minecraft font conflict caught in visual review
+
+- Source040e540a on main/primary. CI40135102820/job120994850492 and production40135102581/job120994849373 SUCCESS. All six sizes and three games pass, sorting/menu bounds/keyboard, shared rating matte and Minecraft mode navigation/reset/search separation verified. Actual390/1440 Minecraft and390 rating/catalog crops inspected. Fresh primary browser confirms040e540a, matte toolbar and pale sort menu with dark text/eight real options.
+- Visual review caught shared glass.css reapplying fantasy Noto Serif to Minecraft heading due equal specificity/later cascade. Increased only Minecraft heading selector specificity; existing browser gate now asserts its actual computed Pixelify Sans family. Geometry/art/data unchanged. LOCAL build/typecheck/prerender137/bundle/syntax/diff PASS. Final corrective CI/deploy PENDING. No private/auth/payment/DNS/newcost changes. Rollback040e540a. Next final matrix, primary font/readability readback and saved screenshots.
+
 ## 25.10.2026 — White matte catalog/rating controls; Minecraft first layout pass
 
 - Owner Android screenshots0964/0965 show dark catalog toolbar/sort popup and rating switch track against matte world UI. New shared discovery-controls.css replaces legacy slabs with the same white matte toolbar/tab surface; sort menu uses legible pale matte/dark text, lime selection and neutral scrollbar. Two rating buttons now fill two columns, not the retired three-column track. No backdrop blur added.

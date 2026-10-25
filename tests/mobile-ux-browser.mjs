@@ -101,7 +101,8 @@ try {
       assert.notEqual(await liveTrack.evaluate(e=>getComputedStyle(e).transform),motion.transform,'LIVE content advances rather than showing a static badge')
       if(width<1024) {
         await page.locator('.gs-live-view').hover()
-        assert.equal(await liveTrack.evaluate(e=>getComputedStyle(e).animationPlayState),'running','Touch hover does not leave the ticker paused')
+        const touchTicker = await liveTrack.evaluate(e=>({state:getComputedStyle(e).animationPlayState,coarse:matchMedia('(pointer:coarse)').matches,noHover:matchMedia('(hover:none)').matches,active:!!document.querySelector('.gs-live-view:active')}))
+        assert.equal(touchTicker.state,'running',`Touch hover does not leave ticker paused: ${JSON.stringify(touchTicker)}`)
         await page.mouse.move(0,0)
       }
       await page.emulateMedia({reducedMotion:'reduce'})
@@ -243,8 +244,10 @@ try {
             const meta = row.querySelector('.server-meta').getBoundingClientRect()
             const metric = row.querySelector('.server-right').getBoundingClientRect()
             const fav = row.querySelector('.fav').getBoundingClientRect()
-            return { nameHeight:name.height, metaBottom:meta.bottom-rect.top, rowHeight:rect.height, metricRight:metric.right, favLeft:fav.left }
+            const badge = row.querySelector('.gs-rank-medal').getBoundingClientRect()
+            return { badgeBottom:badge.bottom, nameTop:name.top, nameHeight:name.height, metaBottom:meta.bottom-rect.top, rowHeight:rect.height, metricRight:metric.right, favLeft:fav.left }
           })
+          assert.ok(content.badgeBottom <= content.nameTop + 1, `Large rank does not cover name: ${game.id} ${kind} ${width}px rank${rank}`)
           assert.ok(content.nameHeight <= 22, 'Long plaque name stays on one line')
           assert.ok(content.metaBottom <= content.rowHeight - 6, 'Mode caption remains inside the plaque')
           assert.ok(content.metricRight <= content.favLeft + 1, `Counter does not overlap favourite: ${game.id} ${width}px rank${rank} ${JSON.stringify(content)}`)
@@ -269,6 +272,12 @@ try {
           const supportArt = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-game-plaque img`)
           const peopleArt = page.locator(`.gs-shelf-people .server[data-rank="${rank}"] .gs-game-plaque img`)
           assert.notEqual(await supportArt.getAttribute('src'), await peopleArt.getAttribute('src'), 'Votes and paid support use different scenes')
+        }
+        for (const kind of ['support','people']) for (const rank of [1,2,3]) {
+          const card = page.locator(`.gs-shelf-${kind} .server[data-rank="${rank}"]`)
+          await card.scrollIntoViewIfNeeded()
+          await mediaReady(page)
+          await card.screenshot({path:`${output}/card-${kind}-${game.id}-${rank}-${width}.png`})
         }
         await page.locator('.gs-shelf-support').screenshot({path:`${output}/board-support-${game.id}-${width}.png`})
         await page.locator('.gs-shelf-people').screenshot({path:`${output}/board-people-${game.id}-${width}.png`})

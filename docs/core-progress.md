@@ -1,3 +1,9 @@
+## 25.10.2026 — Mobile artwork/coin/scene checks pass; tablet touch ticker and badge-caption polish
+
+- CI40193688371/job121169868464 and production40193688402/job121169868639 PASS320x568 and390x844 across3games, including new larger badges, shared coin and distinct support/voting images. Stop before publication on existing touch ticker hover assertion at768. Provider/asset backup and upload not run; livebc04163 unchanged.
+- Extended existing touch autoplay override through1023px/coarse pointers and removed sticky :active pause override; reduced-motion static strip preserved. No new ticker JavaScript. Added actual pointer/hover/active diagnostics to existing browser assertion.
+- Inspected actual downloaded QA boards at320/390: enlarged Minecraft digit could cross caption. Anchor all podium badges bottom35% and use36px information row/bottom6%, adding direct badge/name non-overlap assertion. Coin only added to illustratedTOP3, preserving compact regular rows. Whole-board offscreen screenshots can omit composited art; now scroll/decode/screenshot each place separately for reliable final visual review. Actual complete matrix and publication pending.
+
 ## 25.10.2026 — Responsive gate caught legacy mobile badge sizing before publication
 
 - CI40193287759/job121168683260 and production40193287720/job121168683183 failed before any production backup/upload/activation at new Minecraft rank minimum-size assertion. Existing 56px phone and48px tablet rules outranked enlarged2/3 badge rule; first-place rule already had higher specificity.

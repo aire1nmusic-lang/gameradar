@@ -308,17 +308,14 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
 }
 
 /* The owner requests an active LIVE strip on touch screens too.
-   Animate only the transform; ignore sticky touch-hover and pause during a press. */
-@media (max-width: 767px), (hover: none) {
+   Animate only the transform; ignore sticky touch-hover and touch-active states. */
+@media (max-width: 1023px), (hover: none), (pointer: coarse) {
   html[data-design="lobby"] body .gs-live-view:not(#lb) {
     overflow:hidden!important;
     -webkit-mask-image:none!important;mask-image:none!important;
   }
   html[data-design="lobby"] body .gs-live-track:not(#lb) {
     animation-play-state:running!important;will-change:transform;width:max-content;
-  }
-  html[data-design="lobby"] body .gs-live-view:active .gs-live-track:not(#lb) {
-    animation-play-state:paused!important;
   }
 }
 /* Reduced-motion users retain a readable swipeable strip instead of autoplay. */

@@ -223,12 +223,13 @@ try {
       await mediaReady(page)
       if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
       if (game.id === 'minecraft' || game.id === 'gtarp') {
+        for (const kind of ['support', 'people']) {
         for (const rank of [1, 2, 3]) {
-          const badge = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-rank-medal`)
+          const badge = page.locator(`.gs-shelf-${kind} .server[data-rank="${rank}"] .gs-rank-medal`)
           assert.equal(await badge.getAttribute('aria-label'), `Место ${rank}`)
           assert.equal(await badge.getAttribute('data-game-rank'), game.id)
-          const art = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-game-plaque img`)
-          assert.equal(await art.getAttribute('src'), `/media/ranks/${game.id}-top-${rank}-character-v1-800.webp`)
+          const art = page.locator(`.gs-shelf-${kind} .server[data-rank="${rank}"] .gs-game-plaque img`)
+          assert.equal(await art.getAttribute('src'), kind === 'people' || rank === 1 ? `/media/ranks/${game.id}-${kind}-${rank}-character-v2-800.webp` : `/media/ranks/${game.id}-top-${rank}-character-v1-800.webp`)
           assert.ok(await art.evaluate(e => e.complete && e.naturalWidth === 800), 'Character plaque decodes')
           const artBounds = await art.evaluate(e => {
             const picture = e.getBoundingClientRect(), row = e.closest('.server').getBoundingClientRect()
@@ -253,8 +254,24 @@ try {
           assert.ok(await icon.evaluate(e => e.complete && e.naturalWidth === 192), 'Approved rank icon decodes')
           assert.equal(await badge.evaluate(e => getComputedStyle(e).backgroundImage), 'none', 'No legacy slab behind transparent icon')
           const rect = await badge.boundingBox()
-          assert.ok(rect.width > 0 && rect.width <= 80 && rect.height <= 80, 'Rank icon stays within its plaque area')
+          assert.ok(rect.width > 0 && rect.width <= 180 && rect.height <= 180, 'Rank icon stays within its plaque area')
+          if (game.id === 'minecraft') assert.ok(rect.width >= (rank === 1 ? 104 : 84), 'Minecraft rank is visibly larger')
+          if (kind === 'support') {
+            const coin = page.locator(`.gs-shelf-${kind} .server[data-rank="${rank}"] .gs-shelf-coin`)
+            assert.equal(await coin.getAttribute('src'), '/media/ranks/coin-stack-96.webp')
+            assert.ok(await coin.evaluate(e => e.complete && e.naturalWidth === 96 && e.getBoundingClientRect().width >= 20), 'Same illustrated L2 coin is visible')
+          }
         }
+        const sizes = await page.locator(`.gs-shelf-${kind} .server.gs-top-row`).evaluateAll(es => es.map(e => e.getBoundingClientRect().width))
+        assert.ok(sizes[0] > sizes[1] * 1.12 && sizes[1] > sizes[2] * 1.05, 'First plaque is largest, second larger than third')
+        }
+        for (const rank of [1,2,3]) {
+          const supportArt = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-game-plaque img`)
+          const peopleArt = page.locator(`.gs-shelf-people .server[data-rank="${rank}"] .gs-game-plaque img`)
+          assert.notEqual(await supportArt.getAttribute('src'), await peopleArt.getAttribute('src'), 'Votes and paid support use different scenes')
+        }
+        await page.locator('.gs-shelf-support').screenshot({path:`${output}/board-support-${game.id}-${width}.png`})
+        await page.locator('.gs-shelf-people').screenshot({path:`${output}/board-people-${game.id}-${width}.png`})
       }
       const box = await plaque.locator('.server-name').boundingBox()
       assert.ok(box.width > 40, `name squeezed ${width} ${game.id}`)

@@ -1,0 +1,39 @@
+{
+  "generator": "built-in image_gen",
+  "date": "2026-10-25",
+  "common": "One separate landscape 3:2 game leaderboard plaque, alpha exterior, rounded tier metal frame. No baked text, numbers, badges, coins, UI or information bars. Character at right; left scene reserved for separate rank badge. First champion much larger with head/shoulders rising prominently above frame; second/third restrained.",
+  "assets": [
+    {
+      "asset": "minecraft-support-1",
+      "prompt": "Edit the reference into a more dominant FIRST PLACE premium Minecraft leaderboard plaque. ONE standalone 3:2 landscape image on genuine transparent background outside the plaque and character. Keep brown-haired block adventurer, diamond armor, vivid golden mountain castle and waterfalls, polished gold rounded rectangular frame. Redesign composition: frame occupies x3%-97%, y30%-96%; hero at right occupying 65% width, spectacular broad diamond armor and glowing enchanted diamond sword, head and sword rise boldly to y2%, far ABOVE the frame's top edge at30%. Hero looks like strongest legendary champion, confident upright pose, not childlike. Left45% remains background for separate rank icon. Fully drawn scene extends to bottom border; no info bar, no stripe, no letters, no numbers, no badge, no coin, no logo, no UI. Preserve alpha outside clean silhouette; no solid black/white background, no checkerboard. Ultra crisp richly detailed cinematic voxel art, warm golden light, beautiful. Head must break frame by 25% of canvas height."
+    },
+    {
+      "asset": "gtarp-support-1",
+      "prompt": "Edit reference into a dramatically dominant FIRST PLACE GTA RP leaderboard plaque. ONE standalone 3:2 landscape image with genuine transparent background outside plaque/character. Preserve stylish handsome dark-haired suited adult entrepreneur and gold sunset city/sportscar visual identity, but make him imposing and powerful: standing broad-shouldered close-up, luxury black suit open white shirt, commanding confident gaze. The rounded rich gold metal frame occupies x3%-97%, y30%-96%. Hero occupies right65%; his large head/shoulders break OUT above frame, head top at2% canvas, shoulders above frame; bottom torso reaches bottom edge. He must look more impressive than purple bomber racer third-place. Cinematic realistic premium game key art, sumptuous gold skyline, black supercar, crisp glowing reflections, beautiful not kitsch. Left45% holds city for separate icon. No information band, no stripe, no numbers/letters/badges/coin/UI/watermark. Scene fills lower frame including bottom where live HTML will overlay. Clean transparent cutout outside top hero and frame. Strong hero breakout 25% canvas."
+    },
+    {
+      "asset": "minecraft-people-1",
+      "prompt": "Create ONE separate production leaderboard plaque, landscape 3:2, premium game key art. Rounded metal picture frame at x3%-97%, bottom96%. Frame contains the entire background landscape, clean transparent exterior; genuine alpha outside. Character on right half, left third reserved for separate rank icon, no UI is drawn. No letters, numbers, medals, badges, coins, watermarks or information bars/stripes. Background scene continues richly to lower border; live text will be overlaid in HTML. FIRST PLACE, spectacular golden frame top at30% canvas. A heroic Minecraft voxel champion with short silver hair, enormous black netherite armor with purple enchanted veins and gold ornaments, large enchanted axe held diagonally, confident strong stance, head and axe break far above top border to2% canvas. His close-up head and huge shoulders fill right65%. Dawn over dramatic End citadel floating above violet clouds, golden sunrise, amethyst crystals, crisp dramatic rich voxel cinematic illustration. Biggest most impressive champion of set. Genuine transparent empty area above left frame."
+    },
+    {
+      "asset": "minecraft-people-2",
+      "prompt": "Create ONE separate production leaderboard plaque, landscape 3:2, premium game key art. Rounded metal picture frame at x3%-97%, bottom96%. Frame contains the entire background landscape, clean transparent exterior; genuine alpha outside. Character on right half, left third reserved for separate rank icon, no UI is drawn. No letters, numbers, medals, badges, coins, watermarks or information bars/stripes. Background scene continues richly to lower border; live text will be overlaid in HTML. SECOND PLACE, silver frame top at14%, character top8% only subtle breakout. Minecraft voxel heroine with dark hair braided back, emerald forest-ranger coat and light silver armor, elegant bow and quiver, medium-scale waist-up at right. Luminous lush jungle tree city, silver waterfalls, cool teal and emerald lighting. Beautiful crisp premium voxel cinematic artwork. Less imposing than first-place giant netherite champion, clean subdued silver frame. Transparent exterior."
+    },
+    {
+      "asset": "minecraft-people-3",
+      "prompt": "Create ONE separate production leaderboard plaque, landscape 3:2, premium game key art. Rounded metal picture frame at x3%-97%, bottom96%. Frame contains the entire background landscape, clean transparent exterior; genuine alpha outside. Character on right half, left third reserved for separate rank icon, no UI is drawn. No letters, numbers, medals, badges, coins, watermarks or information bars/stripes. Background scene continues richly to lower border; live text will be overlaid in HTML. THIRD PLACE, copper bronze rounded frame top at12%, character top8% minimal breakout. Minecraft voxel male engineer with auburn beard and goggles pushed onto hair, copper gloves, redstone tool and dark red leather outfit, medium-scale waist-up on right. Exciting underground redstone workshop, copper pipes, glowing blocks, warm red and amber lava-lit cavern. Crisp attractive premium voxel game artwork, restrained frame, modest character scale lower than champion. Transparent exterior."
+    },
+    {
+      "asset": "gtarp-people-1",
+      "prompt": "Mature commanding silver-haired city leader, trimmed beard, closed black structured coat, dark turtleneck and gloves. Giant close-up at right65%, head y2%, gold frame top30%, bottom96%. Blue-hour city, golden lights, palms and black supercar. Strongest tier, genuine alpha exterior, no text/UI/stripe."
+    },
+    {
+      "asset": "gtarp-people-2",
+      "prompt": "Fully clothed adult motorcycle racer in closed silver protective jacket, black high collar, gloves, helmet in arm, short dark hair. Medium waist-up at right, rainy neon cyan downtown and motorcycle. Silver frame top14%, head at8%, subtle breakout, genuine alpha, no text/UI/stripe."
+    },
+    {
+      "asset": "gtarp-people-3",
+      "prompt": "Adult red-haired bearded mechanic, forest-green coveralls, gloves, wrench. Medium right-half figure, classic muscle car in warm copper industrial workshop. Copper frame top12%, head8%, restrained third tier, genuine alpha, no text/UI/stripe."
+    }
+  ]
+}

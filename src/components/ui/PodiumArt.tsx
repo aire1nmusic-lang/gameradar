@@ -17,9 +17,12 @@ const L2_SCENES: Record<number, Scene> = {
   3: { bg: '/media/ranks/l2-top3-band-1600.webp', bgSmall: '/media/ranks/l2-top3-band-800.webp', focus: '50% 50%' },
 }
 
-export function PodiumArt({ server, rank }: { server: GameServer; rank?: number }) {
+export function PodiumArt({ server, rank, kind = 'support' }: { server: GameServer; rank?: number; kind?: 'support' | 'people' }) {
   if (rank && rank <= 3 && (server.gameId === 'minecraft' || server.gameId === 'gtarp')) {
-    return <span className="gs-game-plaque" aria-hidden="true"><img src={`/media/ranks/${server.gameId}-top-${rank}-character-v1-800.webp`} width={800} height={533} alt="" decoding="async" /></span>
+    const artwork = kind === 'people' || rank === 1
+      ? `${server.gameId}-${kind}-${rank}-character-v2-800.webp`
+      : `${server.gameId}-top-${rank}-character-v1-800.webp`
+    return <span className="gs-game-plaque" data-podium-kind={kind} aria-hidden="true"><img src={`/media/ranks/${artwork}`} width={800} height={533} alt="" decoding="async" /></span>
   }
   const scene = server.gameId === 'lineage2' && rank ? L2_SCENES[rank] : undefined
   if (scene) {

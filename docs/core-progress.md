@@ -1,3 +1,8 @@
+## 25.10.2026 — Release attempt2 blocked by storage accounting; retry after refreshed provider stats
+
+- Production40174822916 attempt2/job121160209945: full responsive browser matrix SUCCESS, backup download SUCCESS, durable archive upload failed BucketMaxSizeExceeded. No final assets/HTML/Worker upload or activation ran. Sourcebc04163 remains pending, C3 primary unchanged.
+- Independent post-deletion inventory already verified438653078bytes. Reloaded owner console after failure; provider now reports418.33MiB/1GiB rather than previous1.05GiB/1GiB. LIKELY delayed quota accounting; exact mechanism unconfirmed. No extra deletion, size limit change, paid resources, or guard bypass. Reran failed release after this new provider evidence; attempt3 pending.
+
 ## 25.10.2026 — VERIFIED independent post-cleanup inventory; guarded publication resumed
 
 - Read-only inventory40190416655/job121160035465 SUCCESS:1346objects/438653078bytes; exactly3retained archives/261754175bytes. Eight approved archives removed and692173924bytes freed, matching allowlist exactly. Incomplete multipart uploads empty. Each retained archive independently downloaded again and SHA256/size verified against original release records.

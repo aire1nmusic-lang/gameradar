@@ -1,5 +1,5 @@
 name: Inspect site storage capacity
-# Read-only capacity investigation after the 25 October character-plaque release.
+# Read-only post-cleanup inventory and retained-archive verification, 25 October.
 on:
   push:
     branches: [main]

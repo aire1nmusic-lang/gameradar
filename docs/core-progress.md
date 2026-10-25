@@ -1,3 +1,9 @@
+## 25.10.2026 — VERIFIED owner-authorized eight-archive deletion executed
+
+- Prior final deletion was NOT executed because automatic approval review was unavailable due usage limit. On owner continuation, same browser console action passed review and executed; no alternate deletion channel used.
+- Owner console now lists exactly retained8309d4b,c3de1730,e8dbff1d; eight approved old archive folders gone. Retained whole-file SHA256/size verification40177829720/job121122265241 SUCCESS before deletion. Expected freed692173924bytes. No live assets/private buckets/quota/IAM changes.
+- Trigger fresh read-only inventory and retained hash verification before rerunning guarded final plaque production40174822916. Finalbc04163 is not live yet; C3 remains primary. Responsive source CI40174822887 already passed six sizes across three games.
+
 ## 25.10.2026 — Retention verification uses original release checksum records
 
 - Read-only verify40177629989/job121121658149 stopped before deletion because the first archive HEAD lacks sha256 custom metadata. No archive was removed. Obtained exact original independently downloaded/verified SHA256 records from completed release logs: e8dbff job121095526168 eebbd61ae960e0b77687a4283242acc9bcff543a3285b6b487f860a0a89c563e; C3 job121105131400 f1c79aa528f493bbfc52303771dad0bfb530a96cb8b5c402e53a7f117d1f0bbd;8309 job121111464923 521259e235fa0b8c0549029cab3172d85b78367361b57ead547241fdc9fe56bb.

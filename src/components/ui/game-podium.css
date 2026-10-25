@@ -10,7 +10,7 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row::after {
   content:""; display:block!important; position:absolute; z-index:1;
-  left:2%; right:2%; bottom:6%; height:26%; min-height:58px; pointer-events:none;
+  left:2%; right:2%; bottom:9%; height:26%; min-height:58px; pointer-events:none;
   border-radius:0 0 12px 12px; border-top:1px solid #ffffff55;
   background:linear-gradient(110deg,#edf0e85c,#e2e7e04d);
 }
@@ -19,25 +19,29 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
   background:transparent!important; border-radius:0!important; box-shadow:none!important;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .server-copy:not(#gs):not(#world) {
-  position:absolute; z-index:3; left:5%; right:34%; bottom:10%; height:18%; min-height:36px;
+  position:absolute; z-index:3; left:5%; right:37%; bottom:12%; height:18%; min-height:36px;
   display:flex; align-items:center; gap:7px;
 }
-html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-name {
-  color:#fff7e9!important; font-weight:700; font-size:16px;
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-name:not(#gs):not(#world):not(#card) {
+  color:#fff7e9!important; font-weight:700; font-size:16px!important;
+  display:block!important; white-space:nowrap!important; overflow:hidden; text-overflow:ellipsis;
+  line-height:20px!important; max-height:20px!important; margin:0!important; -webkit-line-clamp:unset!important;
   text-shadow:0 1px 3px #000,0 0 8px #0008;
 }
-html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-meta {
-  color:#fff7e9!important; font-size:12px; text-shadow:0 1px 3px #000;
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-meta:not(#gs):not(#world):not(#card) {
+  color:#fff7e9!important; font-size:12px!important; text-shadow:0 1px 3px #000;
+  display:block!important; white-space:nowrap!important; overflow:hidden; text-overflow:ellipsis;
+  line-height:16px!important; margin:0!important;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .server-right:not(#gs):not(#world) {
-  position:absolute; z-index:3; right:15%; bottom:10%; height:18%; min-height:36px;
+  position:absolute; z-index:3; right:18%; bottom:12%; height:18%; min-height:36px;
   display:flex!important; align-items:center; justify-content:flex-end;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right :is(strong,small) {
   color:#fff7e9!important; text-shadow:0 1px 3px #000;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .fav:not(#gs):not(#world) {
-  position:absolute; z-index:4; right:4%!important; top:auto!important; bottom:10%;
+  position:absolute; z-index:4; right:4%!important; top:auto!important; bottom:12%;
   width:30px; height:36px; color:#fff7e9; background:#252a2840; border-radius:50%;
 }
 @media(max-width:400px) {
@@ -51,5 +55,5 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) { width:48px!important; height:48px!important; top:17%; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row::after { min-height:50px; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .gs-world-row-avatar { width:24px; height:24px; flex-basis:24px; }
-  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .server-name { font-size:14px; }
+  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .server-name:not(#gs):not(#world):not(#card) { font-size:14px!important; }
 }

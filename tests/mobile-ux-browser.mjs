@@ -231,6 +231,17 @@ try {
           assert.equal(await art.getAttribute('src'), `/media/ranks/${game.id}-top-${rank}-character-v1-800.webp`)
           assert.ok(await art.evaluate(e => e.complete && e.naturalWidth === 800), 'Character plaque decodes')
           assert.notEqual(await badge.evaluate(e => getComputedStyle(e.closest('.server'), '::after').backgroundImage), 'none', 'Information band is a separate CSS layer')
+          const content = await badge.evaluate(e => {
+            const row = e.closest('.server'), rect = row.getBoundingClientRect()
+            const name = row.querySelector('.server-name').getBoundingClientRect()
+            const meta = row.querySelector('.server-meta').getBoundingClientRect()
+            const metric = row.querySelector('.server-right').getBoundingClientRect()
+            const fav = row.querySelector('.fav').getBoundingClientRect()
+            return { nameHeight:name.height, metaBottom:meta.bottom-rect.top, rowHeight:rect.height, metricRight:metric.right, favLeft:fav.left }
+          })
+          assert.ok(content.nameHeight <= 22, 'Long plaque name stays on one line')
+          assert.ok(content.metaBottom <= content.rowHeight - 6, 'Mode caption remains inside the plaque')
+          assert.ok(content.metricRight <= content.favLeft + 1, 'Counter does not overlap favourite')
 
           const icon = badge.locator('img')
           assert.equal(await icon.getAttribute('src'), `/media/ranks/${game.id}-rank-${rank}-approved-v1.webp`)

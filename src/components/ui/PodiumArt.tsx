@@ -1,6 +1,7 @@
 import { artSrc, serverArt } from '@/data/themeMedia'
 import type { GameServer } from '@/models'
 import './l2-podium-scene.css'
+import './game-podium.css'
 
 /**
  * A place plaque is two layers bound to the PLACE, not to the server:
@@ -17,6 +18,9 @@ const L2_SCENES: Record<number, Scene> = {
 }
 
 export function PodiumArt({ server, rank }: { server: GameServer; rank?: number }) {
+  if (rank && rank <= 3 && (server.gameId === 'minecraft' || server.gameId === 'gtarp')) {
+    return <span className="gs-game-plaque" aria-hidden="true"><img src={`/media/ranks/${server.gameId}-top-${rank}-character-v1-800.webp`} width={800} height={533} alt="" decoding="async" /></span>
+  }
   const scene = server.gameId === 'lineage2' && rank ? L2_SCENES[rank] : undefined
   if (scene) {
     const hero = scene.hero && <img className="gs-plaque-hero" src={`${scene.hero}-600.webp`} srcSet={`${scene.hero}-300.webp 300w, ${scene.hero}-600.webp 600w`} sizes="220px" alt="" decoding="async" />

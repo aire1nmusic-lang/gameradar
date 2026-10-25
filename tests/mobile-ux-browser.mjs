@@ -227,12 +227,17 @@ try {
           const badge = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-rank-medal`)
           assert.equal(await badge.getAttribute('aria-label'), `Место ${rank}`)
           assert.equal(await badge.getAttribute('data-game-rank'), game.id)
+          const art = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-game-plaque img`)
+          assert.equal(await art.getAttribute('src'), `/media/ranks/${game.id}-top-${rank}-character-v1-800.webp`)
+          assert.ok(await art.evaluate(e => e.complete && e.naturalWidth === 800), 'Character plaque decodes')
+          assert.notEqual(await badge.evaluate(e => getComputedStyle(e.closest('.server'), '::after').backgroundImage), 'none', 'Information band is a separate CSS layer')
+
           const icon = badge.locator('img')
           assert.equal(await icon.getAttribute('src'), `/media/ranks/${game.id}-rank-${rank}-approved-v1.webp`)
           assert.ok(await icon.evaluate(e => e.complete && e.naturalWidth === 192), 'Approved rank icon decodes')
           assert.equal(await badge.evaluate(e => getComputedStyle(e).backgroundImage), 'none', 'No legacy slab behind transparent icon')
           const rect = await badge.boundingBox()
-          assert.ok(rect.width > 0 && rect.width <= 40 && rect.height <= 40, 'Rank icon stays compact')
+          assert.ok(rect.width > 0 && rect.width <= 80 && rect.height <= 80, 'Rank icon stays within its plaque area')
         }
       }
       const box = await plaque.locator('.server-name').boundingBox()

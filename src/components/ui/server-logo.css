@@ -1,2 +1,7 @@
 /* Crop the slightly uneven painted frame from the L2 fallback; only identity/forecast cells. */
 .gs-profile-avatar[data-default-avatar="lineage2"]>img,.gs-support-studio [data-default-avatar="lineage2"]>img{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important;object-position:50% 50%!important;transform:scale(1.14)!important}
+
+/* Default art is a small avatar beside the name in Minecraft/GTA world shelves. */
+.l2a:is(.l2a--minecraft,.l2a--gtarp) .server-copy{display:flex;align-items:center;gap:8px;min-width:0}
+.l2a:is(.l2a--minecraft,.l2a--gtarp) .gs-world-row-avatar{width:32px;height:32px;flex:0 0 32px;border-radius:6px}
+.l2a:is(.l2a--minecraft,.l2a--gtarp) .gs-world-row-identity{min-width:0;flex:1}

@@ -33,8 +33,8 @@ const KIND_GLYPH: Record<string, LucideIcon> = {
 }
 const DEFAULT_AVATAR: Record<string, string> = {
   lineage2: '/media/ui/lineage2-default-avatar.webp',
-  minecraft: '/media/ui/minecraft-default-avatar.webp',
-  gtarp: '/media/ui/gtarp-default-avatar.webp',
+  minecraft: '/media/ui/minecraft-default-avatar-approved-v2.webp',
+  gtarp: '/media/ui/gtarp-default-avatar-approved-v2.webp',
 }
 const GLYPH_PX = { xs: 15, sm: 19, md: 22, lg: 28, xl: 38 } as const
 

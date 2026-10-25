@@ -1,3 +1,10 @@
+## 25.10.2026 — Owner-provided Minecraft/GTA default server avatars prepared
+
+- Owner supplied1000120972.png (Minecraft crossed diamond sword/pickaxe) and1000120971.png (GTA sunset/palms/pier). Faithful square512px WebP conversion without redraw/crop; assets minecraft-default-avatar-approved-v2.webp86002bytes and gtarp-default-avatar-approved-v2.webp96552bytes. Versioned paths avoid stale immutable caches; old files retained.
+- Shared ServerLogo fallback paths updated; valid custom server logos still win. Added shared small32px ServerLogo beside name in non-L2 world shelves, where avatars were absent; nested identity wrapper preserves medal/name/right-counter/favourite columns. Existing catalog/profile/support consumers reuse the new defaults automatically. L2 unchanged.
+- LOCAL typecheck/build/prerender137 and diff PASS. Initial bundle gate caught stale local generated assets containing two legacy favourite-key chunks; preserved old dist as ../avatar-dist-stale-before-rebuild and clean rebuilt, then bundle gate PASS. No gate weakened. Existing six-size browser/deploy checks and live image readback PENDING. No new tests for this reversible asset change; existing meaningful layout/media gates apply.
+- Files:two public/media/ui assets, ServerLogo.tsx, server-logo.css, LineageDiscovery.tsx and this log. No private/auth/payment/DNS/schema/newresource changes or new costs. Rollback099d4811. Next scoped main push, inspect responsive avatar render and primary publication.
+
 ## 25.10.2026 — VERIFIED LIVE: matte catalog/rating controls and Minecraft first pass
 
 - Final source67f316531d2e8a93e343b84a873d0e0a2176eb9a published. CI40135629978/job120996425209 SUCCESS; guarded production40135629940/job120996425003 SUCCESS including durable rollback archive, inactive version and primary checks. Install-browser-runtime step was slow; no gates skipped. Prior040e540a CI+production also succeeded.

@@ -6,6 +6,7 @@ import { chronicleOfVersion } from '@/data/games'
 import { formatNumber } from '@/lib/format'
 import { LaunchCountdown } from '@/components/server/LaunchCountdown'
 import { ServerLogo } from '@/components/ui/ServerLogo'
+import { gamePlaceScene } from '@/data/podiumScenes'
 import './leader-board.css'
 
 export type BoardKind = 'support' | 'opening' | 'people'
@@ -51,12 +52,16 @@ function useFrost() {
 
 /** One top-3 plaque: place art, glass medal, film with the server. Shared by the boards and the catalog list. */
 export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support' }: { server: GameServer; rank: number; meta: string; value: ReactNode; fav: ReactNode; art?: PlaceArt }) {
-  const place = (art === 'people' ? PEOPLE_PLACE : PLACE)[rank]
-  return <div className={`server gsb-plaque p${rank}`}>
+  const gameScene = gamePlaceScene(s.gameId, art, rank)
+  const place = gameScene ?? (art === 'people' ? PEOPLE_PLACE : PLACE)[rank]
+  const medal = s.gameId === 'minecraft' || s.gameId === 'gtarp'
+    ? `/media/ranks/${s.gameId}-rank-${rank}-approved-v1.webp`
+    : `/media/ranks/medal-${rank}-glass-192.webp`
+  return <div className={`server gsb-plaque p${rank}`} data-rank={rank} data-game={s.gameId} data-podium-kind={art} data-character={gameScene?.character}>
     <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
     <span className="gsb-art" aria-hidden="true"><img src={place.bg} alt="" decoding="async" /></span>
     {place.hero && <img className={`gsb-hero gsb-hero-${art}`} src={place.hero} alt="" aria-hidden="true" decoding="async" />}
-    <span className="gsb-medal"><img src={`/media/ranks/medal-${rank}-glass-192.webp`} alt={`${rank} место`} /></span>
+    <span className="gsb-medal"><img src={medal} alt={`${rank} место`} /></span>
     <span className="gsb-bar">
       <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" /><span className="gsb-txt"><span className="server-name gsb-name">{s.name}</span><span className="server-meta gsb-meta">{meta}</span></span>
       {value}{fav}
@@ -96,7 +101,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   if (loading && !rows.length) body = <div className="gsb-empty" role="status"><b>Загружаем серверы…</b></div>
   else if (error && !rows.length) body = <div className="gsb-empty"><b>Не удалось загрузить данные</b><span>Проверь соединение и попробуй снова.</span><button type="button" className="quiet-btn" onClick={reload}>Повторить</button></div>
   else if (!rows.length && kind === 'opening' && !filtered) body = <div className="server gsb-plaque p0 gsb-empty-plaque">
-    <span className="gsb-art" aria-hidden="true"><img src="/media/ranks/gold-v1.webp" alt="" decoding="async" /></span>
+    <span className="gsb-art" aria-hidden="true"><img src={gamePlaceScene(game.id, 'support', 1)?.bg ?? '/media/ranks/gold-v1.webp'} alt="" decoding="async" /></span>
     <span className="gsb-bar"><span className="gsb-txt"><span className="server-name gsb-name">{emptyTitle}</span><span className="server-meta gsb-meta">{emptyText}</span></span></span>
     <span className="gsb-glass" aria-hidden="true" />
   </div>

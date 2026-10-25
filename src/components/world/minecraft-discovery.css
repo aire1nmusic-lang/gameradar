@@ -25,7 +25,7 @@ html[data-design="lobby"] body .l2a--minecraft .panel-head .gs-board-top:not(#lb
 html[data-design="lobby"] body .l2a--minecraft .panel-head .gs-board-sub:not(#lb):not(#gl):not(#p) {display:none}
 html[data-design="lobby"] body .l2a--minecraft .panel-head:not(#lb):not(#gl):not(#p) {padding:0;margin:0 0 16px}
 html[data-design="lobby"] body .l2a--minecraft .panel-head h2:not(#lb):not(#gl):not(#p) {font:700 23px/1.2 var(--font-sans,sans-serif)!important;color:#c8ff55;letter-spacing:-.02em}
-html[data-design="lobby"] body .l2a--minecraft .catalog-grid>.panel:not(#lb):not(#gl):not(#p) {padding:20px 16px;border-radius:18px;background:var(--g-bg)!important;box-shadow:var(--g-hl)!important}
+html[data-design="lobby"] body .l2a--minecraft .catalog-grid>.panel:not(.gsb):not(#lb):not(#gl):not(#p) {padding:20px 16px;border-radius:18px;background:var(--g-bg)!important;box-shadow:var(--g-hl)!important}
 html[data-design="lobby"][data-color-mode="light"] body .l2a--minecraft :is(.hero p,.hero .edition,.panel-head h2):not(#lb):not(#gl):not(#p) {color:#263a22}
 @media(max-width:767px) {
   html[data-design="lobby"] body .l2a--minecraft .wrap:not(#lb):not(#gl):not(#p) {width:calc(100% - 28px)}

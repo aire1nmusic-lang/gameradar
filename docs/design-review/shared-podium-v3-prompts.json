@@ -1,0 +1,67 @@
+{
+  "generator": "built-in image_gen",
+  "date": "2026-10-25",
+  "purpose": "Owner-requested recognizable game cast within exact shared L2 leaderboard geometry",
+  "assets": [
+    {
+      "asset": "public/media/ranks/gtarp-support-1-bg-v3.webp",
+      "transparent": false,
+      "prompt": "Ultra-wide3:1 GTA style game illustration background only, absolutely NO people. Los Santos at golden sunset: downtown skyline, palm-lined luxury villa driveway, sleek dark blue sports coupe low on right, rich amber light and deep navy shadows. Cinematic loading-screen art, crisp painted graphic style. No frame/text/UI/numbers/bands."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-people-1-bg-v3.webp",
+      "transparent": false,
+      "prompt": "Ultra-wide3:1 GTA San Andreas style background only, NO people. Grove Street Los Santos, palm trees, low Californian houses and classic green lowrider parked right, warm Los Angeles sunset and vivid teal shadows. Premium crisp painted game loading-screen illustration, no frame/text/UI/numbers/bands."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-support-1-hero-v3.webp",
+      "transparent": true,
+      "prompt": "Create one isolated full-body/three-quarter character cutout for a videogame leaderboard. Portrait1:2, genuine transparent alpha background. No backdrop, no frame, no text, no numbers, no UI, no shadow rectangle. Whole head and shoulders intact, character upright, looking confidently slightly toward left/camera. Detailed polished canonical game key art, strongest first-place presence. MICHAEL DE SANTA from Grand Theft Auto V, immediately recognizable canonical face: middle-aged white American man, short dark hair graying at temples, square jaw, subtle stubble, blue eyes, confident stern expression. Tailored navy blue business suit, light blue open collar shirt, no tie, hands relaxed. GTA V official loading-screen illustration visual language, bold outlines, rich painterly shading, not a generic handsome model. Slightly turned torso, robust broad shoulders. Preserve recognizable Michael identity."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-people-1-hero-v3.webp",
+      "transparent": true,
+      "prompt": "Create one isolated full-body/three-quarter character cutout for a videogame leaderboard. Portrait1:2, genuine transparent alpha background. No backdrop, no frame, no text, no numbers, no UI, no shadow rectangle. Whole head and shoulders intact, character upright, looking confidently slightly toward left/camera. Detailed polished canonical game key art, strongest first-place presence. CARL CJ JOHNSON from Grand Theft Auto San Andreas, recognizable canonical face, African-American adult man, close cropped black hair, athletic build, white sleeveless tank top, classic loose blue jeans, belt, thin silver chain, no cap, calm confident stance with folded arms at waist level. Authentic San Andreas loading-screen art style, strong clean outlines and painted shading. No background. Make CJ unmistakable, not generic luxury businessman."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-support-2-v3.webp",
+      "transparent": false,
+      "prompt": "Create a single production videogame website background artwork, ultra-wide 3:1 landscape. Full bleed image, no border, no frame, no badges, no words, no digits, no UI or information strip. Premium colorful GTA loading-screen style illustration with confident ink outlines, painterly shading, cinematic lighting and recognizable canon character design. Composition character at far RIGHT, face in upper right third, left45% clean atmospheric scenery for rank icon. Waist-up character fully clothed, no weapons.FRANKLIN CLINTON from GTA V, recognizable canonical young adult Black face and cropped hair, green varsity jacket with white sleeves over white shirt. Los Santos downtown and his green muscle car behind him, cool blue twilight, silver tier atmosphere."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-support-3-v3.webp",
+      "transparent": false,
+      "prompt": "Create a single production videogame website background artwork, ultra-wide 3:1 landscape. Full bleed image, no border, no frame, no badges, no words, no digits, no UI or information strip. Premium colorful GTA loading-screen style illustration with confident ink outlines, painterly shading, cinematic lighting and recognizable canon character design. Composition character at far RIGHT, face in upper right third, left45% clean atmospheric scenery for rank icon. Waist-up character fully clothed, no weapons.TREVOR PHILIPS from GTA V, unmistakable receding brown hairline and rough canonical face, scruffy stubble, weathered off-white T-shirt and brown work pants. Sandy Shores desert airfield behind him, orange sunset, dusty pickup truck, bronze/copper atmosphere. Confident intense expression, no weapons."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-people-2-v3.webp",
+      "transparent": false,
+      "prompt": "Create a single production videogame website background artwork, ultra-wide 3:1 landscape. Full bleed image, no border, no frame, no badges, no words, no digits, no UI or information strip. Premium colorful GTA loading-screen style illustration with confident ink outlines, painterly shading, cinematic lighting and recognizable canon character design. Composition character at far RIGHT, face in upper right third, left45% clean atmospheric scenery for rank icon. Waist-up character fully clothed, no weapons.TOMMY VERCETTI from GTA Vice City, unmistakable slick black hair and square canonical face, teal Hawaiian short-sleeved shirt with dark palm prints, blue jeans. Ocean Drive Miami neon hotels, palms, pink-and-cyan twilight and white sports car. Silver cyan/pink atmosphere."
+    },
+    {
+      "asset": "public/media/ranks/gtarp-people-3-v3.webp",
+      "transparent": false,
+      "prompt": "Create a single production videogame website background artwork, ultra-wide 3:1 landscape. Full bleed image, no border, no frame, no badges, no words, no digits, no UI or information strip. Premium colorful GTA loading-screen style illustration with confident ink outlines, painterly shading, cinematic lighting and recognizable canon character design. Composition character at far RIGHT, face in upper right third, left45% clean atmospheric scenery for rank icon. Waist-up character fully clothed, no weapons.NIKO BELLIC from GTA IV, unmistakable adult Eastern European canonical face, short dark brown hair, stubble, brown zip-up track jacket over pale gray hoodie. Liberty City skyline, Brooklyn-style bridge and dark sedan, copper evening light with violet shadows. Serious confident expression, no weapons."
+    },
+    {
+      "asset": "public/media/ranks/minecraft-support-1-bg-v3.webp",
+      "transparent": false,
+      "prompt": "ONE ultra-wide3:1 landscape premium Minecraft voxel game scenery, NO characters or creatures. Majestic golden block castle above green valleys and waterfalls at sunny golden hour, bright diamond-blue river, crisp detailed cinematic blocks. Clean scenery across full image, no frame/text/stripes/UI/digits."
+    },
+    {
+      "asset": "public/media/ranks/minecraft-people-1-bg-v3.webp",
+      "transparent": false,
+      "prompt": "ONE ultra-wide3:1 landscape Minecraft voxel game scenery, NO characters or creatures. Spectacular End city floating above violet void, tall obsidian towers, purple crystals, golden sunrise breaking through lavender clouds, crisp detailed cinematic block textures. No frame/text/stripes/UI/digits."
+    },
+    {
+      "asset": "public/media/ranks/minecraft-support-1-hero-v3.webp",
+      "transparent": true,
+      "prompt": "Create one isolated full-body/three-quarter character cutout for a videogame leaderboard. Portrait1:2, genuine transparent alpha background. No backdrop, no frame, no text, no numbers, no UI, no shadow rectangle. Whole head and shoulders intact, character upright, looking confidently slightly toward left/camera. Detailed polished canonical game key art, strongest first-place presence. STEVE from Minecraft in spectacular enchanted turquoise DIAMOND armor, blocky brown short hair and canonical square face, holding a diamond sword raised diagonally along his right shoulder, strong confident stance. Three-quarter body to knees, vibrant high quality voxel3D game art. Warm gold rim light, cool blue armor reflections. Correct Minecraft cubic geometry. Transparent background."
+    },
+    {
+      "asset": "public/media/ranks/minecraft-people-1-hero-v3.webp",
+      "transparent": true,
+      "prompt": "Create one isolated full-body/three-quarter character cutout for a videogame leaderboard. Portrait1:2, genuine transparent alpha background. No backdrop, no frame, no text, no numbers, no UI, no shadow rectangle. Whole head and shoulders intact, character upright, looking confidently slightly toward left/camera. Detailed polished canonical game key art, strongest first-place presence. ALEX from Minecraft, iconic orange straight hair, green eyes and square block face, wearing imposing black NETHERITE armor with purple enchantment highlights, holding enchanted netherite sword pointed down beside body. Heroic upright three-quarter body to knees, vibrant detailed cinematic voxel3D art. Gold edge light, purple accents, instantly recognizable Alex. Genuine transparent background."
+    }
+  ]
+}

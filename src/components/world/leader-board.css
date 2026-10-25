@@ -104,11 +104,11 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row .gsb-fav:
 .gsb .gsb-empty button{margin-top:12px}
 
 /* three boards side by side on wide screens, one column below */
-html[data-design="lobby"] body .l2a--lineage2 .catalog-grid:not(#a):not(#b){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;align-items:start!important}
-html[data-design="lobby"] body .l2a--lineage2 .catalog-grid>.gs-shelf-support:not(#a):not(#b){order:1}
-html[data-design="lobby"] body .l2a--lineage2 .catalog-grid>.gs-shelf-opening:not(#a):not(#b){order:2;grid-column:auto!important}
-html[data-design="lobby"] body .l2a--lineage2 .catalog-grid>.gs-shelf-people:not(#a):not(#b){order:3}
-@media (max-width:1180px){html[data-design="lobby"] body .l2a--lineage2 .catalog-grid:not(#a):not(#b){grid-template-columns:minmax(0,560px)!important;justify-content:center}}
+html[data-design="lobby"] body .l2a:is(.l2a--lineage2,.l2a--minecraft,.l2a--gtarp) .catalog-grid:not(#a):not(#b){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important;align-items:start!important}
+html[data-design="lobby"] body .l2a:is(.l2a--lineage2,.l2a--minecraft,.l2a--gtarp) .catalog-grid>.gs-shelf-support:not(#a):not(#b){order:1}
+html[data-design="lobby"] body .l2a:is(.l2a--lineage2,.l2a--minecraft,.l2a--gtarp) .catalog-grid>.gs-shelf-opening:not(#a):not(#b){order:2;grid-column:auto!important}
+html[data-design="lobby"] body .l2a:is(.l2a--lineage2,.l2a--minecraft,.l2a--gtarp) .catalog-grid>.gs-shelf-people:not(#a):not(#b){order:3}
+@media (max-width:1180px){html[data-design="lobby"] body .l2a:is(.l2a--lineage2,.l2a--minecraft,.l2a--gtarp) .catalog-grid:not(#a):not(#b){grid-template-columns:minmax(0,560px)!important;justify-content:center}}
 @media (max-width:380px){
   .gsb .gsb-bar{padding-left:84px;gap:8px}
   .gsb .gsb-medal{width:72px}.gsb .gsb-medal img{width:68px}
@@ -396,3 +396,12 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row > button:
   position:relative!important;z-index:20!important;pointer-events:auto!important;
 }
 
+
+/* All worlds use the approved compact L2 board. Only art and approved rank icons vary. */
+html[data-design="lobby"] body .gsb[data-game]:not([data-game="lineage2"]) .p1 .gsb-hero:not(#a):not(#b):not(#c) {
+  width:60%!important; height:310px!important; object-fit:cover; object-position:50% 0;
+  right:1%!important; bottom:2px!important; -webkit-mask-image:none!important;mask-image:none!important;
+}
+html[data-design="lobby"] body .gsb[data-game]:not([data-game="lineage2"]) :is(.p2,.p3) .gsb-art img:not(#a):not(#b):not(#c) {
+  object-position:100% 0!important;
+}

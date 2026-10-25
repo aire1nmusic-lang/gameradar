@@ -255,7 +255,7 @@ try {
           assert.equal(await badge.evaluate(e => getComputedStyle(e).backgroundImage), 'none', 'No legacy slab behind transparent icon')
           const rect = await badge.boundingBox()
           assert.ok(rect.width > 0 && rect.width <= 180 && rect.height <= 180, 'Rank icon stays within its plaque area')
-          if (game.id === 'minecraft') assert.ok(rect.width >= (rank === 1 ? 104 : 84), 'Minecraft rank is visibly larger')
+          if (game.id === 'minecraft') assert.ok(rect.width >= (rank === 1 ? 104 : 84), `Minecraft rank visibly larger: ${kind} ${width}px rank${rank} actual ${rect.width}`)
           if (kind === 'support') {
             const coin = page.locator(`.gs-shelf-${kind} .server[data-rank="${rank}"] .gs-shelf-coin`)
             assert.equal(await coin.getAttribute('src'), '/media/ranks/coin-stack-96.webp')

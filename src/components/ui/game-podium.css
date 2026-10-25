@@ -57,11 +57,9 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right strong { font-size:18px!important; line-height:20px; }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right small { font-size:10px!important; line-height:12px; }
 @media(max-width:400px) {
-  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) { width:56px!important; height:56px!important; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .gs-world-row-avatar { width:26px; height:26px; flex-basis:26px; }
 }
 @media(min-width:601px) and (max-width:1150px) {
-  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) { width:48px!important; height:48px!important; top:17%; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row::after { min-height:50px; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .gs-world-row-avatar { width:20px; height:20px; flex-basis:20px; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row > .server-copy:not(#gs):not(#world) { gap:5px; }
@@ -71,13 +69,13 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
 /* The same visible hierarchy for votes and support: champion, runner-up, third. */
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row[data-rank="2"]:not(#gs):not(#world):not(#card) { width:85%!important; max-width:544px; }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row[data-rank="3"]:not(#gs):not(#world):not(#card) { width:78%!important; max-width:499.2px; }
-html[data-color-mode] body .l2a--minecraft .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) {
+html[data-color-mode] body .l2a.l2a--minecraft .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) {
   width:clamp(84px,28%,144px)!important; height:auto!important; aspect-ratio:1; top:29%; left:6%;
 }
-html[data-color-mode] body .l2a--minecraft .rows .server.gs-top-row[data-rank="1"] > .gs-rank-medal:not(#gs):not(#world):not(#card) {
+html[data-color-mode] body .l2a.l2a--minecraft .rows .server.gs-top-row[data-rank="1"] > .gs-rank-medal:not(#gs):not(#world):not(#card) {
   width:clamp(104px,32%,164px)!important; top:35%;
 }
-html[data-color-mode] body .l2a--gtarp .rows .server.gs-top-row[data-rank="1"] > .gs-rank-medal:not(#gs):not(#world):not(#card) {
+html[data-color-mode] body .l2a.l2a--gtarp .rows .server.gs-top-row[data-rank="1"] > .gs-rank-medal:not(#gs):not(#world):not(#card) {
   width:clamp(78px,23%,126px)!important; height:auto!important; aspect-ratio:1; top:35%;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .server .gs-shelf-coins {

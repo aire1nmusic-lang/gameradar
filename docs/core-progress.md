@@ -1,3 +1,8 @@
+## 25.10.2026 — Responsive gate caught legacy mobile badge sizing before publication
+
+- CI40193287759/job121168683260 and production40193287720/job121168683183 failed before any production backup/upload/activation at new Minecraft rank minimum-size assertion. Existing 56px phone and48px tablet rules outranked enlarged2/3 badge rule; first-place rule already had higher specificity.
+- Removed obsolete56/48px game badge overrides and matched scoped .l2a.l2a--minecraft selector to shared base specificity; retain104px champion/84px other minimums. Added kind/viewport/rank/actual width to assertion diagnostics. Asset set and no-strip requirement unchanged. Next full responsive rerun and actual visual review; livebc04163 unchanged.
+
 ## 25.10.2026 — Minecraft/GTA podium hierarchy, distinct voting art and shared illustrated coin
 
 - Owner reviewed Android screenshots and requested larger Minecraft digits, the illustrated L2 coin, a substantially stronger/larger first place, and different character plaques for votes versus paid support. Inspected live L2: it already uses separate support/people scenes and pronounced first-place breakout.

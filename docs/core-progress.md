@@ -1,3 +1,8 @@
+## 25.10.2026 — VERIFIED independent post-cleanup inventory; guarded publication resumed
+
+- Read-only inventory40190416655/job121160035465 SUCCESS:1346objects/438653078bytes; exactly3retained archives/261754175bytes. Eight approved archives removed and692173924bytes freed, matching allowlist exactly. Incomplete multipart uploads empty. Each retained archive independently downloaded again and SHA256/size verified against original release records.
+- Retried only failed guarded production40174822916, attempt2/job121160209945, exactbc04163 source. No guard bypass, quota expansion or alternate deletion channel. Build/private core/PostgreSQL restore succeeded; responsive browser matrix currently running. Final primary verification pending; do not report plaques live yet.
+
 ## 25.10.2026 — VERIFIED owner-authorized eight-archive deletion executed
 
 - Prior final deletion was NOT executed because automatic approval review was unavailable due usage limit. On owner continuation, same browser console action passed review and executed; no alternate deletion channel used.

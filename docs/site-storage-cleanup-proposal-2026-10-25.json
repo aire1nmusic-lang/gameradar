@@ -1,5 +1,5 @@
 {
-  "status": "EXECUTED_OWNER_CONSOLE_PENDING_INDEPENDENT_INVENTORY",
+  "status": "EXECUTED_AND_INDEPENDENTLY_VERIFIED",
   "bucket": "gamescout-ru-site",
   "reason": "BucketMaxSizeExceeded blocks durable rollback archive for verified game plaque release",
   "remove": [
@@ -71,5 +71,15 @@
     "Do not change bucket quota, private data, live files or hashed assets",
     "Previously observed uploader DeleteObject denial must not be retried unchanged"
   ],
-  "incompleteMultipartUploads": []
+  "incompleteMultipartUploads": [],
+  "verification": {
+    "run_id": 40190416655,
+    "job_id": 121160035465,
+    "objects": 1346,
+    "bucket_bytes": 438653078,
+    "retained_archives": 3,
+    "retained_bytes": 261754175,
+    "freed_bytes": 692173924,
+    "retained_sha256_verified": true
+  }
 }

@@ -1,3 +1,8 @@
+## 25.10.2026 — VERIFIED v2 primary published; final unit-label inset refinement
+
+- Sourcebe400f75 CI40194390748/job121171999467 SUCCESS all six viewports across3games; individual card artifact12599417993 visually reviewed (all12scenes; desktop details and phone champion), no APIwrites. Guarded production40194390764/job121171999466 SUCCESS. Independent Chrome primary1363px confirmsbe400f75, all12uses of800px plaque art decoded, support/people paths differ at every place, 3coins per game decoded96px, badges above names, rowwidths604.5/513.8/471.5 and nooverflow. Actual live Minecraft clipped-to-board screenshot captured.
+- Primary inspection showed counter unit labels in smaller silver/bronze cards too close to bottom metal frame. Move live information row and matte band from6% to9% bottom inset; move badges from35% to36% bottom to preserve narrow-card title clearance. Add direct unit-label bottom-frame assertion. Artwork and hierarchy unchanged. Final small inset release and primary verification PENDING; be400f75 currently live. No further cloud cleanup or quota changes.
+
 ## 25.10.2026 — Mobile artwork/coin/scene checks pass; tablet touch ticker and badge-caption polish
 
 - CI40193688371/job121169868464 and production40193688402/job121169868639 PASS320x568 and390x844 across3games, including new larger badges, shared coin and distinct support/voting images. Stop before publication on existing touch ticker hover assertion at768. Provider/asset backup and upload not run; livebc04163 unchanged.

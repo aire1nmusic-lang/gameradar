@@ -245,11 +245,13 @@ try {
             const metric = row.querySelector('.server-right').getBoundingClientRect()
             const fav = row.querySelector('.fav').getBoundingClientRect()
             const badge = row.querySelector('.gs-rank-medal').getBoundingClientRect()
-            return { badgeBottom:badge.bottom, nameTop:name.top, nameHeight:name.height, metaBottom:meta.bottom-rect.top, rowHeight:rect.height, metricRight:metric.right, favLeft:fav.left }
+            const unit = row.querySelector('.server-right small').getBoundingClientRect()
+            return { unitBottom:unit.bottom-rect.top, badgeBottom:badge.bottom, nameTop:name.top, nameHeight:name.height, metaBottom:meta.bottom-rect.top, rowHeight:rect.height, metricRight:metric.right, favLeft:fav.left }
           })
           assert.ok(content.badgeBottom <= content.nameTop + 1, `Large rank does not cover name: ${game.id} ${kind} ${width}px rank${rank}`)
           assert.ok(content.nameHeight <= 22, 'Long plaque name stays on one line')
           assert.ok(content.metaBottom <= content.rowHeight - 6, 'Mode caption remains inside the plaque')
+          assert.ok(content.unitBottom <= content.rowHeight * 0.925 + 1, 'Counter label clears the bottom metal frame')
           assert.ok(content.metricRight <= content.favLeft + 1, `Counter does not overlap favourite: ${game.id} ${width}px rank${rank} ${JSON.stringify(content)}`)
 
           const icon = badge.locator('img')

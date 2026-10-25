@@ -3,8 +3,10 @@
 .gs-game-plaque > img { display:block; width:100%; height:100%; object-fit:contain; }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows { display:block!important; }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row:not(#gs):not(#world):not(#card) {
-  position:relative; display:block!important; aspect-ratio:3 / 2; height:auto;
-  min-height:0!important; padding:0!important; margin:10px 0!important;
+  position:relative; display:grid!important; aspect-ratio:3 / 2; height:auto;
+  grid-template-columns:minmax(0,1fr) max-content 30px!important;
+  grid-template-rows:minmax(0,1fr) 44px 9%; column-gap:8px!important; row-gap:0!important;
+  min-height:0!important; padding:0 5%!important; margin:10px 0!important;
   border:0!important; border-radius:16px!important; background:transparent!important;
   box-shadow:none!important; isolation:isolate;
 }
@@ -19,7 +21,8 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
   background:transparent!important; border-radius:0!important; box-shadow:none!important;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .server-copy:not(#gs):not(#world) {
-  position:absolute; z-index:3; left:5%; right:37%; bottom:12%; height:18%; min-height:36px;
+  position:relative; z-index:3; left:auto; right:auto; bottom:auto; height:auto; min-height:36px;
+  grid-column:1!important; grid-row:2; align-self:center;
   display:flex; align-items:center; gap:7px;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-name:not(#gs):not(#world):not(#card) {
@@ -34,16 +37,21 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
   line-height:16px!important; margin:0!important;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .server-right:not(#gs):not(#world) {
-  position:absolute; z-index:3; right:18%; bottom:12%; height:18%; min-height:36px;
+  position:relative; z-index:3; right:auto; bottom:auto; height:auto; min-height:36px;
+  grid-column:2!important; grid-row:2; align-self:center;
   display:flex!important; align-items:center; justify-content:flex-end;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right :is(strong,small) {
   color:#fff7e9!important; text-shadow:0 1px 3px #000;
 }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .fav:not(#gs):not(#world) {
-  position:absolute; z-index:4; right:4%!important; top:auto!important; bottom:12%;
+  position:relative!important; z-index:4; right:auto!important; top:auto!important; bottom:auto!important;
+  grid-column:3; grid-row:2; align-self:center;
   width:30px; height:36px; color:#fff7e9; background:#252a2840; border-radius:50%;
 }
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .gs-shelf-coins { padding:2px!important; }
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right strong { font-size:18px!important; line-height:20px; }
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .server-right small { font-size:10px!important; line-height:12px; }
 @media(max-width:400px) {
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) { width:56px!important; height:56px!important; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row .gs-world-row-avatar { width:26px; height:26px; flex-basis:26px; }
@@ -54,6 +62,7 @@ html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs
   }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row > .gs-rank-medal:not(#gs):not(#world):not(#card) { width:48px!important; height:48px!important; top:17%; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row::after { min-height:50px; }
-  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .gs-world-row-avatar { width:24px; height:24px; flex-basis:24px; }
+  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .gs-world-row-avatar { width:20px; height:20px; flex-basis:20px; }
+  html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row > .server-copy:not(#gs):not(#world) { gap:5px; }
   html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows .server.gs-top-row .server-name:not(#gs):not(#world):not(#card) { font-size:14px!important; }
 }

@@ -241,7 +241,7 @@ try {
           })
           assert.ok(content.nameHeight <= 22, 'Long plaque name stays on one line')
           assert.ok(content.metaBottom <= content.rowHeight - 6, 'Mode caption remains inside the plaque')
-          assert.ok(content.metricRight <= content.favLeft + 1, 'Counter does not overlap favourite')
+          assert.ok(content.metricRight <= content.favLeft + 1, `Counter does not overlap favourite: ${game.id} ${width}px rank${rank} ${JSON.stringify(content)}`)
 
           const icon = badge.locator('img')
           assert.equal(await icon.getAttribute('src'), `/media/ranks/${game.id}-rank-${rank}-approved-v1.webp`)

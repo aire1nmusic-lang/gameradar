@@ -1,3 +1,9 @@
+## 25.10.2026 — Tablet counter/favourite overlap caught by new gate; shared grid fix
+
+- Caption correctionfe480c26d00a678ec9869fb8aac9d75a8297e224 fixed wrapping and mode baseline at320/390 (both pass), but CI40173830215/job121110170815 failed the new no-overlap assertion at768. Production40173830190 runs the same gate before upload; no failed layout is intentionally published. The failing assertion remains unchanged in strength and now logs game/viewport/rank/geometry for diagnosis.
+- Replaced percentage-based absolute horizontal positions for identity/counter/favourite with three real grid cells (minmax(0,1fr), max-content,30px) and8px gaps. Shared44px information row sits above9% bottom margin, character and approved icon remain independent art layers. Counter typography/padding constrained, tablet avatar20px with5px identity gap preserves name width. Separate CSS information band retained; no bitmap or ranking-data changes.
+- LOCAL previous caption build/prerender137/bundle/syntax/diff PASS; new grid build/CI/deploy PENDING. Next scoped push, repeat existing six-size gate and inspect actual corrected screenshot crops, then primary. No gate bypass, no auth/private/payment/DNS/newresource changes. Rollbackfe480c26/ae74af94.
+
 ## 25.10.2026 — Visual review caught wrapping game-plaque captions; corrected before final release
 
 - Character sourceae74af94099d0d3b3a7959f87f1a2d08b918ec77 CI40172939733 SUCCESS at all six sizes/three games, but actual downloaded artifact12591331401 exposed a visual problem not caught by old geometry checks: shared glass styles wrap the long server name onto two lines, pushing mode text below the frame on320px and tablet. Reviewed actual QA crops GTA390/768 and Minecraft320; these are fixture screenshots, not live primary.

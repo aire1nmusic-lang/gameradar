@@ -28,13 +28,13 @@ export function RankStrip({ server, peers, loading = false }: { server: GameServ
     <div className="mt-5 flex flex-wrap gap-2">
       {onlineRank > 0 && (
         <span className={cn(chip, onlineRank <= 3 && 'border-[color:var(--gt-primary)]/50 bg-[color:var(--gt-primary)]/10')}>
-          <RankMedal rank={onlineRank} className="h-6 w-6 text-[12px]" />
+          <RankMedal gameId={server.gameId} rank={onlineRank} className="h-6 w-6 text-[12px]" />
           <Flame size={13} className="opacity-70" /> по онлайну в {game.shortName} · из {ranked.length}
         </span>
       )}
       {voteRank > 0 && (
         <span className={cn(chip, voteRank <= 3 && 'border-[color:var(--gt-primary)]/50 bg-[color:var(--gt-primary)]/10')}>
-          <RankMedal rank={voteRank} className="h-6 w-6 text-[12px]" />
+          <RankMedal gameId={server.gameId} rank={voteRank} className="h-6 w-6 text-[12px]" />
           <Trophy size={13} className="opacity-70" /> в народном рейтинге
         </span>
       )}

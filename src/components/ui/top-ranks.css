@@ -48,3 +48,12 @@ html[data-color-mode] body .gs-rank-podium.gs-rank-3:not(#gs) { background:linea
   html[data-color-mode] body .gs-rank-podium:not(#gs) { width:28px!important; height:28px!important; font-size:12px!important; }
   html[data-color-mode] body .gs-top-row[data-rank]:not(#gs) { min-height:58px!important; }
 }
+
+/* Owner-approved Minecraft E / GTA B assets; retain each caller's compact badge box. */
+html[data-color-mode] body .gs-rank-medal[data-game-rank]:not(#gs):not(#rank) {
+  background:transparent!important; border:0!important; border-radius:0!important;
+  box-shadow:none!important; clip-path:none!important; overflow:visible;
+}
+html[data-color-mode] body .gs-rank-medal[data-game-rank]::before,
+html[data-color-mode] body .gs-rank-medal[data-game-rank]::after { display:none!important; }
+.gs-rank-medal[data-game-rank] > img { display:block; width:100%; height:100%; object-fit:contain; }

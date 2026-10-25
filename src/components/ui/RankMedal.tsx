@@ -8,13 +8,17 @@ export const MEDAL: Record<number, { bg: string; ring: string; text: string }> =
 }
 
 /** Small numbered rank badge; color supplements the readable number. */
-export function RankMedal({ rank, className, neutral=false }: { rank: number; className?: string; neutral?: boolean }) {
+export function RankMedal({ rank, className, neutral=false, gameId }: { rank: number; className?: string; neutral?: boolean; gameId?: string }) {
   // Color identifies the displayed position, including tied/rotating zero scores.
   const medal = MEDAL[rank]
+  const icon = medal && (gameId === 'minecraft' || gameId === 'gtarp')
+    ? `/media/ranks/${gameId}-rank-${rank}-approved-v1.webp`
+    : undefined
   return (
     <span
       aria-label={`Место ${rank}`}
       data-score-tied={neutral || undefined}
+      data-game-rank={icon ? gameId : undefined}
       className={cn(
         'gs-rank-medal gs-rank-number num grid h-8 w-7 shrink-0 place-items-center font-sans text-[12px] font-bold',
         medal && `gs-rank-podium gs-rank-${rank}`,
@@ -29,7 +33,7 @@ export function RankMedal({ rank, className, neutral=false }: { rank: number; cl
 
       }}
     >
-      <span>{rank}</span>
+      {icon ? <img src={icon} width={192} height={192} alt="" decoding="async" /> : <span>{rank}</span>}
     </span>
   )
 }

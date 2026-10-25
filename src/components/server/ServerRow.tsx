@@ -93,7 +93,7 @@ export function ServerRow({
       style={medal ? { borderColor: medal.ring } : undefined}
     >
       {medal && <PodiumArt server={server} />}
-      {rank !== undefined && <RankMedal rank={rank} neutral={(metric==='votes'&&server.votes===0)||(metric==='support'&&support===0)} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
+      {rank !== undefined && <RankMedal gameId={server.gameId} rank={rank} neutral={(metric==='votes'&&server.votes===0)||(metric==='support'&&support===0)} className="h-6 w-6 text-[12px] sm:h-7 sm:w-7 sm:text-[13px]" />}
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />
 
@@ -162,7 +162,7 @@ export function ServerTile({ server, rank, showGame = false }: { server: GameSer
       style={medal ? { borderColor: medal.ring } : undefined}
     >
       <div className="flex items-center gap-2.5">
-        {rank !== undefined && <RankMedal rank={rank} className="gs-tile-rank h-6 w-6 text-[12px]" />}
+        {rank !== undefined && <RankMedal gameId={server.gameId} rank={rank} className="gs-tile-rank h-6 w-6 text-[12px]" />}
         <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="xs" forceGameGlyph />
         <div className="min-w-0 flex-1">
           <div className="gs-tile-name truncate text-[14px] leading-5 font-semibold text-ink-50">{server.name}</div>

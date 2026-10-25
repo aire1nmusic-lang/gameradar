@@ -222,6 +222,19 @@ try {
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
       await mediaReady(page)
       if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
+      if (game.id === 'minecraft' || game.id === 'gtarp') {
+        for (const rank of [1, 2, 3]) {
+          const badge = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-rank-medal`)
+          assert.equal(await badge.getAttribute('aria-label'), `Место ${rank}`)
+          assert.equal(await badge.getAttribute('data-game-rank'), game.id)
+          const icon = badge.locator('img')
+          assert.equal(await icon.getAttribute('src'), `/media/ranks/${game.id}-rank-${rank}-approved-v1.webp`)
+          assert.ok(await icon.evaluate(e => e.complete && e.naturalWidth === 192), 'Approved rank icon decodes')
+          assert.equal(await badge.evaluate(e => getComputedStyle(e).backgroundImage), 'none', 'No legacy slab behind transparent icon')
+          const rect = await badge.boundingBox()
+          assert.ok(rect.width > 0 && rect.width <= 40 && rect.height <= 40, 'Rank icon stays compact')
+        }
+      }
       const box = await plaque.locator('.server-name').boundingBox()
       assert.ok(box.width > 40, `name squeezed ${width} ${game.id}`)
       await plaque.screenshot({ path: `${output}/top-${game.id}-${width}.png` })

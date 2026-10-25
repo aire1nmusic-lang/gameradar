@@ -1,5 +1,5 @@
 {
-  "status": "PROPOSAL_ONLY_NOT_AUTHORIZED_OR_EXECUTED",
+  "status": "AUTHORIZED_BY_OWNER_2026-10-25_PENDING_EXECUTION",
   "bucket": "gamescout-ru-site",
   "reason": "BucketMaxSizeExceeded blocks durable rollback archive for verified game plaque release",
   "remove": [

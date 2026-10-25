@@ -1,3 +1,10 @@
+## 25.10.2026 — Owner authorized exact eight-archive cleanup and character publication
+
+- Owner explicitly instructed “Удаляй лишнее, и загружай таблички” after reviewing the exact eight-old/three-retained692173924byte proposal. Authorization applies to that allowlist only. Existing approved icon set stays installed; publish final six character plaques frombc04163 after storage guard succeeds.
+- Owner authenticated Yandex Cloud through BrowserAuth secure phone/push/account flow. Positive folder/dashboard and gamescout-ru-site bucket observed. No credential values or account identifiers stored in repository. Do not request deletion permission again for the already reviewed scope.
+- Existing uploader DeleteObject denial not retried. Added read-only independent SHA256/size verification of all three retained archives to inventory workflow before browser cleanup. Current inventory1354objects,11archives, no incomplete uploads. Backup deletion NOT yet executed; do not mark complete until eight actual removals and retained readback verified.
+- Next: verify retained hashes, delete only approved eight using authenticated owner session, verify692173924bytes removed and three backups present, rerun failed guarded production40174822916, inspect finalbc04163 on both primary game pages.
+
 ## 25.10.2026 — VERIFIED stable primary recovered; final character publication awaits capacity/access decision
 
 - Recovery40175896688/job121116376616 SUCCESS. Existing prior C3 version preflight verified, current8309 traffic split preserved before activation, then primary independently verified at c3de1730e0b3fbf7e82b97426a9e6164b1d054c6. No bucket, DNS, routes or API configuration changes. This is reversible traffic recovery, not a new source release bypassing backup.

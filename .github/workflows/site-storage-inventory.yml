@@ -43,3 +43,34 @@ jobs:
           uploads=read('list-multipart-uploads').get('Uploads',[])
           print('INCOMPLETE_MULTIPART',json.dumps([{'key':x['Key'],'uploadId':x['UploadId'],'initiated':x['Initiated']} for x in uploads]))
           PY
+
+      - name: Independently verify the three retained archives before approved cleanup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: |
+          python - <<'PY'
+          import subprocess,json,hashlib,tempfile,pathlib,re
+          keep=json.loads('[{"key":"_deployment-backups/e8dbff1d04a98df4c198b24f6f13fd9b64e46b58/40168895531-1/site-rollback.tar.gz","bytes":87101602,"modified":"2026-10-25T06:30:13.890000+00:00"},{"key":"_deployment-backups/c3de1730e0b3fbf7e82b97426a9e6164b1d054c6/40172169346-1/site-rollback.tar.gz","bytes":87284483,"modified":"2026-10-25T07:23:53.198000+00:00"},{"key":"_deployment-backups/8309d4b843b79e4b5354d668871320314f8897ea/40174268139-1/site-rollback.tar.gz","bytes":87368090,"modified":"2026-10-25T07:57:12.466000+00:00"}]')
+          bucket='gamescout-ru-site'
+          endpoint='https://storage.yandexcloud.net'
+          def run(args):
+              result=subprocess.run(['aws']+args+['--endpoint-url',endpoint],capture_output=True,text=True,timeout=240)
+              if result.returncode: raise RuntimeError(result.stderr[-1000:])
+              return result.stdout
+          with tempfile.TemporaryDirectory() as directory:
+              for index,item in enumerate(keep):
+                  head=json.loads(run(['s3api','head-object','--bucket',bucket,'--key',item['key'],'--output','json']))
+                  assert head['ContentLength']==item['bytes'],'Retained size changed'
+                  expected=head.get('Metadata',{}).get('sha256','')
+                  assert re.fullmatch('[a-f0-9]{64}',expected),'Stored checksum missing'
+                  target=pathlib.Path(directory)/str(index)
+                  run(['s3','cp','s3://'+bucket+'/'+item['key'],str(target),'--only-show-errors'])
+                  assert target.stat().st_size==item['bytes'],'Downloaded size mismatch'
+                  digest=hashlib.file_digest(target.open('rb'),'sha256').hexdigest()
+                  assert digest==expected,'Retained checksum mismatch'
+                  print('RETAINED_ARCHIVE_VERIFIED',item['key'],item['bytes'],digest)
+          print('ALL_THREE_RETAINED_ARCHIVES_VERIFIED')
+          PY

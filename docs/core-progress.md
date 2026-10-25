@@ -1,3 +1,10 @@
+## 25.10.2026 — Actual render review caught artwork becoming a grid item; force full-card art layer
+
+- Grid source8309d4b843b79e4b5354d668871320314f8897ea CI40174268017/job121111464531 SUCCESS for all six sizes/three games, including caption and counter/favourite geometry. However actual downloaded artifact12591926497 crops Minecraft320/GTA390/GTA768 showed the character bitmap shrinking into the first grid column: shared glass CSS wins the original low-specificity position:absolute on .gs-game-plaque. The tests checked decode and text geometry, missing image coverage; do not call that passed visual review.
+- Added one narrowly scoped high-specificity absolute/inset0/width100%/height100% rule for the artwork wrapper in these two worlds. Grid remains solely for information content. Extended existing gate to assert actual image bounding width/height equals the whole row within1px, so this visual failure is now caught directly at every size/place.
+- Production40174268139 was already uploading source8309 when found. GitHub connector has no cancel capability; read-only browser check of exact run page showed signed-out session, so no cancellation or credential flow was attempted. Continue with immediate scoped fix release and independently verify final primary rather than describing intermediate version as finished.
+- LOCAL new build/typecheck/prerender/bundle and final CI/publication PENDING. No bitmap/ranking/private/auth/payment/DNS changes. Next: push art-layer fix, inspect actual full-size crops, wait guarded publication, verify six assets/positions and save primary proof. Rollback8309d4b/c3de1730.
+
 ## 25.10.2026 — Tablet counter/favourite overlap caught by new gate; shared grid fix
 
 - Caption correctionfe480c26d00a678ec9869fb8aac9d75a8297e224 fixed wrapping and mode baseline at320/390 (both pass), but CI40173830215/job121110170815 failed the new no-overlap assertion at768. Production40173830190 runs the same gate before upload; no failed layout is intentionally published. The failing assertion remains unchanged in strength and now logs game/viewport/rank/geometry for diagnosis.

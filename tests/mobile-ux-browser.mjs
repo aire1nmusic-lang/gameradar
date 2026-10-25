@@ -230,6 +230,11 @@ try {
           const art = page.locator(`.gs-shelf-support .server[data-rank="${rank}"] .gs-game-plaque img`)
           assert.equal(await art.getAttribute('src'), `/media/ranks/${game.id}-top-${rank}-character-v1-800.webp`)
           assert.ok(await art.evaluate(e => e.complete && e.naturalWidth === 800), 'Character plaque decodes')
+          const artBounds = await art.evaluate(e => {
+            const picture = e.getBoundingClientRect(), row = e.closest('.server').getBoundingClientRect()
+            return { pictureWidth:picture.width, pictureHeight:picture.height, rowWidth:row.width, rowHeight:row.height }
+          })
+          assert.ok(Math.abs(artBounds.pictureWidth-artBounds.rowWidth) <= 1 && Math.abs(artBounds.pictureHeight-artBounds.rowHeight) <= 1, 'Character artwork fills the whole plaque behind its information grid')
           assert.notEqual(await badge.evaluate(e => getComputedStyle(e.closest('.server'), '::after').backgroundImage), 'none', 'Information band is a separate CSS layer')
           const content = await badge.evaluate(e => {
             const row = e.closest('.server'), rect = row.getBoundingClientRect()

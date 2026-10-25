@@ -1,6 +1,9 @@
 /* Illustrated game plaques. The information band is live CSS, never part of the bitmap. */
 .gs-game-plaque { position:absolute; inset:0; display:block; pointer-events:none; }
 .gs-game-plaque > img { display:block; width:100%; height:100%; object-fit:contain; }
+html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row > .gs-game-plaque:not(#gs):not(#world):not(#card) {
+  position:absolute!important; inset:0!important; width:100%!important; height:100%!important; z-index:0!important;
+}
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .support .rows { display:block!important; }
 html[data-color-mode] body .l2a:is(.l2a--minecraft,.l2a--gtarp) .rows .server.gs-top-row:not(#gs):not(#world):not(#card) {
   position:relative; display:grid!important; aspect-ratio:3 / 2; height:auto;

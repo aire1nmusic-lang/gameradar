@@ -399,9 +399,16 @@ html[data-design="lobby"] body :is(.l2a,.gs-rating-page) .gsb .gsb-row > button:
 
 /* All worlds use the approved compact L2 board. Only art and approved rank icons vary. */
 html[data-design="lobby"] body .gsb[data-game]:not([data-game="lineage2"]) .p1 .gsb-hero:not(#a):not(#b):not(#c) {
-  width:60%!important; height:310px!important; object-fit:cover; object-position:50% 0;
+  width:60%!important; height:var(--gsb-game-hero-height,310px)!important; object-fit:cover; object-position:50% 0;
   right:1%!important; bottom:2px!important; -webkit-mask-image:none!important;mask-image:none!important;
 }
 html[data-design="lobby"] body .gsb[data-game]:not([data-game="lineage2"]) :is(.p2,.p3) .gsb-art img:not(#a):not(#b):not(#c) {
   object-position:100% 0!important;
+}
+
+/* GTA cutouts are full-body originals: crop to the torso, keep faces below the title. */
+.gsb[data-game="gtarp"] { --gsb-game-hero-height:250px; }
+/* Old Minecraft art has its own rim; crop it away inside the one shared HTML frame. */
+html[data-design="lobby"] body .gsb[data-game="minecraft"] :is(.p2,.p3) .gsb-art img:not(#a):not(#b):not(#c) {
+  transform:scale(1.16)!important;transform-origin:50% 100%;
 }

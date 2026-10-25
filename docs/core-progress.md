@@ -1,3 +1,9 @@
+## 25.10.2026 — Shared L2 preview reviewed; owner instructed publish
+
+- Owner explicitly accepted the new direction/cast and instructed “другое дело, давай на сайт пуляй теперь это как в л2”. Preview CI40222716670/job121257570797 SUCCESS all six sizes across3games, artifact12609987713. Downloaded actual1440px L2/Minecraft/GTA and390px GTA screenshots: common compact3-column geometry achieved; all six recognizable GTA cast images present and distinct voting/support scenes retained.
+- Visual review caught Michael overlapping the board title. Scoped GTA firsthero height250px (200px plaque) keeps the large torso and50px breakout with face below title, avoiding the generic310px full-body-cutout placement. Crop preframed lower Minecraft artwork16% within the common HTML frame to remove doubled rims. No L2 visual changes. LOCAL build/typecheck/bundle PASS before this tiny art-fit refinement; normal full guarded release will recheck finalsource.
+- Publishing reviewed shared layout directly to main per owner instruction; production/primary verification pending. This corrective release supersedes rejected476c3ae poster design. No quota increase, further archive deletion, API/private/ranking/DNS changes.
+
 ## 25.10.2026 — Owner rejected poster layout; reuse exact L2 boards and recognizable GTA cast
 
 - Owner desktop screenshots show accepted L2 compact3-column board and rejected oversized/tapered Minecraft/GTA posters. Previous476c3ae style is NOT approved despite responsive test success. Corrective scope: use the actual shared LeaderBoard/PlacePlaque component for all worlds rather than approximating it with a second renderer; keep L2 artwork/layout, correct Minecraft/GTA density and replace generic GTA cast.

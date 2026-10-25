@@ -1,0 +1,42 @@
+name: Recover stable primary while podium release is capacity-blocked
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/recover-primary-podium-2026-10-25.yml', '.github/scripts/recover-primary-podium-2026-10-25.mjs']
+permissions:
+  contents: read
+concurrency:
+  group: production-site
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify recovery guards and existing target version
+        run: |
+          node --test tests/primary-worker-release.test.mjs
+          node .github/scripts/recover-primary-podium-2026-10-25.mjs prepare
+      - name: Preserve current traffic split before reversible recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: podium-recovery-before-${{ github.run_id }}
+          path: output/podium-recovery/rollback.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Recover and independently verify stable primary
+        run: node .github/scripts/recover-primary-podium-2026-10-25.mjs activate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: podium-recovery-result-${{ github.run_id }}
+          path: output/podium-recovery/rollback.json
+          retention-days: 30

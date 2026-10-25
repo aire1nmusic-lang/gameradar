@@ -1,0 +1,72 @@
+{
+  "status": "PROPOSAL_ONLY_NOT_AUTHORIZED_OR_EXECUTED",
+  "bucket": "gamescout-ru-site",
+  "reason": "BucketMaxSizeExceeded blocks durable rollback archive for verified game plaque release",
+  "remove": [
+    {
+      "key": "_deployment-backups/9583ce107954565a8543a6d96edd3cf66064e3e4/39414812761-3/site-rollback.tar.gz",
+      "bytes": 84008578,
+      "modified": "2026-10-20T14:44:07.443000+00:00"
+    },
+    {
+      "key": "_deployment-backups/ee627d294892c17a70ed16503134ad385ecb298b/39477813520-1/site-rollback.tar.gz",
+      "bytes": 86613421,
+      "modified": "2026-10-20T18:57:10.782000+00:00"
+    },
+    {
+      "key": "_deployment-backups/334e7ddbaab8593f1d4ca9699972034341de8f5f/39479712332-1/site-rollback.tar.gz",
+      "bytes": 86586109,
+      "modified": "2026-10-20T19:05:17.661000+00:00"
+    },
+    {
+      "key": "_deployment-backups/2b9f4885fce6e3a343b41641727c29ce169c6e71/39611942482-1/site-rollback.tar.gz",
+      "bytes": 86586208,
+      "modified": "2026-10-21T13:58:49.259000+00:00"
+    },
+    {
+      "key": "_deployment-backups/be21d0f130cb3d3a32dc536953cc9d8c35f646ff/39629974682-1/site-rollback.tar.gz",
+      "bytes": 87101591,
+      "modified": "2026-10-21T16:00:04.237000+00:00"
+    },
+    {
+      "key": "_deployment-backups/dab207a1c447f2b65c6d4352cb7e1f298f8dc5b0/39799921069-1/site-rollback.tar.gz",
+      "bytes": 87074984,
+      "modified": "2026-10-22T15:00:41.377000+00:00"
+    },
+    {
+      "key": "_deployment-backups/040e540a4ed7d6a148ceacbbe5481b3a91302c00/40135102581-1/site-rollback.tar.gz",
+      "bytes": 87101513,
+      "modified": "2026-10-24T21:43:02.835000+00:00"
+    },
+    {
+      "key": "_deployment-backups/67f316531d2e8a93e343b84a873d0e0a2176eb9a/40135629940-1/site-rollback.tar.gz",
+      "bytes": 87101520,
+      "modified": "2026-10-24T21:58:12.837000+00:00"
+    }
+  ],
+  "keep": [
+    {
+      "key": "_deployment-backups/e8dbff1d04a98df4c198b24f6f13fd9b64e46b58/40168895531-1/site-rollback.tar.gz",
+      "bytes": 87101602,
+      "modified": "2026-10-25T06:30:13.890000+00:00"
+    },
+    {
+      "key": "_deployment-backups/c3de1730e0b3fbf7e82b97426a9e6164b1d054c6/40172169346-1/site-rollback.tar.gz",
+      "bytes": 87284483,
+      "modified": "2026-10-25T07:23:53.198000+00:00"
+    },
+    {
+      "key": "_deployment-backups/8309d4b843b79e4b5354d668871320314f8897ea/40174268139-1/site-rollback.tar.gz",
+      "bytes": 87368090,
+      "modified": "2026-10-25T07:57:12.466000+00:00"
+    }
+  ],
+  "bytesFreed": 692173924,
+  "requirements": [
+    "Owner authorization for this exact new allowlist",
+    "Verify all three retained archives exist, sizes match and stored SHA256 metadata matches downloaded bytes before deleting anything",
+    "Do not change bucket quota, private data, live files or hashed assets",
+    "Previously observed uploader DeleteObject denial must not be retried unchanged"
+  ],
+  "incompleteMultipartUploads": []
+}

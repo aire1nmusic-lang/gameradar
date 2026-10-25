@@ -1,3 +1,8 @@
+## 25.10.2026 — Retention verification uses original release checksum records
+
+- Read-only verify40177629989/job121121658149 stopped before deletion because the first archive HEAD lacks sha256 custom metadata. No archive was removed. Obtained exact original independently downloaded/verified SHA256 records from completed release logs: e8dbff job121095526168 eebbd61ae960e0b77687a4283242acc9bcff543a3285b6b487f860a0a89c563e; C3 job121105131400 f1c79aa528f493bbfc52303771dad0bfb530a96cb8b5c402e53a7f117d1f0bbd;8309 job121111464923 521259e235fa0b8c0549029cab3172d85b78367361b57ead547241fdc9fe56bb.
+- Verification still downloads all three whole archives and compares their bytes/sizes against those trusted original release digests; present custom metadata must agree too. Missing optional metadata is not used as a substitute for validating archive content. Exact delete/keep object scope unchanged; owner authorization persists. Next successful read-only retention check, then approved owner-session deletion and guarded final publication.
+
 ## 25.10.2026 — Owner authorized exact eight-archive cleanup and character publication
 
 - Owner explicitly instructed “Удаляй лишнее, и загружай таблички” after reviewing the exact eight-old/three-retained692173924byte proposal. Authorization applies to that allowlist only. Existing approved icon set stays installed; publish final six character plaques frombc04163 after storage guard succeeds.

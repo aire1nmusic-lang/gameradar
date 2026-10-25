@@ -48,23 +48,26 @@
     {
       "key": "_deployment-backups/e8dbff1d04a98df4c198b24f6f13fd9b64e46b58/40168895531-1/site-rollback.tar.gz",
       "bytes": 87101602,
-      "modified": "2026-10-25T06:30:13.890000+00:00"
+      "modified": "2026-10-25T06:30:13.890000+00:00",
+      "sha256": "eebbd61ae960e0b77687a4283242acc9bcff543a3285b6b487f860a0a89c563e"
     },
     {
       "key": "_deployment-backups/c3de1730e0b3fbf7e82b97426a9e6164b1d054c6/40172169346-1/site-rollback.tar.gz",
       "bytes": 87284483,
-      "modified": "2026-10-25T07:23:53.198000+00:00"
+      "modified": "2026-10-25T07:23:53.198000+00:00",
+      "sha256": "f1c79aa528f493bbfc52303771dad0bfb530a96cb8b5c402e53a7f117d1f0bbd"
     },
     {
       "key": "_deployment-backups/8309d4b843b79e4b5354d668871320314f8897ea/40174268139-1/site-rollback.tar.gz",
       "bytes": 87368090,
-      "modified": "2026-10-25T07:57:12.466000+00:00"
+      "modified": "2026-10-25T07:57:12.466000+00:00",
+      "sha256": "521259e235fa0b8c0549029cab3172d85b78367361b57ead547241fdc9fe56bb"
     }
   ],
   "bytesFreed": 692173924,
   "requirements": [
     "Owner authorization for this exact new allowlist",
-    "Verify all three retained archives exist, sizes match and stored SHA256 metadata matches downloaded bytes before deleting anything",
+    "Verify all three retained archives exist, sizes match and downloaded SHA256 matches the original independently verified release digest; custom metadata must agree when present",
     "Do not change bucket quota, private data, live files or hashed assets",
     "Previously observed uploader DeleteObject denial must not be retried unchanged"
   ],

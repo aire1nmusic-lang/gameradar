@@ -1,6 +1,6 @@
 import { FavoritesSync } from '@/hooks/useFavorites'
 import { useAppearance } from '@/theme/appearance'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { VisualDemoBanner } from './VisualDemoBanner'
 import { Header } from './Header'
@@ -30,6 +30,8 @@ function LayoutContent() {
   const { game } = useWorldNavigation()
   // One world shell for every game (design preview): same layout as Lineage 2.
   const aether = !!game
+  const accountArt = game && game.id !== 'lineage2' ? worldArt('hero', game.id) : undefined
+  const worldStyle = accountArt ? { '--account-world-art': `url("${artSrc(accountArt, 800)}")`, '--account-world-focus': accountArt.focus.mobile } as CSSProperties : undefined
   const hall = location.pathname === '/'
 
   useEffect(() => {
@@ -50,7 +52,7 @@ function LayoutContent() {
   }, [])
 
   return (
-        <div className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
+        <div style={worldStyle} className={(aether ? `gs-l2-aether-layout ${colorMode === "light" ? "l2-light-shell" : ""} ` : "") + (location.pathname === "/account" ? "gs-account-layout relative flex min-h-screen flex-col" : "relative flex min-h-screen flex-col")}>
           <FavoritesSync/><ToTop/><BackgroundField />{game && !hall && <WorldBackdrop gameId={game.id} />}
           <Header onSearch={() => setSearchOpen(true)} onLogin={() => setAuthOpen(true)} bare={hall} />
           <main className={hall ? "gs-page-main relative flex-1" : "gs-page-main relative flex-1 pt-[60px]"}>

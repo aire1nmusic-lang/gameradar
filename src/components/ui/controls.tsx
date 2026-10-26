@@ -29,6 +29,7 @@ export function Segmented<T extends string>({
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
+            aria-pressed={active}
             className={cn(
               'gs-seg-btn rounded-[6px] font-medium transition-all duration-200',
               active && 'is-active',

@@ -284,7 +284,7 @@ html[data-design="lobby"] body .gs-account-layout > .gs-to-top:not(#lb) {positio
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     /* The generic L2 world shell clears ::before with !important; retain the account scene. */
     background:linear-gradient(180deg,rgba(9,11,16,.28),rgba(9,11,16,.48) 45%,rgba(9,11,16,.74)),
-      url('/media/worlds/lineage-2/account-castle-m-1080.webp') 50% 38%/cover no-repeat!important;
+      var(--account-world-art,url('/media/worlds/lineage-2/account-castle-m-1080.webp')) var(--account-world-focus,50% 38%)/cover no-repeat!important;
   }
   html[data-design="lobby"] body .gs-account-layout:not(#lb)::after {display:none!important}
   html[data-design="lobby"] body .gs-account-layout > .gs-world-backdrop {display:none!important}

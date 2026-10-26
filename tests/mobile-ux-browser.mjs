@@ -75,7 +75,8 @@ try {
       else if (path.endsWith('/people-rating')) json = cards.map(s => ({ server_id: s.id, votes: s.votes }))
       else if (path.endsWith('/support/ranking')) json = cards.map(s => ({ server_id: s.id, coins: s.support.coins, participants: 1 }))
       else if (path.endsWith('/servers')) {
-        let items = cards.filter(s => !url.searchParams.get('gameId') || s.gameId === url.searchParams.get('gameId'))
+        const selectedGames=(url.searchParams.get('gameIds')??url.searchParams.get('gameId')??'').split(',').filter(Boolean)
+        let items = cards.filter(s => !selectedGames.length || selectedGames.includes(s.gameId))
         const query = url.searchParams.get('query') ?? url.searchParams.get('q')
         if (query) items = items.filter(s => s.name.toLowerCase().includes(query.toLowerCase()))
         json = { items, total: items.length, offset: 0, limit: 100 }
@@ -342,6 +343,11 @@ try {
       await page.goto(base + `/server/qa-${game.id}-0`)
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).waitFor()
       assert.equal(await page.locator('.gs-server-profile nav a').first().getAttribute('href'), '/' + game.slug)
+      for(const label of ['7 дней','30 дней','24 часа']){
+        await page.getByRole('button',{name:label,exact:true}).click()
+        assert.equal(await page.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true')
+        await noOverflow()
+      }
       const dossier = page.locator('.gs-profile-dossier')
       const dossierBox = await dossier.boundingBox()
       const avatar = page.locator('.gs-profile-avatar')
@@ -451,6 +457,17 @@ try {
       await page.goto(base + `/account?game=${game.id}`)
       await page.locator('.gs-account-entry').waitFor()
       await noOverflow()
+      await page.getByRole('button',{name:'Создать',exact:true}).click()
+      await page.getByRole('button',{name:'Создать аккаунт',exact:true}).waitFor()
+      await page.getByRole('button',{name:'Показать пароль',exact:true}).click()
+      assert.equal(await page.locator('#account-password').getAttribute('type'),'text')
+      await page.getByRole('button',{name:'Скрыть пароль',exact:true}).click()
+      await page.getByRole('button',{name:'Войти',exact:true}).click()
+      await page.getByRole('button',{name:'Забыли пароль?',exact:true}).click()
+      await page.getByRole('button',{name:'Отправить ссылку',exact:true}).waitFor()
+      await noOverflow()
+      await page.getByRole('button',{name:'Вернуться ко входу',exact:true}).click()
+      if(width<768&&game.id!=='lineage2') assert.ok((await page.locator('.gs-account-layout').evaluate(e=>getComputedStyle(e,'::before').backgroundImage)).includes(`/media/worlds/${game.slug}/`),'Account retains the selected game artwork')
       await page.screenshot({path:`${output}/account-parity-${game.id}-${width}.png`})
       results.push({ width, height, game: game.id, top: true, supportTarget: true, opaqueClaim: true, opaqueSearch: true, contextualHome: true, footerCTA: width < 1024 })
     }

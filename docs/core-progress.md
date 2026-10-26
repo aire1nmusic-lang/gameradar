@@ -1,3 +1,8 @@
+## 26.10.2026 — Scope profile finish and verify auth infrastructure
+
+- VERIFIED read-only diagnostic40389434270: public APIs200, auth/me503 private_api_required; VM check BLOCKED because existing SSH secrets/user/path are absent. Gateway probe from local environment timed out at CONNECT; not evidence the private service is down. DNS requires explicit agreement and current operator access per AGENTS; no DNS/privacy/payment changes performed.
+- Final cascade review excluded support-dialog panels from the light profile material so existing smoked-glass text remains readable. Completed picker keyboard open/up navigation and removed L2-only onboarding copy from Minecraft/GTA. Local typecheck PASS. CI/publication pending; no live claim. Rollback prior live799aae4; no added cost.
+
 ## 26.10.2026 — Owner screenshots: matte finish and interaction polish (IN PROGRESS)
 
 - VERIFIED primary799aae4 is live; owner supplied12 annotated screenshots and13 substantive issues. Support chooser was native select, had no search or nominal ruble equivalent; openings used plain rows; profile trust label was English and top3 decoration excluded online ranking. Main auth/me returns503 private_api_required. No login success claimed.

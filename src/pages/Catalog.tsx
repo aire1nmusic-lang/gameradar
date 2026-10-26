@@ -45,7 +45,7 @@ export default function Catalog() {
   const [filters, setFilters] = useState<CatalogFilters>(() => ({
     ...EMPTY_FILTERS,
     query: params.get('q') ?? '',
-    games: params.get('game') ? [params.get('game')!] : [],
+    games: params.get('game') ? [params.get('game')!] : world ? [world.id] : [],
     modes: params.get('mode') ? [params.get('mode')!] : [],
     versions: params.get('version') ? [params.get('version')!] : [],
     verifiedOnly: params.get('verified') === '1',
@@ -53,8 +53,8 @@ export default function Catalog() {
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
   useEffect(() => { if (!authLoading && !privateCore && sort === 'support') setSort('recommended') },[authLoading,privateCore,sort])
   const ranked = ['recommended','online','votes','support','growth','rating'].includes(sort)
-  // Lineage 2 art: the list's top three are the same place plaques as on the boards
-  const podium = ranked && world?.id === 'lineage2'
+  // Every world uses its own artwork in the shared leaderboard plaques.
+  const podium = ranked && !!world
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'
@@ -69,7 +69,7 @@ export default function Catalog() {
   // footer «Найти свой сервер» lands here with #search: open the search and put the cursor in it
   useEffect(()=>{if(window.location.hash!=='#search')return;setSearchOpen(true);const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
 
-  const rotateSupport = world?.id === 'lineage2' && sort === 'support'
+  const rotateSupport = !!world && sort === 'support'
   const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
   const { data: page, loading, error, reload } = useAsync<Page<GameServer>>(
     publish => demo ? searchServers(query,true,publish) : privateCore && sort === 'votes' ? peopleSortedServers(query,publish)
@@ -123,7 +123,7 @@ export default function Catalog() {
     setFilters((prev) => ({
       ...prev,
       query: params.get('q') ?? '',
-      games: params.get('game') ? [params.get('game')!] : [],
+      games: params.get('game') ? [params.get('game')!] : world ? [world.id] : [],
       modes: params.get('mode') ? [params.get('mode')!] : [],
       versions: params.get('version') ? [params.get('version')!] : [],
       verifiedOnly: params.get('verified') === '1',
@@ -285,7 +285,7 @@ export default function Catalog() {
       </Container>
 
       <Sheet
-        className={world?.id==='lineage2'?'gs-l2-filter-sheet':undefined}
+        className={world?'gs-l2-filter-sheet':undefined}
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         title="Фильтры"

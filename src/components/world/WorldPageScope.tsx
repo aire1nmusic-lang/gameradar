@@ -43,7 +43,7 @@ export function WorldPageScope({children,className}:{children:ReactNode;classNam
   const base=themeForGame(game.id)
   const theme=colorMode==='light'?lightWorldTheme(base):base
 
-  return <ThemeScope theme={theme} as="div" className={cn('gs-world-utility',game.id==='lineage2'&&'gs-l2-utility',colorMode==='light'&&'gs-world-light')}>
+  return <ThemeScope theme={theme} as="div" className={cn('gs-world-utility','gs-l2-utility',colorMode==='light'&&'gs-world-light')}>
     <div
       className={cn('min-h-[calc(100vh-60px)]',className)}
       style={{...platformPalette(theme),background:theme.colors.bg,color:theme.colors.text}}

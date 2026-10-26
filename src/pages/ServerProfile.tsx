@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockBodyScroll } from '@/hooks/useUi'
 import { PlaceBanner } from '@/components/profile/PlaceBanner'
@@ -56,7 +56,7 @@ import { apiRequest } from '@/repositories/http/client'
 import { ClaimModal } from '@/components/profile/ClaimModal'
 import { ProceduralShot } from '@/components/art/ProceduralShot'
 import { WorldArtSurface } from '@/components/media/WorldArt'
-import { isShowcase, L2_SERVER_COVER, serverArt } from '@/data/themeMedia'
+import { isShowcase, L2_SERVER_COVER, serverArt, worldArt, artSrc } from '@/data/themeMedia'
 import {
   ThemeHorizon,
   ThemeParticles,
@@ -177,6 +177,9 @@ function Profile({ server: source }: { server: GameServer }) {
   const theme = themeForGame(server.gameId, chronicle?.themeId)
   const cover = server.gameId === 'lineage2' ? L2_SERVER_COVER : serverArt(server)
   // Showcase worlds get a full profile hero with the header laid over the art.
+  const fullScene = ['lineage2', 'minecraft', 'gtarp'].includes(server.gameId)
+  const profileArt = worldArt('hero', server.gameId)
+  const sceneStyle = server.gameId !== 'lineage2' && profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
   const showcase = !!cover && isShowcase(server.gameId)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
@@ -237,9 +240,9 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', server.gameId === 'lineage2' && 'gs-server-fullbg')} >
-      {/* Lineage 2: the shared fortress is the background of the whole page, like the world page */}
-      {server.gameId === 'lineage2' && <div aria-hidden className="gs-server-bg" />}
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} >
+      {/* Same full-page world scene and compact identity header in every primary game. */}
+      {fullScene && <div aria-hidden className="gs-server-bg" style={sceneStyle} />}
       {/* hero: art of the server's world */}
       <div className={cn('relative overflow-hidden', showcase ? 'h-[300px] sm:h-[440px] lg:h-[500px]' : 'h-[220px] sm:h-[320px]')}>
         <WorldArtSurface

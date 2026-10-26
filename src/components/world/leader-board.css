@@ -412,3 +412,9 @@ html[data-design="lobby"] body .gsb[data-game]:not([data-game="lineage2"]) :is(.
 html[data-design="lobby"] body .gsb[data-game="minecraft"] :is(.p2,.p3) .gsb-art img:not(#a):not(#b):not(#c) {
   transform:scale(1.16)!important;transform-origin:50% 100%;
 }
+
+/* The mobile/tablet category switch controls the shared boards in every world. */
+@media(max-width:1023px){
+  .gs-rating-page .gsb-pair[data-active="support"]>.gs-shelf-people,
+  .gs-rating-page .gsb-pair[data-active="people"]>.gs-shelf-support{display:none!important}
+}

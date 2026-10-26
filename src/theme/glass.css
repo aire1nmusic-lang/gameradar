@@ -410,3 +410,7 @@ html[data-design="lobby"]:not([data-color-mode="light"]) body .gs-server-fullbg:
   .gs-profile-identity .gs-profile-avatar{width:60px;height:60px}
   .gs-profile-copy h1{font-size:22px}
 }
+
+/* Full-page profile composition shared with L2; retain each world's own art. */
+.gs-server-bg[style]{background-image:var(--profile-art);background-position:var(--profile-focus,50% 40%)}
+@media(max-width:767px){.gs-server-bg[style]{background-image:var(--profile-art-mobile);background-position:var(--profile-focus-mobile,50% 40%)}}

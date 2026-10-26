@@ -21,7 +21,7 @@ export function CatalogPodium({ servers, metric }: { servers: GameServer[]; metr
     return <span className="server-right gsb-num"><Users className="gsb-val-ic" aria-hidden /><span><small>онлайн</small><strong>{measured ? formatPlayers(s.online) : '—'}</strong></span></span>
   }
   const fav = (s: GameServer) => <button type="button" className={`fav gsb-fav ${has(s.slug) ? 'selected' : ''}`} aria-pressed={has(s.slug)} aria-label={has(s.slug) ? `Убрать ${s.name} из избранного` : `${s.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(s.slug) }}><Heart size={14} fill={has(s.slug) ? 'currentColor' : 'none'} /></button>
-  return <div className="gs-rating-page gs-catalog-podium"><div className="gsb gsb-plain"><div className="gsb-list">
+  return <div className="gs-rating-page gs-catalog-podium"><div className="gsb gsb-plain" data-game={servers[0]?.gameId}><div className="gsb-list">
     {servers.slice(0, 3).map((s, i) => <PlacePlaque key={s.id} server={s} rank={i + 1} meta={meta(s)} value={value(s)} fav={fav(s)} art={metric === 'votes' ? 'people' : 'support'} />)}
   </div></div></div>
 }

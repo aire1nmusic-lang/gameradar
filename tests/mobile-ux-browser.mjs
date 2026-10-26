@@ -405,7 +405,8 @@ try {
       for(const rank of [1,2,3]){
         const card=page.locator(`.gs-catalog-podium .gsb-plaque[data-rank="${rank}"]`)
         await card.scrollIntoViewIfNeeded()
-        await card.locator('img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())))
+        await mediaReady(page)
+        assert.ok(await card.locator('img').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0)), 'Every actual catalog plaque image is decoded')
         await card.screenshot({path:`${output}/catalog-place-${game.id}-${rank}-${width}.png`})
       }
       await page.evaluate(()=>scrollTo(0,0))

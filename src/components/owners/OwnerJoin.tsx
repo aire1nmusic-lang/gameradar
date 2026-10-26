@@ -24,7 +24,7 @@ export function OwnerJoin() {
           <p>Игроки уже ищут серверы в каталоге. Подтверди права на свой проект — и управляй тем, как его видят.</p>
           <div className="gs-owner-actions">
             <Link to={catalog} className="gs-owner-primary">Найти свой сервер<ArrowRight size={18} /></Link>
-            <Link to="/account" className="gs-owner-secondary">Мои серверы и заявки</Link>
+            <Link to={`/account?game=${game.id}`} className="gs-owner-secondary">Мои серверы и заявки</Link>
           </div>
         </div>
       </section>

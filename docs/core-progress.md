@@ -1,3 +1,9 @@
+## 26.10.2026 — Owner screenshots: matte finish and interaction polish (IN PROGRESS)
+
+- VERIFIED primary799aae4 is live; owner supplied12 annotated screenshots and13 substantive issues. Support chooser was native select, had no search or nominal ruble equivalent; openings used plain rows; profile trust label was English and top3 decoration excluded online ranking. Main auth/me returns503 private_api_required. No login success claimed.
+- Implemented a searchable keyboard-operable support picker, nominal50 RUB/Coin display (no payment activation), illustrated opening cards, stronger matte plaque bands/rank digits, themed sorting/search, light readable profile surfaces, online top3 fallback explicitly labelled by its ranking, distinct gold/silver/violet profile treatment, owner-page matte cards and account natural scroll spacing across worlds. Existing public/private boundary and ranking economics unchanged.
+- Local typecheck PASS. Build/prerender137/bundle/diff/test syntax PASS. Six viewport browser gate, actual primary publication and private-origin diagnostics pending. API checks are read-only; all browser writes aborted. No DNS/IAM/security/registration/payment enablement, migration or new paid resource. Rollback uses mandatory guarded release backup and prior live799aae4.
+
 ## 26.10.2026 — VERIFIED Minecraft/GTA L2 parity published on primary
 
 - Frontend799aae4d6923b65f8f0f1cdb2263131ea46d56ed is LIVE on gamescout.online. CI40385696407/job121793238772 SUCCESS; guarded production40385696392/job121793239530 SUCCESS including durable rollback verification, versioned assets, HTML upload, primary Worker activation and independent readback of six pages/assets/three public API reads. No guard bypass or manual upload.

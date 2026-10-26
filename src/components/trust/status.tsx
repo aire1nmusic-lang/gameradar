@@ -22,7 +22,7 @@ interface StatusMeta {
  */
 export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
   [OnlineStatus.Verified]: {
-    label: 'VERIFIED ONLINE',
+    label: 'Проверено GameScout',
     short: 'Verified',
     icon: <ShieldCheck size={12} strokeWidth={2.4} />,
     pill: 'border-signal-500/28 bg-signal-500/10',
@@ -40,8 +40,8 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     caption: 'Сервер отвечает, но точный онлайн подтвердить нельзя',
   },
   [OnlineStatus.OwnerReported]: {
-    label: 'REPORTED ONLINE',
-    short: 'Reported',
+    label: 'По данным владельца',
+    short: 'От владельца',
     icon: <Upload size={12} strokeWidth={2.4} />,
     pill: 'border-white/10 bg-white/[0.04]',
     text: 'text-ink-300',
@@ -85,7 +85,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     caption: 'Выполняется запрос к серверу',
   },
   [OnlineStatus.External]: {
-    label: 'EXTERNAL ONLINE',
+    label: 'Внешний мониторинг',
     short: 'Внешний',
     icon: <Globe size={12} strokeWidth={2.4} />,
     pill: 'border-white/10 bg-white/[0.04]',

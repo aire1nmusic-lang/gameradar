@@ -17,6 +17,7 @@ import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNav
 import { WorldPageScope } from '@/components/world/WorldPageScope'
 import './review-refinement.css'
 import './world-glass-review.css'
+import './world-polish.css'
 
 export function Layout() {
   return <PortalProvider><WorldNavigationProvider><LayoutContent /></WorldNavigationProvider></PortalProvider>

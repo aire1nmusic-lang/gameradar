@@ -1,3 +1,4 @@
+import { LaunchRow } from '@/components/server/LaunchRow'
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Coins, Crown, Heart, Hourglass, ThumbsUp } from 'lucide-react'
@@ -106,7 +107,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
     <span className="gsb-glass" aria-hidden="true" />
   </div>
   else if (!rows.length) body = <div className="gsb-empty"><b>{filtered ? 'Ничего не найдено' : emptyTitle}</b><span>{filtered ? 'Попробуй другой запрос или сбрось фильтр.' : emptyText}</span></div>
-  else if (kind === 'opening') body = rows.map((s, i) => row(s, i))
+  else if (kind === 'opening') body = rows.map(s => <LaunchRow key={s.id} server={s} showGame={false}/>)
   else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>
 
   return <section className={`panel gsb gs-shelf-${kind} ${kind === 'opening' ? 'openings' : kind === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${kind}`} data-game={game.id}>

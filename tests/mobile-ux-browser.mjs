@@ -294,7 +294,7 @@ try {
       assert.equal(await profileLink.evaluate(e => getComputedStyle(e).position), 'absolute')
       await plaque.getByRole('button', { name: /^Поддержать .* за GS Coins$/ }).click()
       await page.locator('.gs-support-dialog:modal').waitFor()
-      const selectedServer = await page.getByLabel('Сервер', { exact: true }).inputValue().catch(async error => {
+      const selectedServer = await page.getByLabel('Сервер', { exact: true }).getAttribute('data-value').catch(async error => {
         console.error(await page.locator('.gs-support-dialog').innerText(), errors)
         throw error
       })
@@ -306,6 +306,7 @@ try {
       for (const caption of await studio.locator('.gs-projection-coins').all()) assert.equal(await caption.evaluate(e=>getComputedStyle(e).color),'rgb(199, 208, 213)','Forecast captions remain readable on smoked glass')
       await studio.getByRole('button', { name: '25', exact: true }).click()
       assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '25')
+      assert.match(await studio.locator('.gs-support-rubles').innerText(),/1[\s\u00a0\u202f]?250 ₽/)
       await studio.getByRole('button', { name: 'Увеличить количество Coins', exact: true }).click()
       assert.equal(await studio.getByLabel('Количество Coins', { exact: true }).inputValue(), '26')
       await studio.getByRole('button', { name: 'Уменьшить количество Coins', exact: true }).click()
@@ -314,7 +315,9 @@ try {
       assert.equal(await page.locator('.gs-support-login').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(200, 255, 85)', 'Support action keeps the vivid lime brand accent')
       assert.equal(await studio.locator('.gs-projection-row').count(), 7)
       await studio.getByRole('button', { name: 'Свернуть список', exact: true }).click()
-      await studio.getByLabel('Сервер', { exact: true }).selectOption(`qa-${game.id}-11`)
+      await studio.getByLabel('Сервер', { exact: true }).click()
+      await studio.getByLabel('Поиск сервера для поддержки').fill(cards.find(s=>s.id===`qa-${game.id}-11`).name)
+      await studio.getByRole('option').filter({hasText:cards.find(s=>s.id===`qa-${game.id}-11`).name}).click()
       await studio.getByLabel('Количество Coins', { exact: true }).fill('1')
       assert.equal(await page.locator('.gs-support-login').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(200, 255, 85)', 'Support action keeps the vivid lime brand accent')
       assert.equal(await studio.locator('.gs-projection-row').count(), 3)
@@ -323,7 +326,9 @@ try {
       await studio.getByRole('alert').waitFor()
       assert.equal(await studio.locator('.gs-position-next').count(), 0, 'Invalid amount has no forecast')
       await studio.getByLabel('Количество Coins', { exact: true }).fill('10')
-      await studio.getByLabel('Сервер', { exact: true }).selectOption(`qa-${game.id}-0`)
+      await studio.getByLabel('Сервер', { exact: true }).click()
+      await studio.getByLabel('Поиск сервера для поддержки').fill(cards.find(s=>s.id===`qa-${game.id}-0`).name)
+      await studio.getByRole('option').filter({hasText:cards.find(s=>s.id===`qa-${game.id}-0`).name}).click()
       const dialogBox = await page.locator('.gs-support-dialog').boundingBox()
       assert.ok(dialogBox.x >= 0 && dialogBox.y >= 0 && dialogBox.x + dialogBox.width <= width + 1 && dialogBox.y + dialogBox.height <= height + 1, 'Support dialog fits viewport')
       const regions = await studio.evaluate(e => {
@@ -501,6 +506,8 @@ try {
       await noOverflow()
       await page.getByRole('button',{name:'Создать',exact:true}).click()
       await page.getByRole('button',{name:'Создать аккаунт',exact:true}).waitFor()
+      await page.getByRole('button',{name:'Создать аккаунт',exact:true}).scrollIntoViewIfNeeded()
+      assert.ok(await page.getByRole('button',{name:'Создать аккаунт',exact:true}).isVisible(),'Registration action remains reachable by scrolling in portrait and landscape')
       await page.getByRole('button',{name:'Показать пароль',exact:true}).click()
       assert.equal(await page.locator('#account-password').getAttribute('type'),'text')
       await page.getByRole('button',{name:'Скрыть пароль',exact:true}).click()

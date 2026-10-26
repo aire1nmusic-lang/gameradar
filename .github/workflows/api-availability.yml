@@ -1,3 +1,4 @@
+# Read-only verification for the owner report: login remains unavailable on the primary domain.
 name: Diagnose live API availability
 on:
   push:

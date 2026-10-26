@@ -67,7 +67,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
       <button aria-label="Закрыть" onClick={onClose} className="absolute inset-0 animate-fade bg-ink-1000/80 backdrop-blur-[5px]" />
 
       <div className="gs-search-surface surface-raised relative flex h-full w-full animate-pop flex-col overflow-hidden sm:h-auto sm:max-h-[70vh] sm:w-[620px] sm:rounded-xl">
-        <div className="flex items-center gap-3 border-b border-white/7 px-4 py-3.5 sm:px-5">
+        <div className="gs-search-intro"><span>Поиск серверов</span><h2>{game ? `Твой следующий мир — ${game.shortName}` : 'Найди свой следующий мир'}</h2><p>Название проекта, версия или игровой режим</p></div>
+        <div className="gs-search-input-row flex items-center gap-3 border-b border-white/7 px-4 py-3.5 sm:px-5">
           <Search size={18} className="shrink-0 text-ink-400" />
           <input
             ref={inputRef}

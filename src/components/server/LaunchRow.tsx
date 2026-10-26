@@ -1,3 +1,4 @@
+import { artSrc, worldArt } from '@/data/themeMedia'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ import { LaunchCountdown } from './LaunchCountdown'
 export function LaunchRow({ server, className, showGame = true }: { server: GameServer; className?: string; showGame?: boolean }) {
   const game = getGame(server.gameId)
   const chronicle = chronicleOfVersion(server.gameId, server.version)
+  const art = worldArt('hero',server.gameId)
   const launch = server.launch
   if (!launch) return null
   const sub = [showGame ? game.shortName : null, chronicle?.label ?? server.version, server.rates ? `рейты ${server.rates}` : null].filter(Boolean)
@@ -23,10 +25,12 @@ export function LaunchRow({ server, className, showGame = true }: { server: Game
     <Link
       to={`/server/${server.slug}`}
       className={cn(
-        'gs-row-line group flex min-h-[54px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[54px] sm:gap-4 sm:px-4',
+        'gs-opening-card gs-row-line group flex min-h-[54px] items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 transition-colors duration-150 hover:border-white/14 hover:bg-white/[0.045] sm:min-h-[54px] sm:gap-4 sm:px-4',
         className,
       )}
     >
+      {art&&<img className="gs-opening-art" src={artSrc(art,800)} alt="" aria-hidden="true"/>}
+      <span className="gs-opening-date"><b>{new Date(launch.at).toLocaleDateString('ru-RU',{day:'2-digit',timeZone:'Europe/Moscow'})}</b>{new Date(launch.at).toLocaleDateString('ru-RU',{month:'short',timeZone:'Europe/Moscow'})}</span>
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar" />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[14px] font-semibold text-ink-50">{server.name}</div>

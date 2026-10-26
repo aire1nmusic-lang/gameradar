@@ -9,13 +9,14 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { Minus, Plus, ChevronDown, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import './support-studio.css'
+import { ServerPicker } from './ServerPicker'
 
 export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:GameServer[];demo:boolean;initialServer?:string|null;onSupported:()=>void}) {
  const choices=[...servers].sort((a,b)=>a.name.localeCompare(b.name,'ru'))
  const [serverId,setServerId]=useState(choices.find(s=>s.id===initialServer||s.slug===initialServer)?.id??choices[0]?.id??'')
  const [amount,setAmount]=useState(10)
  const [expanded,setExpanded]=useState(false)
- const selectId=useId(),amountId=useId(),listId=useId()
+ const amountId=useId(),listId=useId()
  const target=servers.find(s=>s.id===serverId)
  const projection=projectSupport(servers,serverId,amount)
  const targetIndex=projection?.rows.findIndex(s=>s.id===serverId)??0
@@ -41,8 +42,8 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
    <div className="gs-support-target">
     <ServerLogo name={target.name} src={target.logoUrl} hue={target.hue} gameId={target.gameId} size="lg" forceGameGlyph className="gs-support-target-avatar"/>
     <div className="gs-support-target-copy">
-     <label htmlFor={selectId} className="gs-support-eyebrow">Выбранный сервер</label>
-     <div className="gs-support-target-select"><select id={selectId} aria-label="Сервер" className="gs-support-select" value={serverId} onChange={e=>{setServerId(e.target.value);setExpanded(false)}}>{choices.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><ChevronDown size={16} aria-hidden="true"/></div>
+     <span className="gs-support-eyebrow">Выбранный сервер</span>
+     <ServerPicker servers={choices} value={serverId} onChange={id=>{setServerId(id);setExpanded(false)}}/>
      <span className="gs-support-target-meta">{getGame(target.gameId).shortName} · {target.version}{target.rates?` · ${target.rates}`:''}</span>
     </div>
    </div>
@@ -53,6 +54,7 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
      <div className="gs-support-value"><input id={amountId} aria-label="Количество Coins" className="gs-support-amount" type="number" min={1} max={10000} step={1} value={Number.isNaN(amount)?'':amount} onChange={e=>setAmount(e.target.value===''?NaN:Number(e.target.value))}/><span>GS Coins</span></div>
      <button type="button" aria-label="Увеличить количество Coins" disabled={amount>=10000} onClick={()=>changeAmount(1)}><Plus size={18}/></button>
     </div>
+    <p className="gs-support-rubles" aria-live="polite">Эквивалент по номиналу: <strong>{Number.isFinite(amount)&&amount>0?`${(amount*50).toLocaleString('ru-RU')} ₽`:'—'}</strong><small>1 GS Coin = 50 ₽ · поддержка списывается с баланса Coins</small></p>
     <div className="gs-support-presets" aria-label="Быстрый выбор Coins">{[5,10,25,50,100].map(n=><button className="gs-amount-preset" key={n} type="button" aria-label={String(n)} aria-pressed={amount===n} onClick={()=>setAmount(n)}>{n}</button>)}</div>
    </div>
   </div>

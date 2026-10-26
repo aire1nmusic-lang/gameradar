@@ -406,7 +406,8 @@ try {
         const card=page.locator(`.gs-catalog-podium .gsb-plaque[data-rank="${rank}"]`)
         await card.scrollIntoViewIfNeeded()
         await mediaReady(page)
-        assert.ok(await card.locator('img').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0)), 'Every actual catalog plaque image is decoded')
+        // At320px the avatar is intentionally display:none; lazy hidden images never load.
+        await page.waitForFunction(selector=>{const images=[...document.querySelector(selector).querySelectorAll('img')].filter(image=>image.getClientRects().length>0);return images.length>=2&&images.every(image=>image.complete&&image.naturalWidth>0)}, `.gs-catalog-podium .gsb-plaque[data-rank="${rank}"]`, {timeout:10000})
         await card.screenshot({path:`${output}/catalog-place-${game.id}-${rank}-${width}.png`})
       }
       await page.evaluate(()=>scrollTo(0,0))
@@ -456,7 +457,7 @@ try {
         assert.match(await dateSelect.innerText(),new RegExp(label))
       }
       await page.screenshot({path:`${output}/filters-parity-${game.id}-${width}.png`})
-      await page.getByRole('button',{name:'Сбросить',exact:true}).click()
+      await filterPanel.getByRole('button',{name:'Сбросить',exact:true}).click()
       await page.getByRole('button',{name:/^Показать \d/}).click()
       await page.locator('.gs-l2-filter-sheet').waitFor({state:'detached'})
       await page.getByRole('button',{name:'Поиск серверов',exact:true}).click()

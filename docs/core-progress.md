@@ -1,3 +1,9 @@
+## 26.10.2026 — Correct hidden lazy-avatar QA blocker; publish parity release
+
+- VERIFIED CI40372039099/job121745580271 and production40372038854/job121763648850 stopped at catalog image assertion before backup/upload. At320px shared CSS intentionally hides .gsb-avatar; ServerLogo uses loading=lazy, so its hidden original image never loads. Earlier native decode wait hung for this same reason. Source feature code is already on main1b856e1; actual primary still shows previous catalog.
+- Corrected gate to await ALL rendered plaque images with10second bound and require at least2 actual images; intentionally display:none avatars are excluded. Existing complete-art/hero/medal/home checks remain. Scoped filter reset to its dialog, since toolbar can have another Reset once chips are selected. No production guard, API, security, backup, DNS, payment or data change.
+- Local test syntax/diff check PASS. Six-viewports x3games and guarded publication pending. Cost unchanged; rollback remains previous published version and mandatory release archive.
+
 ## 26.10.2026 — World-wide L2 layout parity audit and correction (IN PROGRESS)
 
 - Owner reports Minecraft/GTA catalog lacks L2 TOP3 plaques and requests every tab/button checked. Inspected owner screenshots, live L2, current main5844b11 and shared components. VERIFIED source gaps: Catalog podium/filter portal, RatingPage shared boards/links, WorldPageScope palette, ServerProfile full-scene/PlaceBanner restricted to L2; GTA uses legacy picker. Previous25Oct completion concerned home shelves only and did not cover these routes.

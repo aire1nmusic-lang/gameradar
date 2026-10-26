@@ -61,6 +61,8 @@ try {
   for (const [width, height] of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]]) {
     const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 1024, hasTouch: width < 1024, reducedMotion: 'reduce' })
     const page = await context.newPage()
+    page.setDefaultTimeout(20000)
+    page.setDefaultNavigationTimeout(20000)
     let writes = 0
     let authUnavailable = false
     const errors = []
@@ -88,6 +90,7 @@ try {
     })
     const noOverflow = async () => assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `overflow ${width} ${page.url()}`)
     for (const game of games.filter(g => ['lineage2', 'minecraft', 'gtarp'].includes(g.id))) {
+      console.log(`QA ${width}x${height} ${game.id}: home`)
       await page.goto(base + '/' + game.slug)
       await page.locator('.gs-shelf-support .server:not(.is-skeleton)').first().waitFor()
       await noOverflow()
@@ -388,6 +391,7 @@ try {
         await page.screenshot({ path: `${output}/footer-${game.id}-${width}.png` })
       }
       await noOverflow()
+      console.log(`QA ${width}x${height} ${game.id}: catalog`)
       // Parity must hold after leaving the home page, not just on its shelves.
       assert.equal(await page.locator('.gs-server-fullbg .gs-server-bg').count(), 1, 'Every primary game has the same full-scene profile')
       assert.equal(await page.locator('.gs-place-banner').count(), 1, 'Positive TOP3 fixture earns a game-specific profile banner')
@@ -420,6 +424,7 @@ try {
         await noOverflow()
         await page.getByRole('button',{name:'Список',exact:true}).click()
       }
+      console.log(`QA ${width}x${height} ${game.id}: filters`)
       await page.getByRole('button',{name:'Фильтры',exact:true}).click()
       await page.locator('.gs-l2-filter-sheet').waitFor({state:'visible'})
       const filterBox=await page.locator('.gs-l2-filter-sheet>div').boundingBox()
@@ -442,6 +447,7 @@ try {
       await range.press('ArrowRight')
       assert.equal(await range.inputValue(),'50')
       await range.press('Home')
+      console.log(`QA ${width}x${height} ${game.id}: filter date options`)
       const dateSelect=filterPanel.getByRole('button',{name:'Сортировка',exact:true})
       for(const label of ['За последние 30 дней','За последние 3 месяца','За последний год','Любая']){
         await dateSelect.click()
@@ -458,6 +464,7 @@ try {
       await page.getByText('По этим фильтрам ничего не нашлось',{exact:true}).waitFor()
       await page.getByRole('button',{name:'Очистить',exact:true}).click()
       await page.locator('.gs-catalog-podium .gsb-plaque').first().waitFor()
+      console.log(`QA ${width}x${height} ${game.id}: rating`)
       await page.goto(base + `/rating?game=${game.id}&all=people`)
       await page.locator('.gsb-pair .gs-shelf-people .gsb-plaque').first().waitFor()
       assert.equal(await page.locator('.gsb-pair .gsb-plaque').count(),6,'Both rating categories use shared TOP3')
@@ -486,6 +493,7 @@ try {
       await page.goto(base + `/favorites?game=${game.id}`)
       await page.getByRole('heading',{level:1}).waitFor()
       await noOverflow()
+      console.log(`QA ${width}x${height} ${game.id}: account`)
       await page.goto(base + `/account?game=${game.id}`)
       await page.locator('.gs-account-entry').waitFor()
       await noOverflow()

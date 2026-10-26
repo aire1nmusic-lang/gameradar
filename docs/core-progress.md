@@ -1,3 +1,11 @@
+## 26.10.2026 — VERIFIED Minecraft/GTA L2 parity published on primary
+
+- Frontend799aae4d6923b65f8f0f1cdb2263131ea46d56ed is LIVE on gamescout.online. CI40385696407/job121793238772 SUCCESS; guarded production40385696392/job121793239530 SUCCESS including durable rollback verification, versioned assets, HTML upload, primary Worker activation and independent readback of six pages/assets/three public API reads. No guard bypass or manual upload.
+- Browser gate PASS320x568,390x844,768x1024,1024x768,1440x900,844x390 across L2/Minecraft/GTA: home shelves, picker, catalog TOP3/list/grid/all sorts/search/all filter chips/switches/range/date options, rating category content/support dialog, profile/history/claim, openings/favorites/account register/password visibility/recovery. All API writes blocked; these checks validate UI with fixtures, not real registration/payment transactions. Physical Android remains untested.
+- Independent anonymous Chrome actual primary Minecraft and GTA catalogs VERIFIED meta gs-build799aae4, three illustrated podium plaques, all GTA scene/hero/rank images decoded, no horizontal overflow at1363px. Actual viewport screenshots visually reviewed and saved gamescout-minecraft-live-1793042884882.jpg and gamescout-gta-live-1793042951844.jpg in shared scratch. MC Steve/Alex/Enderman; GTA Michael/Franklin/Trevor; approved avatars/rank icons preserved.
+- Root release blocker CLOSED: intentionally hidden320px lazy avatars must not be decoded as visible art. Rendered art/medal/hero assertions retained with bounded waits. No private API, ranking rules, security/IAM/DNS/payment changes or new paid resources. Rollback remains the mandatory guarded release archive and previous live2d8a67d7.
+- Requested design-parity slice COMPLETE on primary. Documentation-only checkpoint uses skip-ci; no further frontend redeploy required.
+
 ## 26.10.2026 — Correct hidden lazy-avatar QA blocker; publish parity release
 
 - VERIFIED CI40372039099/job121745580271 and production40372038854/job121763648850 stopped at catalog image assertion before backup/upload. At320px shared CSS intentionally hides .gsb-avatar; ServerLogo uses loading=lazy, so its hidden original image never loads. Earlier native decode wait hung for this same reason. Source feature code is already on main1b856e1; actual primary still shows previous catalog.

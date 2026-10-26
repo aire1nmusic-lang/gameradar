@@ -117,7 +117,7 @@ html[data-color-mode] body .gs-l2-filter-sheet > div {
 .gs-l2-filter-sheet .gs-filter-panel > div {margin-top:0}
 .gs-l2-filter-sheet .gs-filter-panel > div > div {padding:16px 0;border-color:var(--aether-line)}
 .gs-l2-filter-sheet .gs-filter-panel h4 {margin-bottom:10px;color:var(--aether-muted);font-size:11px;letter-spacing:.08em}
-.gs-l2-filter-sheet .gs-filter-panel button[aria-pressed] {min-height:40px;padding:8px 12px;background:var(--aether-field);border:1px solid var(--aether-line);border-radius:11px;color:var(--aether-muted);font-size:12px;font-weight:400;box-shadow:none}
+.gs-l2-filter-sheet .gs-filter-panel button[aria-pressed] {min-height:44px;padding:8px 12px;background:var(--aether-field);border:1px solid var(--aether-line);border-radius:11px;color:var(--aether-muted);font-size:12px;font-weight:400;box-shadow:none}
 .gs-l2-filter-sheet .gs-filter-panel button[aria-pressed='true'] {border-color:var(--aether-gold);color:var(--aether-gold);background:color-mix(in srgb,var(--aether-gold) 9%,var(--aether-field))}
 .gs-l2-filter-sheet > div > div:last-child {background:var(--filter-glass);border-color:var(--aether-line)}
 html[data-color-mode] body .gs-l2-filter-sheet .gs-button-primary {background:color-mix(in srgb,var(--aether-gold) 13%,var(--aether-field))!important;color:var(--aether-ink)!important;border:1px solid var(--aether-line)!important;box-shadow:none!important}

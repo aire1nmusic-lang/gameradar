@@ -149,6 +149,7 @@ export function ChipToggle({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={!!active}
       className={cn(
         'gs-chip inline-flex items-center gap-2 rounded-full border px-3 py-[6px] text-[13px] transition-all duration-200',
         active && 'is-active',

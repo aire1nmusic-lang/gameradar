@@ -416,6 +416,30 @@ try {
       await page.locator('.gs-l2-filter-sheet').waitFor({state:'visible'})
       const filterBox=await page.locator('.gs-l2-filter-sheet>div').boundingBox()
       assert.ok(filterBox.x>=-1&&filterBox.x+filterBox.width<=width+1&&filterBox.y>=-1&&filterBox.y+filterBox.height<=height+1,'Same filter portal fits every viewport')
+      const filterPanel=page.locator('.gs-l2-filter-sheet')
+      for(const chip of await filterPanel.locator('.gs-chip').all()){
+        await chip.click()
+        assert.equal(await chip.getAttribute('aria-pressed'),'true','Filter chip responds and announces its selected state')
+        const box=await chip.boundingBox();assert.ok(box.height>=44,'Filter chip has a 44px touch target')
+      }
+      for(const toggle of await filterPanel.getByRole('switch').all()){
+        const before=await toggle.getAttribute('aria-checked')
+        await toggle.click()
+        assert.notEqual(await toggle.getAttribute('aria-checked'),before)
+        await toggle.click()
+        assert.equal(await toggle.getAttribute('aria-checked'),before)
+      }
+      const range=filterPanel.getByRole('slider')
+      await range.focus()
+      await range.press('ArrowRight')
+      assert.equal(await range.inputValue(),'50')
+      await range.press('Home')
+      const dateSelect=filterPanel.getByRole('button',{name:'Сортировка',exact:true})
+      for(const label of ['За последние 30 дней','За последние 3 месяца','За последний год','Любая']){
+        await dateSelect.click()
+        await filterPanel.getByRole('option',{name:label,exact:true}).click()
+        assert.match(await dateSelect.innerText(),new RegExp(label))
+      }
       await page.screenshot({path:`${output}/filters-parity-${game.id}-${width}.png`})
       await page.getByRole('button',{name:'Сбросить',exact:true}).click()
       await page.getByRole('button',{name:/^Показать \d/}).click()

@@ -397,6 +397,14 @@ try {
       assert.equal(await page.locator('.gs-catalog-podium .gsb').getAttribute('data-game'), game.id)
       await mediaReady(page)
       await noOverflow()
+      // Scroll/decode each plaque before capture: offscreen compositor tiles can be blank.
+      for(const rank of [1,2,3]){
+        const card=page.locator(`.gs-catalog-podium .gsb-plaque[data-rank="${rank}"]`)
+        await card.scrollIntoViewIfNeeded()
+        await card.locator('img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())))
+        await card.screenshot({path:`${output}/catalog-place-${game.id}-${rank}-${width}.png`})
+      }
+      await page.evaluate(()=>scrollTo(0,0))
       await page.screenshot({path:`${output}/catalog-parity-${game.id}-${width}.png`})
       const sortControl=page.locator('.gs-catalog-toolbar').getByRole('button',{name:'Сортировка',exact:true})
       for (const [label,podiumExpected] of [['Онлайн',true],['Рост',true],['Голоса',true],['Поддержка',true],['Рейтинг',true],['Новые',false],['Открытие',false],['Общий топ',true]]) {
@@ -420,7 +428,7 @@ try {
       for(const chip of await filterPanel.locator('.gs-chip').all()){
         await chip.click()
         assert.equal(await chip.getAttribute('aria-pressed'),'true','Filter chip responds and announces its selected state')
-        const box=await chip.boundingBox();assert.ok(box.height>=44,'Filter chip has a 44px touch target')
+        const box=await chip.boundingBox();assert.ok(box.height>=44,`Filter chip has a 44px touch target: ${game.id}/${width}/${await chip.innerText()}=${box.height}`)
       }
       for(const toggle of await filterPanel.getByRole('switch').all()){
         const before=await toggle.getAttribute('aria-checked')

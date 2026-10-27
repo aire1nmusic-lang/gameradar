@@ -1,3 +1,9 @@
+## 27.10.2026 — Exclude active chart controls from blanket light text rule
+
+- CI40533905728/job122293833290 caught the actual selected-chart color still white at320px. The broad profile text selector also matched the button's text-ink-50 utility and won by its additional type specificity. Exclude active chart buttons from that blanket rule so their existing explicit dark-ink rule applies. Keep selected-control regression unchanged; no color assertion removed. Core/build checks passed; contrast follow-up still NOT published, primary glass remains fd0ab89.
+- No layout/material/VM/DNS/payment change. Next guarded CI/release and actual primary selected-control/status readback.
+
+
 ## 27.10.2026 — Glass LIVE; actual-primary contrast follow-up
 
 - VERIFIED guarded production40530246369/job122280759482 terminal SUCCESS for fd0ab89e00d17aa3cc47b856959cddceeff6b683. Real Chrome GommeHD primary shows exact fd0ab89 stamp, translucent .20/.26 gradient, computed18px diffusion,19px heart and no horizontal overflow. Actual favorite toggled false→true→false and original local state restored. Screenshot gamescout-approved-glass-live-1793115725758.jpg saved/visually reviewed; this is a real public page, unlike CI fixture metrics.

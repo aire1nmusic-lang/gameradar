@@ -2284,5 +2284,35 @@
     "checkedAt": "2026-10-17",
     "confidence": "confirmed",
     "notes": "Found automatically on 2026-10-17; official site answered and names the project."
+  },
+  {
+    "key": "l2:lineage.by",
+    "game": "lineage2",
+    "name": "Lineage 2 High Five",
+    "website": "https://lineage.by/",
+    "chronicle": "high-five",
+    "version": "High Five",
+    "rates": "x1",
+    "openedAt": null,
+    "languages": [],
+    "country": null,
+    "endpoint": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://lineage.by/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://lineage.by/"
+      },
+      {
+        "name": "MMOTOP Lineage 2",
+        "url": "https://la2.mmotop.ru/servers/39804"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Found automatically on 2026-10-27; official site answered and names the project."
   }
 ]

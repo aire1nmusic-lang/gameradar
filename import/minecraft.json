@@ -1919,5 +1919,38 @@
     "checkedAt": "2026-10-27",
     "confidence": "confirmed",
     "notes": "Listing address corroborated on official website on 2026-10-27. Listing registration is not treated as launch."
+  },
+  {
+    "name": "Minecraft Asylum",
+    "website": "https://minecraft-asylum.de",
+    "version": "26.3",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.minecraft-asylum.de",
+      "port": null
+    },
+    "key": "mc:play.minecraft-asylum.de",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://minecraft-asylum.de/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://minecraft-asylum.de/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s365977"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-27. Listing registration is not treated as launch."
   }
 ]

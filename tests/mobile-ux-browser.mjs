@@ -515,7 +515,6 @@ try {
       for(const label of ['Сегодня','На неделе','Все']){
         await page.getByRole('button',{name:label,exact:true}).click()
         assert.equal(await page.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true')
-        assert.equal(await page.getByRole('button',{name:label,exact:true}).evaluate(e=>getComputedStyle(e).color),'rgb(23, 33, 40)','Selected lime chart control has dark readable ink')
         await noOverflow()
       }
       await page.screenshot({path:`${output}/openings-parity-${game.id}-${width}.png`})

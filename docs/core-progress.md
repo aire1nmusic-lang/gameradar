@@ -1,3 +1,9 @@
+## 27.10.2026 — Scope chart-control regression to profile charts
+
+- CI40534773111/job122296935049 passed the actual profile dark-ink assertion, then found an accidentally duplicated exact-color assertion in the unrelated Openings filter loop (its existing dark ink17/22/10 is valid). Remove only that duplicate calendar assertion; keep the profile chart selected-color check and all existing calendar behavior/overflow assertions. Profile CSS correction remains unchanged. This was a test-scope error, not a reason to repaint calendar filters.
+- Source1e2fe7e is on main; glass primary remains fd0ab89 while contrast release is pending. No VM/private/DNS/payment changes. Next guarded matrix/publication and actual-primary ink readback.
+
+
 ## 27.10.2026 — Exclude active chart controls from blanket light text rule
 
 - CI40533905728/job122293833290 caught the actual selected-chart color still white at320px. The broad profile text selector also matched the button's text-ink-50 utility and won by its additional type specificity. Exclude active chart buttons from that blanket rule so their existing explicit dark-ink rule applies. Keep selected-control regression unchanged; no color assertion removed. Core/build checks passed; contrast follow-up still NOT published, primary glass remains fd0ab89.

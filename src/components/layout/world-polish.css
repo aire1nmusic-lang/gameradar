@@ -39,7 +39,7 @@ html[data-design=lobby] body .gsb .gsb-plaque .gsb-fav.selected:not(#a):not(#b):
 html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *){--color-ink-300:#e5edf4;--color-ink-400:#e5edf4;--color-ink-500:#d5e1eb}
 html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *) :is(th,td,caption,dt,dd):not(#a):not(#b):not(#c):not(#d):not(#e){color:#f3f7fa!important;text-shadow:0 1px 3px #07101bcc!important}
 html[data-design=lobby] body .gs-server-profile .gs-vote-panel>div.uppercase:not(#a):not(#b):not(#c):not(#d):not(#e){color:#d5ff91!important;text-shadow:0 1px 3px #07101bcc!important}
-html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *) :is(.text-signal-300,.text-signal-400,.text-signal-500):not(#a):not(#b):not(#c):not(#d):not(#e){color:#d5ff91!important;text-shadow:0 1px 3px #07101bcc!important}
+html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *) :is(.text-signal-300,.text-signal-400,.text-signal-500,[class*="text-signal-"]):not(#a):not(#b):not(#c):not(#d):not(#e){color:#d5ff91!important;text-shadow:0 1px 3px #07101bcc!important}
 
 /* Keep scene detail visible through the glass; quiet the light behind white text. */
 .gs-server-fullbg .gs-server-bg::after{background:linear-gradient(90deg,#08111b4d,#08111b26 55%,#08111b1a),linear-gradient(0deg,#08111b4d,#08111b26 55%,#08111b33)}
@@ -55,3 +55,6 @@ html[data-design=lobby] body :is(.gsb-fav,.gs-row-favorite,.gs-fav-btn,.gs-profi
 html[data-design=lobby] body :is(.gsb-fav,.gs-row-favorite,.gs-fav-btn,.gs-profile-favorite) svg:not(#a):not(#b):not(#c):not(#d):not(#e){width:19px!important;height:19px!important;stroke:currentColor!important;stroke-width:1.8!important;fill:none!important;filter:none!important}
 html[data-design=lobby] body :is(.gsb-fav,.gs-row-favorite,.gs-fav-btn,.gs-profile-favorite)[aria-pressed=true]:not(#a):not(#b):not(#c):not(#d):not(#e){color:#ffadc1!important;-webkit-text-fill-color:currentColor!important}
 html[data-design=lobby] body :is(.gsb-fav,.gs-row-favorite,.gs-fav-btn,.gs-profile-favorite)[aria-pressed=true] svg:not(#a):not(#b):not(#c):not(#d):not(#e){fill:currentColor!important}
+
+/* Active lime controls use dark ink; slash-opacity status utilities need full-opacity light ink on glass. */
+html[data-design=lobby] body .gs-server-profile .gs-seg-btn.is-active:not(#a):not(#b):not(#c):not(#d):not(#e){color:#172128!important;-webkit-text-fill-color:currentColor!important;text-shadow:none!important}

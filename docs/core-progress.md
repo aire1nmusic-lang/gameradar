@@ -1,3 +1,10 @@
+## 27.10.2026 — Glass LIVE; actual-primary contrast follow-up
+
+- VERIFIED guarded production40530246369/job122280759482 terminal SUCCESS for fd0ab89e00d17aa3cc47b856959cddceeff6b683. Real Chrome GommeHD primary shows exact fd0ab89 stamp, translucent .20/.26 gradient, computed18px diffusion,19px heart and no horizontal overflow. Actual favorite toggled false→true→false and original local state restored. Screenshot gamescout-approved-glass-live-1793115725758.jpg saved/visually reviewed; this is a real public page, unlike CI fixture metrics.
+- Real-primary review caught two remaining ink issues: selected lime chart controls inherited white text, and status class text-signal-500/70 escaped exact-class selector. Add dark ink to selected controls and include slash-opacity signal utilities in the light semantic ink rule. Keep transparent material/layout unchanged; add selected-control color check to existing matrix. This follow-up is NOT yet live until its own guarded release/readback.
+- CI40530246363 matrix and core/DB/SEO/bundle checks already PASS for glass; CI screenshots reviewed across world/viewport samples. VMs remain intentionally stopped; no API/private/payment/DNS or new resource changes. Rollback verified previous-primary archive. Next: publish/read back only this contrast correction and complete checkpoint.
+
+
 ## 27.10.2026 — Transparent glass: browser gate caught prefixed-filter build issue
 
 - CI40529444445/job122277900960 reached responsive gate and failed at actual computed profile blur on320px; material gradient had passed, so no publication completion claimed. Built CSS inspection found optimizer retained only the trailing prefixed filter declaration while global unprefixed none remained. Order prefixed declaration BEFORE standard backdrop-filter so built CSS retains the standard supported property. Rank chip now also uses important to beat the old global no-blur rule. Keep18px diffusion assertion; do not weaken it.

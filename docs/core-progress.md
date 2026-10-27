@@ -1,3 +1,9 @@
+## 27.10.2026 — Transparent glass: browser gate caught prefixed-filter build issue
+
+- CI40529444445/job122277900960 reached responsive gate and failed at actual computed profile blur on320px; material gradient had passed, so no publication completion claimed. Built CSS inspection found optimizer retained only the trailing prefixed filter declaration while global unprefixed none remained. Order prefixed declaration BEFORE standard backdrop-filter so built CSS retains the standard supported property. Rank chip now also uses important to beat the old global no-blur rule. Keep18px diffusion assertion; do not weaken it.
+- No private VM restart, DNS, API write, payment or new resource. Guarded publication and responsive matrix pending on correction. Existing b803ecc remains primary until verified deployment.
+
+
 ## 27.10.2026 — Approved slightly frosted transparent profile glass (implementation)
 
 - Owner approved the final transparent-glass preview with a small increase in diffusion. Preserve existing profile geometry and world artwork; replace opaque pearl cards with a translucent neutral film,18px blur, subtle edges, light high-contrast text and lighter chart/table labels across L2/Minecraft/GTA. No new rank art or composition approved in this slice.

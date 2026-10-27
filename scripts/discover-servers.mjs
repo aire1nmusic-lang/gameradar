@@ -163,7 +163,7 @@ async function main() {
       if (parsed && parsed >= isoDay(today) && (!known.openedAt || known.openedAt >= isoDay(today)) && known.openedAt !== parsed) {
         const official = await confirmOfficial(known.website)
         const sharedSite = dataset.filter(r => hostOf(r.website) === hostOf(known.website)).length > 1
-        if (official.ok && !sharedSite && announcedOpening(official.html, today) === parsed) {
+        if (official.ok && !sharedSite && announcedOpening(official.html, today, { rates: known.rates }) === parsed) {
           report.updated.push({ id: item.id, key: known.key, before: known.openedAt ?? null, after: parsed })
           known.openedAt = parsed
           known.checkedAt = isoDay(today)
@@ -191,9 +191,9 @@ async function main() {
     const official = await confirmOfficial(location)
     if (!official.ok) { report.skipped.push({ id: item.id, title: item.title, reason: official.reason }); continue }
 
-    // A monitoring advertisement alone cannot establish an opening date.
-    if (opened && announcedOpening(official.html, today) !== opened) opened = null
     const rate = item.rates.find(value => /^x\s?\d/i.test(value)) ?? item.title.match(/\bx\s?\d{1,6}\b/i)?.[0] ?? null
+    // Match the named rate/world, not another world's announcement on the same homepage.
+    if (opened && announcedOpening(official.html, today, { rates: rate }) !== opened) opened = null
     const name = cleanName(item.title, host, rate ? rate.replace(/\s/g, '').toLowerCase() : null)
     if (knownNames.has(name.toLowerCase())) { report.skipped.push({ id: item.id, title: item.title, reason: 'name already in catalog' }); continue }
     const listing = `${MONITOR}/servers/${item.id}`

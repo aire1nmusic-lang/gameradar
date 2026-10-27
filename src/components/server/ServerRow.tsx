@@ -75,7 +75,11 @@ export function ServerRow({
   const medal = rank !== undefined ? MEDAL[rank] : undefined
   const support = server.support?.coins ?? 0
   const tooltip = launching
-    ? `Открытие $<LaunchCountdown at={server.launch!.at}/>`
+    ? `Открытие ${shortDate(server.launch!.at)}`
+    : source === 'Нет источника'
+      ? 'Источник онлайна не подключён'
+      : status === OnlineStatus.Pending
+        ? 'Онлайн ещё не измерялся'
     : stale
       ? `Данные устарели · обновлено ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`
       : `${meta.caption}${server.online.source ? ` · ${server.online.source}` : ''} · ${formatSeconds(server.online.observedAgoSec ?? server.online.checkedAgoSec)}`

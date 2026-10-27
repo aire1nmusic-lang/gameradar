@@ -102,7 +102,7 @@ for (const game of games) {
     if (list.filter(r => new URL(r.website).hostname.replace(/^www\./,'') === host).length > 1) continue
     const official = await page(record.website)
     if (!official) continue
-    const date = announcedOpening(official.text, now)
+    const date = announcedOpening(official.text, now, { rates: game === 'lineage2' ? record.rates : null })
     if (!date || date < day || record.openedAt === date) continue
     // Historical first opening must never be overwritten by a re-opening of the same server.
     if (record.openedAt && record.openedAt < day) {

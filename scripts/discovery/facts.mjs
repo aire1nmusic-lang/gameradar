@@ -10,7 +10,7 @@ export function openingDate(text, now = new Date()) {
   const marker = text.match(launch)
   const context = text.slice(Math.max(0, marker.index - 12), marker.index + 130)
   let day, month, year
-  const numeric = context.match(/\b(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?(?![\d./])/u)
+  const numeric = context.match(/\b(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?(?!\d|[./]\d)/u)
   const named = context.toLowerCase().match(/\b(\d{1,2})\s+(январ|феврал|март|апрел|мая|май|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-я]*(?:\s+(\d{4}))?/u)
   if (numeric) { day = +numeric[1]; month = +numeric[2]; year = numeric[3] && +numeric[3] }
   else if (named) { day = +named[1]; month = months.findIndex(m => named[2].startsWith(m)) + 1; year = named[3] && +named[3] }
@@ -29,10 +29,18 @@ export function openingDate(text, now = new Date()) {
   if (date.getTime() < today - 45 * 86400000 || date.getTime() > today + 75 * 86400000) return null
   return date.toISOString().slice(0, 10)
 }
-export function announcedOpening(html, now = new Date()) {
+export function announcedOpening(html, now = new Date(), { rates = null } = {}) {
   // Preserve block boundaries: never associate a date from a neighbouring news item.
   const blocks = html.replace(/<script\b[\s\S]*?<\/script>/gi, '').split(/<\/(?:article|section|p|li|h[1-6])\s*>/i)
-  const dates = new Set(blocks.map(plain).filter(t => t.length <= 350).map(t => openingDate(t, now)).filter(Boolean))
+  const dates = new Set(blocks.map(plain).filter(t => t.length <= 350).filter(t => {
+    if (!rates) return true
+    const marker = t.match(launch)
+    if (!marker) return false
+    // A multi-world homepage must name this world's rate immediately before its launch.
+    const preceding = t.slice(Math.max(0, marker.index - 100), marker.index)
+    const nearestRate = [...preceding.matchAll(/\bx\s?(\d+(?:[.,]\d+)?)/gi)].at(-1)?.[1]
+    return nearestRate === rates.replace(/^x\s?/i, '').replace(',', '.')
+  }).map(t => openingDate(t, now)).filter(Boolean))
   return dates.size === 1 ? [...dates][0] : null
 }
 export function gta5rpWorlds(html) {

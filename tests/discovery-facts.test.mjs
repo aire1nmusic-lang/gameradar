@@ -16,6 +16,12 @@ test('unrelated dates and conflicting announcements are not combined', () => {
   assert.equal(announcedOpening('<p>Открытие <b>30 октября 2026</b></p>',now),'2026-10-30')
   assert.equal(announcedOpening('<script>"Открытие 30.10.2026"</script>',now),null)
 })
+test('L2 opening belongs to the named rate/world, not a neighbour', () => {
+  const html='<p>Silver Moon x3 Открытие 11.11.2026. Moonlight x8 Game Online</p>'
+  assert.equal(announcedOpening(html,now,{rates:'x3'}),'2026-11-11')
+  assert.equal(announcedOpening(html,now,{rates:'x8'}),null)
+  assert.equal(announcedOpening('<p>Открытие 11.11.2026</p>',now,{rates:'x3'}),null)
+})
 test('GTA SSR identifies worlds, never accepts arbitrary hosts or malformed endpoints', () => {
   const worlds = [{name:'Mirror',host:'mirror.gta5rp.com',port:22005},{name:'Bad',host:'localhost',port:22005},{name:'Other',host:'fake.gta5rp.com.attacker.net',port:22}]
   const html = `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({props:{pageProps:{values:{list:worlds}}}})}</script>`

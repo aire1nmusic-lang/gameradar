@@ -1,5 +1,5 @@
 name: Inspect site storage capacity
-# Read-only inventory after the 27 October release hit BucketMaxSizeExceeded.
+# Read-only verification after owner-approved seven-archive cleanup, 27 October.
 on:
   push:
     branches: [main]

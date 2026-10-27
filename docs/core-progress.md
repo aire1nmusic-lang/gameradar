@@ -1,3 +1,8 @@
+## 27.10.2026 — Validate both responsive vote headings
+
+- VERIFIED CI40453727668/job122022111479 stopped in the newly added contrast assertion: profile intentionally renders2 responsive vote headings, so a single-element locator is ambiguous. Test now requires at least1 heading and checks EVERY matching heading for the exact dark-green color. No color check or viewport removed; feature CSS unchanged. Local syntax/diff PASS.
+- Actual primary owner onboarding tested for L2/Minecraft/GTA: correct world,3 matte steps, world-preserving account link, no horizontal overflow. Browser anonymous auth/me currently returns private_api_required. fdeed31 production40452632818 still processing; final publication pending. No API submission/registration/payment/security/DNS changes; cost and rollback unchanged.
+
 ## 27.10.2026 — Live profile contrast follow-up after successful matrix
 
 - VERIFIED48b94a0 is LIVE: production40452512685/job122018269972 SUCCESS. Anonymous Chrome tested actual BoHpts support search(L2MAD gives2 real results), nominal10Coins=500RUB, first Escape closes picker and second closes dialog; no writes. Profile actual online3rd place correctly displays violet frame/banner, Russian owner-reported label and dark identity text; no horizontal overflow.

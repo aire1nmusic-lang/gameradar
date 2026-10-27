@@ -1,3 +1,9 @@
+## 27.10.2026 — Final contrast release capacity-blocked; inspect before cleanup
+
+- VERIFIED b803ecc CI40454280599/job122023862284 SUCCESS. Production40454280755/job122024783809 also passed ALL core/DB/build/browser checks(6viewports x3games, no writes), then FAILED at durable rollback upload with BucketMaxSizeExceeded. No final source assets/HTML/Worker upload/activation occurred. Primary remains successfully published fdeed31; only latest chart/table/vote-heading contrast follow-up remains unpublished.
+- Trigger existing read-only storage inventory; list exact completed archives and incomplete multipart bytes, independently download/hash the newest3 control archives against their stored SHA256. No deletion, quota increase, paid resource or release-guard bypass. YAML syntax/diff PASS. Need fresh inventory before a concrete cleanup proposal. Prior exact8/13 archive approvals do not authorize deleting new archives; unchanged uploader DeleteObject denial must not be retried.
+- Actual live TOP1 TheBattle(gold229/191/114), TOP2 L2MAD(silver185/209/232), TOP3 BoHpts(violet188/145/237) profiles verified by anonymous Chrome, explicit online ranking labels and no horizontal overflow. Owner CTA routes each world to its own catalog. Auth still private_api_required. Final proof and closure must distinguish published fdeed31 from pending b803ecc.
+
 ## 27.10.2026 — Validate both responsive vote headings
 
 - VERIFIED CI40453727668/job122022111479 stopped in the newly added contrast assertion: profile intentionally renders2 responsive vote headings, so a single-element locator is ambiguous. Test now requires at least1 heading and checks EVERY matching heading for the exact dark-green color. No color check or viewport removed; feature CSS unchanged. Local syntax/diff PASS.

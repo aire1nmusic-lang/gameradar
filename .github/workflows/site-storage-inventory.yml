@@ -1,5 +1,5 @@
 name: Inspect site storage capacity
-# Read-only post-cleanup inventory and retained-archive verification, 25 October.
+# Read-only inventory after the 27 October release hit BucketMaxSizeExceeded.
 on:
   push:
     branches: [main]
@@ -13,67 +13,52 @@ jobs:
     timeout-minutes: 5
     environment: production
     steps:
-      - name: Inventory public site objects and deployment archives (read only)
+      - name: Inventory storage and independently verify three newest complete archives (read only)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ru-central1
-          AWS_EC2_METADATA_DISABLED: "true"
+          AWS_EC2_METADATA_DISABLED: 'true'
         run: |
           python - <<'PY'
-          import subprocess,json,collections
+          import subprocess,json,collections,tempfile,pathlib,hashlib,re
           endpoint='https://storage.yandexcloud.net'
           bucket='gamescout-ru-site'
-          def read(operation):
-              result=subprocess.run(['aws','s3api',operation,'--bucket',bucket,'--endpoint-url',endpoint,'--output','json'],capture_output=True,text=True,timeout=180)
-              if result.returncode:
-                  print(operation,'UNAVAILABLE',result.stderr[-500:]);return {}
-              return json.loads(result.stdout)
+          def aws(*args):
+              result=subprocess.run(['aws',*args,'--endpoint-url',endpoint],capture_output=True,text=True,timeout=180)
+              if result.returncode: raise RuntimeError(result.stderr[-600:])
+              return result.stdout
+          def read(operation,*args):
+              return json.loads(aws('s3api',operation,'--bucket',bucket,*args,'--output','json'))
           objects=read('list-objects-v2').get('Contents',[])
-          groups=collections.defaultdict(lambda: {'objects':0,'bytes':0})
+          groups=collections.defaultdict(lambda:{'objects':0,'bytes':0})
           backups=[]
           for obj in objects:
               key=obj['Key'];group=key.split('/')[0] if '/' in key else '(root)'
               groups[group]['objects']+=1;groups[group]['bytes']+=obj['Size']
-              if key.startswith('_deployment-backups/'):
+              if re.fullmatch(r'_deployment-backups/[a-f0-9]{40}/[0-9]+-[0-9]+/site-rollback.tar.gz',key):
                   backups.append({'key':key,'bytes':obj['Size'],'modified':obj['LastModified']})
+          backups.sort(key=lambda x:(x['modified'],x['key']))
           print('BUCKET_TOTAL',json.dumps({'objects':len(objects),'bytes':sum(x['Size'] for x in objects)}))
           print('PREFIX_TOTALS',json.dumps(dict(groups),sort_keys=True))
-          print('DEPLOYMENT_ARCHIVES',json.dumps(sorted(backups,key=lambda x:x['modified'])))
+          print('DEPLOYMENT_ARCHIVES',json.dumps(backups))
           uploads=read('list-multipart-uploads').get('Uploads',[])
-          print('INCOMPLETE_MULTIPART',json.dumps([{'key':x['Key'],'uploadId':x['UploadId'],'initiated':x['Initiated']} for x in uploads]))
-          PY
-
-      - name: Independently verify the three retained archives before approved cleanup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ru-central1
-          AWS_EC2_METADATA_DISABLED: "true"
-        run: |
-          python - <<'PY'
-          import subprocess,json,hashlib,tempfile,pathlib,re
-          keep=json.loads('[{"key":"_deployment-backups/e8dbff1d04a98df4c198b24f6f13fd9b64e46b58/40168895531-1/site-rollback.tar.gz","bytes":87101602,"modified":"2026-10-25T06:30:13.890000+00:00","sha256":"eebbd61ae960e0b77687a4283242acc9bcff543a3285b6b487f860a0a89c563e"},{"key":"_deployment-backups/c3de1730e0b3fbf7e82b97426a9e6164b1d054c6/40172169346-1/site-rollback.tar.gz","bytes":87284483,"modified":"2026-10-25T07:23:53.198000+00:00","sha256":"f1c79aa528f493bbfc52303771dad0bfb530a96cb8b5c402e53a7f117d1f0bbd"},{"key":"_deployment-backups/8309d4b843b79e4b5354d668871320314f8897ea/40174268139-1/site-rollback.tar.gz","bytes":87368090,"modified":"2026-10-25T07:57:12.466000+00:00","sha256":"521259e235fa0b8c0549029cab3172d85b78367361b57ead547241fdc9fe56bb"}]')
-          bucket='gamescout-ru-site'
-          endpoint='https://storage.yandexcloud.net'
-          def run(args):
-              result=subprocess.run(['aws']+args+['--endpoint-url',endpoint],capture_output=True,text=True,timeout=240)
-              if result.returncode: raise RuntimeError(result.stderr[-1000:])
-              return result.stdout
+          for upload in uploads:
+              parts=read('list-parts','--key',upload['Key'],'--upload-id',upload['UploadId']).get('Parts',[])
+              print('INCOMPLETE_MULTIPART',json.dumps({'key':upload['Key'],'uploadId':upload['UploadId'],'initiated':upload['Initiated'],'bytes':sum(x['Size'] for x in parts)}))
+          print('INCOMPLETE_MULTIPART_COUNT',len(uploads))
+          assert len(backups)>=3,'Need at least three complete control archives'
           with tempfile.TemporaryDirectory() as directory:
-              for index,item in enumerate(keep):
-                  head=json.loads(run(['s3api','head-object','--bucket',bucket,'--key',item['key'],'--output','json']))
-                  assert head['ContentLength']==item['bytes'],'Retained size changed'
-                  expected=item['sha256']
-                  assert re.fullmatch('[a-f0-9]{64}',expected),'Original release checksum missing'
-                  stored={k.lower():v for k,v in head.get('Metadata',{}).items()}.get('sha256')
-                  if stored is not None: assert stored==expected,'Stored checksum conflicts with original release'
-                  print('CHECKSUM_SOURCE_ORIGINAL_VERIFIED_RELEASE',item['key'],'metadata_present',stored is not None)
+              for index,item in enumerate(backups[-3:]):
+                  head=read('head-object','--key',item['key'])
+                  expected={k.lower():v for k,v in head.get('Metadata',{}).items()}.get('sha256','')
+                  assert head['ContentLength']==item['bytes'] and re.fullmatch('[a-f0-9]{64}',expected),'Control archive metadata mismatch'
                   target=pathlib.Path(directory)/str(index)
-                  run(['s3','cp','s3://'+bucket+'/'+item['key'],str(target),'--only-show-errors'])
-                  assert target.stat().st_size==item['bytes'],'Downloaded size mismatch'
+                  aws('s3','cp','s3://'+bucket+'/'+item['key'],str(target),'--only-show-errors')
+                  assert target.stat().st_size==item['bytes'],'Control download size mismatch'
                   digest=hashlib.file_digest(target.open('rb'),'sha256').hexdigest()
-                  assert digest==expected,'Retained checksum mismatch'
-                  print('RETAINED_ARCHIVE_VERIFIED',item['key'],item['bytes'],digest)
-          print('ALL_THREE_RETAINED_ARCHIVES_VERIFIED')
+                  assert digest==expected,'Control archive checksum mismatch'
+                  print('NEWEST_CONTROL_ARCHIVE_VERIFIED',json.dumps({**item,'sha256':digest}))
+                  target.unlink()
+          print('READ_ONLY_INVENTORY_COMPLETE_NO_DELETIONS')
           PY

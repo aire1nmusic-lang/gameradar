@@ -1,3 +1,9 @@
+## 27.10.2026 — Live profile contrast follow-up after successful matrix
+
+- VERIFIED48b94a0 is LIVE: production40452512685/job122018269972 SUCCESS. Anonymous Chrome tested actual BoHpts support search(L2MAD gives2 real results), nominal10Coins=500RUB, first Escape closes picker and second closes dialog; no writes. Profile actual online3rd place correctly displays violet frame/banner, Russian owner-reported label and dark identity text; no horizontal overflow.
+- VERIFIED final ink/title version fdeed31 CI40452632813/job122019051110 SUCCESS across six viewports/three games; artifact12711381353. Its guarded deployment40452632818 is running. Actual live review additionally exposed lime vote heading and pale chart/table text on pearl material. Correct those scoped profile colors/variables and add an exact heading-contrast browser assertion. Local build137/typecheck/syntax/diff PASS. Publication of this last correction pending.
+- Actual primary account still displays unavailable/disabled login. Shell HTTP now gets edge1010/403, whereas normal anonymous Chrome renders primary; no attempt to bypass edge. Private VM/DNS access blocker below remains. No private data/API writes/payment enablement/new paid services. All rollback and release gates retained.
+
 ## 27.10.2026 — Inspect actual320px screenshots and repair contrast
 
 - VERIFIED downloaded CI artifact12682955598 shows support selected title wrapping into8 lines and light plaque bands still using white text. Clamp chosen title to2 lines (full name retained in title), use dark ink#172128 and metadata#334750 on the stronger pearl band in all worlds. Retain exact browser color assertions with the intended dark ink; no assertion removed.

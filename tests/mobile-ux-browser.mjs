@@ -362,6 +362,7 @@ try {
         assert.equal(await page.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true')
         await noOverflow()
       }
+      assert.equal(await page.locator('.gs-vote-panel > div.uppercase').evaluate(e=>getComputedStyle(e).color),'rgb(49, 91, 37)','Player-rating heading stays readable on the pearl profile panel')
       const dossier = page.locator('.gs-profile-dossier')
       const dossierBox = await dossier.boundingBox()
       const avatar = page.locator('.gs-profile-avatar')

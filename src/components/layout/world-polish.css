@@ -35,3 +35,8 @@ html[data-design=lobby] body .gs-profile-facts:not(#a):not(#b):not(#c):not(#d):n
 html[data-design=lobby] body .gsb .gsb-plaque :is(.gsb-name,.gsb-num,.gsb-num strong,.gsb-num small,.gsb-fav):not(#a):not(#b):not(#c):not(#d):not(#e){color:#172128!important;-webkit-text-fill-color:#172128!important;text-shadow:none!important}
 html[data-design=lobby] body .gsb .gsb-plaque .gsb-meta:not(#a):not(#b):not(#c):not(#d):not(#e){color:#334750!important;text-shadow:none!important}
 html[data-design=lobby] body .gsb .gsb-plaque .gsb-fav.selected:not(#a):not(#b):not(#c):not(#d):not(#e){color:#92324f!important;-webkit-text-fill-color:#92324f!important}
+/* Data remains legible on pearl panels, including SVG points and table cells. */
+html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *){--color-ink-300:#40525b;--color-ink-400:#40525b;--color-ink-500:#4b5a61}
+html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *) :is(th,td,caption,dt,dd):not(#a):not(#b):not(#c):not(#d):not(#e){color:#23333d!important;text-shadow:none!important}
+html[data-design=lobby] body .gs-server-profile .gs-vote-panel>div.uppercase:not(#a):not(#b):not(#c):not(#d):not(#e){color:#315b25!important;text-shadow:none!important}
+html[data-design=lobby] body .gs-server-profile :is(.surface,.surface-raised,.gs-panel,.gs-vote-panel):not(dialog *) :is(.text-signal-300,.text-signal-400,.text-signal-500):not(#a):not(#b):not(#c):not(#d):not(#e){color:#315b25!important;text-shadow:none!important}

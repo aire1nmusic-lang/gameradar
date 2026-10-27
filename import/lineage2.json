@@ -2053,7 +2053,7 @@
     "chronicle": "high-five",
     "version": "High Five",
     "rates": "x3",
-    "openedAt": null,
+    "openedAt": "2026-11-11",
     "languages": [],
     "country": null,
     "endpoint": null,
@@ -2071,7 +2071,7 @@
         "url": "https://la2.mmotop.ru/servers/29893"
       }
     ],
-    "checkedAt": "2026-10-10",
+    "checkedAt": "2026-10-27",
     "confidence": "confirmed",
     "notes": "Found automatically on 2026-10-10; official site answered and names the project."
   },

@@ -1,3 +1,22 @@
+## 27.10.2026 — VERIFIED approved cleanup and final profile contrast LIVE
+
+- Owner-authorized exact7old archives removed in existing Yandex owner Console; independent40464327110/job122056014732 SUCCESS confirms7objects/616421501bytes freed, bucket459352880bytes,3planned controls present and freshly downloaded SHA256 matching original releases. No public object/IAM/DNS/quota/tariff change; denied publisher deletion not retried.
+- Frontend b803eccf2a8c6bec70381ae901f0b6f532e5f517 is LIVE on gamescout.online. Guarded production40454280755 attempt2/job122056688133 terminal SUCCESS: core/DB/build/bundle/browser checks, durable rollback checksum89c8702a082b8225fe9f6103edd8fc995c86d28d4791414984e19df79a2f27af, assets/HTML/primary Worker activation and readback passed. Three retained controls remain; release additionally created a fourth new rollback archive. No guard bypass.
+- Matrix PASS320x568,390x844,768x1024,1024x768,1440x900,844x390 x L2/Minecraft/GTA; ALL API writes blocked. Actual anonymous Chrome profile VERIFIED b803ecc; vote headings49/91/37, chart64/82/91, history table35/51/61, no overflow. Actual MC/GTA catalogs VERIFIED b803ecc,3plaques each, dark band ink23/33/40, no overflow. Actual screenshot gamescout-final-profile-live-1793085016446.jpg saved in shared scratch and visually reviewed.
+- Visual/publishing slice COMPLETE. Login NOT fixed: main private_api_required versus working Russian gateway privateCore:true/emailLogin:true, registrationOpen:false. Existing Yandex owner session now works; current CF dashboard requires sign-in. No CF credentials submitted or DNS/registration/private-route change. Auth repair needs current CF record/Worker binding read and separately agreed concrete production DNS migration/rollback per AGENTS. Do not repeat obsolete claim that Russian private API is down.
+- Cleanup JSON/Markdown VERIFIED; documentation-only checkpoint skips CI/deployment. No new paid resources. Rollback is newly verified prior-primary archive plus3preserved controls.
+
+## 27.10.2026 — Read-only auth routing diagnosis with existing operator session
+
+- VERIFIED Yandex gamescout-ru gateway d5d9pl6cgdpfk52duoa2 is Active. Its Domains view already binds gamescout.online to certificate gamescout-online-apex; no Cloud DNS resource record binding (external DNS). No gateway/domain/certificate setting changed.
+- VERIFIED anonymous browser service-host GET /api/v1/auth/me returns user:null, privateCore:true, emailLogin:true, registrationOpen:false, providers Google/Discord, devAuthEnabled:false. Service-host /account loads Google/Discord controls and enabled email-login button without unavailable alert. No credentials entered or auth form submitted. Therefore the Russian private API is currently reachable; main-domain private_api_required is an entry-routing mismatch, not evidence of a dead private API.
+- Cloudflare dashboard shows Sign in, no existing authenticated session observed. No credentials requested/entered, DNS/custom-domain/IAM change attempted. Current cleanup approval does not separately approve a production DNS switch. Existing release-plan2026-10-15 migration/rollback proposal remains; fresh current CF record and Worker binding must be read before proposing concrete DNS mutation.
+
+## 27.10.2026 — Exact approved cleanup independently VERIFIED; guarded release restarted
+
+- VERIFIED read-only40464327110/job122056014732:1442objects/459352880bytes, exactly7objects/616421501bytes fewer than the pre-cleanup inventory; only3planned completed archives remain. Public root/assets/media/server prefix totals unchanged. All3retained archives independently downloaded again and SHA256 matched original verified release records. No incomplete multipart uploads.
+- Owner-approved cleanup COMPLETE using existing signed-in Yandex owner Console. No retry of publisher DeleteObject denial, no IAM/DNS/quota/tariff change, no new resource. Rerun failed production40454280755 requested successfully through GitHub connector; b803ecc guarded build/test/backup/publish still pending. Do not call final UI contrast live until actual primary readback.
+
 ## 27.10.2026 — Owner approved exact7 cleanup; browser deletion completed
 
 - Owner explicitly replied «делай» to the exact7archives/616421501bytes proposal, retaining3verified newest backups. VERIFIED existing Yandex Console browser session is authenticated into the gamescout folder; used operator UI instead of unchanged denied publisher DeleteObject credentials. No auth credentials exposed, IAM/quota/tariff/DNS changes or new resources.

@@ -1,5 +1,5 @@
 {
-  "status": "OWNER_APPROVED_DELETED_PENDING_INDEPENDENT_VERIFICATION",
+  "status": "OWNER_APPROVED_CLEANUP_AND_PUBLICATION_VERIFIED",
   "inventory_run_id": 40455825802,
   "inventory_job_id": 122028794545,
   "inventory_at_utc": "2026-10-27T05:32:24Z",
@@ -68,8 +68,22 @@
     }
   ],
   "scope": "Only the seven named completed deployment archives; no public site objects, assets, quota, IAM, personal data or payment settings.",
-  "execution_blocker": "Independent post-cleanup size/hash verification pending; no change to existing publisher key, IAM, quota or tariff.",
-  "rollback": "Keep and independently verify the three listed newest archives; after cleanup rerun guarded production40454280755 for b803ecc. Never bypass durable backup verification.",
+  "execution_blocker": null,
+  "rollback": "Three approved control archives retained and reverified; successful guarded publication additionally created and independently verified a fourth archive of the previous live site.",
   "user_approval": "27.10.2026: owner replied «делай» to the exact seven-archive/616MB proposal.",
-  "execution_method": "Existing signed-in Yandex Console owner session; full exact object keys, one object per delete, UI size/date checks. All seven searches empty after deletion; only the three retained prefixes remain."
+  "execution_method": "Existing signed-in Yandex Console owner session; full exact object keys, one object per delete, UI size/date checks. All seven searches empty after deletion; only the three retained prefixes remain.",
+  "post_cleanup_inventory_run_id": 40464327110,
+  "post_cleanup_inventory_job_id": 122056014732,
+  "post_cleanup_bucket_total_bytes": 459352880,
+  "post_cleanup_bucket_objects": 1442,
+  "publication": {
+    "frontend_sha": "b803eccf2a8c6bec70381ae901f0b6f532e5f517",
+    "run_id": 40454280755,
+    "attempt": 2,
+    "job_id": 122056688133,
+    "conclusion": "success",
+    "actual_primary_browser_verified": true,
+    "new_rollback_archive": "_deployment-backups/b803eccf2a8c6bec70381ae901f0b6f532e5f517/40454280755-2/site-rollback.tar.gz",
+    "new_rollback_sha256": "89c8702a082b8225fe9f6103edd8fc995c86d28d4791414984e19df79a2f27af"
+  }
 }

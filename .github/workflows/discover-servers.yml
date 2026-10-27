@@ -1,9 +1,15 @@
-name: Discover new Lineage 2 servers
-# Three times a day: read public monitoring lists, confirm each new project on its own website,
-# add confirmed records to import/lineage2.json and upsert them into the public catalog (D1).
+name: Discover servers and official openings
+# Three bounded runs daily; public facts only, no new cloud resources or private API writes.
 on:
   schedule:
     - cron: '23 3,11,19 * * *'   # 06:23, 14:23, 22:23 MSK
+  push:
+    branches: [main]
+    paths:
+      - scripts/discovery/**
+      - scripts/discover-worlds.mjs
+      - scripts/discover-servers.mjs
+      - .github/workflows/discover-servers.yml
   workflow_dispatch:
 permissions:
   contents: write
@@ -29,7 +35,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run import:check
-      - name: Find and confirm new servers
+      - name: Verify discovery evidence rules
+        run: node --test tests/discovery-facts.test.mjs tests/import-dataset.test.mjs
+      - name: Discover GTA and Minecraft; refresh official openings
+        run: node scripts/discover-worlds.mjs --write
+      - name: Find and confirm Lineage 2 servers
         run: node scripts/discover-servers.mjs --write --pages 3 --limit 12
       - name: Keep the run report
         if: always()
@@ -37,24 +47,24 @@ jobs:
         continue-on-error: true
         with:
           name: discovery-report
-          path: output/discovery/last-run.json
+          path: output/discovery/*.json
           retention-days: 7
       - name: Detect dataset change
         id: changed
         run: |
-          if git diff --quiet -- import/lineage2.json; then echo "value=false" >> "$GITHUB_OUTPUT"; else echo "value=true" >> "$GITHUB_OUTPUT"; fi
+          if git diff --quiet -- import/lineage2.json import/minecraft.json import/gtarp.json; then echo "value=false" >> "$GITHUB_OUTPUT"; else echo "value=true" >> "$GITHUB_OUTPUT"; fi
       - name: Validate the whole dataset
         if: steps.changed.outputs.value == 'true'
         run: npm run import:check
-      - name: Upsert Lineage 2 records into the public catalog
-        if: steps.changed.outputs.value == 'true'
-        run: node scripts/import-servers.mjs --remote --games lineage2 --yes
+      - name: Upsert confirmed records into the public catalog
+        if: steps.changed.outputs.value == 'true' || github.event_name == 'push'
+        run: node scripts/import-servers.mjs --remote --games lineage2,minecraft,gtarp --yes
       - name: Commit the dataset
         if: steps.changed.outputs.value == 'true'
         run: |
           git config user.name "gamescout-discovery"
           git config user.email "gamescout-discovery@users.noreply.github.com"
-          git add import/lineage2.json
-          git commit -m "Add newly discovered Lineage 2 servers"
+          git add import/lineage2.json import/minecraft.json import/gtarp.json
+          git commit -m "Refresh confirmed servers and official opening dates"
           git pull --rebase origin main
           git push origin HEAD:main

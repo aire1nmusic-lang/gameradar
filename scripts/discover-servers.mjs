@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { loadDataset, validateRecord } from './import/dataset.mjs'
+import { openingDate, announcedOpening } from './discovery/facts.mjs'
 
 const args = process.argv.slice(2)
 const flag = name => args.includes(name)
@@ -63,27 +64,6 @@ function parseList(html) {
     found.push({ id: title[2], title: decode(title[1]).trim(), rates, isNew: /class=['"]new-server['"]/.test(box) })
   }
   return found
-}
-
-const MONTHS = { январ: 1, феврал: 2, март: 3, апрел: 4, ма: 5, июн: 6, июл: 7, август: 8, сентябр: 9, октябр: 10, ноябр: 11, декабр: 12 }
-/** Opening date written in a listing title: "Старт 2 Октября", "открытие 09.10", "OBT 15.10". */
-function openingDate(text) {
-  const lower = text.toLowerCase()
-  let day, month
-  const named = lower.match(/(\d{1,2})\s+(январ|феврал|март|апрел|мая|май|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-я]*/)
-  if (named) {
-    day = Number(named[1])
-    month = MONTHS[named[2].startsWith('ма') ? 'ма' : named[2]]
-  } else {
-    const numeric = lower.match(/(?:старт|открыт|open|обт|збт|obt|cbt)[^0-9]{0,12}(\d{1,2})[./](\d{1,2})(?![./]?\d{3})/)
-    if (numeric) { day = Number(numeric[1]); month = Number(numeric[2]) }
-  }
-  if (!day || !month || day > 31 || month > 12) return null
-  const year = today.getUTCFullYear()
-  const date = new Date(Date.UTC(year, month - 1, day))
-  // Only "2 января" written in November–December means next year; any other past date is simply old.
-  if (month <= 2 && today.getUTCMonth() >= 10 && date.getTime() < today.getTime()) date.setUTCFullYear(year + 1)
-  return isoDay(date)
 }
 
 const CHRONICLES = [
@@ -143,7 +123,7 @@ async function confirmOfficial(rawUrl) {
   const base = site.split('.')[0]
   if (base.length >= 3 && !text.includes(base) && !html.toLowerCase().includes(site)) return { ok: false, reason: 'site does not name its own brand' }
   if (!/lineage|l2|интерлюд|interlude|high five|essence/i.test(text)) return { ok: false, reason: 'site is not about Lineage 2' }
-  return { ok: true, origin: new URL(response.url).origin + '/' }
+  return { ok: true, origin: new URL(response.url).origin + '/', html }
 }
 
 async function main() {
@@ -173,15 +153,27 @@ async function main() {
 
   const windowStart = today.getTime() - 45 * 86400000
   const windowEnd = today.getTime() + 75 * 86400000
-  const report = { at: new Date().toISOString(), listed: listed.size, added: [], skipped: [] }
+  const report = { at: new Date().toISOString(), listed: listed.size, added: [], updated: [], skipped: [] }
   const additions = []
   for (const item of listed.values()) {
     if (additions.length >= LIMIT) break
-    if (knownIds.has(item.id)) continue
-    const parsed = openingDate(item.title)
+    const known = dataset.find(record => [record.source, ...(record.refs ?? [])].some(ref => ref?.url?.match(/mmotop\.ru\/servers\/(\d+)/)?.[1] === item.id))
+    const parsed = openingDate(item.title, today)
+    if (known) {
+      if (parsed && parsed >= isoDay(today) && (!known.openedAt || known.openedAt >= isoDay(today)) && known.openedAt !== parsed) {
+        const official = await confirmOfficial(known.website)
+        const sharedSite = dataset.filter(r => hostOf(r.website) === hostOf(known.website)).length > 1
+        if (official.ok && !sharedSite && announcedOpening(official.html, today) === parsed) {
+          report.updated.push({ id: item.id, key: known.key, before: known.openedAt ?? null, after: parsed })
+          known.openedAt = parsed
+          known.checkedAt = isoDay(today)
+        } else report.skipped.push({ id: item.id, title: item.title, reason: 'opening requires matching official world announcement' })
+      }
+      continue
+    }
     const inWindow = !!parsed && Date.parse(parsed) >= windowStart && Date.parse(parsed) <= windowEnd
     // A date far from today is more likely a stale ad than the real opening: better none than a wrong one.
-    const opened = inWindow ? parsed : null
+    let opened = inWindow ? parsed : null
     const fresh = item.isNew || inWindow
     if (!fresh) continue
     const page = await monitorPage(`/servers/${item.id}`)
@@ -199,6 +191,8 @@ async function main() {
     const official = await confirmOfficial(location)
     if (!official.ok) { report.skipped.push({ id: item.id, title: item.title, reason: official.reason }); continue }
 
+    // A monitoring advertisement alone cannot establish an opening date.
+    if (opened && announcedOpening(official.html, today) !== opened) opened = null
     const rate = item.rates.find(value => /^x\s?\d/i.test(value)) ?? item.title.match(/\bx\s?\d{1,6}\b/i)?.[0] ?? null
     const name = cleanName(item.title, host, rate ? rate.replace(/\s/g, '').toLowerCase() : null)
     if (knownNames.has(name.toLowerCase())) { report.skipped.push({ id: item.id, title: item.title, reason: 'name already in catalog' }); continue }
@@ -230,15 +224,15 @@ async function main() {
 
   mkdirSync(REPORT_DIR, { recursive: true })
   writeFileSync(path.join(REPORT_DIR, 'last-run.json'), JSON.stringify(report, null, 2))
-  console.log(`Listed on monitor: ${report.listed}. New and confirmed: ${report.added.length}. Skipped: ${report.skipped.length}.`)
+  console.log(`Listed on monitor: ${report.listed}. New and confirmed: ${report.added.length}. Opening updates: ${report.updated.length}. Skipped: ${report.skipped.length}.`)
   for (const item of report.added) console.log(`  + ${item.name} · ${item.version}${item.rates ? ' · ' + item.rates : ''}${item.openedAt ? ' · ' + item.openedAt : ''} · ${item.website}`)
   for (const item of report.skipped) console.log(`  - ${item.title}: ${item.reason}`)
 
-  if (WRITE && additions.length) {
+  if (WRITE && (additions.length || report.updated.length)) {
     const next = [...dataset, ...additions]
     writeFileSync(DATASET_FILE, JSON.stringify(next, null, 2) + '\n')
     loadDataset() // the whole dataset must still validate after the write
-    console.log(`Written ${additions.length} record(s) to ${path.relative(process.cwd(), DATASET_FILE)}`)
+    console.log(`Written ${additions.length} new and ${report.updated.length} updated record(s) to ${path.relative(process.cwd(), DATASET_FILE)}`)
   } else if (!WRITE && additions.length) {
     console.log('Plan only: re-run with --write to add them.')
   }

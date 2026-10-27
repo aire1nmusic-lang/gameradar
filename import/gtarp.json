@@ -292,5 +292,253 @@
     "chronicle": "fivem",
     "version": "FiveM",
     "checkedAt": "2026-09-22"
+  },
+  {
+    "key": "gta:downtown.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Downtown",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world downtown.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:eclipse.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Eclipse",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world eclipse.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:rockford.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Rockford",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world rockford.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:redwood.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Redwood",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world redwood.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:murrieta.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Murrieta",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world murrieta.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:chiliad.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Chiliad",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world chiliad.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:mirror.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Mirror",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world mirror.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
+  },
+  {
+    "key": "gta:blaine.gta5rp.com:22005",
+    "game": "gtarp",
+    "name": "GTA5RP · Blaine",
+    "website": "https://gta5rp.com/",
+    "chronicle": "ragemp",
+    "version": "RAGE:MP",
+    "languages": [
+      "Русский"
+    ],
+    "country": null,
+    "endpoint": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт GTA5RP",
+      "url": "https://gta5rp.com/"
+    },
+    "refs": [
+      {
+        "name": "Официальный список миров GTA5RP",
+        "url": "https://gta5rp.com/"
+      },
+      {
+        "name": "RAGE:MP platform master",
+        "url": "https://cdn.rage.mp/master/"
+      }
+    ],
+    "checkedAt": "2026-10-27",
+    "confidence": "confirmed",
+    "notes": "Official world blaine.gta5rp.com:22005 corroborated with RAGE:MP master on 2026-10-27. Catalog identity only; no direct online endpoint is claimed."
   }
 ]

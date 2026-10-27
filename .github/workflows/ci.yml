@@ -23,6 +23,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Public discovery evidence rules
+        run: node --test tests/discovery-facts.test.mjs tests/import-dataset.test.mjs
       - name: Private core tests
         run: |
           npm run test:private

@@ -315,9 +315,10 @@ function Profile({ server: source }: { server: GameServer }) {
           <div className="gs-profile-actions flex items-center gap-2 pb-1">
             <button
               onClick={() => toggle(server.slug)}
-              aria-label="В избранное"
+              aria-label={favorite ? 'Убрать из избранного' : 'В избранное'}
+              aria-pressed={favorite}
               className={cn(
-                'grid h-11 w-11 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-ink-300 transition-colors hover:border-white/20 hover:text-ink-50',
+                'gs-profile-favorite grid h-11 w-11 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-ink-300 transition-colors hover:border-white/20 hover:text-ink-50',
                 favorite && 'border-danger-500/35 text-danger-400',
               )}
             >

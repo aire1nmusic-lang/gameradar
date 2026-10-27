@@ -20,6 +20,7 @@ export function FavoriteButton({ slug, className }: { slug: string; className?: 
   return (
     <button
       type="button"
+      aria-pressed={active}
       aria-label={active ? 'Убрать из избранного' : 'В избранное'}
       onClick={(event) => {
         event.preventDefault()

@@ -1,3 +1,11 @@
+## 27.10.2026 — Approved slightly frosted transparent profile glass (implementation)
+
+- Owner approved the final transparent-glass preview with a small increase in diffusion. Preserve existing profile geometry and world artwork; replace opaque pearl cards with a translucent neutral film,18px blur, subtle edges, light high-contrast text and lighter chart/table labels across L2/Minecraft/GTA. No new rank art or composition approved in this slice.
+- Outline favorites share a restrained rounded-square hit area instead of a grey circle; selected fill and accessible pressed state remain. Added missing profile/card aria-pressed; existing storage semantics unchanged.
+- VERIFIED local typecheck/build137prerender routes. Responsive browser matrix and actual primary publication pending; do NOT call this live. Updated existing matrix assertions for approved transparent material and reversible favorite toggle, with all API writes blocked.
+- Private VMs remain intentionally Stopped; no new cloud resource, DNS/private API, data or payment change. Existing private-backed ranking unavailability is expected. Rollback: previous b803ecc frontend/durable release archive. Next: guarded CI/publication and actual main-domain visual readback.
+
+
 ## 27.10.2026 — VERIFIED owner-requested private VM pause
 
 - Owner explicitly requested stopping the VM if round-the-clock running provides no search visibility benefit, and clarified that primary-domain login already fails. In the existing authenticated Yandex operator Console, stopped ONLY gamescout-private-d using normal Stop confirmation. VERIFIED terminal Stopped for both private-d and the already stopped private-staging. Both 20 GiB disks and static IP bindings remain; no deletion, resize, credential, DNS, billing-plan or gateway change.

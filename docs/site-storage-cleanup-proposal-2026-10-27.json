@@ -1,0 +1,73 @@
+{
+  "status": "PROPOSAL_ONLY_NOT_AUTHORIZED_OR_EXECUTED",
+  "inventory_run_id": 40455825802,
+  "inventory_job_id": 122028794545,
+  "inventory_at_utc": "2026-10-27T05:32:24Z",
+  "bucket": "gamescout-ru-site",
+  "endpoint": "https://storage.yandexcloud.net",
+  "bucket_total_bytes": 1075774381,
+  "bytes_to_free": 616421501,
+  "remove": [
+    {
+      "key": "_deployment-backups/e8dbff1d04a98df4c198b24f6f13fd9b64e46b58/40168895531-1/site-rollback.tar.gz",
+      "bytes": 87101602,
+      "modified": "2026-10-25T06:30:13.890000+00:00"
+    },
+    {
+      "key": "_deployment-backups/c3de1730e0b3fbf7e82b97426a9e6164b1d054c6/40172169346-1/site-rollback.tar.gz",
+      "bytes": 87284483,
+      "modified": "2026-10-25T07:23:53.198000+00:00"
+    },
+    {
+      "key": "_deployment-backups/8309d4b843b79e4b5354d668871320314f8897ea/40174268139-1/site-rollback.tar.gz",
+      "bytes": 87368090,
+      "modified": "2026-10-25T07:57:12.466000+00:00"
+    },
+    {
+      "key": "_deployment-backups/bc04163bc43e2be8743c5618a264decf6c52c149/40174822916-3/site-rollback.tar.gz",
+      "bytes": 88099303,
+      "modified": "2026-10-25T12:01:10.250000+00:00"
+    },
+    {
+      "key": "_deployment-backups/be400f75d798de8fde99bfe0f5b7896f297db3a6/40194390764-1/site-rollback.tar.gz",
+      "bytes": 88098951,
+      "modified": "2026-10-25T12:51:03.787000+00:00"
+    },
+    {
+      "key": "_deployment-backups/476c3ae10f55cddb4517b56e6ce1bef12e83ba24/40195275998-1/site-rollback.tar.gz",
+      "bytes": 89234539,
+      "modified": "2026-10-25T13:01:41.695000+00:00"
+    },
+    {
+      "key": "_deployment-backups/2d8a67d73bb5c8a7e235924a3998abff4de71749/40223561967-1/site-rollback.tar.gz",
+      "bytes": 89234533,
+      "modified": "2026-10-25T19:00:08.323000+00:00"
+    }
+  ],
+  "keep": [
+    {
+      "key": "_deployment-backups/799aae4d6923b65f8f0f1cdb2263131ea46d56ed/40385696392-1/site-rollback.tar.gz",
+      "bytes": 90695592,
+      "modified": "2026-10-26T19:26:35.786000+00:00",
+      "sha256": "5d7d33cb81df483440f6cea024f9ac4e0a668f691d04f200ac20369b3e3e70f6",
+      "original_release_job_id": 121793239530
+    },
+    {
+      "key": "_deployment-backups/48b94a0469920010e148daa1ba9d263cef107b6a/40452512685-1/site-rollback.tar.gz",
+      "bytes": 90695508,
+      "modified": "2026-10-27T05:04:40.184000+00:00",
+      "sha256": "4c67f0e1ff4d2ff3cc921c05a2c44c3dd7d0814ff16ced1151c12d2f49b0ac71",
+      "original_release_job_id": 122018269972
+    },
+    {
+      "key": "_deployment-backups/fdeed318e2efd68e8afd6a1dc3cad03d3d3a47f3/40452632818-1/site-rollback.tar.gz",
+      "bytes": 90695531,
+      "modified": "2026-10-27T05:17:25.212000+00:00",
+      "sha256": "6a0ced70672e0b19a84b04a2fc744083396c54ee07204c79b183bd34870c26ed",
+      "original_release_job_id": 122020922846
+    }
+  ],
+  "scope": "Only the seven named completed deployment archives; no public site objects, assets, quota, IAM, personal data or payment settings.",
+  "execution_blocker": "New exact deletion approval required. Existing publisher credentials previously denied DeleteObject; do not repeat unchanged denied credentials.",
+  "rollback": "Keep and independently verify the three listed newest archives; after cleanup rerun guarded production40454280755 for b803ecc. Never bypass durable backup verification."
+}

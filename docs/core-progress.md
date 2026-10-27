@@ -1,3 +1,8 @@
+## 27.10.2026 — Inspect actual320px screenshots and repair contrast
+
+- VERIFIED downloaded CI artifact12682955598 shows support selected title wrapping into8 lines and light plaque bands still using white text. Clamp chosen title to2 lines (full name retained in title), use dark ink#172128 and metadata#334750 on the stronger pearl band in all worlds. Retain exact browser color assertions with the intended dark ink; no assertion removed.
+- Escape fix48b94a0 is on main; refreshed release pending. Build/typecheck/test syntax/diff check run locally; screenshots across remaining viewports and live domain pending. No API/privacy/DNS/payment or cost changes; previous release remains rollback.
+
 ## 27.10.2026 — Resume owner polish: repair Escape interaction
 
 - VERIFIED CI40389891878/job121807812281 and production40389892233/job121812228751 stopped before any production upload: closed ServerPicker intercepted Escape and prevented native support-dialog cancellation. Earlier stages passed; primary remains799aae4. Fix limits Escape interception to the open picker; closed trigger now lets native dialog cancellation run. Added meaningful empty-search/keyboard-open/first-Escape regression alongside existing whole-dialog close assertion.

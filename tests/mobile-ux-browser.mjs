@@ -226,7 +226,7 @@ try {
       }
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
       await mediaReady(page)
-      if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
+      if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(23, 33, 40)')
       // All worlds share the owner-approved L2 component, density and information bar.
       assert.equal(await page.locator('.catalog-grid > .gsb').count(), 3, 'Same three boards in every world')
       const columns = await page.locator('.catalog-grid').evaluate(e => getComputedStyle(e).gridTemplateColumns.split(' ').length)
@@ -263,7 +263,7 @@ try {
           })
           assert.ok(content.barBottom <= content.rowBottom + 1 && content.metaBottom <= content.rowBottom, 'Live caption remains inside the frame')
           assert.ok(content.metricRight <= content.favLeft + 1, 'Counter and favourite do not overlap')
-          assert.equal(await card.locator('.gsb-name').evaluate(e => getComputedStyle(e).color),'rgb(255, 247, 233)')
+          assert.equal(await card.locator('.gsb-name').evaluate(e => getComputedStyle(e).color),'rgb(23, 33, 40)')
           if(kind === 'support') {
             const coin=card.locator('.gsb-coin')
             assert.equal(await coin.getAttribute('src'),'/media/ranks/coin-stack-96.webp')

@@ -329,6 +329,12 @@ try {
       await studio.getByLabel('Сервер', { exact: true }).click()
       await studio.getByLabel('Поиск сервера для поддержки').fill(cards.find(s=>s.id===`qa-${game.id}-0`).name)
       await studio.getByRole('option').filter({hasText:cards.find(s=>s.id===`qa-${game.id}-0`).name}).click()
+      await studio.getByLabel('Сервер', { exact: true }).press('ArrowDown')
+      await studio.getByLabel('Поиск сервера для поддержки').fill('нет-такого-проекта-qa')
+      await studio.getByRole('status').filter({hasText:'Сервер не найден'}).waitFor()
+      await studio.getByLabel('Поиск сервера для поддержки').press('Escape')
+      await studio.locator('.gs-server-picker-popover').waitFor({state:'detached'})
+      assert.ok(await page.locator('.gs-support-dialog').isVisible(),'First Escape closes only the open server picker; the next Escape closes support')
       const dialogBox = await page.locator('.gs-support-dialog').boundingBox()
       assert.ok(dialogBox.x >= 0 && dialogBox.y >= 0 && dialogBox.x + dialogBox.width <= width + 1 && dialogBox.y + dialogBox.height <= height + 1, 'Support dialog fits viewport')
       const regions = await studio.evaluate(e => {

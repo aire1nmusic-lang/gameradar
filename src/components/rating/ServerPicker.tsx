@@ -10,7 +10,7 @@ export function ServerPicker({servers,value,onChange}:{servers:GameServer[];valu
  const close=()=>{setOpen(false);trigger.current?.focus()}
  useEffect(()=>{if(!open)return;search.current?.focus();const outside=(e:PointerEvent)=>{if(!root.current?.contains(e.target as Node))setOpen(false)};document.addEventListener('pointerdown',outside);return()=>document.removeEventListener('pointerdown',outside)},[open])
  return <div className="gs-server-picker" ref={root} onKeyDown={e=>{
-  if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}
+  if(open&&e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}
   if(!open&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();setQuery('');setOpen(true);return}
   if(open&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();const options=[...root.current!.querySelectorAll<HTMLButtonElement>('[role=option]')];const index=options.indexOf(document.activeElement as HTMLButtonElement);options[index<0?(e.key==='ArrowDown'?0:options.length-1):(index+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus()}
  }}>

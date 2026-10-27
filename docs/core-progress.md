@@ -1,3 +1,8 @@
+## 27.10.2026 — Resume owner polish: repair Escape interaction
+
+- VERIFIED CI40389891878/job121807812281 and production40389892233/job121812228751 stopped before any production upload: closed ServerPicker intercepted Escape and prevented native support-dialog cancellation. Earlier stages passed; primary remains799aae4. Fix limits Escape interception to the open picker; closed trigger now lets native dialog cancellation run. Added meaningful empty-search/keyboard-open/first-Escape regression alongside existing whole-dialog close assertion.
+- Local typecheck/test syntax/diff PASS. Full six-viewport browser gate and guarded publication pending. No API writes/privacy/DNS/IAM/registration/payment changes, no new paid services. Rollback remains guarded prior live799aae4. Login infrastructure blocker recorded below remains unresolved.
+
 ## 26.10.2026 — Scope profile finish and verify auth infrastructure
 
 - VERIFIED read-only diagnostic40389434270: public APIs200, auth/me503 private_api_required; VM check BLOCKED because existing SSH secrets/user/path are absent. Gateway probe from local environment timed out at CONNECT; not evidence the private service is down. DNS requires explicit agreement and current operator access per AGENTS; no DNS/privacy/payment changes performed.

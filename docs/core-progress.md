@@ -1,3 +1,9 @@
+## 28.10.2026 — Owner screenshot review: public UI correction IN PROGRESS
+
+- Owner requests inset favourites, clearer TOP1/GTA and ranks4+, stronger server names, quieter frames/type, dark owner onboarding and improved global search; mode artwork prompts requested separately. Isolated codex/ui-review-20261028 from current origin/main b8a138a; existing dirty worktrees preserved. Claude owns auth; no account/core/API/data/DNS/VM changes in this slice.
+- LOCAL typecheck/build (152 prerendered routes)/bundle and browser-test syntax PASS. Local Chromium download returned invalid archives, so visual acceptance moves to the existing GitHub browser gate; no checks removed. Nine standalone 4K mode/platform prompts added at docs/design-review/mode-art-prompts-4k.md.
+- VERIFIED legacy world-polish light-band/owner-step overrides and nested search input chrome match screenshots. Implementing scoped shared public UI correction while retaining accepted game scenes/rank art/glass. QA pending:320/390/768/1024/1440/844landscape x3games; no publication yet. Existing free CI/hosting only; rollback scoped revert and guarded deployment archive.
+
 ## 28.10.2026 — Owner requests alternative account hosting; paid private host remains paused
 
 - Owner asks to seek another way instead of resuming the prior-cost Yandex VM. No start, subscription, migration, DNS, credential or private-data change. Distinguish working cloud-console access from unavailable GameScout auth: existing private host remainsStopped, primary private ingress unresolved. Existing normal registration code need not be replaced merely to change its host.

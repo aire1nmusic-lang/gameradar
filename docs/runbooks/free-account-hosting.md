@@ -57,6 +57,26 @@ Consequences, in order of strength:
 
 So "0 ₽ guaranteed" is **false**; "0 ₽ expected, YDB bounded to ≤ ~170 ₽, flood tail bounded only by an alert plus manual kill switch" is the verified statement. Per the project rule, **no resource is created until the owner accepts that tail.**
 
+## 3a. Owner requirement: "it must be free" — what can actually guarantee 0 ₽ (checked 28 Oct, afternoon)
+
+A second reading of the official billing pages found **no documented hard zero on Yandex Cloud**:
+
+- A personal payment account is documented both as card-less (top-up only) and as requiring a bound card at creation ([create-new-account](https://yandex.cloud/ru/docs/billing/operations/create-new-account) vs [payment-methods-individual](https://yandex.cloud/ru/docs/billing/payment/payment-methods-individual)); `PAY_OR_BIND` ("free resources and cloud creation" only) lasts until a card is bound ([statuses](https://yandex.cloud/ru/docs/billing/concepts/billing-account-statuses)). The pages contradict each other, so a card-less account is **not** a verified way to make charges impossible.
+- Debt is described only for the card payment threshold; no page says what happens to Functions, API Gateway or serverless YDB at zero balance (the zero-balance cycle names VMs and database clusters), and free-tier overage is stated to be billed at tariffs ([free tier](https://yandex.cloud/ru/docs/billing/concepts/serverless-free-tier)).
+- Budgets only notify; there is no spend cap (see §3).
+
+Options that are free **by construction** or documented-free, with their price in other terms:
+
+| Option | 0 ₽ guarantee | Data in Russia | Cost of the choice |
+| --- | --- | --- | --- |
+| Yandex Functions + serverless YDB (this branch) | expected 0 ₽; **not guaranteed** (§3) | yes | residual flood tail; unproven YDB store |
+| Yandex in a **new card-less billing account** | UNVERIFIED — needs a 10-minute owner test (create the account without a card, try to create a YDB database and a function, read what the console allows); I cannot create accounts | yes | may be refused; behaviour at quota end unknown |
+| Cloudflare Workers + D1 **free plan** | hard cap by plan terms (requests are refused, not billed; LIKELY, terms not re-read here) | **no** — breaks the owner's Russia-storage decision and the `AGENTS.md` boundary (private data = Yandex/PostgreSQL); reuses the retired D1 accounts code; D1 free read limits already caused one outage | needs an explicit change of the data boundary |
+| Owner's own PC in Russia (private API + Postgres/SQLite, outbound-only tunnel) | hard 0 ₽ | yes | account sign-in is down when the PC is off; owner must secure, patch and back it up; DNS approval still needed |
+| Fixed-price Russian host (e.g. Amvera 580–980 ₽/30 days list price) | fixed, not free | yes | not free |
+
+No option is selected and nothing was created.
+
 ## 4. What was built (local, 0 ₽)
 
 `accounts-fn/` — an accounts-only API with the same wire contract as `private-api/app.mjs` for exactly these routes: `GET /api/v1/health`,

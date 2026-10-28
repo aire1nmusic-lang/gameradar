@@ -29,6 +29,11 @@ jobs:
         run: |
           npm run test:private
           node --experimental-strip-types tests/support-projection.mjs
+      # Accounts-only serverless candidate: reference store contract, handler mapping and gateway spec. No cloud access.
+      - name: Accounts function (serverless YDB candidate)
+        run: |
+          npm run test:accounts-fn
+          npm run build:accounts-fn
       - name: Public ranking boundary and pagination
         run: node --experimental-strip-types --test tests/public-people-ranking.test.mjs tests/public-people-ranking-runtime.test.mjs tests/public-api-release.test.mjs tests/public-ranking-pagination.test.mjs tests/l2-read-recovery.test.mjs
       # Synthetic data only: real advisory locks, TLS and GPG/pg_restore, no live secrets.

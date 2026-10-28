@@ -10,6 +10,8 @@
     "private:maintenance-once": "node private-api/maintenance-once.mjs",
     "dev:core-ui": "node scripts/dev-core-ui.mjs",
     "test:private": "node --test tests/private-core.test.mjs tests/projection-backfill.test.mjs tests/egress.test.mjs tests/emergency.test.mjs tests/telegram-relay.test.mjs tests/telegram-relay-runtime.test.mjs tests/claim-proof.test.mjs tests/private-rehearsal.test.mjs tests/ingress.test.mjs tests/local-postgres-acceptance.test.mjs tests/backup-freshness.test.mjs",
+    "test:accounts-fn": "node --test tests/accounts-fn.test.mjs tests/accounts-fn-handler.test.mjs tests/accounts-fn-store.test.mjs tests/accounts-gateway.test.mjs",
+    "build:accounts-fn": "node accounts-fn/build.mjs",
     "test:postgres": "node scripts/local-postgres-acceptance.mjs",
     "test:seo": "node tests/seo-http.mjs",
     "seo:reconcile": "node scripts/reconcile-public-html.mjs",

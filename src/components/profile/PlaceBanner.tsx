@@ -1,12 +1,14 @@
+import type { CSSProperties, ReactNode } from 'react'
+import { Coins, Sparkles, ThumbsUp } from 'lucide-react'
 import type { GameServer } from '@/models'
 import './place-banner.css'
-import { getGame } from '@/data/games'
-import { gamePlaceScene } from '@/data/podiumScenes'
 
-const ART: Record<number, string> = { 1: '/media/ranks/l2-top1-bg-1600.webp', 2: '/media/ranks/l2-top2-1600.webp', 3: '/media/ranks/l2-top3-1600.webp' }
+export type ProfilePlace = { place: number; board: 'support' | 'people' | 'online' }
+export const PLACE_BOARD = { support: 'Поддержка серверов', people: 'Выбор игроков', online: 'По онлайну' }
+const PLACE_TITLE: Record<number, string> = { 1: 'Первое место', 2: 'Второе место', 3: 'Третье место' }
 
 /** Place in the real rankings: support (GS Coins > 0), votes (> 0), then fresh measured online. Each banner names its actual ranking. */
-export function placeOf(server: GameServer, peers: GameServer[]): { place: number; board: 'support' | 'people' | 'online' } | null {
+export function placeOf(server: GameServer, peers: GameServer[]): ProfilePlace | null {
   peers = peers.filter(s=>s.gameId===server.gameId)
   const paid = peers.filter(s => (s.support?.coins ?? 0) > 0).sort((a, b) => (b.support?.coins ?? 0) - (a.support?.coins ?? 0) || b.votes - a.votes)
   const bySupport = paid.findIndex(s => s.id === server.id)
@@ -20,17 +22,23 @@ export function placeOf(server: GameServer, peers: GameServer[]): { place: numbe
   return null
 }
 
-/** The server page wears the same plaque as the leaderboard while the server holds a top-3 place. */
-export function PlaceBanner({ server, peers }: { server: GameServer; peers: GameServer[] }) {
-  if (!['lineage2', 'minecraft', 'gtarp'].includes(server.gameId)) return null
-  const found = placeOf(server, peers)
-  if (!found) return null
-  const { place, board } = found
-  const scene = gamePlaceScene(server.gameId, board === 'online' ? 'people' : board, place)
-  const medal = server.gameId === 'lineage2' ? `/media/ranks/medal-${place}-glass-192.webp` : `/media/ranks/${server.gameId}-rank-${place}-approved-v1.webp`
-  return <div className={`gs-place-banner pb${place}`} role="note" data-place={place}>
-    <img className="gs-place-art" src={scene?.bg ?? ART[place]} alt="" aria-hidden="true" />
-    <img className="gs-place-medal" src={medal} alt={`${place} место`} />
-    <span className="gs-place-text"><b>{place} место</b><span>{board === 'support' ? 'Лидеры поддержки' : board === 'online' ? 'Лидер по онлайну' : 'Выбор игроков'} · {getGame(server.gameId).shortName}</span></span>
+/** The approved existing glass shields belong inside the identity header, in every world. */
+export function PlaceBanner({ rank, children }: { rank: ProfilePlace | null; children: ReactNode }) {
+  if (!rank) return children
+  return <div className="gs-profile-distinction" data-place={rank.place} data-board={rank.board}>
+    <img className="gs-profile-place-shield" src={`/media/ranks/medal-${rank.place}-glass-192.webp`} width="192" height="192" alt={`ТОП-${rank.place}`} />
+    <div className="gs-profile-distinction-body">
+      <div className="gs-profile-place-copy"><span>{PLACE_BOARD[rank.board]}</span><strong>{PLACE_TITLE[rank.place]}</strong></div>
+      {children}
+    </div>
+  </div>
+}
+
+// A small, deterministic decoration layer. No timers, network, score changes or input interception.
+export function ProfilePlaceParticles({ rank }: { rank: ProfilePlace | null }) {
+  if (!rank) return null
+  const Icon = rank.board === 'support' ? Coins : rank.board === 'people' ? ThumbsUp : Sparkles
+  return <div className="gs-profile-particles" aria-hidden="true">
+    {[2, 97, 4, 94, 1, 98].map((left, i) => <span key={i} className="gs-profile-particle" style={{ '--particle-x': `${left}%`, '--particle-delay': `${i * -2.7}s`, '--particle-duration': `${16 + i * 1.7}s`, '--particle-drift': `${i % 2 ? -16 : 16}px` } as CSSProperties}><Icon size={i % 2 ? 19 : 24} strokeWidth={1.35} /></span>)}
   </div>
 }

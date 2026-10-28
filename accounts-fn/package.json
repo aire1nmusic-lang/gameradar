@@ -1,0 +1,12 @@
+{
+  "name": "gamescout-accounts-fn",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Accounts-only GameScout API for Yandex Cloud Functions + serverless YDB (registration, sign-in, sessions, recovery).",
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "hono": "4.13.8",
+    "ydb-sdk": "5.11.1"
+  }
+}

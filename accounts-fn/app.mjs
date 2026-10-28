@@ -1,0 +1,249 @@
+import { Hono } from 'hono'
+import { digest, equal, keyed, passwordValid, token } from './primitives.mjs'
+import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
+import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
+
+/**
+ * Accounts-only GameScout API: registration by e-mail link, sign-in, session, logout, password recovery.
+ *
+ * It keeps the wire contract of `private-api/app.mjs` for exactly these routes (same paths, cookie, JSON error
+ * codes, hashing, 20-minute single-use links, 7-day sessions) so the existing frontend works unchanged.
+ * Storage is behind the small `store` interface below; `store-ydb.mjs` is the production implementation
+ * (serverless YDB) and `store-memory.mjs` is the reference used by tests. Everything else the private core does
+ * (Claims, votes, Coins, payments) is deliberately NOT here: those routes answer 404 `route_unavailable`.
+ * Sign-in through Google and Discord is supported (sign-in/sign-up only, no linking to an existing account).
+ *
+ * store contract — every method is atomic (one serializable transaction in YDB):
+ *   ping()
+ *   rateHit({key,window,expiresAt}) -> number             increments and returns the counter
+ *   userByEmail(email) / userById(id) -> User|null
+ *   sessionUser({tokenHash,now}) -> {user,session}|null   live session of a non-banned user
+ *   issueToken({email,purpose,tokenHash,payload,expiresAt,now,onlyIfNoUser}) -> boolean
+ *   confirmRegistration({tokenHash,userId,sessionHash,replaceSessionHash,sessionExpiresAt,now}) -> User|null
+ *   openSession({userId,expectedPasswordHash,sessionHash,replaceSessionHash,sessionExpiresAt,loginMethod,now}) -> boolean
+ *   resetPassword({tokenHash,passwordHash,now}) -> boolean   consumes the token, revokes every session
+ *   deleteSession(tokenHash)
+ *   identitiesOf(userId) -> [{provider,linkedAt}]
+ *   saveOAuthState({stateHash,browserHash,provider,verifier,nextPath,expiresAt}) / takeOAuthState({stateHash,browserHash,provider,now}) -> {verifier,nextPath}|null
+ *   oauthSignIn({provider,subject,displayName,newUserId,allowCreate,sessionHash,replaceSessionHash,sessionExpiresAt,now}) -> {status:'ok',user}|{status:'closed'|'banned'}
+ */
+export class Failure extends Error {
+  constructor(status, code, message) { super(message); this.status = status; this.code = code }
+}
+const fail = (status, code, message) => { throw new Failure(status, code, message) }
+const emailOf = value => {
+  const email = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  if (email.length > 254 || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]+$/.test(email)) fail(400, 'email_invalid', 'Введите корректный email')
+  return email
+}
+const textOf = (value, min, max) => {
+  if (typeof value !== 'string' || value.trim().length < min || value.length > max || /[\u0000-\u001f]/.test(value))
+    fail(400, 'invalid_input', `Ожидается текст от ${min} до ${max} символов`)
+  return value.trim()
+}
+const passwordOf = value => {
+  if (!passwordValid(value)) fail(400, 'password_weak', 'Пароль — от 12 до 128 символов')
+  return value
+}
+const cookieValue = (c, name) => (c.req.header('Cookie') ?? '').split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) ?? ''
+
+const LINK_TTL_MS = 20 * 60_000
+const OAUTH_TTL_MS = 10 * 60_000
+const OAUTH_PROVIDERS = ['google', 'discord']
+const safeName = value => {
+  const name = typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40) : ''
+  return name.length >= 1 ? name : 'Игрок'
+}
+const SESSION_TTL_MS = 7 * 86_400_000
+const RATE_WINDOW_MS = 900_000
+
+export function userDto(user, identities = []) {
+  return { id: user.id, email: user.email, displayName: user.displayName, provider: 'EMAIL', loginMethod: user.loginMethod ?? null,
+    emailVerified: !!user.emailVerifiedAt, hasPassword: !!user.passwordHash, roles: user.roles ?? ['PLAYER'], permissions: [],
+    createdAt: user.createdAt, identities }
+}
+
+/**
+ * config: {origin, environment, rateKey(≥32 chars), mailEnabled, registrationOpen, emergencyMode, oauth?: provider client ids/secrets}
+ * sendLinkMail(to, purpose, link) delivers the one-time link; it is awaited after the database commit.
+ * sendNotice(to, kind, accountUrl) sends the link-less letter ('EXISTS' | 'NO_ACCOUNT') so that registration and recovery
+ * take the same time and send one letter whether or not the address has an account (no probing by response time).
+ */
+/** passwords: {hash(password), verify(password, stored)} — scrypt in Node (private-api/crypto.mjs), PBKDF2+pepper in a Worker. */
+export function createAccountsApp({ store, config, passwords, sendLinkMail, sendNotice = async () => {}, clock = () => new Date(),
+  oauthExchange = exchangeProfile }) {
+  if (typeof passwords?.hash !== 'function' || typeof passwords?.verify !== 'function') throw new Error('password_hashing_required')
+  if ((config.rateKey ?? '').length < 32) throw new Error('private_keys_required')
+  const origin = new URL(config.origin).origin
+  const local = config.environment === 'development' && ['127.0.0.1', 'localhost'].includes(new URL(origin).hostname)
+  if (!local && !origin.startsWith('https://')) throw new Error('https_required')
+  const app = new Hono()
+  // Only Google and Discord are offered by this service; provider secrets decide which of them are on.
+  const oauthEnv = { ...(config.oauth ?? {}), ALLOWED_ORIGIN: origin, ENVIRONMENT: local ? 'development' : 'production' }
+  const providers = () => enabledProviders(oauthEnv).filter(p => OAUTH_PROVIDERS.includes(p))
+  const oauthCookie = (value, seconds) => `gs_private_oauth=${value}; Path=/api/v1/auth; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
+  const cookie = (value, seconds) => `gs_private_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
+  const sessionHash = c => digest(cookieValue(c, 'gs_private_session'))
+  const registrationOpen = () => config.registrationOpen === true && config.emergencyMode !== true
+  const closedRegistration = () => fail(403, 'registration_closed', 'Регистрация пока закрыта. Вход доступен только существующим аккаунтам.')
+  const mailRequired = () => { if (!config.mailEnabled) fail(503, 'mail_disabled', 'Почта ещё не подключена') }
+  // Same-cost failure path when the email is unknown; computed on first use, not at cold start.
+  let dummy
+  const dummyHash = () => (dummy ??= passwords.hash(token()))
+
+  async function json(c) {
+    let body
+    try { body = JSON.parse(await c.req.text()) } catch { fail(400, 'invalid_json', 'Ожидается JSON') }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) fail(400, 'invalid_json', 'Ожидается объект')
+    return body
+  }
+  async function limit(c, bucket, subject, max = 10) {
+    max = emergencyLimit(max, config.emergencyMode === true)
+    // The client IP is set by our function adapter from the API Gateway event, never from a public header.
+    const ip = c.env?.clientIp ?? 'unknown'
+    const window = Math.floor(clock().getTime() / RATE_WINDOW_MS)
+    for (const [value, bound] of [[`ip:${ip}`, max * 4], [`subject:${subject}`, max]]) {
+      const count = await store.rateHit({ key: keyed(config.rateKey, `${bucket}:${value}`), window,
+        expiresAt: new Date((window + 2) * RATE_WINDOW_MS) })
+      if (count > bound) fail(429, 'rate_limited', 'Слишком много запросов. Повторите через 15 минут.')
+    }
+  }
+  const currentUser = async c => (await store.sessionUser({ tokenHash: sessionHash(c), now: clock() }))?.user ?? null
+  async function issue(email, purpose, payload, onlyIfNoUser = false) {
+    const raw = token(), now = clock()
+    const issued = await store.issueToken({ email, purpose, tokenHash: digest(raw), payload, now, onlyIfNoUser,
+      expiresAt: new Date(now.getTime() + LINK_TTL_MS) })
+    if (!issued) return false
+    const link = `${origin}/account#${new URLSearchParams({ token: raw, purpose: purpose.toLowerCase() })}`
+    // At most once: a failed delivery is only logged (no address, no token); the person can request a new link.
+    try { await sendLinkMail(email, purpose, link) } catch (error) { console.error('mail_dispatch_failed', error?.message?.slice(0, 40) ?? 'error') }
+    return true
+  }
+  const notify = async (email, kind) => {
+    try { await sendNotice(email, kind, `${origin}/account`) } catch (error) { console.error('mail_dispatch_failed', error?.message?.slice(0, 40) ?? 'error') }
+  }
+
+  app.use('*', async (c, next) => {
+    c.header('Cache-Control', 'no-store'); c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer')
+    if (emergencyBlocks(c.req.method, new URL(c.req.url).pathname, config.emergencyMode === true)) {
+      c.header('Retry-After', '300')
+      fail(503, 'emergency_read_only', 'Временно включена усиленная защита. Просмотр доступен; изменения попробуйте позже.')
+    }
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method)) {
+      if (c.req.header('Origin') !== origin) fail(403, 'origin_forbidden', 'Источник запроса не разрешён')
+      const bytes = await c.req.raw.arrayBuffer()
+      if (bytes.byteLength > 16384) fail(413, 'body_too_large', 'Запрос слишком большой')
+      c.req.raw = new Request(c.req.url, { method: c.req.method, headers: c.req.raw.headers, body: bytes })
+      if (!(c.req.header('Content-Type') ?? '').startsWith('application/json')) fail(415, 'content_type', 'Ожидается application/json')
+    }
+    await next()
+  })
+  app.onError((error, c) => {
+    if (error instanceof Failure) return c.json({ error: { code: error.code, message: error.message } }, error.status)
+    // Never log request bodies, email, query parameters, tokens or database answers.
+    console.error('accounts_fn_error', error?.code ?? error?.name ?? 'error')
+    return c.json({ error: { code: 'internal_error', message: 'Внутренняя ошибка' } }, 500)
+  })
+
+  app.get('/api/v1/health', async c => { await store.ping(); return c.json({ status: 'ok', storage: 'ydb-serverless', scope: 'accounts' }) })
+  app.get('/api/v1/auth/me', async c => {
+    const user = await currentUser(c)
+    return c.json({ user: user ? userDto(user, await store.identitiesOf(user.id)) : null, providers: providers(), emailLogin: !!config.mailEnabled,
+      registrationOpen: registrationOpen(), privateCore: true, devAuthEnabled: false })
+  })
+  app.post('/api/v1/auth/register', async c => {
+    if (!registrationOpen()) closedRegistration()
+    mailRequired()
+    const body = await json(c), email = emailOf(body.email), password = passwordOf(body.password), name = textOf(body.displayName, 2, 40)
+    await limit(c, 'mail', email, 5)
+    const hash = await passwords.hash(password)
+    // An existing address gets the same answer and a link-less notice, so the form cannot be used to probe accounts.
+    if (!await issue(email, 'REGISTER', { hash, name }, true)) await notify(email, 'EXISTS')
+    return c.json({ sent: true, message: 'Если адрес доступен для регистрации, письмо отправлено.' }, 202)
+  })
+  app.post('/api/v1/auth/register/confirm', async c => {
+    if (!registrationOpen()) closedRegistration()
+    const body = await json(c)
+    if (typeof body.token !== 'string' || body.token.length > 128) fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    const raw = token(), now = clock()
+    const user = await store.confirmRegistration({ tokenHash: digest(body.token), userId: token(), sessionHash: digest(raw),
+      replaceSessionHash: sessionHash(c), sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now })
+    if (!user) fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    c.header('Set-Cookie', cookie(raw, 604800))
+    return c.json({ user: userDto({ ...user, loginMethod: 'email' }) })
+  })
+  app.post('/api/v1/auth/login', async c => {
+    const body = await json(c), email = emailOf(body.email), password = passwordOf(body.password)
+    await limit(c, 'login', email)
+    const user = await store.userByEmail(email)
+    const valid = await passwords.verify(password, user?.passwordHash ?? await dummyHash())
+    if (!user || !valid || user.bannedAt) fail(401, 'invalid_credentials', 'Неверный email или пароль')
+    const raw = token(), now = clock()
+    const opened = await store.openSession({ userId: user.id, expectedPasswordHash: user.passwordHash, sessionHash: digest(raw),
+      replaceSessionHash: sessionHash(c), sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), loginMethod: 'email', now })
+    if (!opened) fail(401, 'invalid_credentials', 'Повторите вход')
+    c.header('Set-Cookie', cookie(raw, 604800))
+    return c.json({ user: userDto({ ...user, loginMethod: 'email' }) })
+  })
+  app.post('/api/v1/auth/password/reset/request', async c => {
+    mailRequired()
+    const email = emailOf((await json(c)).email)
+    await limit(c, 'mail', email, 5)
+    const user = await store.userByEmail(email)
+    if (user && user.emailVerifiedAt && !user.bannedAt) await issue(email, 'RESET', { userId: user.id })
+    else await notify(email, 'NO_ACCOUNT')
+    return c.json({ sent: true }, 202)
+  })
+  app.post('/api/v1/auth/password/reset', async c => {
+    const body = await json(c)
+    await limit(c, 'reset', digest(String(body.token ?? '')))
+    const newPassword = passwordOf(body.password)
+    if (typeof body.token !== 'string' || body.token.length > 128) fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    const hash = await passwords.hash(newPassword)
+    if (!await store.resetPassword({ tokenHash: digest(body.token), passwordHash: hash, now: clock() }))
+      fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    c.header('Set-Cookie', cookie('', 0))
+    return c.json({ ok: true })
+  })
+  app.post('/api/v1/auth/logout', async c => {
+    await store.deleteSession(sessionHash(c))
+    c.header('Set-Cookie', cookie('', 0))
+    return c.json({ ok: true })
+  })
+  app.get('/api/v1/auth/:provider', async c => {
+    const provider = c.req.param('provider')
+    if (!isProvider(provider) || !providers().includes(provider)) fail(404, 'provider_disabled', 'Провайдер не подключён')
+    if (c.req.query('link') === '1') fail(400, 'link_unsupported', 'Привязка провайдера к существующему аккаунту пока недоступна')
+    await limit(c, 'oauth', provider, 30)
+    const state = token(), browser = token(), verifier = token()
+    await store.saveOAuthState({ stateHash: digest(state), browserHash: digest(browser), provider, verifier,
+      nextPath: safeNext(c.req.query('next')), expiresAt: new Date(clock().getTime() + OAUTH_TTL_MS) })
+    c.header('Set-Cookie', oauthCookie(browser, 600))
+    return c.redirect(await authorizeUrl(oauthEnv, provider, state, verifier))
+  })
+  app.get('/api/v1/auth/:provider/callback', async c => {
+    const provider = c.req.param('provider'), state = c.req.query('state') ?? '', code = c.req.query('code') ?? ''
+    if (!isProvider(provider) || !providers().includes(provider)) fail(404, 'provider_disabled', 'Провайдер не подключён')
+    // Any failure returns the person to the account page with a marker instead of a raw error page.
+    const back = reason => { c.header('Set-Cookie', oauthCookie('', 0)); return c.redirect(`/account?auth_error=${provider}&reason=${reason}`) }
+    if (!code || code.length > 1024 || !state || state.length > 128) return back('invalid')
+    const browser = cookieValue(c, 'gs_private_oauth')
+    const row = browser ? await store.takeOAuthState({ stateHash: digest(state), browserHash: digest(browser), provider, now: clock() }) : null
+    if (!row) return back('expired')
+    let profile
+    try { profile = await oauthExchange(oauthEnv, provider, code, new URL(c.req.url).searchParams, row.verifier) }
+    catch { return back('provider') }
+    const raw = token(), now = clock()
+    // No provider e-mail enters the account e-mail: mailbox proof stays separate (no account takeover by e-mail).
+    const result = await store.oauthSignIn({ provider, subject: String(profile.id), displayName: safeName(profile.displayName),
+      newUserId: token(), allowCreate: registrationOpen(), sessionHash: digest(raw), replaceSessionHash: sessionHash(c),
+      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now })
+    if (result.status !== 'ok') return back(result.status)
+    c.header('Set-Cookie', oauthCookie('', 0))
+    c.header('Set-Cookie', cookie(raw, 604800), { append: true })
+    return c.redirect(row.nextPath)
+  })
+  // Everything else of the private core is not part of this service.
+  app.all('/api/*', c => c.json({ error: { code: 'route_unavailable', message: 'API route unavailable' } }, 404))
+  return app
+}

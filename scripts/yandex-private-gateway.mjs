@@ -34,7 +34,8 @@ function routeYaml(route,vm=false) {
   const lines=[`  ${route.path}:`, `    ${method}:`]
   if (route.param) lines.push('      parameters:',`        - name: ${route.param}`,'          in: path',`          required: ${route.param==='path'?'false':'true'}`,'          schema:','            type: string')
   lines.push('      x-yc-apigateway-integration:')
-  if (route.target==='private' && vm) {
+  if (route.target==='accounts') lines.push('        type: cloud_functions','        function_id: __ACCOUNTS_FUNCTION_ID__','        service_account_id: __ACCOUNTS_GATEWAY_SERVICE_ACCOUNT_ID__',"        payload_format_version: '1.0'")
+  else if (route.target==='private' && vm) {
     // Private API on the VM behind Caddy. Headers and query are NOT forwarded by default: pass them all,
     // then let the fixed X-GS-Gateway header override any client-supplied value.
     const url=`__PRIVATE_ORIGIN__${route.path.replace('{path+}','{path}')}`
@@ -44,6 +45,14 @@ function routeYaml(route,vm=false) {
   else lines.push('        type: dummy','        http_code: 404','        http_headers:','          Content-Type: application/json','          Cache-Control: no-store','        content:',"          '*': '{\"error\":{\"code\":\"route_unavailable\",\"message\":\"API route unavailable\"}}'")
   return lines.join('\n')
 }
+
+/**
+ * Accounts-only candidate (docs/runbooks/free-account-hosting.md): sign-in routes go to the serverless accounts function,
+ * every other private route fails closed with the same JSON 404 until the full private core is running again.
+ */
+export const accountsRoutes = apiRoutes.map(route=>route.target!=='private'?route
+  :route.path==='/api/v1/health'||route.path==='/api/v1/auth/{path+}'?{...route,target:'accounts'}
+  :{...route,target:'deny'})
 
 /** Minimal cutover: the live gateway template stays as it is; only its /api/{path+} block becomes the public/private split. */
 export function renderApiSplit(liveTemplate,{vm=true}={}) {
@@ -70,6 +79,21 @@ export function renderSeoSplit(privateTemplate,staticCandidate) {
   if (!staticTail.includes("object: '{file}/index.html'") || !staticTail.includes('statusCode: 404'))
     throw new Error('unexpected_prerender_spec')
   return privateTemplate.slice(0,privateStart)+staticTail
+}
+
+export function renderAccountsGateway(staticCandidate) {
+  const marker='  /assets/{file+}:'
+  const staticStart=staticCandidate.indexOf(marker)
+  if (staticStart<0 || !staticCandidate.includes('  /api/{path+}:')) throw new Error('unexpected_static_gateway_spec')
+  const heading=['# Candidate only: replace placeholders and validate on an isolated staging gateway.',
+    '# No production routing or DNS changes are performed by this file.',
+    '# Accounts run in a serverless function on serverless YDB; no other private route is reachable.',
+    'openapi: 3.0.0','info:','  title: gamescout-ru-accounts-candidate','  version: 1.0.0','paths:','  /:','    get:',
+    '      x-yc-apigateway-integration:','        type: object_storage','        bucket: __BUCKET__','        object: index.html',
+    '        service_account_id: __SERVICE_ACCOUNT_ID__',''].join('\n')
+  const legacyHealth=['  /__gs/health:','    get:','      x-yc-apigateway-integration:','        type: cloud_functions',
+    '        function_id: __FUNCTION_ID__','        service_account_id: __SERVICE_ACCOUNT_ID__',"        payload_format_version: '1.0'"].join('\n')
+  return [heading,accountsRoutes.map(route=>routeYaml(route)).join('\n'),legacyHealth,staticCandidate.slice(staticStart).trimEnd()].join('\n')+'\n'
 }
 
 export function renderPrivateGateway(staticCandidate,{vm=false}={}) {
@@ -112,6 +136,13 @@ if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
     const target=new URL('../ru-proxy/yandex/gateway.vm-min.template.yaml',import.meta.url), minimal=renderApiSplit(live)
     if (process.argv.includes('--write')) await writeFile(target,minimal)
     else if (lf(await readFile(target,'utf8'))!==minimal) throw new Error('gateway_vm_min_out_of_date')
+    process.exit(0)
+  }
+  if (process.argv.includes('--accounts')) {
+    const lf=text=>text.split(String.fromCharCode(13,10)).join(String.fromCharCode(10))
+    const target=new URL('../ru-proxy/yandex/gateway.accounts-fn.template.yaml',import.meta.url), rendered=renderAccountsGateway(lf(source))
+    if (process.argv.includes('--write')) await writeFile(target,rendered)
+    else if (lf(await readFile(target,'utf8'))!==rendered) throw new Error('gateway_accounts_candidate_out_of_date')
     process.exit(0)
   }
   const vm=process.argv.includes('--vm')

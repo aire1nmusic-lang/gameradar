@@ -1,3 +1,37 @@
+## 28.10.2026 — VERIFIED live: free accounts service deployed (sign-up closed)
+
+- Owner ran scripts/accounts-go-live.mjs: Worker secrets PASSWORD_PEPPER/ACCOUNTS_RATE_KEY stored (owner copy in Documents/GameScout Secrets/accounts-20261028, not in Git), D1 migration 0012 applied, Worker version b52d56b3-912e-4110-8ec6-a2a7d0550485 deployed; script live check health/games/auth-me 200.
+- Independent read-only check: /auth/me 200 {privateCore:true, registrationOpen:false, emailLogin:false, providers:[]}; register 403 registration_closed; forged origin 403; /auth/google 404 provider_disabled; /account renders the login form with "registration and recovery by mail temporarily unavailable".
+- Production now runs branch claude/free-account-auth-20261028 (PR26); main must receive it (merge with [skip ci], owner action — the session may not merge) or a later deploy from main would drop accounts.
+- Next: mail provider + Google/Discord apps → secrets → real e-mail/OAuth journey → ACCOUNTS_REGISTRATION_OPEN=true. Rollback: remove ACCOUNTS_FREE from wrangler.toml and deploy.
+
+## 28.10.2026 — Owner approved account go-live; production steps blocked by the session's permission policy; marketing plan drafted
+
+- Owner said yes to deployment. Prepared on the PR branch: ACCOUNTS_FREE="true" in wrangler.toml (sign-up closed), dev sign-in and explicit legacy D1 accounts keep working; `npm run test:api` and `test:monitoring` PASS locally; PR CI PASS. Remote D1 shows exactly one pending migration: 0012_free_accounts.sql.
+- BLOCKED: setting Worker secrets (PASSWORD_PEPPER, ACCOUNTS_RATE_KEY), `wrangler d1 migrations apply --remote` and `wrangler deploy` were refused by the automated permission policy; not retried by other means. The owner runs them (commands in the session answer) or allows them. PASSWORD_PEPPER must be kept forever: losing it invalidates every password.
+- Marketing: docs/marketing-plan.md (0 ₽ start, no fake reviews/spam; SEO landing pages, structured data, llms.txt/methodology page, Habr/vc/Dzen/Pikabu/short video, communities, owner outreach, 4-week rhythm, metrics; who does what).
+
+## 28.10.2026 — Google and Discord sign-in added to the free accounts service; verified locally, NOT deployed
+
+- Owner asked for e-mail registration plus Google and Discord. Added provider routes (start + callback) to accounts-fn/app.mjs using worker/lib/oauth.ts, tables acc_identities/acc_oauth_states in 0012 (not applied anywhere), store methods in memory and D1 stores; Worker passes GOOGLE_*/DISCORD_* secrets; OAuth round trips count toward the daily cap. Provider e-mail is not copied into the account (no takeover by e-mail); no linking yet.
+- VERIFIED: tests 33/33 (incl. accounts-oauth on memory + D1 stores), typecheck PASS, local workerd + D1 with a fake provider: Google and Discord round trips, session, identities, replay refused. NOT verified with real Google/Discord (owner must create apps; redirect URIs in the runbook).
+
+## 28.10.2026 — Owner decision: accounts free on Cloudflare (Worker + D1); built and verified locally, NOT deployed
+
+- Owner rejected Yandex for accounts (no possible charges). Built worker/accounts-free.ts (ACCOUNTS_FREE gate, daily cap, hourly cleanup), accounts-fn/store-d1.mjs (guarded atomic batches), migrations/0012_free_accounts.sql (new tables only), PBKDF2+pepper, Worker mail drivers. Frontend unchanged.
+- VERIFIED locally on workerd + local D1 (wrangler dev --local, 12 migrations): full register/confirm/session/logout/login/notice/reset/revocation journey, forged origin 403 uncounted, cap 503; dry-run bundle 304 KiB; test:accounts-fn 27/27; typecheck PASS. NOT verified: production D1, free-plan CPU limit, real mail.
+- BLOCKED for owner: AGENTS.md boundary exception for accounts (session not allowed to edit project rules); legal 152-FZ trade-off. No production change (no secret, migration, deploy, DNS). Go-live/rollback: docs/runbooks/free-account-hosting.md (top). Cost 0.
+
+## 28.10.2026 — Free-tier accounts candidate (Yandex Functions + serverless YDB) built locally; NOT deployed; cost guard incomplete
+
+- Task: restore registration/sign-in without mandatory payments and without starting the paused private VM. Brief received truncated after item 3 (budget notifications); items 4+ were not seen, so no resource, DNS or main publication was done.
+- Audit re-verified against origin/main b8a138a: 503 `private_api_required` comes from the Worker `PUBLIC_ONLY` gate; the private API is PostgreSQL-only (advisory locks, SKIP LOCKED, 24 migrations); both VMs Stopped per the previous session's console reading (not re-read here); mail provider/DNS still unverified; fix 90d8ef9 present. Existing accounts, if any, exist only on the stopped VM disk: untouched, count UNKNOWN.
+- Official terms read (VERIFIED pages, two conflicting YDB RU prices recorded): YDB free 1 M RU + 1 GB; Functions 1 M calls + 10 GB·h; Gateway 100 k requests; Postbox 2 000 letters; Lockbox no free part; Cloud Logging closed to new clients from 22.10.2026; budgets are notifications only; no hard spend cap exists. YDB can be capped (`throttling_rcu_limit`, `storage_size_limit`), Functions/Gateway cannot: flood tail unbounded except by concurrency quota. Conclusion: overage cannot be technically excluded completely -> per the brief no resource was created.
+- Built (0 ₽): `accounts-fn/` accounts-only API with the same wire contract for health/auth routes, reference memory store, YDB store/schema/migrate (dry-run default), Cloud Functions v1.0 adapter + esbuild bundle, unapplied gateway candidate `ru-proxy/yandex/gateway.accounts-fn.template.yaml` (`scripts/yandex-private-gateway.mjs --accounts`), npm scripts and a CI step. Runbook: docs/runbooks/free-account-hosting.md (costs, worst cases, resource plan, kill switch, approvals, acceptance).
+- VERIFIED locally: `npm run test:accounts-fn` 19/19 (reference store contract, handler mapping, route-behaviour scenarios incl. link-less notices that equalize timing, gateway coverage), bundle build/load, existing `tests/yandex-private-gateway.test.mjs` 7/7. HYPOTHESIS: YDB store/YQL/TTL/metadata credentials and RU per login (Docker daemon not running, no YDB endpoint). BLOCKED: live function/gateway, delivered e-mail, DNS, existing-user import.
+- Owner follow-up: "it must be free". Re-read billing pages: no documented hard zero on Yandex (card-less account documented inconsistently; zero-balance behaviour of serverless services not stated; free-tier overage billed). Options and trade-offs recorded in runbook 3a; none selected, nothing created.
+- Cost 0 new resources; rollback: revert the source commit. Next: owner decisions listed in section 8 of the runbook (accept cost model or choose shield/paid option, create resources, DNS candidate, mail sender, user import, local YDB image download).
+
 ## 28.10.2026 — VERIFIED public UI and nine supplied mode scenes LIVE
 
 - FINAL frontend9436b8f440d74d45577481705676559c8e9ce872 is LIVE on gamescout.online. Guarded production40755901626/job123054595504 terminalSUCCESS: full core/build/browser gate, mandatory durable rollback archive upload/download verification, primary Worker snapshot, versioned assets, mutable HTML, actual-primary activation/readback and evidence upload allPASS. Independent mainCI40755901420/job123054595205 terminalSUCCESS. Responsive artifact12846805969.

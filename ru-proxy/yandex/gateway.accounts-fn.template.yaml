@@ -1,0 +1,400 @@
+# Candidate only: replace placeholders and validate on an isolated staging gateway.
+# No production routing or DNS changes are performed by this file.
+# Accounts run in a serverless function on serverless YDB; no other private route is reachable.
+openapi: 3.0.0
+info:
+  title: gamescout-ru-accounts-candidate
+  version: 1.0.0
+paths:
+  /:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: index.html
+        service_account_id: __SERVICE_ACCOUNT_ID__
+
+  /api/v1/games:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/servers:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/servers/{key}:
+    get:
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/servers/{key}/online-history:
+    get:
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/rating:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/support/ranking:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/sitemap.xml:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/health:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __ACCOUNTS_FUNCTION_ID__
+        service_account_id: __ACCOUNTS_GATEWAY_SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/auth/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __ACCOUNTS_FUNCTION_ID__
+        service_account_id: __ACCOUNTS_GATEWAY_SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /api/v1/me/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/claims:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/claims/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/owners/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/servers/{id}/manage-access:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/people-rating:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/people-rating/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/coins/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/payments/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/support:
+    x-yc-apigateway-any-method:
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/support/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/admin/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/v1/copyright/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /api/{path+}:
+    x-yc-apigateway-any-method:
+      parameters:
+        - name: path
+          in: path
+          required: false
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 404
+        http_headers:
+          Content-Type: application/json
+          Cache-Control: no-store
+        content:
+          '*': '{"error":{"code":"route_unavailable","message":"API route unavailable"}}'
+  /__gs/health:
+    get:
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: __FUNCTION_ID__
+        service_account_id: __SERVICE_ACCOUNT_ID__
+        payload_format_version: '1.0'
+  /assets/{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: 'assets/{file}'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /media/{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: 'media/{file}'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /robots.txt:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: robots.txt
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /sitemap.xml:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: sitemap.xml
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /favicon.svg:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: favicon.svg
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /favicon-32.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: favicon-32.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /apple-touch-icon.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: apple-touch-icon.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /icon-512.png:
+    get:
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: icon-512.png
+        service_account_id: __SERVICE_ACCOUNT_ID__
+  /{file+}:
+    get:
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: __BUCKET__
+        object: '{file}/index.html'
+        error_object:
+          object: 404.html
+          statusCode: 404
+        service_account_id: __SERVICE_ACCOUNT_ID__

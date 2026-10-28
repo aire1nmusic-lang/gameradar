@@ -113,7 +113,7 @@ export function ServerRow({
         </div>
       </div>
 
-      <div className="shrink-0 text-right">
+      <div className="gs-row-metric shrink-0 text-right">
         {metric === 'support' ? (
           <>
             <div className="num text-[14px] leading-[18px] font-semibold text-ink-50">{support}</div>

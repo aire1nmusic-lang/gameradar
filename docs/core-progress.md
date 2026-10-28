@@ -1,3 +1,9 @@
+## 28.10.2026 — Device approval followed by provider sign-in failure; primary remains BLOCKED
+
+- Owner reported completing Google device approval. Rendered next step was GitHub's normal email device-verification form. Requested its visible code only through browserAuth; no code/credential was read or recorded. Secure request returned submission_failed. Fresh target state is Cloudflare's normal login page with the explicit generic message: Unable to sign in. Try again or use your email and password. This is NOT a confirmed wrong code, bot-detection diagnosis or successful Cloudflare authentication.
+- Stop this failed sign-in flow after its first generic provider error, per secure browser guidance. Do not blindly retry the same OAuth chain, switch methods without owner choice, inspect secrets or use an indirect session path. A separately owner-selected visible email/password method can be a future secure-flow continuation, not a claimed completed fix.
+- Source26f84e9 remains accepted inmain; primary publication NOT completed. No production upload retry, token/IAM/DNS/VM/private/payment/resource/archive changes. Cost0new resources. Rollback none for this auth failure; docs-only checkpoint[skip ci]. Next owner choice of further authentication, then positive signed-in Cloudflare proof before upload401diagnosis and guarded release.
+
 ## 28.10.2026 — Confirmed sign-in account; device approval pending
 
 - Owner explicitly confirmed the exact sign-in account after the prior automatic account-choice rejection. The secure browserAuth chooser completed the saved-account selection; no alternative channel or secret inspection used. Google now displays its normal device-approval challenge. Owner was told the exact visible matching detail privately in chat; no account/device/challenge/session identifiers are recorded here.

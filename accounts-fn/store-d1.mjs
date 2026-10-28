@@ -133,6 +133,8 @@ export function d1Store(db) {
         db.prepare(`INSERT INTO acc_users (id, email, display_name, password_hash, created_at) VALUES (?, NULL, ?, NULL, ?)`).bind(userId, displayName, at),
         db.prepare(`INSERT INTO acc_identities (provider, subject, user_id, created_at) VALUES (?, ?, ?, ?)`).bind(provider, subject, userId, at))
       const ok = 'EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)'
+      // Admin comes only from the configured list of provider-verified addresses; it is never removed here.
+      if (args.grantAdmin) statements.push(db.prepare(`UPDATE acc_users SET roles = '["PLAYER","ADMIN"]' WHERE id = ? AND banned_at IS NULL`).bind(userId))
       statements.push(
         db.prepare(`INSERT INTO acc_audit (actor_id, action, target, created_at) SELECT ?, 'identity.login', ?, ? WHERE ${ok}`).bind(userId, provider, at, userId),
         db.prepare(`DELETE FROM acc_sessions WHERE token_hash = ? AND ${ok}`).bind(replaceSessionHash, userId),

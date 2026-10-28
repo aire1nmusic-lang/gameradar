@@ -14,7 +14,7 @@ const stores = [['memory', () => memoryStore()], ['d1-sqlite', () => d1Store(sql
 function harness(makeStore, { registrationOpen = true, profiles = {}, withOAuth = true } = {}) {
   const store = makeStore(), calls = []
   const app = createAccountsApp({ store, passwords: { hash: hashPassword, verify: verifyPassword }, sendLinkMail: async () => {},
-    config: { origin, environment: 'development', rateKey: 'k'.repeat(40), mailEnabled: true, registrationOpen, ...(withOAuth ? { oauth } : {}) },
+    config: { origin, environment: 'development', rateKey: 'k'.repeat(40), mailEnabled: true, registrationOpen, adminEmails: 'Boss@Example.com', ...(withOAuth ? { oauth } : {}) },
     oauthExchange: async (env, provider, code, query, verifier) => {
       calls.push({ provider, code, verifier })
       const profile = profiles[code]
@@ -96,5 +96,22 @@ for (const [name, makeStore] of stores) {
     const failing = await closed.start('discord')
     assert.match((await closed.request(`/api/v1/auth/discord/callback?code=nope&state=${failing.state}`, { gs_private_oauth: failing.browser })).location, /reason=provider/)
     assert.match((await closed.request('/api/v1/auth/discord/callback?state=x', { gs_private_oauth: 'y' })).location, /reason=invalid/)
+  })
+
+  test(`[${name}] admin role only for a provider-verified address on the admin list; cabinet reads are empty, not errors`, async () => {
+    const h = harness(makeStore, { profiles: { boss: { id: 'g-boss', displayName: 'Boss', email: 'boss@example.com', emailVerified: true },
+      fake: { id: 'g-fake', displayName: 'Fake', email: 'boss@example.com', emailVerified: false } } })
+    const signIn = async code => {
+      const trip = await h.start('google')
+      const done = await h.request(`/api/v1/auth/google/callback?code=${code}&state=${trip.state}`, { gs_private_oauth: trip.browser })
+      return done.set.gs_private_session.value
+    }
+    const boss = await signIn('boss'), fake = await signIn('fake')
+    assert.deepEqual((await h.request('/api/v1/auth/me', { gs_private_session: boss })).body.user.roles, ['PLAYER', 'ADMIN'])
+    assert.deepEqual((await h.request('/api/v1/auth/me', { gs_private_session: fake })).body.user.roles, ['PLAYER'], 'unverified e-mail is not trusted')
+    assert.deepEqual((await h.request('/api/v1/owners/me/claims', { gs_private_session: boss })).body, [])
+    assert.deepEqual((await h.request('/api/v1/owners/me/servers', { gs_private_session: boss })).body, [])
+    assert.deepEqual((await h.request('/api/v1/coins/me', { gs_private_session: boss })).body, { balance: 0, nominalRub: 50, ledger: [] })
+    assert.equal((await h.request('/api/v1/coins/me')).status, 401)
   })
 }

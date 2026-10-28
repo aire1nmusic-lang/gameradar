@@ -81,6 +81,7 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
   // Only Google and Discord are offered by this service (owner decision); provider secrets decide which of them are on.
   const oauthEnv = { ...(config.oauth ?? {}), ALLOWED_ORIGIN: origin, ENVIRONMENT: local ? 'development' : 'production' }
   const providers = () => enabledProviders(oauthEnv).filter(p => OAUTH_PROVIDERS.includes(p))
+  const adminEmails = String(config.adminEmails ?? '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean)
   const oauthCookie = (value, seconds) => `gs_private_oauth=${value}; Path=/api/v1/auth; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
   const cookie = (value, seconds) => `gs_private_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
   const sessionHash = c => digest(cookieValue(c, 'gs_private_session'))
@@ -235,14 +236,23 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
     catch { return back('provider') }
     const raw = token(), now = clock()
     // No provider e-mail enters the account e-mail: mailbox proof stays separate (no account takeover by e-mail).
+    // It is only compared with the configured admin list, and only when the provider vouches for the address.
+    const providerEmail = profile.emailVerified && typeof profile.email === 'string' ? profile.email.toLowerCase() : ''
     const result = await store.oauthSignIn({ provider, subject: String(profile.id), displayName: safeName(profile.displayName),
       newUserId: token(), allowCreate: registrationOpen(), sessionHash: digest(raw), replaceSessionHash: sessionHash(c),
-      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now })
+      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now, grantAdmin: !!providerEmail && adminEmails.includes(providerEmail) })
     if (result.status !== 'ok') return back(result.status)
     c.header('Set-Cookie', oauthCookie('', 0))
     c.header('Set-Cookie', cookie(raw, 604800), { append: true })
     return c.redirect(row.nextPath)
   })
+  // Cabinet reads the account page makes. Accounts in this service cannot own Claims, servers or Coins yet,
+  // so the true answer is "none"; writes (Claims, e-mail linking) stay unavailable.
+  const signedIn = async c => { const user = await currentUser(c); if (!user) fail(401, 'unauthorized', 'Войдите в аккаунт'); return user }
+  app.get('/api/v1/owners/me/claims', async c => { await signedIn(c); return c.json([]) })
+  app.get('/api/v1/owners/me/servers', async c => { await signedIn(c); return c.json([]) })
+  app.get('/api/v1/coins/me', async c => { await signedIn(c); return c.json({ balance: 0, nominalRub: 50, ledger: [] }) })
+  app.post('/api/v1/me/email', async c => { await signedIn(c); fail(503, 'email_link_unavailable', 'Привязка почты к аккаунту появится позже') })
   // Everything else of the private core is not part of this service.
   app.all('/api/*', c => c.json({ error: { code: 'route_unavailable', message: 'API route unavailable' } }, 404))
   return app

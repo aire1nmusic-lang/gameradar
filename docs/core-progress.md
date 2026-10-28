@@ -1,3 +1,9 @@
+## 28.10.2026 — VERIFIED real Google sign-in; admin by verified e-mail; cabinet errors removed (built, deploy pending)
+
+- Owner signed in with Google on the live site: account created, cabinet shows "Вход через Google" (VERIFIED real provider round trip). Visible issues: role PLAYER for gamescout.team@gmail.com (should be admin) and red "Приватный API обслуживается в Yandex Cloud" lines from cabinet calls (claims/servers/coins) that hit the paused private core.
+- Built: ADMIN_EMAILS (wrangler var, gamescout.team@gmail.com) — Google/Discord sign-in with a provider-VERIFIED address on the list gets roles PLAYER+ADMIN (unverified address never trusted; role never removed automatically); free service answers cabinet reads truthfully empty for its accounts (owners/me/claims [], owners/me/servers [], coins/me 0) and refuses /me/email with a clear message. Admin tools themselves still run in the paused private core.
+- VERIFIED locally: test:accounts-fn 35/35, test:api PASS, typecheck PASS. Deploy pending (owner command: node scripts/accounts-keys.mjs, Enter on every key).
+
 ## 28.10.2026 — VERIFIED live: sign-up open with Google and Discord (Worker 4ff91824)
 
 - Owner ran scripts/accounts-keys.mjs: 4 Worker secrets (Google and Discord client id/secret; existing Google client in project helical-liberty with the gamescout.online callback, existing Discord app), Worker version 4ff91824-5bd5-4240-8e5b-490e0ee33db1 deployed (also carries the daily-cap no-write fix).

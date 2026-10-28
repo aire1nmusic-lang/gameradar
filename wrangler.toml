@@ -22,6 +22,8 @@ ACCOUNTS_FREE = "true"
 ACCOUNTS_REGISTRATION_OPEN = "true"
 MAIL_DRIVER = "resend"
 MAIL_FROM = "GameScout <no-reply@gamescout.online>"
+# Accounts signing in through Google/Discord with one of these provider-verified addresses get the ADMIN role.
+ADMIN_EMAILS = "gamescout.team@gmail.com"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # Probes per cron tick; each costs a few subrequests (DNS + connect).
 MONITOR_BATCH = "8"

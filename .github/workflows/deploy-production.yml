@@ -1,4 +1,5 @@
 name: Deploy production site
+# Release continuation: fresh asset-session authorization independently checked on 2026-10-28.
 
 on:
   push:

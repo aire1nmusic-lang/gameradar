@@ -48,6 +48,10 @@ test('daily cap answers 503 without touching accounts; forged origins and reads 
   for (let i = 0; i < 3; i++) assert.equal((await freeAccounts(post('/auth/password/reset/request', { email: `n${i}@example.com` }), e)).status, 202)
   const capped = await freeAccounts(post('/auth/password/reset/request', { email: 'n9@example.com' }), e)
   assert.equal(capped.status, 503); assert.equal((await capped.json()).error.code, 'accounts_daily_limit')
+  const counted = () => e.DB.sqlite.prepare('SELECT calls FROM acc_daily').get().calls
+  const before = counted()
+  for (let i = 0; i < 5; i++) assert.equal((await freeAccounts(new Request(origin + '/api/v1/auth/google'), e)).status, 503)
+  assert.equal(counted(), before, 'past the cap nothing more is written')
   assert.equal(dailyLimit({}), 1500); assert.equal(dailyLimit({ ACCOUNTS_DAILY_LIMIT: 'nonsense' }), 1500); assert.equal(dailyLimit({ ACCOUNTS_DAILY_LIMIT: '200' }), 200)
   e.DB.sqlite.prepare("INSERT INTO acc_daily(day,calls) VALUES('2000-01-01',1)").run()
   await freeAccountsCleanup(e, new Date('2026-10-29T10:30:00Z'))

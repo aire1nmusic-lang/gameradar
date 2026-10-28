@@ -44,8 +44,9 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
   const write = !['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('Origin') === env.ALLOWED_ORIGIN
   const oauthTrip = request.method === 'GET' && /^\/api\/v1\/auth\/(?:google|discord)(?:\/callback)?$/.test(path)
   if (write || oauthTrip) {
-    const calls = await d1Store(env.DB).dailyHit(new Date().toISOString().slice(0, 10))
-    if (calls > dailyLimit(env)) return json(503, 'accounts_daily_limit', 'Вход и регистрация на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
+    const day = new Date().toISOString().slice(0, 10), store = d1Store(env.DB), cap = dailyLimit(env)
+    // Past the cap only a read happens, so hostile traffic cannot keep spending the D1 write quota shared with the catalog.
+    if (await store.dailyCount(day) >= cap || await store.dailyHit(day) > cap) return json(503, 'accounts_daily_limit', 'Вход и регистрация на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
   }
   const config = { origin: env.ALLOWED_ORIGIN, environment: env.ENVIRONMENT === 'development' ? 'development' : 'production', rateKey,
     mailEnabled: mailEnabled(env), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',

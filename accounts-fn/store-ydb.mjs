@@ -149,11 +149,17 @@ export async function createYdbStore({ driver, retries = 5, timeoutMs = 10_000 }
       if (!user || user.bannedAt || user.email !== row.email) return false
       await consumeToken(run, tokenHash, row.email, 'RESET')
       await run('DECLARE $i AS Utf8; DECLARE $p AS Utf8; UPDATE gs_users SET password_hash = $p WHERE id = $i;', { $i: text(user.id), $p: text(passwordHash) })
-      const [sessions] = await run('DECLARE $u AS Utf8; SELECT token_hash FROM gs_user_sessions WHERE user_id = $u LIMIT 200;', { $u: text(user.id) })
-      for (const { token_hash: hash } of sessions) await dropSession(run, hash)
+      // Every session of the account is revoked, page by page, inside the same transaction.
+      for (;;) {
+        const [sessions] = await run('DECLARE $u AS Utf8; SELECT token_hash FROM gs_user_sessions WHERE user_id = $u LIMIT 200;', { $u: text(user.id) })
+        if (!sessions.length) break
+        for (const { token_hash: hash } of sessions) await dropSession(run, hash)
+      }
       await audit(run, user.id, 'password.reset', user.id, now)
       return true
     }),
     deleteSession: tokenHash => transaction(run => dropSession(run, tokenHash)),
+    // The YDB candidate has no Google/Discord sign-in: no provider identities exist.
+    async identitiesOf() { return [] },
   }
 }

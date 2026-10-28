@@ -22,6 +22,11 @@ export function d1Store(db) {
       return Number(row.hits)
     },
 
+    /** Operations already counted for the UTC day (a read: once the cap is reached nothing more is written). */
+    async dailyCount(day) {
+      return Number((await one('SELECT calls FROM acc_daily WHERE day = ?', day))?.calls ?? 0)
+    },
+
     /** Counts one account operation for the UTC day; returns the new count. */
     async dailyHit(day) {
       const row = await one(`INSERT INTO acc_daily (day, calls) VALUES (?, 1)

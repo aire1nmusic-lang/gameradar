@@ -37,7 +37,7 @@ html[data-design=lobby] body .gs-server-profile .gs-profile-support::after { con
 /* The bevel lives on the border only, leaving text, chart and click targets untouched. */
 .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *) { position:relative; }
 .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before {
-  content:""; position:absolute; inset:-1px; z-index:2; border-radius:inherit; padding:1.5px; pointer-events:none;
+  content:""; display:block!important; position:absolute; inset:-1px; z-index:2; border-radius:inherit; padding:1.5px; pointer-events:none;
   background:linear-gradient(115deg,var(--profile-metal-dark),var(--profile-metal) 18%,#ffffffdd 26%,var(--profile-metal-dark) 42%,var(--profile-metal) 72%,#ffffffb3 79%,var(--profile-metal-dark));
   background-size:240% 100%;
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
@@ -75,5 +75,5 @@ html[data-design=lobby] body .gs-server-profile .gs-profile-support::after { con
   .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before { animation:none; }
 }
 @supports not (mask-composite:exclude) {
-  .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before { display:none; }
+  .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before { display:none!important; }
 }

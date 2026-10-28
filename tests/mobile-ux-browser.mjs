@@ -388,6 +388,9 @@ try {
       await page.emulateMedia({reducedMotion:'no-preference'})
       assert.equal(await page.locator('.gs-profile-particles').evaluate(e=>getComputedStyle(e).pointerEvents), 'none', 'Decoration never intercepts controls')
       assert.equal(await page.locator('.gs-profile-dossier').evaluate(e=>getComputedStyle(e,'::before').animationName), 'gs-profile-bevel')
+      for (const panel of await page.locator('.gs-profile-dossier,.gs-server-profile .gs-panel,.gs-profile-support,.gs-server-profile .surface,.gs-vote-panel').all()) {
+        assert.notEqual(await panel.evaluate(e=>getComputedStyle(e,'::before').display),'none','The legacy world theme must not hide the actual bevel')
+      }
       assert.equal(await page.locator('.gs-profile-particle').first().evaluate(e=>getComputedStyle(e).animationPlayState), 'running')
       await page.emulateMedia({reducedMotion:'reduce'})
       const favorite=page.locator('.gs-profile-favorite')

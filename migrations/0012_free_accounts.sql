@@ -5,9 +5,9 @@
 
 CREATE TABLE acc_users (
   id                 TEXT PRIMARY KEY,
-  email              TEXT NOT NULL UNIQUE,
+  email              TEXT UNIQUE,            -- NULL for accounts created through Google/Discord
   display_name       TEXT NOT NULL,
-  password_hash      TEXT NOT NULL,
+  password_hash      TEXT,                   -- NULL when the account signs in only through a provider
   email_verified_at  TEXT,
   banned_at          TEXT,
   created_at         TEXT NOT NULL,
@@ -35,6 +35,27 @@ CREATE TABLE acc_tokens (
   UNIQUE (email, purpose)
 );
 CREATE INDEX idx_acc_tokens_expires ON acc_tokens(expires_at);
+
+-- Google / Discord identities. The provider's e-mail never enters acc_users.email: mailbox proof is separate.
+CREATE TABLE acc_identities (
+  provider    TEXT NOT NULL,
+  subject     TEXT NOT NULL,
+  user_id     TEXT NOT NULL REFERENCES acc_users(id),
+  created_at  TEXT NOT NULL,
+  PRIMARY KEY (provider, subject),
+  UNIQUE (user_id, provider)
+);
+
+-- One-use OAuth round trips bound to the browser (cookie) and expiring after 10 minutes.
+CREATE TABLE acc_oauth_states (
+  state_hash    TEXT PRIMARY KEY,
+  browser_hash  TEXT NOT NULL,
+  provider      TEXT NOT NULL,
+  verifier      TEXT NOT NULL,
+  next_path     TEXT NOT NULL,
+  expires_at    TEXT NOT NULL
+);
+CREATE INDEX idx_acc_oauth_states_expires ON acc_oauth_states(expires_at);
 
 CREATE TABLE acc_rate (
   rate_key       TEXT NOT NULL,

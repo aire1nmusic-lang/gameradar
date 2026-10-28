@@ -184,11 +184,13 @@ test('input, origin, size and content-type guards; per-address and per-IP rate l
 
 test('only the accounts routes exist; any other private route is a JSON 404; health checks the store', async () => {
   const h = harness()
-  for (const path of ['/claims', '/coins/me', '/payments/me', '/me/favorites', '/owners/me/claims', '/admin/overview', '/auth/google']) {
+  for (const path of ['/claims', '/coins/me', '/payments/me', '/me/favorites', '/owners/me/claims', '/admin/overview']) {
     const answer = await h.request(path)
     assert.equal(answer.status, 404, path)
     assert.equal(answer.body.error.code, 'route_unavailable', path)
   }
+  const google = await h.request('/auth/google')
+  assert.equal(google.status, 404); assert.equal(google.body.error.code, 'provider_disabled', 'no provider secrets: Google is off')
   const health = await h.request('/health')
   assert.deepEqual(health.body, { status: 'ok', storage: 'ydb-serverless', scope: 'accounts' })
   assert.equal(health.response.headers.get('Cache-Control'), 'no-store')

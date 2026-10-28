@@ -100,6 +100,51 @@ export function d1Store(db) {
       return changes(results[0]) > 0
     },
 
+    async identitiesOf(userId) {
+      const { results } = await db.prepare('SELECT provider, created_at FROM acc_identities WHERE user_id = ? ORDER BY provider').bind(userId).all()
+      return results.map(row => ({ provider: row.provider, linkedAt: date(row.created_at) }))
+    },
+
+    async saveOAuthState({ stateHash, browserHash, provider, verifier, nextPath, expiresAt }) {
+      await db.prepare(`INSERT INTO acc_oauth_states (state_hash, browser_hash, provider, verifier, next_path, expires_at)
+        VALUES (?, ?, ?, ?, ?, ?)`).bind(stateHash, browserHash, provider, verifier, nextPath, iso(expiresAt)).run()
+    },
+
+    /** One use: the row is deleted in the same statement that reads it. */
+    async takeOAuthState({ stateHash, browserHash, provider, now }) {
+      const row = await one(`DELETE FROM acc_oauth_states WHERE state_hash = ? AND browser_hash = ? AND provider = ? AND expires_at > ?
+        RETURNING verifier, next_path`, stateHash, browserHash, provider, iso(now))
+      return row ? { verifier: row.verifier, nextPath: row.next_path } : null
+    },
+
+    async oauthSignIn(args, retry = true) {
+      const { provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now } = args
+      const at = iso(now)
+      const identity = await one('SELECT user_id FROM acc_identities WHERE provider = ? AND subject = ?', provider, subject)
+      const userId = identity?.user_id ?? newUserId
+      if (!identity && !allowCreate) return { status: 'closed' }
+      const statements = []
+      if (!identity) statements.push(
+        db.prepare(`INSERT INTO acc_users (id, email, display_name, password_hash, created_at) VALUES (?, NULL, ?, NULL, ?)`).bind(userId, displayName, at),
+        db.prepare(`INSERT INTO acc_identities (provider, subject, user_id, created_at) VALUES (?, ?, ?, ?)`).bind(provider, subject, userId, at))
+      const ok = 'EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)'
+      statements.push(
+        db.prepare(`INSERT INTO acc_audit (actor_id, action, target, created_at) SELECT ?, 'identity.login', ?, ? WHERE ${ok}`).bind(userId, provider, at, userId),
+        db.prepare(`DELETE FROM acc_sessions WHERE token_hash = ? AND ${ok}`).bind(replaceSessionHash, userId),
+        db.prepare(`INSERT INTO acc_sessions (token_hash, user_id, created_at, expires_at, login_method) SELECT ?, ?, ?, ?, ? WHERE ${ok}`)
+          .bind(sessionHash, userId, at, iso(sessionExpiresAt), provider, userId))
+      let results
+      try { results = await db.batch(statements) }
+      catch (error) {
+        // A simultaneous first sign-in with the same identity won the race: sign in to that account instead.
+        if (retry && !identity) return this.oauthSignIn(args, false)
+        throw error
+      }
+      if (!changes(results.at(-1))) return { status: 'banned' }
+      const user = await this.userById(userId)
+      return { status: 'ok', user: { ...user, loginMethod: provider } }
+    },
+
     async deleteSession(tokenHash) { await db.prepare('DELETE FROM acc_sessions WHERE token_hash = ?').bind(tokenHash).run() },
 
     /** Removes expired links, sessions and counters; called from the Worker's cron at most once an hour. */
@@ -110,6 +155,7 @@ export function d1Store(db) {
         db.prepare('DELETE FROM acc_sessions WHERE expires_at <= ?').bind(at),
         db.prepare('DELETE FROM acc_rate WHERE expires_at <= ?').bind(at),
         db.prepare('DELETE FROM acc_daily WHERE day < ?').bind(at.slice(0, 10)),
+        db.prepare('DELETE FROM acc_oauth_states WHERE expires_at <= ?').bind(at),
       ])
     },
   }

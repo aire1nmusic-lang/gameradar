@@ -4,13 +4,14 @@
  */
 export function memoryStore() {
   const users = new Map(), byEmail = new Map(), sessions = new Map(), tokens = new Map(), slots = new Map(), rates = new Map()
+  const identities = new Map(), states = new Map()
   const audit = []
   const live = (row, now) => row.expiresAt > now
   const dropSession = hash => { const s = sessions.get(hash); if (s) { sessions.delete(hash) } }
   const record = (actorId, action, target, now) => audit.push({ actorId, action, target, createdAt: now })
   return {
     // inspection helpers for tests only
-    _state: { users, sessions, tokens, rates, audit },
+    _state: { users, sessions, tokens, rates, audit, identities, states },
     async ping() { return true },
     async rateHit({ key, window, expiresAt }) {
       const id = `${key}:${window}`
@@ -69,5 +70,34 @@ export function memoryStore() {
       return true
     },
     async deleteSession(tokenHash) { dropSession(tokenHash) },
+    async identitiesOf(userId) {
+      return [...identities.entries()].filter(([, row]) => row.userId === userId)
+        .map(([key, row]) => ({ provider: key.split('|')[0], linkedAt: row.createdAt }))
+    },
+    async saveOAuthState({ stateHash, browserHash, provider, verifier, nextPath, expiresAt }) {
+      states.set(stateHash, { browserHash, provider, verifier, nextPath, expiresAt })
+    },
+    async takeOAuthState({ stateHash, browserHash, provider, now }) {
+      const row = states.get(stateHash)
+      if (!row || row.browserHash !== browserHash || row.provider !== provider || !live(row, now)) return null
+      states.delete(stateHash)
+      return { verifier: row.verifier, nextPath: row.nextPath }
+    },
+    async oauthSignIn({ provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now }) {
+      const key = `${provider}|${subject}`
+      let userId = identities.get(key)?.userId
+      if (!userId) {
+        if (!allowCreate) return { status: 'closed' }
+        userId = newUserId
+        users.set(userId, { id: userId, email: null, displayName, passwordHash: null, emailVerifiedAt: null, bannedAt: null, createdAt: now, roles: ['PLAYER'] })
+        identities.set(key, { userId, createdAt: now })
+      }
+      const user = users.get(userId)
+      if (user.bannedAt) return { status: 'banned' }
+      record(userId, 'identity.login', provider, now)
+      dropSession(replaceSessionHash)
+      sessions.set(sessionHash, { userId, createdAt: now, expiresAt: sessionExpiresAt, loginMethod: provider })
+      return { status: 'ok', user: { ...user, loginMethod: provider } }
+    },
   }
 }

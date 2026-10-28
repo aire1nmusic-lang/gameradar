@@ -28,8 +28,16 @@ password 401 → new password 200; forged origin 403 and not counted; daily cap 
 bundle 304 KiB; `npm run test:accounts-fn` 27/27; typecheck PASS. NOT verified: production D1, the free-plan 10 ms CPU limit (local
 dev does not enforce it; the earlier D1 accounts used the same PBKDF2 setting), real mail delivery.
 
-Go-live (each step needs the owner's explicit OK; nothing done yet): (1) free mail-provider plan and its DNS records in Cloudflare;
-(2) Worker secrets `PASSWORD_PEPPER`, `ACCOUNTS_RATE_KEY`, mail key; (3) apply `0012_free_accounts.sql` to production D1 (additive;
+Google and Discord (sign-in and sign-up; no linking to an existing e-mail account yet; the provider e-mail is never copied
+into the account): offered only when `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` and `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` are set.
+Redirect URIs to register: `https://gamescout.online/api/v1/auth/google/callback` and `https://gamescout.online/api/v1/auth/discord/callback`.
+State is one-use, browser-bound (cookie on `/api/v1/auth`), 10 minutes; failures return to `/account?auth_error=<provider>&reason=…`;
+closed sign-up refuses new provider accounts but lets existing ones in. VERIFIED locally on workerd + local D1 with a fake provider
+(`OAUTH_TEST_BASE`): both round trips, session, `/auth/me` identities, replay refused; `tests/accounts-oauth.test.mjs` on memory and D1
+stores. NOT verified with the real Google/Discord (needs the owner's client credentials).
+
+Go-live (each step needs the owner's explicit OK; nothing done yet): (1) free mail-provider plan and its DNS records in Cloudflare; Google and Discord apps with the redirect URIs above;
+(2) Worker secrets `PASSWORD_PEPPER`, `ACCOUNTS_RATE_KEY`, mail key, Google/Discord client id+secret; (3) apply `0012_free_accounts.sql` to production D1 (additive;
 rollback = drop `acc_*`); (4) deploy with `ACCOUNTS_FREE=true`, registration closed; (5) real e-mail journey; (6) open registration.
 Rollback: unset `ACCOUNTS_FREE` — the previous behaviour returns at once.
 

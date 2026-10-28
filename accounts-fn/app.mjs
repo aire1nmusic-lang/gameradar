@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
-import { digest, keyed, passwordValid, token } from './primitives.mjs'
+import { digest, equal, keyed, passwordValid, token } from './primitives.mjs'
+import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
 
 /**
@@ -9,7 +10,8 @@ import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
  * codes, hashing, 20-minute single-use links, 7-day sessions) so the existing frontend works unchanged.
  * Storage is behind the small `store` interface below; `store-ydb.mjs` is the production implementation
  * (serverless YDB) and `store-memory.mjs` is the reference used by tests. Everything else the private core does
- * (Claims, votes, Coins, payments, OAuth) is deliberately NOT here: those routes answer 404 `route_unavailable`.
+ * (Claims, votes, Coins, payments) is deliberately NOT here: those routes answer 404 `route_unavailable`.
+ * Sign-in through Google and Discord is supported (sign-in/sign-up only, no linking to an existing account).
  *
  * store contract — every method is atomic (one serializable transaction in YDB):
  *   ping()
@@ -21,6 +23,9 @@ import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
  *   openSession({userId,expectedPasswordHash,sessionHash,replaceSessionHash,sessionExpiresAt,loginMethod,now}) -> boolean
  *   resetPassword({tokenHash,passwordHash,now}) -> boolean   consumes the token, revokes every session
  *   deleteSession(tokenHash)
+ *   identitiesOf(userId) -> [{provider,linkedAt}]
+ *   saveOAuthState({stateHash,browserHash,provider,verifier,nextPath,expiresAt}) / takeOAuthState({stateHash,browserHash,provider,now}) -> {verifier,nextPath}|null
+ *   oauthSignIn({provider,subject,displayName,newUserId,allowCreate,sessionHash,replaceSessionHash,sessionExpiresAt,now}) -> {status:'ok',user}|{status:'closed'|'banned'}
  */
 export class Failure extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code }
@@ -43,29 +48,40 @@ const passwordOf = value => {
 const cookieValue = (c, name) => (c.req.header('Cookie') ?? '').split(';').map(x => x.trim()).find(x => x.startsWith(name + '='))?.slice(name.length + 1) ?? ''
 
 const LINK_TTL_MS = 20 * 60_000
+const OAUTH_TTL_MS = 10 * 60_000
+const OAUTH_PROVIDERS = ['google', 'discord']
+const safeName = value => {
+  const name = typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40) : ''
+  return name.length >= 1 ? name : 'Игрок'
+}
 const SESSION_TTL_MS = 7 * 86_400_000
 const RATE_WINDOW_MS = 900_000
 
-export function userDto(user) {
+export function userDto(user, identities = []) {
   return { id: user.id, email: user.email, displayName: user.displayName, provider: 'EMAIL', loginMethod: user.loginMethod ?? null,
     emailVerified: !!user.emailVerifiedAt, hasPassword: !!user.passwordHash, roles: user.roles ?? ['PLAYER'], permissions: [],
-    createdAt: user.createdAt, identities: [] }
+    createdAt: user.createdAt, identities }
 }
 
 /**
- * config: {origin, environment, rateKey(≥32 chars), mailEnabled, registrationOpen, emergencyMode}
+ * config: {origin, environment, rateKey(≥32 chars), mailEnabled, registrationOpen, emergencyMode, oauth?: provider client ids/secrets}
  * sendLinkMail(to, purpose, link) delivers the one-time link; it is awaited after the database commit.
  * sendNotice(to, kind, accountUrl) sends the link-less letter ('EXISTS' | 'NO_ACCOUNT') so that registration and recovery
  * take the same time and send one letter whether or not the address has an account (no probing by response time).
  */
 /** passwords: {hash(password), verify(password, stored)} — scrypt in Node (private-api/crypto.mjs), PBKDF2+pepper in a Worker. */
-export function createAccountsApp({ store, config, passwords, sendLinkMail, sendNotice = async () => {}, clock = () => new Date() }) {
+export function createAccountsApp({ store, config, passwords, sendLinkMail, sendNotice = async () => {}, clock = () => new Date(),
+  oauthExchange = exchangeProfile }) {
   if (typeof passwords?.hash !== 'function' || typeof passwords?.verify !== 'function') throw new Error('password_hashing_required')
   if ((config.rateKey ?? '').length < 32) throw new Error('private_keys_required')
   const origin = new URL(config.origin).origin
   const local = config.environment === 'development' && ['127.0.0.1', 'localhost'].includes(new URL(origin).hostname)
   if (!local && !origin.startsWith('https://')) throw new Error('https_required')
   const app = new Hono()
+  // Only Google and Discord are offered by this service; provider secrets decide which of them are on.
+  const oauthEnv = { ...(config.oauth ?? {}), ALLOWED_ORIGIN: origin, ENVIRONMENT: local ? 'development' : 'production' }
+  const providers = () => enabledProviders(oauthEnv).filter(p => OAUTH_PROVIDERS.includes(p))
+  const oauthCookie = (value, seconds) => `gs_private_oauth=${value}; Path=/api/v1/auth; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
   const cookie = (value, seconds) => `gs_private_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`
   const sessionHash = c => digest(cookieValue(c, 'gs_private_session'))
   const registrationOpen = () => config.registrationOpen === true && config.emergencyMode !== true
@@ -132,7 +148,7 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
   app.get('/api/v1/health', async c => { await store.ping(); return c.json({ status: 'ok', storage: 'ydb-serverless', scope: 'accounts' }) })
   app.get('/api/v1/auth/me', async c => {
     const user = await currentUser(c)
-    return c.json({ user: user ? userDto(user) : null, providers: [], emailLogin: !!config.mailEnabled,
+    return c.json({ user: user ? userDto(user, await store.identitiesOf(user.id)) : null, providers: providers(), emailLogin: !!config.mailEnabled,
       registrationOpen: registrationOpen(), privateCore: true, devAuthEnabled: false })
   })
   app.post('/api/v1/auth/register', async c => {
@@ -193,6 +209,39 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
     await store.deleteSession(sessionHash(c))
     c.header('Set-Cookie', cookie('', 0))
     return c.json({ ok: true })
+  })
+  app.get('/api/v1/auth/:provider', async c => {
+    const provider = c.req.param('provider')
+    if (!isProvider(provider) || !providers().includes(provider)) fail(404, 'provider_disabled', 'Провайдер не подключён')
+    if (c.req.query('link') === '1') fail(400, 'link_unsupported', 'Привязка провайдера к существующему аккаунту пока недоступна')
+    await limit(c, 'oauth', provider, 30)
+    const state = token(), browser = token(), verifier = token()
+    await store.saveOAuthState({ stateHash: digest(state), browserHash: digest(browser), provider, verifier,
+      nextPath: safeNext(c.req.query('next')), expiresAt: new Date(clock().getTime() + OAUTH_TTL_MS) })
+    c.header('Set-Cookie', oauthCookie(browser, 600))
+    return c.redirect(await authorizeUrl(oauthEnv, provider, state, verifier))
+  })
+  app.get('/api/v1/auth/:provider/callback', async c => {
+    const provider = c.req.param('provider'), state = c.req.query('state') ?? '', code = c.req.query('code') ?? ''
+    if (!isProvider(provider) || !providers().includes(provider)) fail(404, 'provider_disabled', 'Провайдер не подключён')
+    // Any failure returns the person to the account page with a marker instead of a raw error page.
+    const back = reason => { c.header('Set-Cookie', oauthCookie('', 0)); return c.redirect(`/account?auth_error=${provider}&reason=${reason}`) }
+    if (!code || code.length > 1024 || !state || state.length > 128) return back('invalid')
+    const browser = cookieValue(c, 'gs_private_oauth')
+    const row = browser ? await store.takeOAuthState({ stateHash: digest(state), browserHash: digest(browser), provider, now: clock() }) : null
+    if (!row) return back('expired')
+    let profile
+    try { profile = await oauthExchange(oauthEnv, provider, code, new URL(c.req.url).searchParams, row.verifier) }
+    catch { return back('provider') }
+    const raw = token(), now = clock()
+    // No provider e-mail enters the account e-mail: mailbox proof stays separate (no account takeover by e-mail).
+    const result = await store.oauthSignIn({ provider, subject: String(profile.id), displayName: safeName(profile.displayName),
+      newUserId: token(), allowCreate: registrationOpen(), sessionHash: digest(raw), replaceSessionHash: sessionHash(c),
+      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now })
+    if (result.status !== 'ok') return back(result.status)
+    c.header('Set-Cookie', oauthCookie('', 0))
+    c.header('Set-Cookie', cookie(raw, 604800), { append: true })
+    return c.redirect(row.nextPath)
   })
   // Everything else of the private core is not part of this service.
   app.all('/api/*', c => c.json({ error: { code: 'route_unavailable', message: 'API route unavailable' } }, 404))

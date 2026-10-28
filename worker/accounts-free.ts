@@ -35,13 +35,18 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
   const pepper = env.PASSWORD_PEPPER ?? '', rateKey = env.ACCOUNTS_RATE_KEY ?? ''
   // Without its own secrets the service stays closed rather than running with weak hashing or shared keys.
   if (pepper.length < 32 || rateKey.length < 32 || !env.ALLOWED_ORIGIN) return json(503, 'accounts_unavailable', 'Вход и регистрация временно недоступны.')
-  // Only same-site writes count, so a forged cross-site request cannot use up the day's budget.
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('Origin') === env.ALLOWED_ORIGIN) {
+  // Counted: same-site writes (a forged cross-site request cannot use up the day's budget) and Google/Discord round trips
+  // (top-level navigations carry no Origin). The session check /auth/me is never counted.
+  const write = !['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('Origin') === env.ALLOWED_ORIGIN
+  const oauthTrip = request.method === 'GET' && /^\/api\/v1\/auth\/(?:google|discord)(?:\/callback)?$/.test(path)
+  if (write || oauthTrip) {
     const calls = await d1Store(env.DB).dailyHit(new Date().toISOString().slice(0, 10))
     if (calls > dailyLimit(env)) return json(503, 'accounts_daily_limit', 'Вход и регистрация на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
   }
   const config = { origin: env.ALLOWED_ORIGIN, environment: env.ENVIRONMENT === 'development' ? 'development' : 'production', rateKey,
-    mailEnabled: mailEnabled(env), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true' }
+    mailEnabled: mailEnabled(env), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
+    oauth: { GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
+      DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE } }
   // In-memory only: a changed secret or setting rebuilds the app.
   const key = JSON.stringify([config, pepper])
   if (cached?.key !== key) cached = { key, app: createAccountsApp({ store: d1Store(env.DB), config,

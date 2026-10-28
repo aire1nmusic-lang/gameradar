@@ -1,3 +1,8 @@
+## 28.10.2026 — Google and Discord sign-in added to the free accounts service; verified locally, NOT deployed
+
+- Owner asked for e-mail registration plus Google and Discord. Added provider routes (start + callback) to accounts-fn/app.mjs using worker/lib/oauth.ts, tables acc_identities/acc_oauth_states in 0012 (not applied anywhere), store methods in memory and D1 stores; Worker passes GOOGLE_*/DISCORD_* secrets; OAuth round trips count toward the daily cap. Provider e-mail is not copied into the account (no takeover by e-mail); no linking yet.
+- VERIFIED: tests 33/33 (incl. accounts-oauth on memory + D1 stores), typecheck PASS, local workerd + D1 with a fake provider: Google and Discord round trips, session, identities, replay refused. NOT verified with real Google/Discord (owner must create apps; redirect URIs in the runbook).
+
 ## 28.10.2026 — Owner decision: accounts free on Cloudflare (Worker + D1); built and verified locally, NOT deployed
 
 - Owner rejected Yandex for accounts (no possible charges). Built worker/accounts-free.ts (ACCOUNTS_FREE gate, daily cap, hourly cleanup), accounts-fn/store-d1.mjs (guarded atomic batches), migrations/0012_free_accounts.sql (new tables only), PBKDF2+pepper, Worker mail drivers. Frontend unchanged.

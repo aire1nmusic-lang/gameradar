@@ -1,10 +1,11 @@
-name: Diagnose primary publication access (read only)
+name: Diagnose primary access and upload-session metadata
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/check-primary-access.yml'
       - '.github/scripts/check-primary-access*'
+      - '.github/scripts/check-upload-session*'
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,3 +26,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node .github/scripts/check-primary-access.mjs
+      - name: Test bounded session metadata diagnostic
+        run: node --test .github/scripts/check-upload-session.test.mjs
+      - name: Inspect fresh unattached asset-session metadata (no file upload or deployment)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node .github/scripts/check-upload-session.mjs

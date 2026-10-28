@@ -1,3 +1,8 @@
+## 28.10.2026 — Bounded fresh-session metadata diagnosis, no asset upload
+
+- Owner instructed completion. Existing CI read access is verified; next narrow test creates ONE unattached empty-file manifest session on the same existing Worker and inspects only token-present/bucket-count/expiry/not-before offsets. No token/claim identifiers/raw response logged, no file bytes uploaded, no version created/deployed/activated and no IAM/credential expansion. This is NOT a retry of the denied assets/upload endpoint. Workflow renamed to accurately disclose session initialization (not read-only). No retries on denial. Two boundary/expiry/non-disclosure tests localPASS.
+- Real runner pending. No production deploy trigger matches these .github paths; current UI/live/private/DNS/VM/payment/resource/archive state unchanged. Cost existing short GitHub runner only. Rollback revert diagnostic files; session is ephemeral/unattached. Next inspect fresh-session metadata before any uploader correction or guarded publication. No successful publication/root-cause claim.
+
 ## 28.10.2026 — VERIFIED existing CI access; stop browser-login detour, add fail-early release check
 
 - Dedicated read-only runner40650801879/job122690151903 terminalSUCCESS for5715d660078bbb6ede4a3fc26bb22b5db4325b1e. Actual primary domains/settings/deployments allHTTP200 with existing CI credential, correct gamescout-emergency-preview target/bindings validated. Three local and real-run boundary testsPASS. This proves service read access, NOT asset-upload permission/session validity. Existing token is not shown expired/invalid by this evidence; do not rotate or expand IAM on a guess.

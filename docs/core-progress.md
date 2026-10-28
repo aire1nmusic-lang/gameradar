@@ -32,6 +32,28 @@
 - Owner follow-up: "it must be free". Re-read billing pages: no documented hard zero on Yandex (card-less account documented inconsistently; zero-balance behaviour of serverless services not stated; free-tier overage billed). Options and trade-offs recorded in runbook 3a; none selected, nothing created.
 - Cost 0 new resources; rollback: revert the source commit. Next: owner decisions listed in section 8 of the runbook (accept cost model or choose shield/paid option, create resources, DNS candidate, mail sender, user import, local YDB image download).
 
+## 28.10.2026 — Correct density-aware mode image QA; guard stopped before upload
+
+- FinalPR CI40754905014/job123051116427 failed at the NEW mode-image assertion on320pxMinecraft; prior L2controls passed. Test incorrectly required naturalWidth>=400 on width-descriptor srcset, where naturalWidth is density-corrected to the sizes CSS slot. Corrected to bounded10second complete/naturalWidth>0 plus unchanged unique-count and owner-v1-source assertions; failure now includes source/width diagnostics. No image path, acceptance viewport or production guard removed.
+- Source f54d304 is in main; guarded production40755030510 is still before backup/upload in the same browser gate. Do not claim live. Added nine new TOP-scene prompts docs/design-review/top3-scene-prompts-v4.md; no ungenerated podium art installed.
+- Local browser syntax/diff PASS; finalCI/production pending. Existing hosting/CI only, no VM/auth/DNS/private/payment/resource mutation. Rollback previous primary and mandatory existing guarded archive. Next final matrix, visual evidence and primary proof.
+
+## 28.10.2026 — Owner mode artwork integrated; final public UI acceptance pending
+
+- Owner supplied10images and explicitly requested installation plus unique TOP1/2/3 prompts per game. Installed9distinct tile scenes (sixMinecraft/threeGTA), using secondBedWars for clearer small figures. Source images are2048x1143 (not native4K); generated400/800/1600WebP delivery sizes without upscaling. RAGE:MP bottom crop top340removes the supplied horizontal black seam; original Library uploads retained. Provenance docs/design-review/mode-art-owner-v1.json.
+- Tile-only registry preserves approved full-page backgrounds, L2chronicles and existing podium scenes/shields. NonL2tiles have stronger sans captions, quieter borders and3desktop/2mobile columns. New TOPprompts do NOT install ungenerated art. No account/core/API/data/DNS/VM/payment change; Claude owns auth.
+- VERIFIED previousUI sourcefa6b5d12 CI40750881612 SUCCESS: sixviewports xthreegames, full core/DB/build/gates, noAPIwrites. Downloaded artifact12844176934 and inspected actual GTA1440/390plaque/catalog, owner1440 and search1440. Search screenshot exposed oldL2margin+overlaypadding pushing long results below viewport; corrected common centered bounds and added landscape/viewport assertion. Final images/bounds version must pass fresh gate before primary publication.
+- LOCAL final typecheck/build152routes/bundle/testsyntax PASS. Bundle initially saw two old hash generations in the reused dist directory; moved only generated dist aside, rebuilt clean and guard passed unchanged. No source/gate bypass.
+- Cost existingCI/hosting plus ordinary asset/rollback storage; no new paid services. Rollback scoped revert and existing guarded release archive. Next finalCI/screenshots, main merge, guarded publish and independent primary verification.
+
+## 28.10.2026 — Owner screenshot review: public UI correction IN PROGRESS
+
+- Owner requests inset favourites, clearer TOP1/GTA and ranks4+, stronger server names, quieter frames/type, dark owner onboarding and improved global search; mode artwork prompts requested separately. Isolated codex/ui-review-20261028 from current origin/main b8a138a; existing dirty worktrees preserved. Claude owns auth; no account/core/API/data/DNS/VM changes in this slice.
+- Responsive follow-up: narrow catalog identity and metric now occupy separate rows, preserving name space and44px favourite;320px board titles adapt to available width. No private-account files touched.
+- Review PR27 source965fdfc tree matches local exactly; CI40750141934 running. Existing local git push lacks a credential, so same tree submitted through the connected GitHub API. Search initial results now include public unverified servers rather than hiding all when no verified source exists; light-mode search retains readable dark-surface tokens.
+- LOCAL typecheck/build (152 prerendered routes)/bundle and browser-test syntax PASS. Local Chromium download returned invalid archives, so visual acceptance moves to the existing GitHub browser gate; no checks removed. Nine standalone 4K mode/platform prompts added at docs/design-review/mode-art-prompts-4k.md.
+- VERIFIED legacy world-polish light-band/owner-step overrides and nested search input chrome match screenshots. Implementing scoped shared public UI correction while retaining accepted game scenes/rank art/glass. QA pending:320/390/768/1024/1440/844landscape x3games; no publication yet. Existing free CI/hosting only; rollback scoped revert and guarded deployment archive.
+
 ## 28.10.2026 — Owner requests alternative account hosting; paid private host remains paused
 
 - Owner asks to seek another way instead of resuming the prior-cost Yandex VM. No start, subscription, migration, DNS, credential or private-data change. Distinguish working cloud-console access from unavailable GameScout auth: existing private host remainsStopped, primary private ingress unresolved. Existing normal registration code need not be replaced merely to change its host.

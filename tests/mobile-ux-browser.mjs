@@ -212,6 +212,13 @@ try {
         const modes = picker.getByRole('navigation', { name: game.id === 'gtarp' ? 'Выбрать платформу' : 'Выбрать режим', exact: true })
         await modes.waitFor({ state: 'visible' })
         assert.equal(await modes.getByRole('link').count(), game.chronicles.length)
+        await mediaReady(page)
+        // Width-descriptor srcset reports density-corrected naturalWidth (e.g.160px on320px viewport), not file pixel width.
+        await page.waitForFunction(()=>[...document.querySelectorAll('.gs-inline-grid img')].every(image=>image.complete&&image.naturalWidth>0),null,{timeout:10000})
+        const modeSources=await modes.locator('img').evaluateAll(images=>images.map(image=>({src:image.currentSrc,ready:image.complete&&image.naturalWidth>0,naturalWidth:image.naturalWidth})))
+        assert.equal(new Set(modeSources.map(image=>image.src)).size,game.chronicles.length,'Each mode/platform has its own owner-supplied scene')
+        assert.ok(modeSources.every(image=>image.ready&&image.src.includes('-owner-v1-')),`All supplied mode/platform images decode: ${JSON.stringify(modeSources)}`)
+        await modes.screenshot({path:`${output}/mode-art-${game.id}-${width}.png`})
         await noOverflow()
         if (game.chronicles.length) {
           const target = game.chronicles[0]
@@ -230,7 +237,7 @@ try {
       }
       const plaque = page.locator('.gs-shelf-support .server:not(.is-skeleton)').first()
       await mediaReady(page)
-      if (game.id === 'lineage2') assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(23, 33, 40)')
+      assert.equal(await plaque.locator('.gsb-name').evaluate(e => getComputedStyle(e).color), 'rgb(255, 247, 233)')
       // All worlds share the owner-approved L2 component, density and information bar.
       assert.equal(await page.locator('.catalog-grid > .gsb').count(), 3, 'Same three boards in every world')
       const columns = await page.locator('.catalog-grid').evaluate(e => getComputedStyle(e).gridTemplateColumns.split(' ').length)
@@ -267,7 +274,9 @@ try {
           })
           assert.ok(content.barBottom <= content.rowBottom + 1 && content.metaBottom <= content.rowBottom, 'Live caption remains inside the frame')
           assert.ok(content.metricRight <= content.favLeft + 1, 'Counter and favourite do not overlap')
-          assert.equal(await card.locator('.gsb-name').evaluate(e => getComputedStyle(e).color),'rgb(23, 33, 40)')
+          assert.equal(await card.locator('.gsb-name').evaluate(e => getComputedStyle(e).color),'rgb(255, 247, 233)')
+          const inset=await card.locator('.gsb-fav').evaluate(e=>{const a=e.getBoundingClientRect(),b=e.closest('.gsb-plaque').getBoundingClientRect();return {width:a.width,height:a.height,right:b.right-a.right}})
+          assert.ok(inset.width>=44&&inset.height>=44&&inset.right>=10, 'Favourite has a full touch target inset from the frame')
           if(kind === 'support') {
             const coin=card.locator('.gsb-coin')
             assert.equal(await coin.getAttribute('src'),'/media/ranks/coin-stack-96.webp')
@@ -431,9 +440,23 @@ try {
       await page.locator('.gs-search-surface').waitFor()
       const input = page.locator('.gs-search-surface input')
       await input.fill('QA')
-      await page.getByRole('button', { name: /QA Очень длинное/ }).first().waitFor()
+      await page.getByRole('option', { name: /QA Очень длинное/ }).first().waitFor()
       const background = await page.locator('.gs-search-surface').evaluate(e => getComputedStyle(e).backgroundImage)
-      assert.ok(background.includes('rgb(35, 39, 49)') && !background.includes('rgba('), background)
+      assert.ok(background.includes('rgb(19, 31, 44)') && !background.includes('rgba('), background)
+      assert.equal(await input.evaluate(e=>getComputedStyle(e).borderTopWidth),'0px','Search has one outer field, no nested input frame')
+      assert.equal(await input.getAttribute('aria-label'),'Название сервера, версия или режим')
+      await page.getByRole('button',{name:'Очистить запрос',exact:true}).click()
+      assert.equal(await input.inputValue(),'')
+      assert.equal(await input.evaluate(e=>document.activeElement===e),true)
+      await input.fill('QA')
+      await page.getByRole('option', { name: /QA Очень длинное/ }).first().waitFor()
+      await input.press('ArrowDown')
+      assert.equal(await input.getAttribute('aria-activedescendant'),'gs-search-option-0')
+
+      const searchBounds=await page.locator('.gs-search-surface').boundingBox()
+      assert.ok(searchBounds.x>=0&&searchBounds.y>=0&&searchBounds.x+searchBounds.width<=width+1&&searchBounds.y+searchBounds.height<=height+1,'Entire search surface stays within viewport, including landscape')
+      const closeBounds=await page.getByRole('button',{name:'Закрыть поиск',exact:true}).boundingBox()
+      assert.ok(closeBounds.width>=44&&closeBounds.height>=44,'Search close has a full touch target')
       await page.screenshot({ path: `${output}/search-${game.id}-${width}.png` })
       await input.press('Escape')
       if (width < 1024) {
@@ -591,6 +614,15 @@ try {
       await page.getByRole('button',{name:'Вернуться ко входу',exact:true}).click()
       if(width<768&&game.id!=='lineage2') assert.ok((await page.locator('.gs-account-layout').evaluate(e=>getComputedStyle(e,'::before').backgroundImage)).includes(`/media/worlds/${game.slug}/`),'Account retains the selected game artwork')
       await page.screenshot({path:`${output}/account-parity-${game.id}-${width}.png`})
+      await page.goto(base + `/add-server?game=${game.id}`)
+      await page.locator('.gs-owner-steps').waitFor()
+      await noOverflow()
+      for(const step of await page.locator('.gs-owner-step').all()) {
+        assert.equal(await step.locator('strong').evaluate(e=>getComputedStyle(e).color),'rgb(243, 247, 250)','Owner steps have bright text on dark glass')
+        const bg=await step.evaluate(e=>getComputedStyle(e).backgroundImage)
+        assert.ok(bg.includes('16, 27, 37'),bg)
+      }
+      await page.screenshot({path:`${output}/owner-ui-${game.id}-${width}.png`})
       results.push({ width, height, game: game.id, top: true, supportTarget: true, opaqueClaim: true, opaqueSearch: true, contextualHome: true, footerCTA: width < 1024 })
     }
     await page.goto(base + '/catalog?game=lineage2')

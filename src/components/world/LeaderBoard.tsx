@@ -90,7 +90,7 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const plaque = (s: GameServer, rank: number) => <PlacePlaque key={s.id} server={s} rank={rank} meta={meta(s)} value={num(s)} fav={fav(s)} art={kind === 'people' ? 'people' : 'support'} />
   const row = (s: GameServer, index: number) => <div key={s.id} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
     <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
-    <span className="gsb-hex"><svg viewBox="0 0 56 65" aria-hidden="true"><path d="M28 1.2 54.6 16.5v32L28 63.8 1.4 48.5v-32z" /></svg><span>{index + 1}</span></span>
+    <span className="gsb-position" aria-label={`Место ${index + 1}`}>{String(index + 1).padStart(2, '0')}</span>
     {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
     {kind === 'opening' && s.launch
       ? <span className="server-right gsb-num"><span><small><LaunchCountdown at={s.launch.at} /></small><strong>{new Date(s.launch.at).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', timeZone: 'Europe/Moscow' })}</strong></span></span>

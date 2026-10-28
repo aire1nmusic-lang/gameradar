@@ -1,0 +1,197 @@
+[
+  {
+    "game": "minecraft",
+    "id": "survival",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_Survival_illustration_3840×2160_16_9._Authentic_Mine-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-survival-owner-v1-400.webp",
+        "bytes": 25520
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-survival-owner-v1-800.webp",
+        "bytes": 84936
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-survival-owner-v1-1600.webp",
+        "bytes": 241530
+      }
+    ]
+  },
+  {
+    "game": "minecraft",
+    "id": "anarchy",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_Anarchy_illustration_3840×2160_16_9._Authentic_Minec-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-anarchy-owner-v1-400.webp",
+        "bytes": 14762
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-anarchy-owner-v1-800.webp",
+        "bytes": 41514
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-anarchy-owner-v1-1600.webp",
+        "bytes": 119490
+      }
+    ]
+  },
+  {
+    "game": "minecraft",
+    "id": "skyblock",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_SkyBlock_illustration_3840×2160_16_9._Authentic_Mine-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-skyblock-owner-v1-400.webp",
+        "bytes": 10514
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-skyblock-owner-v1-800.webp",
+        "bytes": 29376
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-skyblock-owner-v1-1600.webp",
+        "bytes": 75758
+      }
+    ]
+  },
+  {
+    "game": "minecraft",
+    "id": "bedwars",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_BedWars_illustration_3840×2160_16_9._Authentic_Minec-0 (1).jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-bedwars-owner-v1-400.webp",
+        "bytes": 11964
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-bedwars-owner-v1-800.webp",
+        "bytes": 31644
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-bedwars-owner-v1-1600.webp",
+        "bytes": 77188
+      }
+    ]
+  },
+  {
+    "game": "minecraft",
+    "id": "prison",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_Prison_illustration_3840×2160_16_9._Authentic_Minecr-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-prison-owner-v1-400.webp",
+        "bytes": 15832
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-prison-owner-v1-800.webp",
+        "bytes": 53774
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-prison-owner-v1-1600.webp",
+        "bytes": 162014
+      }
+    ]
+  },
+  {
+    "game": "minecraft",
+    "id": "modded",
+    "source": "nano-banana-2.1_Create_a_premium_Minecraft_Modded_illustration_3840×2160_16_9._Authentic_Minecr-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/minecraft/mode-modded-owner-v1-400.webp",
+        "bytes": 27404
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-modded-owner-v1-800.webp",
+        "bytes": 86298
+      },
+      {
+        "path": "public/media/worlds/minecraft/mode-modded-owner-v1-1600.webp",
+        "bytes": 253878
+      }
+    ]
+  },
+  {
+    "game": "gta-rp",
+    "id": "fivem",
+    "source": "nano-banana-2.1_Create_premium_GTA_V-style_painted_promotional_key_art_3840×2160_16_9_for_a_Fiv-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/gta-rp/mode-fivem-owner-v1-400.webp",
+        "bytes": 17728
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-fivem-owner-v1-800.webp",
+        "bytes": 58422
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-fivem-owner-v1-1600.webp",
+        "bytes": 177112
+      }
+    ]
+  },
+  {
+    "game": "gta-rp",
+    "id": "ragemp",
+    "source": "nano-banana-2.1_Create_premium_GTA_V-style_painted_promotional_key_art_3840×2160_16_9_for_a_RAG-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "crop": {
+      "left": 0,
+      "top": 340,
+      "width": 2048,
+      "height": 803
+    },
+    "files": [
+      {
+        "path": "public/media/worlds/gta-rp/mode-ragemp-owner-v1-400.webp",
+        "bytes": 18342
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-ragemp-owner-v1-800.webp",
+        "bytes": 58866
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-ragemp-owner-v1-1600.webp",
+        "bytes": 172354
+      }
+    ]
+  },
+  {
+    "game": "gta-rp",
+    "id": "altv",
+    "source": "nano-banana-2.1_Create_premium_GTA_V-style_painted_promotional_key_art_3840×2160_16_9_for_an_al-0.jpg",
+    "sourceWidth": 2048,
+    "sourceHeight": 1143,
+    "files": [
+      {
+        "path": "public/media/worlds/gta-rp/mode-altv-owner-v1-400.webp",
+        "bytes": 15434
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-altv-owner-v1-800.webp",
+        "bytes": 52450
+      },
+      {
+        "path": "public/media/worlds/gta-rp/mode-altv-owner-v1-1600.webp",
+        "bytes": 162446
+      }
+    ]
+  }
+]

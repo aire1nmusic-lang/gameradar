@@ -18,7 +18,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const {game,scoped}=useWorldNavigation()
   const [query, setQuery] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [cursor, setCursor] = useState(0)
+  const [cursor, setCursor] = useState(-1)
+  const surfaceRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   useLockBodyScroll(open)
@@ -41,11 +42,30 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     if (open) {
       setQuery('')
       setSearchQuery('')
-      setCursor(0)
+      setCursor(-1)
       const timer = window.setTimeout(() => inputRef.current?.focus(), 40)
       return () => window.clearTimeout(timer)
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    const trap = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return }
+      if (event.key !== 'Tab') return
+      const controls = [...(surfaceRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input,a[href]') ?? [])].filter(el => el.getClientRects().length)
+      const first = controls[0], last = controls.at(-1)
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', trap)
+    return () => { document.removeEventListener('keydown', trap); previousFocus?.focus({ preventScroll: true }) }
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (open && cursor >= 0) surfaceRef.current?.querySelector(`[data-search-index="${cursor}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [open, cursor])
 
   if (!open) return null
 
@@ -54,28 +74,39 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     navigate(to)
   }
 
+  const allResults = () => {
+    const url = new URL(scoped('/catalog'), window.location.origin)
+    if (query.trim()) url.searchParams.set('q', query.trim())
+    go(`${url.pathname}${url.search}`)
+  }
+
   const submit = () => {
     const target = suggestions[cursor]
     if (target) return go(target.to)
-    const url = new URL(scoped('/catalog'), window.location.origin)
-    url.searchParams.set('q', query)
-    go(`${url.pathname}${url.search}`)
+    allResults()
   }
 
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label="Поиск серверов" className={`gs-search-overlay ${game?.id==='lineage2'?'gs-l2-search-sheet':''} fixed inset-0 z-[100] flex items-start justify-center sm:pt-[12vh]`}>
       <button aria-label="Закрыть" onClick={onClose} className="absolute inset-0 animate-fade bg-ink-1000/80 backdrop-blur-[5px]" />
 
-      <div className="gs-search-surface surface-raised relative flex h-full w-full animate-pop flex-col overflow-hidden sm:h-auto sm:max-h-[70vh] sm:w-[620px] sm:rounded-xl">
-        <div className="gs-search-intro"><span>Поиск серверов</span><h2>{game ? `Твой следующий мир — ${game.shortName}` : 'Найди свой следующий мир'}</h2><p>Название проекта, версия или игровой режим</p></div>
+      <div ref={surfaceRef} className="gs-search-surface surface-raised relative flex h-full w-full animate-pop flex-col overflow-hidden sm:h-auto sm:max-h-[70vh] sm:w-[620px] sm:rounded-xl">
+        <div className="gs-search-intro"><div><h2>Найти сервер</h2><p>{game ? `${game.name} · название, версия или режим` : 'По всем играм · название, версия или режим'}</p></div><button type="button" onClick={onClose} aria-label="Закрыть поиск" className="gs-search-close"><X size={20} /></button></div>
         <div className="gs-search-input-row flex items-center gap-3 border-b border-white/7 px-4 py-3.5 sm:px-5">
           <Search size={18} className="shrink-0 text-ink-400" />
           <input
             ref={inputRef}
+            type="search"
+            role="combobox"
+            aria-label="Название сервера, версия или режим"
+            aria-autocomplete="list"
+            aria-expanded={suggestions.length > 0}
+            aria-controls="gs-search-options"
+            aria-activedescendant={cursor >= 0 && suggestions[cursor] ? `gs-search-option-${cursor}` : undefined}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value)
-              setCursor(0)
+              setCursor(-1)
             }}
             onKeyDown={(event) => {
               if (event.key === 'ArrowDown') {
@@ -86,22 +117,16 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                 event.preventDefault()
                 setCursor((c) => Math.max(0, c - 1))
               }
-              if (event.key === 'Enter') submit()
+              if (event.key === 'Enter') { event.preventDefault(); submit() }
               if (event.key === 'Escape') onClose()
             }}
             placeholder={game?`Найти сервер ${game.shortName}`:'Найти игру, сервер или режим'}
             className="min-w-0 flex-1 bg-transparent text-[16px] text-ink-50 placeholder:text-ink-500 focus:outline-none"
           />
-          <button
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-ink-400 transition-colors hover:bg-white/6 hover:text-ink-50"
-          >
-            <X size={17} />
-          </button>
+          {query && <button type="button" onClick={() => { setQuery(''); setCursor(-1); inputRef.current?.focus() }} aria-label="Очистить запрос" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-400"><X size={17} /></button>}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 sm:px-2.5">
+        <div className="gs-search-results min-h-0 flex-1 overflow-y-auto">
           {pending ? <p role="status" className="px-4 py-10 text-center text-[14px] text-ink-300">Ищем серверы…</p> : suggestions.length === 0 ? (
             <div className="px-4 py-10 text-center">
               <p className="text-[14px] text-ink-200">{error ? 'Поиск сейчас недоступен' : `Ничего не найдено по запросу «${query}»`}</p>
@@ -117,6 +142,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
             <SuggestionList items={suggestions} cursor={cursor} onHover={setCursor} onPick={go} />
           )}
 
+          {query.trim() && <button type="button" className="gs-search-all" onClick={allResults}><span>Все результаты по запросу «{query.trim()}»</span><ArrowRight size={16} className="shrink-0" /></button>}
           {!query && (
             <div className="mt-2 border-t border-white/6 px-2.5 pt-3 pb-1">
               <div className="mb-2 text-[11px] tracking-[0.12em] text-ink-500 uppercase">Быстрый поиск</div>
@@ -177,7 +203,7 @@ export function SuggestionList({
 }) {
   let lastKind = ''
   return (
-    <div>
+    <div id="gs-search-options" role="listbox" aria-label="Результаты поиска">
       {items.map((item, index) => {
         const showHeader = item.kind !== lastKind
         lastKind = item.kind
@@ -189,10 +215,14 @@ export function SuggestionList({
               </div>
             )}
             <button
+              id={`gs-search-option-${index}`}
+              role="option"
+              aria-selected={cursor === index}
+              data-search-index={index}
               onMouseEnter={() => onHover(index)}
               onClick={() => onPick(item.to)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-md px-2.5 py-2.5 text-left transition-colors',
+                'gs-search-result flex w-full items-center gap-3 rounded-md px-2.5 py-2.5 text-left transition-colors',
                 cursor === index ? 'bg-white/8' : 'hover:bg-white/5',
               )}
             >
@@ -203,8 +233,8 @@ export function SuggestionList({
                 {ICONS[item.kind]}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] text-ink-50">{item.label}</span>
-                <span className="block truncate text-[12px] text-ink-400">{item.sub}</span>
+                <span className="gs-search-result-title block truncate text-[14px] text-ink-50">{item.label}</span>
+                <span className="gs-search-result-sub block truncate text-[12px] text-ink-400">{item.sub}</span>
               </span>
               <ArrowRight size={14} className={cn('shrink-0 text-ink-600', cursor === index && 'text-ink-300')} />
             </button>

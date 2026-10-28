@@ -101,9 +101,9 @@ export function ServerRow({
 
       <ServerLogo name={server.name} hue={server.hue} gameId={server.gameId} src={server.logoUrl} size="sm" forceGameGlyph className="gs-row-avatar h-8 w-8" />
 
-      <div className="min-w-0 flex-1">
+      <div className="gs-row-identity min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-[14px] leading-[18px] font-semibold text-ink-50">{server.name}</span>
+          <span className="gs-row-name truncate text-[14px] leading-[18px] font-semibold text-ink-50">{server.name}</span>
           {!compact && known && Math.abs(change24h) >= 10 && status !== OnlineStatus.Offline && (
             <span className="hidden shrink-0 sm:inline-flex"><TrendChip value={change24h} /></span>
           )}
@@ -113,7 +113,7 @@ export function ServerRow({
         </div>
       </div>
 
-      <div className="shrink-0 text-right">
+      <div className="gs-row-metric shrink-0 text-right">
         {metric === 'support' ? (
           <>
             <div className="num text-[14px] leading-[18px] font-semibold text-ink-50">{support}</div>

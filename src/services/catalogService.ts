@@ -228,7 +228,7 @@ export async function buildSuggestions(text: string, limit = 7, gameId?:string):
   }
 
   const servers = await listServers(
-    term ? { gameId,query: term, sort: 'online', limit: 4 } : { gameId,sort: 'online', verifiedOnly: true, limit: 3 },
+    term ? { gameId,query: term, sort: 'online', limit: 4 } : { gameId,sort: 'online', limit: 3 },
   )
   for (const server of servers) {
     const game = games.find((item) => item.id === server.gameId)

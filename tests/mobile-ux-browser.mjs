@@ -65,6 +65,8 @@ try {
     page.setDefaultNavigationTimeout(20000)
     let writes = 0
     let authUnavailable = false
+    let authMailDisabled = false
+    let authPolicyMissing = false
     let profileBoard = 'support'
     const errors = []
     page.on('pageerror', e => errors.push(e.message))
@@ -75,7 +77,7 @@ try {
       let json = []
       if (path.endsWith('/auth/me') && authUnavailable) return route.fulfill({ status: 503, json: {error:{code:'private_api_required',message:'Private upstream is not a user-facing explanation'}} })
       if (path.endsWith('/games')) json = games
-      else if (path.endsWith('/auth/me')) json = { privateCore: true, user: null, providers: [], registrationOpen: true }
+      else if (path.endsWith('/auth/me')) json = { privateCore: true, emailLogin: !authMailDisabled, user: null, providers: [], ...(authPolicyMissing?{}:{registrationOpen: true}) }
       else if (path.endsWith('/people-rating')) json = apiCards.map(s => ({ server_id: s.id, votes: s.votes }))
       else if (path.endsWith('/support/ranking')) json = apiCards.map(s => ({ server_id: s.id, coins: s.support.coins, participants: 1 }))
       else if (path.endsWith('/servers')) {
@@ -661,6 +663,22 @@ try {
     await page.getByRole('button', { name: 'Повторить подключение', exact: true }).click()
     await page.getByRole('button', { name: 'Создать', exact: true }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Войти', exact: true }).isEnabled(), true)
+    // A mail outage blocks sign-up/reset, while existing password accounts still sign in.
+    authMailDisabled = true
+    await page.reload()
+    await page.getByText('Регистрация и восстановление по почте временно недоступны.',{exact:true}).waitFor()
+    assert.equal(await page.getByRole('button',{name:'Создать',exact:true}).count(),0)
+    assert.equal(await page.getByRole('button',{name:'Забыли пароль?',exact:true}).isDisabled(),true)
+    assert.equal(await page.getByRole('button',{name:'Войти',exact:true}).isEnabled(),true)
+    await noOverflow()
+    await page.screenshot({path:`${output}/account-mail-unavailable-${width}.png`})
+    authMailDisabled = false
+    authPolicyMissing = true
+    await page.reload()
+    await page.getByText('Регистрация пока закрыта.',{exact:true}).waitFor()
+    assert.equal(await page.getByRole('button',{name:'Создать',exact:true}).count(),0)
+    assert.equal(await page.getByRole('button',{name:'Войти',exact:true}).isEnabled(),true)
+    await noOverflow()
     assert.equal(writes, 0)
     assert.deepEqual(errors, [])
     await context.close()

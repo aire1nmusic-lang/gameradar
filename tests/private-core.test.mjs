@@ -1671,3 +1671,23 @@ test('favorites are private, merge old devices without replacing, and share betw
  assert.equal((await h.request('/me/favorites/clear',{},b.cookie)).status,200)
  assert.deepEqual((await h.request('/me/favorites',undefined,a.cookie)).body.favorites,['favorite-one'])
 })
+
+
+test('mail unavailable leaves password sign-in working but refuses registration/reset without sending',async t=>{
+  const h=await harness(t),registered=await h.register('mail-outage@example.com')
+  const app=createApp({db:h.db,config:{...config,mailEnabled:false}})
+  const request=(path,body)=>app.request(origin+'/api/v1'+path,{method:body?'POST':'GET',headers:{Origin:origin,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})},{clientIp:'127.0.0.1'})
+  const me=await request('/auth/me')
+  assert.equal((await me.json()).emailLogin,false)
+  const before=(await h.db.query('SELECT count(*)::int n FROM gs_mail_outbox')).rows[0].n
+  for(const path of ['/auth/register','/auth/password/reset/request']){
+    const response=await request(path,{email:'mail-outage@example.com',password,displayName:'Player'})
+    assert.equal(response.status,503)
+    assert.equal((await response.json()).error.code,'mail_disabled')
+  }
+  assert.equal((await h.db.query('SELECT count(*)::int n FROM gs_mail_outbox')).rows[0].n,before)
+  const login=await request('/auth/login',{email:'mail-outage@example.com',password})
+  assert.equal(login.status,200)
+  assert.equal((await login.json()).user.id,registered.user.id)
+  assert.match(login.headers.get('Set-Cookie'),/HttpOnly; SameSite=Lax/)
+})

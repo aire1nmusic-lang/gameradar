@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockBodyScroll } from '@/hooks/useUi'
-import { PlaceBanner } from '@/components/profile/PlaceBanner'
+import { PlaceBanner, placeOf, ProfilePlaceParticles } from '@/components/profile/PlaceBanner'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import {
   CalendarClock,
@@ -193,6 +193,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
   const { data: peers = [], loading: peersLoading } = useServers({ gameId: server.gameId, limit: 200 }, true)
+  const profilePlace = fullScene && !peersLoading ? placeOf(server, peers) : null
 
   useSeo({
     title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
@@ -240,7 +241,7 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} >
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board}>
       {/* Same full-page world scene and compact identity header in every primary game. */}
       {fullScene && <div aria-hidden className="gs-server-bg" style={sceneStyle} />}
       {/* hero: art of the server's world */}
@@ -285,7 +286,7 @@ function Profile({ server: source }: { server: GameServer }) {
         </Container>
       </div>
 
-      <Container className={cn('relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
+      <Container className={cn('gs-profile-content relative', showcase ? '-mt-32 sm:-mt-44 lg:-mt-48' : '-mt-12 sm:-mt-14')}>
         <div className={cn("gs-profile-head gs-profile-dossier flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between", showcase && "gs-profile-over-hero")}>
           <div className="gs-profile-identity flex items-start gap-3 sm:items-end sm:gap-4">
             <ServerLogo
@@ -312,6 +313,7 @@ function Profile({ server: source }: { server: GameServer }) {
             </div>
           </div>
 
+          <PlaceBanner rank={profilePlace}>
           <div className="gs-profile-actions flex items-center gap-2 pb-1">
             <button
               onClick={() => toggle(server.slug)}
@@ -347,9 +349,10 @@ function Profile({ server: source }: { server: GameServer }) {
               )}
             </span>
           </div>
+          </PlaceBanner>
         </div>
 
-        <PlaceBanner server={server} peers={peers} /><RankStrip server={server} peers={peers} loading={peersLoading} />
+        <RankStrip server={server} peers={peers} loading={peersLoading} />
 
         {server.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-1.5 sm:mt-6">
@@ -397,6 +400,7 @@ function Profile({ server: source }: { server: GameServer }) {
           </section>
         )}
       </Container>
+      <ProfilePlaceParticles rank={profilePlace} />
 
       {/* the one bottom bar on a phone: the navigation steps aside for it */}
       {(playableAddress || site) && createPortal(<div className="gs-profile-cta-bar safe-bottom fixed inset-x-0 bottom-0 z-[80] border-t border-white/8 bg-ink-950/95 px-4 py-2.5 lg:hidden">

@@ -65,24 +65,26 @@ try {
     page.setDefaultNavigationTimeout(20000)
     let writes = 0
     let authUnavailable = false
+    let profileBoard = 'support'
     const errors = []
     page.on('pageerror', e => errors.push(e.message))
     await page.route('**/api/v1/**', async route => {
       const req = route.request(), url = new URL(req.url()), path = url.pathname
       if (req.method() !== 'GET') { writes++; return route.abort() }
+      const apiCards = profileBoard === 'support' ? cards : cards.map(s => ({ ...s, support: { coins: 0, participants: 0 }, ...(profileBoard === 'online' ? { votes: 0, online: { ...s.online, status: 'VERIFIED', playersKnown: true, freshness: 'fresh', current: 10000 - Number(s.id.split('-').at(-1)) * 100 } } : {}), ...(profileBoard === 'ordinary' ? { votes: 0, online: { ...s.online, status: 'UNKNOWN', playersKnown: false, freshness: 'unknown' } } : {}) }))
       let json = []
       if (path.endsWith('/auth/me') && authUnavailable) return route.fulfill({ status: 503, json: {error:{code:'private_api_required',message:'Private upstream is not a user-facing explanation'}} })
       if (path.endsWith('/games')) json = games
       else if (path.endsWith('/auth/me')) json = { privateCore: true, user: null, providers: [], registrationOpen: true }
-      else if (path.endsWith('/people-rating')) json = cards.map(s => ({ server_id: s.id, votes: s.votes }))
-      else if (path.endsWith('/support/ranking')) json = cards.map(s => ({ server_id: s.id, coins: s.support.coins, participants: 1 }))
+      else if (path.endsWith('/people-rating')) json = apiCards.map(s => ({ server_id: s.id, votes: s.votes }))
+      else if (path.endsWith('/support/ranking')) json = apiCards.map(s => ({ server_id: s.id, coins: s.support.coins, participants: 1 }))
       else if (path.endsWith('/servers')) {
         const selectedGames=(url.searchParams.get('gameIds')??url.searchParams.get('gameId')??'').split(',').filter(Boolean)
-        let items = cards.filter(s => !selectedGames.length || selectedGames.includes(s.gameId))
+        let items = apiCards.filter(s => !selectedGames.length || selectedGames.includes(s.gameId))
         const query = url.searchParams.get('query') ?? url.searchParams.get('q')
         if (query) items = items.filter(s => s.name.toLowerCase().includes(query.toLowerCase()))
         json = { items, total: items.length, offset: 0, limit: 100 }
-      } else if (/\/servers\/[^/]+$/.test(path)) json = cards.find(s => s.slug === path.split('/').at(-1) || s.id === path.split('/').at(-1))
+      } else if (/\/servers\/[^/]+$/.test(path)) json = apiCards.find(s => s.slug === path.split('/').at(-1) || s.id === path.split('/').at(-1))
       else if (path.includes('/copyright/restrictions/')) json = { restrictedLinks: [], restrictedMaterials: [] }
       else if (path.includes('/support/servers/')) json = { coins: 0, participants: 0, recent: [] }
       else if (path.endsWith('/payments/test/config')) json = { available: false, testOnly: true, realSalesEnabled: false }
@@ -367,9 +369,27 @@ try {
       assert.ok(voteHeadings.length>0,'Profile has a player-rating heading')
       for(const heading of voteHeadings) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(213, 255, 145)','Both responsive player-rating headings stay readable on transparent glass')
       const glass=await page.locator('.gs-profile-dossier').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,blur:s.backdropFilter,color:s.color}})
-      assert.ok(glass.background.includes('0.2)')&&glass.background.includes('0.26)'), 'Approved glass transmits the world scene instead of opaque pearl panels')
-      assert.ok(glass.blur.includes('blur(18px)'), 'Light matte diffusion stays enabled at every viewport')
+      assert.ok(glass.background.includes('0.13)')&&glass.background.includes('0.2)'), 'Approved glass transmits the world scene instead of opaque pearl panels')
+      assert.ok(glass.blur.includes('blur(5px)'), 'Owner-selected light diffusion preserves scene detail at every viewport')
       assert.equal(await page.getByRole('heading',{level:1}).evaluate(e=>getComputedStyle(e).color),'rgb(243, 247, 250)')
+      const shield = page.locator('.gs-profile-place-shield')
+      await shield.waitFor()
+      await mediaReady(page)
+      assert.match(await shield.getAttribute('src'), /medal-1-glass-192\.webp$/)
+      const shieldBox = await shield.boundingBox(), headerBox = await page.locator('.gs-profile-dossier').boundingBox()
+      assert.equal(Math.round(shieldBox.width), width >= 1280 ? 164 : width < 640 ? 128 : 136, 'TOP shield is prominent at every viewport')
+      assert.ok(shieldBox.x >= headerBox.x && shieldBox.x + shieldBox.width <= headerBox.x + headerBox.width + 1 && shieldBox.y >= headerBox.y && shieldBox.y + shieldBox.height <= headerBox.y + headerBox.height + 1, 'Large shield remains inside the original header')
+      const supportMaterial = await page.locator('.gs-profile-support').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,blur:s.backdropFilter,after:getComputedStyle(e,'::after').content}})
+      assert.equal(supportMaterial.background, glass.background, 'Support CTA uses exactly the surrounding glass material')
+      assert.equal(supportMaterial.blur, glass.blur)
+      assert.equal(supportMaterial.after, 'none', 'Old gold sweep no longer covers the support CTA')
+      assert.equal(await page.locator('.gs-profile-particles').evaluate(e=>getComputedStyle(e).display), 'none', 'Reduced motion removes particles')
+      assert.equal(await page.locator('.gs-profile-dossier').evaluate(e=>getComputedStyle(e,'::before').animationName), 'none', 'Reduced motion keeps the metallic rim still')
+      await page.emulateMedia({reducedMotion:'no-preference'})
+      assert.equal(await page.locator('.gs-profile-particles').evaluate(e=>getComputedStyle(e).pointerEvents), 'none', 'Decoration never intercepts controls')
+      assert.equal(await page.locator('.gs-profile-dossier').evaluate(e=>getComputedStyle(e,'::before').animationName), 'gs-profile-bevel')
+      assert.equal(await page.locator('.gs-profile-particle').first().evaluate(e=>getComputedStyle(e).animationPlayState), 'running')
+      await page.emulateMedia({reducedMotion:'reduce'})
       const favorite=page.locator('.gs-profile-favorite')
       const wasFavorite=await favorite.getAttribute('aria-pressed')
       assert.equal(await favorite.locator('svg').evaluate(e=>getComputedStyle(e).width),'19px')
@@ -389,6 +409,7 @@ try {
       const titleBox=await page.getByRole('heading',{level:1}).boundingBox()
       assert.ok(titleBox.x>=avatarBox.x+avatarBox.width-1,'Server name has its own column beside avatar')
       await page.screenshot({ path: `${output}/identity-redesign-${game.id}-${width}.png` })
+      await dossier.screenshot({ path: `${output}/profile-top-header-${game.id}-${width}.png` })
 
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).click()
       await page.locator('.gs-ui-modal-panel').waitFor()
@@ -420,7 +441,29 @@ try {
       console.log(`QA ${width}x${height} ${game.id}: catalog`)
       // Parity must hold after leaving the home page, not just on its shelves.
       assert.equal(await page.locator('.gs-server-fullbg .gs-server-bg').count(), 1, 'Every primary game has the same full-scene profile')
-      assert.equal(await page.locator('.gs-place-banner').count(), 1, 'Positive TOP3 fixture earns a game-specific profile banner')
+      assert.equal(await page.locator('.gs-profile-distinction').count(), 1, 'A real positive TOP3 fixture earns the large header shield')
+      if ([390,1440].includes(width)) {
+        for (const board of ['support','people','online']) {
+          profileBoard = board
+          for (const rank of [1,2,3]) {
+            await page.goto(base + `/server/qa-${game.id}-${rank-1}`)
+            await page.locator(`.gs-server-profile[data-profile-place="${rank}"][data-profile-board="${board}"]`).waitFor()
+            await mediaReady(page)
+            assert.match(await page.locator('.gs-profile-place-shield').getAttribute('src'), new RegExp(`medal-${rank}-glass-192\\.webp$`))
+            assert.equal(await page.locator('.gs-profile-place-shield').evaluate(e=>e.complete&&e.naturalWidth===192),true, 'Existing approved shield decodes')
+            assert.equal(await page.locator('.gs-profile-particle svg').first().getAttribute('class').then(s=>s.includes(board==='support'?'lucide-coins':board==='people'?'lucide-thumbs-up':'lucide-sparkles')),true,'Decoration names the actual board; online never pretends to be paid support')
+            await noOverflow()
+            await page.locator('.gs-profile-dossier').screenshot({path:`${output}/profile-place-${game.id}-${board}-${rank}-${width}.png`})
+            if(rank===1&&board==='support') await page.screenshot({path:`${output}/profile-glass-${game.id}-${width}.png`,fullPage:true})
+          }
+        }
+        profileBoard = 'ordinary'
+        await page.goto(base + `/server/qa-${game.id}-0`)
+        await page.getByRole('heading',{level:1}).waitFor()
+        assert.equal(await page.locator('.gs-profile-distinction,.gs-profile-particles').count(),0,'Zero scores and unknown online never receive an invented TOP place')
+        await noOverflow()
+        profileBoard = 'support'
+      }
       await page.goto(base + `/catalog?game=${game.id}`)
       await page.locator('.gs-catalog-podium .gsb-plaque').first().waitFor()
       assert.equal(await page.locator('.gs-catalog-podium .gsb-plaque').count(), 3)

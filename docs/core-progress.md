@@ -1,3 +1,12 @@
+## 28.10.2026 — Approved large TOP shields: scoped implementation and acceptance in progress
+
+- Owner approved the latest large-shield prototype ("Ну давай попробуем так"). Implemented the exact existing medal-1/2/3-glass-192 artwork inside the profile identity header for L2/Minecraft/GTA,164px desktop/136px compact/128px phone, with explicit board/place caption. Removed the separate scenic rank banner. Main section order, world backgrounds and ranking inputs remain unchanged; zero support/votes/unknown online never create a place.
+- Selected hybrid treatment: gold/silver/BRONZE edge with restrained moving highlight,6decorative edge particles (3on phone); coins for support, thumbs for people, neutral sparks for online. No input interception/timers/network. Reduced motion removes particles and freezes rim. Glass diffusion5px (visual prototype match; numeric value not separately owner specified), transparent.13/.20film, fine dark text contour/compact shadow, lime controls keep dark unstroked ink. Support CTA shares EXACT material instead of legacy dark/gold stripe.
+- LOCAL typecheck/build/prerender149routes PASS. Extended existing read-only browser gate with large-shield geometry, material parity, motion preference, all3places/all3boards at390/1440 in3games and ordinary zero-state; complete320/390/768/1024/1440/844landscape acceptance PENDING. Work in isolated clean worktree from76fffda; unrelated dirty worktrees preserved. No claim of live publication.
+- BLOCKED publication: prior Cloudflare assets-upload401 has not been resolved. Do not retry identical denied upload or change IAM. Run full source CI through a review branch, then push verified tree to main with publication skipped while this provider blocker persists. No DNS/VM/private API/payments/new paid services; paused core remains paused. Cost0new cloud resources; rollback revert scoped source changes. Next responsive visual evidence, source-main checkpoint and honest live status.
+
+## 27.10.2026 — Owner rejects tiny typographic rank; reuse existing TOP-3 artwork
+
 ## 27.10.2026 — Owner rejects tiny typographic rank; reuse existing TOP-3 artwork
 
 - Owner explicitly rejected the small01/02/03 profile place mark and authorised reusing the already prepared TOP1/2/3 artwork. Use the existing leaderboard glass shields medal-1-glass-192.webp, medal-2-glass-192.webp, medal-3-glass-192.webp for L2; all three inspected. Do not continue drawing small text-only place labels or introduce new ornate crowns.

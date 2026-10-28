@@ -1,9 +1,79 @@
-.gs-place-banner{--pc:#e8b964;position:relative;display:flex;align-items:center;gap:14px;height:96px;margin:14px 0 4px;padding:0 18px 0 8px;border-radius:16px;overflow:hidden;
-  border:1.5px solid var(--pc);box-shadow:0 0 22px -4px var(--pc),inset 0 1px 0 rgba(255,255,255,.35)}
-.gs-place-banner.pb2{--pc:#b8c9e0}.gs-place-banner.pb3{--pc:#b77ee6}
-.gs-place-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:72% 20%;z-index:0}
-.gs-place-banner::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(8,8,12,.75),rgba(8,8,12,.35) 45%,transparent 70%)}
-.gs-place-medal{position:relative;z-index:2;width:78px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
-.gs-place-text{position:relative;z-index:2;display:flex;flex-direction:column;gap:3px}
-.gs-place-text b{font:700 22px/1.1 "Noto Serif",Georgia,serif;color:#fff2cf;text-shadow:0 1px 4px rgba(0,0,0,.8)}
-.gs-place-text span{font:500 13px/1.2 Inter,system-ui,sans-serif;color:#ece6da;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+/* The reviewed material keeps the existing world scene and profile block order. */
+.gs-server-profile {
+  position:relative;
+  --profile-glass:linear-gradient(145deg,rgba(230,241,250,.13),rgba(16,26,38,.20));
+  --profile-text-shadow:0 1px 1px #07101bf2,0 0 3px #07101bc9;
+  --profile-metal:#dde6ee;
+  --profile-metal-dark:#667789;
+}
+.gs-server-profile[data-profile-place="1"] { --profile-metal:#ebc675; --profile-metal-dark:#99723a; }
+.gs-server-profile[data-profile-place="2"] { --profile-metal:#d6e2ef; --profile-metal-dark:#7c8c9e; }
+.gs-server-profile[data-profile-place="3"] { --profile-metal:#d79b73; --profile-metal-dark:#875538; }
+.gs-profile-content { z-index:1; }
+.gs-profile-distinction { display:grid; grid-template-columns:164px minmax(0,270px); align-items:center; gap:14px; flex-shrink:0; min-width:0; }
+.gs-profile-place-shield { display:block; width:164px; height:164px; object-fit:contain; filter:drop-shadow(0 5px 6px #07101b66); }
+.gs-profile-distinction-body { display:flex; flex-direction:column; gap:18px; min-width:0; }
+.gs-profile-place-copy { display:flex; flex-direction:column; gap:5px; }
+.gs-profile-place-copy>span { font-size:11px; line-height:1.5; font-weight:650; text-transform:uppercase; letter-spacing:.1em; color:var(--profile-metal); }
+.gs-profile-place-copy>strong { font-size:24px; line-height:1.2; font-family:Georgia,serif; font-weight:700; color:#f3f7fa; }
+html[data-design=lobby] body .gs-server-profile[data-profile-place] .gs-profile-dossier:not(#a):not(#b):not(#c):not(#d):not(#e) { min-height:208px; border-color:var(--profile-metal)!important; }
+html[data-design=lobby] body .gs-profile-distinction .gs-profile-actions { align-self:stretch; width:auto; border:0; padding:0!important; flex-wrap:wrap; justify-content:flex-start; }
+.gs-profile-distinction .gs-profile-actions>span { flex-wrap:wrap; }
+.gs-profile-distinction .gs-profile-actions .gt-btn { max-width:100%; }
+.gs-profile-distinction .gs-profile-actions .gt-btn>span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+
+/* A fine contour separates the glyphs from bright scenery without fogging the scene. */
+.gs-server-profile :is(h1,h2,h3,p,th,td,dt,dd,small,.gs-profile-facts,.gs-profile-place-copy,.gs-profile-support strong):not(dialog *) {
+  -webkit-text-stroke:.3px #07101b9e;
+  paint-order:stroke fill;
+}
+html[data-design=lobby] body :is(.gs-server-profile,.gs-profile-cta-bar) :is(.gt-btn--primary,.gs-seg-btn.is-active,.gt-btn--primary *,.gs-seg-btn.is-active *):not(#a):not(#b):not(#c):not(#d):not(#e) { -webkit-text-stroke:0!important; text-shadow:none!important; }
+html[data-design=lobby] body .gs-server-profile .gs-profile-support:not(#a):not(#b):not(#c):not(#d):not(#e) { color:#f3f7fa!important; transition:box-shadow .2s; }
+html[data-design=lobby] body .gs-server-profile .gs-profile-support :is(strong,small):not(#a):not(#b):not(#c):not(#d):not(#e) { color:#f3f7fa!important; text-shadow:var(--profile-text-shadow)!important; }
+html[data-design=lobby] body .gs-server-profile .gs-profile-support .gs-profile-support-icon:not(#a):not(#b):not(#c):not(#d):not(#e) { color:var(--profile-metal)!important; border:1px solid color-mix(in srgb,var(--profile-metal) 55%,transparent); background:#ffffff0d!important; box-shadow:inset 0 1px #ffffff40!important; }
+html[data-design=lobby] body .gs-server-profile .gs-profile-support>svg:not(#a):not(#b):not(#c):not(#d):not(#e) { color:var(--profile-metal)!important; }
+html[data-design=lobby] body .gs-server-profile .gs-profile-support::after { content:none!important; animation:none!important; }
+
+/* The bevel lives on the border only, leaving text, chart and click targets untouched. */
+.gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *) { position:relative; }
+.gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before {
+  content:""; position:absolute; inset:-1px; z-index:2; border-radius:inherit; padding:1.5px; pointer-events:none;
+  background:linear-gradient(115deg,var(--profile-metal-dark),var(--profile-metal) 18%,#ffffffdd 26%,var(--profile-metal-dark) 42%,var(--profile-metal) 72%,#ffffffb3 79%,var(--profile-metal-dark));
+  background-size:240% 100%;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+  animation:gs-profile-bevel 18s ease-in-out infinite alternate;
+}
+.gs-profile-particles { position:absolute; inset:0 0 auto; height:min(1200px,100%); overflow:hidden; pointer-events:none; z-index:0; color:var(--profile-metal); }
+.gs-profile-particle { position:absolute; top:-40px; left:var(--particle-x); opacity:0; filter:drop-shadow(0 1px 2px #0009); animation:gs-profile-fall var(--particle-duration) linear var(--particle-delay) infinite; }
+.gs-profile-particle svg { fill:color-mix(in srgb,var(--profile-metal) 16%,transparent); }
+.gs-server-profile[data-profile-board="people"] .gs-profile-particle { top:auto; bottom:-40px; animation-name:gs-profile-rise; }
+@keyframes gs-profile-bevel { to { background-position:100% 0; } }
+@keyframes gs-profile-fall { 0% { opacity:0; transform:translate3d(0,-30px,0) rotate(-18deg); } 8%,70% { opacity:.55; } 100% { opacity:0; transform:translate3d(var(--particle-drift),1200px,0) rotate(80deg); } }
+@keyframes gs-profile-rise { 0% { opacity:0; transform:translate3d(0,30px,0) rotate(-8deg); } 8%,70% { opacity:.5; } 100% { opacity:0; transform:translate3d(var(--particle-drift),-1200px,0) rotate(18deg); } }
+@media(min-width:1024px) and (max-width:1279px) {
+  .gs-profile-distinction { grid-template-columns:136px minmax(0,220px); gap:8px; }
+  .gs-profile-place-shield { width:136px; height:136px; }
+  .gs-profile-place-copy>strong { font-size:22px; }
+}
+@media(max-width:1023px) {
+  .gs-profile-distinction { grid-template-columns:136px minmax(0,1fr); gap:18px; }
+  .gs-profile-place-shield { width:136px; height:136px; }
+  .gs-profile-distinction-body { gap:12px; }
+}
+@media(max-width:639px) {
+  .gs-profile-distinction { grid-template-columns:128px minmax(0,1fr); gap:10px; }
+  .gs-profile-place-shield { width:128px; height:128px; }
+  .gs-profile-place-copy>strong { font-size:21px; }
+  .gs-profile-place-copy>span { font-size:10px; letter-spacing:.07em; }
+  .gs-profile-particle:nth-child(n+4) { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .gs-profile-particles { display:none; }
+  .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before { animation:none; }
+}
+@supports not (mask-composite:exclude) {
+  .gs-server-profile[data-profile-place] :is(.gs-profile-dossier,.gs-panel,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support):not(dialog *)::before { display:none; }
+}

@@ -1,0 +1,7 @@
+import {test} from 'node:test'
+import assert from 'node:assert/strict'
+import {checkPrimaryAccess} from './check-primary-access.mjs'
+const values=[[{hostname:'gamescout.online',service:'gamescout-emergency-preview'}],{bindings:[{type:'assets',name:'ASSETS'},{type:'service',name:'GAME_API'}]},{deployments:[{versions:[{}]}]}]
+test('diagnosis only reads actual primary and never logs secrets',async()=>{let i=0;const report=await checkPrimaryAccess({token:'SECRET',accountId:'ACCOUNT',fetcher:async(url,init)=>{assert.equal(init.method,'GET');assert.equal(init.headers.Authorization,'Bearer SECRET');assert.ok(!url.includes('gamescout-api'));return Response.json({success:true,result:values[i++]})}});assert.equal(report.ok,true);assert.equal(i,3);assert.ok(!JSON.stringify(report).includes('SECRET'));assert.ok(!JSON.stringify(report).includes('ACCOUNT'))})
+test('permission denial stops immediately without retry or escalation',async()=>{let calls=0;const r=await checkPrimaryAccess({token:'SECRET',accountId:'ACCOUNT',fetcher:async()=>{calls++;return Response.json({success:false,errors:[{code:10000,message:'SECRET'}]},{status:403})}});assert.equal(calls,1);assert.equal(r.ok,false);assert.deepEqual(r.evidence[0].codes,[10000]);assert.ok(!JSON.stringify(r).includes('SECRET'))})
+test('unexpected target refuses diagnosis success',async()=>{const r=await checkPrimaryAccess({token:'x',accountId:'y',fetcher:async()=>Response.json({success:true,result:[]})});assert.equal(r.ok,false)})

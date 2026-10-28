@@ -1,0 +1,27 @@
+name: Diagnose primary publication access (read only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-primary-access.yml'
+      - '.github/scripts/check-primary-access*'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify read-only boundaries
+        run: node --test .github/scripts/check-primary-access.test.mjs
+      - name: Check existing CI credentials against actual primary Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node .github/scripts/check-primary-access.mjs

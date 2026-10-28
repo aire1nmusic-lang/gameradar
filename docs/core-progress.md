@@ -1,3 +1,9 @@
+## 28.10.2026 — Correct density-aware mode image QA; guard stopped before upload
+
+- FinalPR CI40754905014/job123051116427 failed at the NEW mode-image assertion on320pxMinecraft; prior L2controls passed. Test incorrectly required naturalWidth>=400 on width-descriptor srcset, where naturalWidth is density-corrected to the sizes CSS slot. Corrected to bounded10second complete/naturalWidth>0 plus unchanged unique-count and owner-v1-source assertions; failure now includes source/width diagnostics. No image path, acceptance viewport or production guard removed.
+- Source f54d304 is in main; guarded production40755030510 is still before backup/upload in the same browser gate. Do not claim live. Added nine new TOP-scene prompts docs/design-review/top3-scene-prompts-v4.md; no ungenerated podium art installed.
+- Local browser syntax/diff PASS; finalCI/production pending. Existing hosting/CI only, no VM/auth/DNS/private/payment/resource mutation. Rollback previous primary and mandatory existing guarded archive. Next final matrix, visual evidence and primary proof.
+
 ## 28.10.2026 — Owner mode artwork integrated; final public UI acceptance pending
 
 - Owner supplied10images and explicitly requested installation plus unique TOP1/2/3 prompts per game. Installed9distinct tile scenes (sixMinecraft/threeGTA), using secondBedWars for clearer small figures. Source images are2048x1143 (not native4K); generated400/800/1600WebP delivery sizes without upscaling. RAGE:MP bottom crop top340removes the supplied horizontal black seam; original Library uploads retained. Provenance docs/design-review/mode-art-owner-v1.json.

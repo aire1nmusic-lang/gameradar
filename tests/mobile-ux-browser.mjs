@@ -213,9 +213,11 @@ try {
         await modes.waitFor({ state: 'visible' })
         assert.equal(await modes.getByRole('link').count(), game.chronicles.length)
         await mediaReady(page)
-        const modeSources=await modes.locator('img').evaluateAll(images=>images.map(image=>({src:image.currentSrc,ready:image.complete&&image.naturalWidth>=400})))
+        // Width-descriptor srcset reports density-corrected naturalWidth (e.g.160px on320px viewport), not file pixel width.
+        await page.waitForFunction(()=>[...document.querySelectorAll('.gs-inline-grid img')].every(image=>image.complete&&image.naturalWidth>0),null,{timeout:10000})
+        const modeSources=await modes.locator('img').evaluateAll(images=>images.map(image=>({src:image.currentSrc,ready:image.complete&&image.naturalWidth>0,naturalWidth:image.naturalWidth})))
         assert.equal(new Set(modeSources.map(image=>image.src)).size,game.chronicles.length,'Each mode/platform has its own owner-supplied scene')
-        assert.ok(modeSources.every(image=>image.ready&&image.src.includes('-owner-v1-')),'All supplied mode/platform images decode')
+        assert.ok(modeSources.every(image=>image.ready&&image.src.includes('-owner-v1-')),`All supplied mode/platform images decode: ${JSON.stringify(modeSources)}`)
         await modes.screenshot({path:`${output}/mode-art-${game.id}-${width}.png`})
         await noOverflow()
         if (game.chronicles.length) {

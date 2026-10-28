@@ -59,6 +59,7 @@ export function ThemeScope({
   children,
   className,
   as: Tag = 'div',
+  ...attributes
 }: {
   theme: GameTheme
   children: ReactNode
@@ -70,6 +71,7 @@ export function ThemeScope({
   return (
     <ThemeContext value={lifted}>
       <Tag
+        {...attributes}
         data-theme={theme.id}
         data-pattern={theme.decor.pattern}
         style={themeToCssVars(lifted)}

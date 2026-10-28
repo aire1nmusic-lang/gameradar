@@ -92,3 +92,5 @@ html[data-design=lobby] body .gs-site-header .gs-header-search:not(#a):not(#b):n
   html[data-design=lobby] body .gs-catalog-page .gs-row-name:not(#a):not(#b):not(#c):not(#d):not(#e){font-size:15px!important}
 }
 @media(max-width:639px){.gs-search-intro{padding:20px 16px 16px}.gs-search-intro h2{font-size:22px}html[data-design=lobby] body .gs-search-input-row:not(#a):not(#b):not(#c):not(#d):not(#e){margin-inline:16px}html[data-design=lobby] body .gs-search-overlay .gs-search-surface:not(#a):not(#b):not(#c):not(#d):not(#e){height:calc(100dvh - 24px);max-height:none;border-radius:18px!important;margin:12px;width:calc(100% - 24px)}}
+html[data-design=lobby] body .gs-search-overlay {--search-ink:#f3f7fa;--search-muted:#aebfcd;--color-ink-50:#f3f7fa;--color-ink-200:#d4dfe7;--color-ink-300:#c2ced8;--color-ink-400:#aebfcd;--color-ink-500:#aebfcd;--color-ink-600:#90a2b2}
+.gs-search-surface input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}

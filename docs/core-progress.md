@@ -1,3 +1,11 @@
+## 28.10.2026 — Owner mode artwork integrated; final public UI acceptance pending
+
+- Owner supplied10images and explicitly requested installation plus unique TOP1/2/3 prompts per game. Installed9distinct tile scenes (sixMinecraft/threeGTA), using secondBedWars for clearer small figures. Source images are2048x1143 (not native4K); generated400/800/1600WebP delivery sizes without upscaling. RAGE:MP bottom crop top340removes the supplied horizontal black seam; original Library uploads retained. Provenance docs/design-review/mode-art-owner-v1.json.
+- Tile-only registry preserves approved full-page backgrounds, L2chronicles and existing podium scenes/shields. NonL2tiles have stronger sans captions, quieter borders and3desktop/2mobile columns. New TOPprompts do NOT install ungenerated art. No account/core/API/data/DNS/VM/payment change; Claude owns auth.
+- VERIFIED previousUI sourcefa6b5d12 CI40750881612 SUCCESS: sixviewports xthreegames, full core/DB/build/gates, noAPIwrites. Downloaded artifact12844176934 and inspected actual GTA1440/390plaque/catalog, owner1440 and search1440. Search screenshot exposed oldL2margin+overlaypadding pushing long results below viewport; corrected common centered bounds and added landscape/viewport assertion. Final images/bounds version must pass fresh gate before primary publication.
+- LOCAL final typecheck/build152routes/bundle/testsyntax PASS. Bundle initially saw two old hash generations in the reused dist directory; moved only generated dist aside, rebuilt clean and guard passed unchanged. No source/gate bypass.
+- Cost existingCI/hosting plus ordinary asset/rollback storage; no new paid services. Rollback scoped revert and existing guarded release archive. Next finalCI/screenshots, main merge, guarded publish and independent primary verification.
+
 ## 28.10.2026 — Owner screenshot review: public UI correction IN PROGRESS
 
 - Owner requests inset favourites, clearer TOP1/GTA and ranks4+, stronger server names, quieter frames/type, dark owner onboarding and improved global search; mode artwork prompts requested separately. Isolated codex/ui-review-20261028 from current origin/main b8a138a; existing dirty worktrees preserved. Claude owns auth; no account/core/API/data/DNS/VM changes in this slice.

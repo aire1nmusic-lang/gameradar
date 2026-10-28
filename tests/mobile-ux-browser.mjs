@@ -212,6 +212,11 @@ try {
         const modes = picker.getByRole('navigation', { name: game.id === 'gtarp' ? 'Выбрать платформу' : 'Выбрать режим', exact: true })
         await modes.waitFor({ state: 'visible' })
         assert.equal(await modes.getByRole('link').count(), game.chronicles.length)
+        await mediaReady(page)
+        const modeSources=await modes.locator('img').evaluateAll(images=>images.map(image=>({src:image.currentSrc,ready:image.complete&&image.naturalWidth>=400})))
+        assert.equal(new Set(modeSources.map(image=>image.src)).size,game.chronicles.length,'Each mode/platform has its own owner-supplied scene')
+        assert.ok(modeSources.every(image=>image.ready&&image.src.includes('-owner-v1-')),'All supplied mode/platform images decode')
+        await modes.screenshot({path:`${output}/mode-art-${game.id}-${width}.png`})
         await noOverflow()
         if (game.chronicles.length) {
           const target = game.chronicles[0]
@@ -445,6 +450,11 @@ try {
       await page.getByRole('option', { name: /QA Очень длинное/ }).first().waitFor()
       await input.press('ArrowDown')
       assert.equal(await input.getAttribute('aria-activedescendant'),'gs-search-option-0')
+
+      const searchBounds=await page.locator('.gs-search-surface').boundingBox()
+      assert.ok(searchBounds.x>=0&&searchBounds.y>=0&&searchBounds.x+searchBounds.width<=width+1&&searchBounds.y+searchBounds.height<=height+1,'Entire search surface stays within viewport, including landscape')
+      const closeBounds=await page.getByRole('button',{name:'Закрыть поиск',exact:true}).boundingBox()
+      assert.ok(closeBounds.width>=44&&closeBounds.height>=44,'Search close has a full touch target')
       await page.screenshot({ path: `${output}/search-${game.id}-${width}.png` })
       await input.press('Escape')
       if (width < 1024) {

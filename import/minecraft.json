@@ -1985,5 +1985,71 @@
     "checkedAt": "2026-10-28",
     "confidence": "confirmed",
     "notes": "Listing address corroborated on official website on 2026-10-28. Listing registration is not treated as launch."
+  },
+  {
+    "name": "Beyond Sol",
+    "website": "https://beyond-sol.space/",
+    "version": "1.20.1",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.beyond-sol.space",
+      "port": null
+    },
+    "key": "mc:play.beyond-sol.space",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://beyond-sol.space/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://beyond-sol.space/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366020"
+      }
+    ],
+    "checkedAt": "2026-10-28",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-28. Listing registration is not treated as launch."
+  },
+  {
+    "name": "Endless Network",
+    "website": "https://endlessmc.net",
+    "version": "26.3",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.endlessmc.net",
+      "port": 25565
+    },
+    "key": "mc:play.endlessmc.net:25565",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://endlessmc.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://endlessmc.net/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366017"
+      }
+    ],
+    "checkedAt": "2026-10-28",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-28. Listing registration is not treated as launch."
   }
 ]

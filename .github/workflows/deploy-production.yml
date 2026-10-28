@@ -54,6 +54,14 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Fail early on service-credential/target changes before tests, backups or mutable uploads.
+      # This read check does not claim to validate the separate asset-session JWT.
+      - name: Check actual primary Worker access before release work
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node .github/scripts/check-primary-access.mjs
+
       - name: Require Yandex Object Storage credentials
         env:
           YC_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}

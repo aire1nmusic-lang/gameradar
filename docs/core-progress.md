@@ -1,3 +1,12 @@
+## 28.10.2026 — E-mail sign-up mail through the team Gmail (free); VERIFIED locally, deploy + app password pending
+
+- Status before this step: admin-by-verified-e-mail and the cabinet fix are live (owner deploy; /coins/me 401 without a session, no "Yandex Cloud" errors). Owner's ADMIN role appears after the next Google sign-in (log out, log in). E-mail registration was still off: no mail sender.
+- Cloudflare Email Sending needs Workers Paid, Resend needs a new account — owner wants neither. Built Gmail SMTP from the Worker over Cloudflare TCP sockets: worker/lib/smtp-socket.ts (implicit TLS 465, AUTH LOGIN, dot-stuffing, errors carry only step+code), worker/cloudflare-sockets.d.ts, message builder moved to private-api/smtp-message.mjs (shared with the Node SMTP client). wrangler.toml: MAIL_DRIVER=smtp, smtp.gmail.com:465, SMTP_USER/MAIL_FROM gamescout.team@gmail.com. Gmail limit about 500 recipients/day (below the 1500 daily cap of account operations).
+- scripts/accounts-keys.mjs now asks SMTP_PASSWORD instead of RESEND_API_KEY and accepts key names: `node scripts/accounts-keys.mjs SMTP_PASSWORD` asks only the Gmail app password (spaces removed), stores the secret, deploys, checks /auth/me.
+- VERIFIED locally: wrangler dev (workerd) + fresh local D1 + fake plain SMTP on 127.0.0.1:2525 — register → letter delivered through cloudflare:sockets (EHLO, AUTH, MAIL, RCPT, DATA) → link token → register/confirm → session (/auth/me) → password login 200. typecheck PASS, test:accounts-fn PASS, smtp.test 5/5, test:api PASS.
+- NOT verified: TLS to smtp.gmail.com from Cloudflare and the real app password (LIKELY; port 465 is not blocked on Workers). Until SMTP_PASSWORD is stored, mailEnabled stays false and the site keeps e-mail sign-up hidden exactly as before. Rollback: MAIL_DRIVER back to resend (or delete the secret) and deploy.
+- Next: owner runs the one command above; real sign-up with a test address; then Yandex.Metrika.
+
 ## 28.10.2026 — VERIFIED real Google sign-in; admin by verified e-mail; cabinet errors removed (built, deploy pending)
 
 - Owner signed in with Google on the live site: account created, cabinet shows "Вход через Google" (VERIFIED real provider round trip). Visible issues: role PLAYER for gamescout.team@gmail.com (should be admin) and red "Приватный API обслуживается в Yandex Cloud" lines from cabinet calls (claims/servers/coins) that hit the paused private core.

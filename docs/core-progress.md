@@ -1,3 +1,10 @@
+## 28.10.2026 — VERIFIED live: Worker sends mail through the team Gmail (version 3acd7461)
+
+- Owner ran `node scripts/accounts-keys.mjs SMTP_PASSWORD` → secret stored, Worker version 3acd7461-1e32-447c-9867-68c40661fe5b deployed from PR28 branch, DONE. Live /auth/me: emailLogin true, registrationOpen true, providers [google, discord].
+- Independent check: one password-reset request for gamescout.team@gmail.com (no account with that e-mail → link-less NO_ACCOUNT notice, nothing created) with `wrangler tail`: 202, outcome ok, wall 1165 ms, no mail_dispatch_failed log → Gmail accepted the message over TLS 465 from Cloudflare (VERIFIED send; inbox delivery LIKELY, owner can see the letter).
+- NOT yet: a real person completing e-mail sign-up via the link (owner/first player). Production runs branch claude/accounts-yandex-20261028 (PR28); main must receive it with [skip ci] (owner merge) or a deploy from main drops Gmail mail and the admin/cabinet fix.
+- Next: Yandex.Metrika (needs the counter number from the owner).
+
 ## 28.10.2026 — E-mail sign-up mail through the team Gmail (free); VERIFIED locally, deploy + app password pending
 
 - Status before this step: admin-by-verified-e-mail and the cabinet fix are live (owner deploy; /coins/me 401 without a session, no "Yandex Cloud" errors). Owner's ADMIN role appears after the next Google sign-in (log out, log in). E-mail registration was still off: no mail sender.

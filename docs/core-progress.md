@@ -1,3 +1,9 @@
+## 28.10.2026 — Owner approved account go-live; production steps blocked by the session's permission policy; marketing plan drafted
+
+- Owner said yes to deployment. Prepared on the PR branch: ACCOUNTS_FREE="true" in wrangler.toml (sign-up closed), dev sign-in and explicit legacy D1 accounts keep working; `npm run test:api` and `test:monitoring` PASS locally; PR CI PASS. Remote D1 shows exactly one pending migration: 0012_free_accounts.sql.
+- BLOCKED: setting Worker secrets (PASSWORD_PEPPER, ACCOUNTS_RATE_KEY), `wrangler d1 migrations apply --remote` and `wrangler deploy` were refused by the automated permission policy; not retried by other means. The owner runs them (commands in the session answer) or allows them. PASSWORD_PEPPER must be kept forever: losing it invalidates every password.
+- Marketing: docs/marketing-plan.md (0 ₽ start, no fake reviews/spam; SEO landing pages, structured data, llms.txt/methodology page, Habr/vc/Dzen/Pikabu/short video, communities, owner outreach, 4-week rhythm, metrics; who does what).
+
 ## 28.10.2026 — Google and Discord sign-in added to the free accounts service; verified locally, NOT deployed
 
 - Owner asked for e-mail registration plus Google and Discord. Added provider routes (start + callback) to accounts-fn/app.mjs using worker/lib/oauth.ts, tables acc_identities/acc_oauth_states in 0012 (not applied anywhere), store methods in memory and D1 stores; Worker passes GOOGLE_*/DISCORD_* secrets; OAuth round trips count toward the daily cap. Provider e-mail is not copied into the account (no takeover by e-mail); no linking yet.

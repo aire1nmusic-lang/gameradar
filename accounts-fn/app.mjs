@@ -11,7 +11,7 @@ import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
  * Storage is behind the small `store` interface below; `store-ydb.mjs` is the production implementation
  * (serverless YDB) and `store-memory.mjs` is the reference used by tests. Everything else the private core does
  * (Claims, votes, Coins, payments) is deliberately NOT here: those routes answer 404 `route_unavailable`.
- * Sign-in through Yandex ID, Google and Discord is supported (sign-in/sign-up only, no linking to an existing account).
+ * Sign-in through Google and Discord is supported (sign-in/sign-up only, no linking to an existing account).
  *
  * store contract — every method is atomic (one serializable transaction in YDB):
  *   ping()
@@ -49,7 +49,7 @@ const cookieValue = (c, name) => (c.req.header('Cookie') ?? '').split(';').map(x
 
 const LINK_TTL_MS = 20 * 60_000
 const OAUTH_TTL_MS = 10 * 60_000
-const OAUTH_PROVIDERS = ['yandex', 'google', 'discord']
+const OAUTH_PROVIDERS = ['google', 'discord']
 const safeName = value => {
   const name = typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40) : ''
   return name.length >= 1 ? name : 'Игрок'
@@ -78,7 +78,7 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
   const local = config.environment === 'development' && ['127.0.0.1', 'localhost'].includes(new URL(origin).hostname)
   if (!local && !origin.startsWith('https://')) throw new Error('https_required')
   const app = new Hono()
-  // Only Yandex ID, Google and Discord are offered by this service; provider secrets decide which of them are on.
+  // Only Google and Discord are offered by this service (owner decision); provider secrets decide which of them are on.
   const oauthEnv = { ...(config.oauth ?? {}), ALLOWED_ORIGIN: origin, ENVIRONMENT: local ? 'development' : 'production' }
   const providers = () => enabledProviders(oauthEnv).filter(p => OAUTH_PROVIDERS.includes(p))
   const oauthCookie = (value, seconds) => `gs_private_oauth=${value}; Path=/api/v1/auth; HttpOnly; SameSite=Lax; Max-Age=${seconds}${local ? '' : '; Secure'}`

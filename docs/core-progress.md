@@ -1,6 +1,7 @@
 ## 28.10.2026 — PR26 merged to main ([skip ci]); Yandex ID sign-in added; sign-up opened in config; keys script
 
 - PR26 merged in the browser on the owner's explicit instruction (merge commit 51fbc96, [skip ci], no publication triggered); AGENTS.md now records the owner-approved accounts exception (Cloudflare D1, tables acc_*).
+- UPDATE same day: owner wants e-mail + Google + Discord only — Yandex removed again. Mail: Cloudflare Email Sending needs Workers Paid (not free), so MAIL_DRIVER=resend (free plan 3 000/month, 100/day per Resend), MAIL_FROM=no-reply@gamescout.online in wrangler.toml; the keys script asks RESEND_API_KEY, Google, Discord.
 - Owner already has a Yandex ID OAuth app: free accounts now also offer Yandex (oauth.ts provider; same browser-bound one-use state; e-mail not copied). wrangler.toml: ACCOUNTS_REGISTRATION_OPEN="true" — without a mail provider only Yandex/Google/Discord sign-up works; e-mail registration stays unavailable.
 - scripts/accounts-keys.mjs: owner pastes Yandex/Google/Discord keys (hidden input), script stores Worker secrets, deploys, reports live providers. Worker deploys remain blocked for the session by the permission policy. Redirect URI the Yandex app must contain: https://gamescout.online/api/v1/auth/yandex/callback.
 - VERIFIED: test:accounts-fn 33/33, test:api PASS, typecheck PASS. NOT verified: real Yandex sign-in (needs owner's keys and one click on the live site).

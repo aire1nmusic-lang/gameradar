@@ -7,7 +7,7 @@ import { resolve } from 'node:path'
 import readline from 'node:readline'
 
 const KEYS = [
-  ['YANDEX_CLIENT_ID', 'Яндекс ID — ClientID'], ['YANDEX_CLIENT_SECRET', 'Яндекс ID — Client secret'],
+  ['RESEND_API_KEY', 'Resend — API key (письма регистрации)'],
   ['GOOGLE_CLIENT_ID', 'Google — Client ID'], ['GOOGLE_CLIENT_SECRET', 'Google — Client secret'],
   ['DISCORD_CLIENT_ID', 'Discord — Client ID'], ['DISCORD_CLIENT_SECRET', 'Discord — Client secret'],
 ]
@@ -41,5 +41,5 @@ console.log(run(['deploy']).split('\n').filter(line => /Deployed|Version ID/.tes
 
 const response = await fetch('https://gamescout.online/api/v1/auth/me', { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(15000) })
 const me = await response.json().catch(() => ({}))
-console.log(`\nСайт: HTTP ${response.status}; кнопки входа: ${(me.providers ?? []).join(', ') || 'нет'}; регистрация ${me.registrationOpen ? 'открыта' : 'закрыта'}`)
+console.log(`\nСайт: HTTP ${response.status}; кнопки входа: ${(me.providers ?? []).join(', ') || 'нет'}; регистрация ${me.registrationOpen ? 'открыта' : 'закрыта'}; почта ${me.emailLogin ? 'подключена' : 'не подключена'}`)
 console.log(response.ok && me.privateCore ? 'DONE' : 'CHECK FAILED — пришлите этот вывод Claude')

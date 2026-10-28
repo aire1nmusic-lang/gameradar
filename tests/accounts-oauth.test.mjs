@@ -37,10 +37,11 @@ function harness(makeStore, { registrationOpen = true, profiles = {}, withOAuth 
 }
 
 for (const [name, makeStore] of stores) {
-  test(`[${name}] Yandex, Google and Discord are offered, and only when configured`, async () => {
+  test(`[${name}] only Google and Discord are offered, and only when configured`, async () => {
     const h = harness(makeStore)
-    assert.deepEqual((await h.request('/api/v1/auth/me')).body.providers, ['google', 'yandex', 'discord'])
+    assert.deepEqual((await h.request('/api/v1/auth/me')).body.providers, ['google', 'discord'])
     assert.deepEqual((await harness(makeStore, { withOAuth: false }).request('/api/v1/auth/me')).body.providers, [])
+    assert.equal((await h.request('/api/v1/auth/yandex')).status, 404, 'Yandex is configured but not offered by this service')
     assert.equal((await h.request('/api/v1/auth/vk')).status, 404, 'VK is not offered by this service')
     assert.equal((await h.request('/api/v1/auth/github')).status, 404)
     assert.equal((await h.request('/api/v1/auth/google?link=1')).status, 400)

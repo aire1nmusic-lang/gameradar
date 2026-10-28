@@ -17,9 +17,11 @@ ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
 PUBLIC_ONLY = "true"
 # Free-plan accounts (worker/accounts-free.ts). Needs secrets PASSWORD_PEPPER and ACCOUNTS_RATE_KEY, else answers 503.
-# Owner decision 28.10.2026: sign-up open. Without a mail provider only Yandex/Google/Discord sign-up works.
+# Owner decision 28.10.2026: sign-up open (e-mail, Google, Discord). E-mail needs the RESEND_API_KEY secret.
 ACCOUNTS_FREE = "true"
 ACCOUNTS_REGISTRATION_OPEN = "true"
+MAIL_DRIVER = "resend"
+MAIL_FROM = "GameScout <no-reply@gamescout.online>"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # Probes per cron tick; each costs a few subrequests (DNS + connect).
 MONITOR_BATCH = "8"

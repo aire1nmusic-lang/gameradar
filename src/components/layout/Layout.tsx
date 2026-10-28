@@ -18,6 +18,7 @@ import { WorldPageScope } from '@/components/world/WorldPageScope'
 import './review-refinement.css'
 import './world-glass-review.css'
 import './world-polish.css'
+import './public-ui-review.css'
 
 export function Layout() {
   return <PortalProvider><WorldNavigationProvider><LayoutContent /></WorldNavigationProvider></PortalProvider>

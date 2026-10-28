@@ -22,7 +22,7 @@ export function RankMedal({ rank, className, neutral=false, gameId }: { rank: nu
       className={cn(
         'gs-rank-medal gs-rank-number num grid h-8 w-7 shrink-0 place-items-center font-sans text-[12px] font-bold',
         medal && `gs-rank-podium gs-rank-${rank}`,
-        !medal && 'text-ink-400',
+        !medal && 'gs-rank-plain text-ink-400',
         className,
       )}
       style={{
@@ -33,7 +33,7 @@ export function RankMedal({ rank, className, neutral=false, gameId }: { rank: nu
 
       }}
     >
-      {icon ? <img src={icon} width={192} height={192} alt="" decoding="async" /> : <span>{rank}</span>}
+      {icon ? <img src={icon} width={192} height={192} alt="" decoding="async" /> : <span>{medal ? rank : String(rank).padStart(2, '0')}</span>}
     </span>
   )
 }

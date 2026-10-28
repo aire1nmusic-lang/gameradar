@@ -112,9 +112,22 @@ const L2_CHRONICLE_ART: Record<string, WorldArt> = {
   gracia: art('lineage-2/chronicle-gracia-approved-v1', 'Gracia Final — воин у горящей крепости', 'medium', {desktop:'75% 25%',mobile:'75% 25%'}, [400,800,1600]),
 }
 
+/** Owner-supplied mode/platform images, 28 Oct. Navigation tiles only; world heroes stay approved. */
+const MODE_TILE_ART: Record<string, WorldArt> = {
+  'minecraft:survival': art('minecraft/mode-survival-owner-v1', 'Survival — деревня у реки и игрок с киркой', 'bright', {desktop:'55% 58%',mobile:'70% 55%'}, [400,800,1600]),
+  'minecraft:anarchy': art('minecraft/mode-anarchy-owner-v1', 'Anarchy — разрушенный спавн, обсидиан и лава', 'dark', {desktop:'50% 55%',mobile:'65% 50%'}, [400,800,1600]),
+  'minecraft:skyblock': art('minecraft/mode-skyblock-owner-v1', 'SkyBlock — остров с домом над облаками', 'bright', {desktop:'50% 55%',mobile:'50% 55%'}, [400,800,1600]),
+  'minecraft:bedwars': art('minecraft/mode-bedwars-owner-v1', 'BedWars — кровать и бой команд на мосту', 'bright', {desktop:'50% 55%',mobile:'65% 55%'}, [400,800,1600]),
+  'minecraft:prison': art('minecraft/mode-prison-owner-v1', 'Prison — тюремная шахта с рудами', 'dark', {desktop:'50% 55%',mobile:'70% 50%'}, [400,800,1600]),
+  'minecraft:modded': art('minecraft/mode-modded-owner-v1', 'Modded — механизмы, трубы и магический портал', 'medium', {desktop:'50% 55%',mobile:'60% 55%'}, [400,800,1600]),
+  'gtarp:fivem': art('gta-rp/mode-fivem-owner-v1', 'FiveM — полицейский и водитель в ночном городе', 'medium', {desktop:'50% 62%',mobile:'75% 60%'}, [400,800,1600]),
+  'gtarp:ragemp': art('gta-rp/mode-ragemp-owner-v1', 'RAGE:MP — деловой квартал и представительский автомобиль', 'bright', {desktop:'50% 50%',mobile:'75% 45%'}, [400,800,1600]),
+  'gtarp:altv': art('gta-rp/mode-altv-owner-v1', 'alt:V — тюнинг-гараж у ночного побережья', 'dark', {desktop:'50% 60%',mobile:'72% 55%'}, [400,800,1600]),
+}
+
 /** The All tile has its own banner without replacing the main world's approved backdrop. */
 export function chronicleTileArt(gameId: string, chronicleId?: string): WorldArt | undefined {
-  if (gameId !== 'lineage2') return worldArt('hero',gameId,chronicleId) ?? worldArt('card',gameId,chronicleId)
+  if (gameId !== 'lineage2') return MODE_TILE_ART[`${gameId}:${chronicleId}`] ?? worldArt('hero',gameId,chronicleId) ?? worldArt('card',gameId,chronicleId)
   const item = L2_CHRONICLE_ART[chronicleId ?? 'all']
   if (!item) return undefined
   // Tile crops differ from full-page backgrounds: protect the top of every head.

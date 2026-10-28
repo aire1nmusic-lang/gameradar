@@ -393,6 +393,10 @@ try {
       }
       assert.equal(await page.locator('.gs-profile-particle').first().evaluate(e=>getComputedStyle(e).animationPlayState), 'running')
       await page.emulateMedia({reducedMotion:'reduce'})
+      for (const action of await page.locator('.gs-server-profile .gs-button-primary,.gs-server-profile .gt-btn--primary').all()) {
+        assert.equal(await action.evaluate(e=>getComputedStyle(e).color),'rgb(23, 33, 40)','Every lime profile action keeps dark readable ink, including vote/login')
+        assert.equal(await action.evaluate(e=>getComputedStyle(e).webkitTextStrokeWidth),'0px','Primary action labels never inherit the pale-text contour')
+      }
       const favorite=page.locator('.gs-profile-favorite')
       const wasFavorite=await favorite.getAttribute('aria-pressed')
       assert.equal(await favorite.locator('svg').evaluate(e=>getComputedStyle(e).width),'19px')

@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import { memoryStore } from '../accounts-fn/store-memory.mjs'
+import { d1Store } from '../accounts-fn/store-d1.mjs'
+import { sqliteD1 } from './helpers/d1-sqlite.mjs'
 
 /**
  * Store contract. Always runs against the in-memory reference; runs against a real YDB too when
@@ -10,7 +12,7 @@ import { memoryStore } from '../accounts-fn/store-memory.mjs'
  *   YDB_TEST_ENDPOINT=grpc://localhost:2136 YDB_TEST_DATABASE=/local YDB_ANONYMOUS_CREDENTIALS=1 node --test tests/accounts-fn-store.test.mjs
  * Each case uses random addresses and keys, so no cleanup is needed.
  */
-const factories = [['memory', async () => memoryStore()]]
+const factories = [['memory', async () => memoryStore()], ['d1-sqlite', async () => d1Store(sqliteD1(['migrations/0012_free_accounts.sql']))]]
 if (process.env.YDB_TEST_ENDPOINT && process.env.YDB_TEST_DATABASE) {
   factories.push(['ydb', async () => {
     const { createYdbStore } = await import('../accounts-fn/store-ydb.mjs')

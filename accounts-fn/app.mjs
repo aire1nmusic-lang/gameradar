@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
-import { isIP } from 'node:net'
-import { digest, hashPassword, keyed, passwordValid, token, verifyPassword } from '../private-api/crypto.mjs'
+import { digest, keyed, passwordValid, token } from './primitives.mjs'
 import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
 
 /**
@@ -59,7 +58,9 @@ export function userDto(user) {
  * sendNotice(to, kind, accountUrl) sends the link-less letter ('EXISTS' | 'NO_ACCOUNT') so that registration and recovery
  * take the same time and send one letter whether or not the address has an account (no probing by response time).
  */
-export function createAccountsApp({ store, config, sendLinkMail, sendNotice = async () => {}, clock = () => new Date() }) {
+/** passwords: {hash(password), verify(password, stored)} — scrypt in Node (private-api/crypto.mjs), PBKDF2+pepper in a Worker. */
+export function createAccountsApp({ store, config, passwords, sendLinkMail, sendNotice = async () => {}, clock = () => new Date() }) {
+  if (typeof passwords?.hash !== 'function' || typeof passwords?.verify !== 'function') throw new Error('password_hashing_required')
   if ((config.rateKey ?? '').length < 32) throw new Error('private_keys_required')
   const origin = new URL(config.origin).origin
   const local = config.environment === 'development' && ['127.0.0.1', 'localhost'].includes(new URL(origin).hostname)
@@ -72,7 +73,7 @@ export function createAccountsApp({ store, config, sendLinkMail, sendNotice = as
   const mailRequired = () => { if (!config.mailEnabled) fail(503, 'mail_disabled', 'Почта ещё не подключена') }
   // Same-cost failure path when the email is unknown; computed on first use, not at cold start.
   let dummy
-  const dummyHash = () => (dummy ??= hashPassword(token()))
+  const dummyHash = () => (dummy ??= passwords.hash(token()))
 
   async function json(c) {
     let body
@@ -139,7 +140,7 @@ export function createAccountsApp({ store, config, sendLinkMail, sendNotice = as
     mailRequired()
     const body = await json(c), email = emailOf(body.email), password = passwordOf(body.password), name = textOf(body.displayName, 2, 40)
     await limit(c, 'mail', email, 5)
-    const hash = await hashPassword(password)
+    const hash = await passwords.hash(password)
     // An existing address gets the same answer and a link-less notice, so the form cannot be used to probe accounts.
     if (!await issue(email, 'REGISTER', { hash, name }, true)) await notify(email, 'EXISTS')
     return c.json({ sent: true, message: 'Если адрес доступен для регистрации, письмо отправлено.' }, 202)
@@ -159,7 +160,7 @@ export function createAccountsApp({ store, config, sendLinkMail, sendNotice = as
     const body = await json(c), email = emailOf(body.email), password = passwordOf(body.password)
     await limit(c, 'login', email)
     const user = await store.userByEmail(email)
-    const valid = await verifyPassword(password, user?.passwordHash ?? await dummyHash())
+    const valid = await passwords.verify(password, user?.passwordHash ?? await dummyHash())
     if (!user || !valid || user.bannedAt) fail(401, 'invalid_credentials', 'Неверный email или пароль')
     const raw = token(), now = clock()
     const opened = await store.openSession({ userId: user.id, expectedPasswordHash: user.passwordHash, sessionHash: digest(raw),
@@ -182,7 +183,7 @@ export function createAccountsApp({ store, config, sendLinkMail, sendNotice = as
     await limit(c, 'reset', digest(String(body.token ?? '')))
     const newPassword = passwordOf(body.password)
     if (typeof body.token !== 'string' || body.token.length > 128) fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
-    const hash = await hashPassword(newPassword)
+    const hash = await passwords.hash(newPassword)
     if (!await store.resetPassword({ tokenHash: digest(body.token), passwordHash: hash, now: clock() }))
       fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
     c.header('Set-Cookie', cookie('', 0))
@@ -196,13 +197,4 @@ export function createAccountsApp({ store, config, sendLinkMail, sendNotice = as
   // Everything else of the private core is not part of this service.
   app.all('/api/*', c => c.json({ error: { code: 'route_unavailable', message: 'API route unavailable' } }, 404))
   return app
-}
-
-/** The API Gateway appends/sets the caller address; prefer its own field, else the LAST X-Forwarded-For entry. */
-export function gatewayClientIp(event) {
-  const own = event?.requestContext?.identity?.sourceIp
-  if (typeof own === 'string' && isIP(own)) return own
-  const forwarded = event?.headers?.['X-Forwarded-For'] ?? event?.headers?.['x-forwarded-for']
-  const last = typeof forwarded === 'string' ? forwarded.split(',').at(-1)?.trim() : ''
-  return last && isIP(last) ? last : 'unknown'
 }

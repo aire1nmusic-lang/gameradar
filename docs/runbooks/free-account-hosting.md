@@ -1,4 +1,41 @@
-# Free-tier account hosting: Yandex Cloud Functions + serverless YDB (candidate)
+# Free account hosting
+
+## DECISION 28.10.2026 (owner): Cloudflare free plan, no Yandex for accounts
+
+The owner rejected anything that can charge money. Accounts run inside the existing Cloudflare Worker on the free plan, which refuses
+requests past its quotas instead of billing them (Workers: 100 000 requests/day, then Error 1027; D1: 5 M rows read and 100 000 written
+per day, then queries fail — [Workers limits](https://developers.cloudflare.com/workers/platform/limits/),
+[D1 limits](https://developers.cloudflare.com/d1/platform/limits/)).
+
+**Pending owner edit:** `AGENTS.md` still says private data belongs to Yandex/PostgreSQL. The owner must add the exception for accounts
+(the automated session was not allowed to change project rules). **Legal note:** e-mail addresses and password hashes of Russian users
+are then stored outside Russia (152-FZ localisation) — an owner trade-off, not a compliance finding.
+
+| Piece | File |
+| --- | --- |
+| Worker entry: `/api/v1/auth/*` → accounts app when `ACCOUNTS_FREE=true`; daily cap; hourly cleanup from the cron | `worker/accounts-free.ts`, `worker/index.ts` |
+| Same app and wire contract; PBKDF2-15000 + `PASSWORD_PEPPER` (free-plan CPU budget); mail via Worker drivers (`resend`/`unisender`) | `accounts-fn/app.mjs`, `worker/lib/password.ts`, `worker/lib/mailer.ts` |
+| D1 store: one atomic guarded `batch()` per operation | `accounts-fn/store-d1.mjs`, `migrations/0012_free_accounts.sql` (new tables only) |
+
+Settings: `ACCOUNTS_FREE=true` (off by default), `ACCOUNTS_REGISTRATION_OPEN=true` (closed by default), `ACCOUNTS_DAILY_LIMIT` (default
+1 500 same-site account POSTs per UTC day), secrets `PASSWORD_PEPPER` and `ACCOUNTS_RATE_KEY` (≥ 32 chars; without them the service
+answers 503), mail `MAIL_DRIVER` + key + `MAIL_FROM`. At the cap the form says the free limit for today is used up; the rest of the site
+is unaffected and nothing is billed.
+
+Evidence — VERIFIED locally on workerd + local D1 (`wrangler dev --local`, migrations 0001–0012): register → link mail → confirm → cookie →
+me → replay 400 → logout → wrong password 401 → login → duplicate signup gets a link-less notice → reset → old sessions revoked → old
+password 401 → new password 200; forged origin 403 and not counted; daily cap 503; PBKDF2 hash stored; `wrangler deploy --dry-run`
+bundle 304 KiB; `npm run test:accounts-fn` 27/27; typecheck PASS. NOT verified: production D1, the free-plan 10 ms CPU limit (local
+dev does not enforce it; the earlier D1 accounts used the same PBKDF2 setting), real mail delivery.
+
+Go-live (each step needs the owner's explicit OK; nothing done yet): (1) free mail-provider plan and its DNS records in Cloudflare;
+(2) Worker secrets `PASSWORD_PEPPER`, `ACCOUNTS_RATE_KEY`, mail key; (3) apply `0012_free_accounts.sql` to production D1 (additive;
+rollback = drop `acc_*`); (4) deploy with `ACCOUNTS_FREE=true`, registration closed; (5) real e-mail journey; (6) open registration.
+Rollback: unset `ACCOUNTS_FREE` — the previous behaviour returns at once.
+
+---
+
+# Earlier analysis: Yandex Cloud Functions + serverless YDB (superseded, kept for reference)
 
 Status on 28 October 2026: **source and local tests complete; nothing deployed, no cloud resource created, no DNS or production change.**
 Live registration is still BLOCKED. This document records the audit, the official terms checked, what the cost guards can and cannot do,

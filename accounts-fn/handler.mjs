@@ -1,4 +1,9 @@
-import { createAccountsApp, gatewayClientIp } from './app.mjs'
+import { isIP } from 'node:net'
+import { createAccountsApp } from './app.mjs'
+import { noticeMail } from './mail.mjs'
+import { hashPassword, verifyPassword } from '../private-api/crypto.mjs'
+
+export { noticeMail }
 import { linkMail, mailEnabled, sendMail } from '../worker/lib/mailer.ts'
 import { sendSmtp } from '../private-api/smtp.mjs'
 
@@ -6,6 +11,15 @@ import { sendSmtp } from '../private-api/smtp.mjs'
  * Yandex Cloud Functions entry point behind API Gateway (payload_format_version 1.0).
  * Entrypoint name for the platform: `index.handler` (see build.mjs).
  */
+/** The API Gateway appends/sets the caller address; prefer its own field, else the LAST X-Forwarded-For entry. */
+export function gatewayClientIp(event) {
+  const own = event?.requestContext?.identity?.sourceIp
+  if (typeof own === 'string' && isIP(own)) return own
+  const forwarded = event?.headers?.['X-Forwarded-For'] ?? event?.headers?.['x-forwarded-for']
+  const last = typeof forwarded === 'string' ? forwarded.split(',').at(-1)?.trim() : ''
+  return last && isIP(last) ? last : 'unknown'
+}
+
 export function configFromEnv(env = process.env) {
   const mailEnv = { ENVIRONMENT: 'production', MAIL_DRIVER: env.MAIL_DRIVER, MAIL_FROM: env.MAIL_FROM, RESEND_API_KEY: env.RESEND_API_KEY,
     UNISENDER_API_KEY: env.UNISENDER_API_KEY, SMTP_HOST: env.SMTP_HOST, SMTP_PORT: env.SMTP_PORT, SMTP_USER: env.SMTP_USER,
@@ -39,7 +53,7 @@ export async function toResponse(response) {
 export function createHandler({ store, config, sendLinkMail, sendNotice }) {
   let app
   return async function handle(event) {
-    app ??= createAccountsApp({ store: await store(), config, sendLinkMail, sendNotice })
+    app ??= createAccountsApp({ store: await store(), config, sendLinkMail, sendNotice, passwords: { hash: hashPassword, verify: verifyPassword } })
     try {
       return await toResponse(await app.fetch(toRequest(event, config.origin), { clientIp: gatewayClientIp(event) }))
     } catch {
@@ -47,22 +61,6 @@ export function createHandler({ store, config, sendLinkMail, sendNotice }) {
         body: JSON.stringify({ error: { code: 'internal_error', message: 'Внутренняя ошибка' } }), isBase64Encoded: false }
     }
   }
-}
-
-const NOTICE = {
-  EXISTS: ['Аккаунт уже существует', 'Этот адрес указали при регистрации на GameScout, но аккаунт с ним уже есть.'],
-  NO_ACCOUNT: ['Аккаунт не найден', 'Для этого адреса запрошено восстановление пароля на GameScout, но аккаунта с ним нет.'],
-}
-/** A letter without any token: it only tells the owner of the address what happened and where to go. */
-export function noticeMail(to, kind, accountUrl) {
-  const [subject, lead] = NOTICE[kind] ?? NOTICE.NO_ACCOUNT
-  const text = `${lead}
-
-Если это были вы, откройте ${accountUrl}: войдите или восстановите пароль, либо зарегистрируйтесь с нужным адресом. Если вы ничего не запрашивали, просто удалите это письмо.
-
-GameScout`
-  const html = `<p>${lead}</p><p>Если это были вы, откройте <a href="${accountUrl}">${accountUrl}</a>. Если вы ничего не запрашивали, просто удалите это письмо.</p><p>GameScout</p>`
-  return { to, subject: `GameScout: ${subject}`, text, html }
 }
 
 let cached

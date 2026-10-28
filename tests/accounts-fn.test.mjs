@@ -1,8 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createAccountsApp, gatewayClientIp } from '../accounts-fn/app.mjs'
+import { createAccountsApp } from '../accounts-fn/app.mjs'
+import { gatewayClientIp } from '../accounts-fn/handler.mjs'
 import { memoryStore } from '../accounts-fn/store-memory.mjs'
-import { digest } from '../private-api/crypto.mjs'
+import { digest, hashPassword, verifyPassword } from '../private-api/crypto.mjs'
+const passwords = { hash: hashPassword, verify: verifyPassword }
 
 const origin = 'http://127.0.0.1:5173', password = 'correct horse battery staple'
 const baseConfig = { origin, environment: 'development', mailEnabled: true, registrationOpen: true, rateKey: 'k'.repeat(40) }
@@ -10,7 +12,7 @@ const baseConfig = { origin, environment: 'development', mailEnabled: true, regi
 function harness(overrides = {}) {
   let now = new Date('2026-10-28T12:00:00Z')
   const store = memoryStore(), mails = [], notices = []
-  const app = createAccountsApp({ store, config: { ...baseConfig, ...overrides }, clock: () => now,
+  const app = createAccountsApp({ store, passwords, config: { ...baseConfig, ...overrides }, clock: () => now,
     sendLinkMail: async (to, purpose, link) => { mails.push({ to, purpose, link }) },
     sendNotice: async (to, kind, url) => { notices.push({ to, kind, url }) } })
   const jar = {}
@@ -194,8 +196,9 @@ test('only the accounts routes exist; any other private route is a JSON 404; hea
 
 test('production requires https origin and strong keys; gateway client IP comes from the gateway, not from a public header', () => {
   const store = memoryStore(), config = { ...baseConfig, environment: 'production', origin: 'http://gamescout.online' }
-  assert.throws(() => createAccountsApp({ store, config, sendLinkMail: async () => {} }), /https_required/)
-  assert.throws(() => createAccountsApp({ store, config: { ...baseConfig, rateKey: 'short' }, sendLinkMail: async () => {} }), /private_keys_required/)
+  assert.throws(() => createAccountsApp({ store, passwords, config, sendLinkMail: async () => {} }), /https_required/)
+  assert.throws(() => createAccountsApp({ store, config: baseConfig, sendLinkMail: async () => {} }), /password_hashing_required/)
+  assert.throws(() => createAccountsApp({ store, passwords, config: { ...baseConfig, rateKey: 'short' }, sendLinkMail: async () => {} }), /private_keys_required/)
   assert.equal(gatewayClientIp({ requestContext: { identity: { sourceIp: '203.0.113.5' } }, headers: { 'X-Forwarded-For': '1.1.1.1' } }), '203.0.113.5')
   assert.equal(gatewayClientIp({ headers: { 'X-Forwarded-For': '9.9.9.9, 203.0.113.6' } }), '203.0.113.6')
   assert.equal(gatewayClientIp({ headers: { 'X-Forwarded-For': 'not-an-ip' } }), 'unknown')

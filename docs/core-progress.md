@@ -1,3 +1,9 @@
+## 28.10.2026 — Owner decision: accounts free on Cloudflare (Worker + D1); built and verified locally, NOT deployed
+
+- Owner rejected Yandex for accounts (no possible charges). Built worker/accounts-free.ts (ACCOUNTS_FREE gate, daily cap, hourly cleanup), accounts-fn/store-d1.mjs (guarded atomic batches), migrations/0012_free_accounts.sql (new tables only), PBKDF2+pepper, Worker mail drivers. Frontend unchanged.
+- VERIFIED locally on workerd + local D1 (wrangler dev --local, 12 migrations): full register/confirm/session/logout/login/notice/reset/revocation journey, forged origin 403 uncounted, cap 503; dry-run bundle 304 KiB; test:accounts-fn 27/27; typecheck PASS. NOT verified: production D1, free-plan CPU limit, real mail.
+- BLOCKED for owner: AGENTS.md boundary exception for accounts (session not allowed to edit project rules); legal 152-FZ trade-off. No production change (no secret, migration, deploy, DNS). Go-live/rollback: docs/runbooks/free-account-hosting.md (top). Cost 0.
+
 ## 28.10.2026 — Free-tier accounts candidate (Yandex Functions + serverless YDB) built locally; NOT deployed; cost guard incomplete
 
 - Task: restore registration/sign-in without mandatory payments and without starting the paused private VM. Brief received truncated after item 3 (budget notifications); items 4+ were not seen, so no resource, DNS or main publication was done.

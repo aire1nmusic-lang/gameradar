@@ -43,6 +43,7 @@ import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
 import { sitemapXml } from './lib/sitemap.ts'
 import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, startSession, store, type AppEnv } from './lib/http.ts'
 import { accountRoutes } from './routes/accounts.ts'
+import { freeAccounts, freeAccountsCleanup } from './accounts-free.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 import { applyPublicSnapshot, parsePublicSnapshot } from './lib/public-projection.ts'
 import { deliverRelayNotice, relayNotice } from './lib/telegram-relay.ts'
@@ -868,7 +869,9 @@ async function runTick(env: Env): Promise<void> {
 }
 
 export default {
-  fetch: app.fetch,
+  async fetch(request: Request, env: Env, ctx: Parameters<typeof app.fetch>[2]) {
+    return (await freeAccounts(request, env)) ?? app.fetch(request, env, ctx)
+  },
   /**
    * Cron entry point: keeps VERIFIED/LIVE/OFFLINE current without a request.
    * On the free plan a cron invocation gets 10 ms of CPU, less than one pass
@@ -876,6 +879,7 @@ export default {
    * consumer does the work. Without a queue (local tests) the tick runs here.
    */
   async scheduled(event: { scheduledTime?: number }, env: Env, ctx: { waitUntil(promise: Promise<unknown>): void }) {
+    ctx.waitUntil(freeAccountsCleanup(env, new Date(event.scheduledTime ?? Date.now())).catch(() => console.error('accounts_cleanup_failed')))
     if (env.MONITOR_QUEUE) {
       await env.MONITOR_QUEUE.send({ tick: event.scheduledTime ?? Date.now() })
       return

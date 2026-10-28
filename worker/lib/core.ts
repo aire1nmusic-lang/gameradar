@@ -4,6 +4,16 @@ export interface Env {
   PUBLIC_ONLY?: string
   /** "true" turns on the D1-backed accounts (worker/routes/accounts.ts). Off by default: the private PostgreSQL API in Russia owns accounts. */
   ACCOUNTS_IN_D1?: string
+  /** "true" serves /api/v1/auth/* from the free-plan accounts service (worker/accounts-free.ts, tables acc_*). */
+  ACCOUNTS_FREE?: string
+  /** "true" opens sign-up in the free-plan accounts service; existing accounts sign in regardless. */
+  ACCOUNTS_REGISTRATION_OPEN?: string
+  /** Account operations (POST) allowed per UTC day before the service answers 503 accounts_daily_limit (default 1500). */
+  ACCOUNTS_DAILY_LIMIT?: string
+  /** HMAC key (≥32 chars) for the accounts rate-limit counters; a Worker secret. */
+  ACCOUNTS_RATE_KEY?: string
+  /** "true" pauses account writes (sign-in still works). */
+  EMERGENCY_MODE?: string
   PUBLIC_PROJECTION_SECRET?: string
   TELEGRAM_RELAY_BOT_TOKEN?: string
   TELEGRAM_RELAY_CHAT_ID?: string

@@ -17,8 +17,9 @@ const DEFAULT_DAILY_LIMIT = 1500
 const json = (status: number, code: string, message: string) => new Response(JSON.stringify({ error: { code, message } }),
   { status, headers: { 'Content-Type': 'application/json; charset=UTF-8', 'Cache-Control': 'no-store' } })
 
+/** The legacy D1 accounts (ACCOUNTS_IN_D1) win when explicitly enabled, e.g. in their own acceptance tests. */
 export function freeAccountsEnabled(env: Env): boolean {
-  return env.ACCOUNTS_FREE === 'true'
+  return env.ACCOUNTS_FREE === 'true' && env.ACCOUNTS_IN_D1 !== 'true'
 }
 
 export function dailyLimit(env: Env): number {
@@ -31,10 +32,13 @@ let cached: { key: string; app: ReturnType<typeof createAccountsApp> } | undefin
 /** Answers /api/v1/auth/* when free accounts are on; returns null for every other request. */
 export async function freeAccounts(request: Request, env: Env): Promise<Response | null> {
   const path = new URL(request.url).pathname
-  if (!freeAccountsEnabled(env) || !path.startsWith('/api/v1/auth/')) return null
+  // /auth/dev is the local-development sign-in of the main Worker and stays there.
+  if (!freeAccountsEnabled(env) || !path.startsWith('/api/v1/auth/') || path === '/api/v1/auth/dev') return null
   const pepper = env.PASSWORD_PEPPER ?? '', rateKey = env.ACCOUNTS_RATE_KEY ?? ''
   // Without its own secrets the service stays closed rather than running with weak hashing or shared keys.
-  if (pepper.length < 32 || rateKey.length < 32 || !env.ALLOWED_ORIGIN) return json(503, 'accounts_unavailable', 'Вход и регистрация временно недоступны.')
+  // A local development Worker without them keeps its previous behaviour (dev sign-in, regression tests).
+  if (pepper.length < 32 || rateKey.length < 32 || !env.ALLOWED_ORIGIN)
+    return env.ENVIRONMENT === 'development' ? null : json(503, 'accounts_unavailable', 'Вход и регистрация временно недоступны.')
   // Counted: same-site writes (a forged cross-site request cannot use up the day's budget) and Google/Discord round trips
   // (top-level navigations carry no Origin). The session check /auth/me is never counted.
   const write = !['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('Origin') === env.ALLOWED_ORIGIN

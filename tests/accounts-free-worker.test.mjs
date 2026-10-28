@@ -14,8 +14,11 @@ test('off by default and for non-auth paths; refuses to run without its own secr
   assert.equal(await freeAccounts(new Request(origin + '/api/v1/auth/me'), env({ ACCOUNTS_FREE: undefined })), null)
   assert.equal(await freeAccounts(new Request(origin + '/api/v1/games'), env()), null)
   assert.equal(await freeAccounts(new Request(origin + '/api/v1/claims'), env()), null)
+  assert.equal(await freeAccounts(new Request(origin + '/api/v1/auth/dev'), env()), null, 'local dev sign-in stays in the main Worker')
+  assert.equal(await freeAccounts(new Request(origin + '/api/v1/auth/me'), env({ ACCOUNTS_IN_D1: 'true' })), null, 'explicit legacy D1 accounts win')
+  assert.equal(await freeAccounts(new Request(origin + '/api/v1/auth/me'), env({ PASSWORD_PEPPER: undefined })), null, 'development without secrets falls back')
   for (const missing of [{ PASSWORD_PEPPER: 'short' }, { ACCOUNTS_RATE_KEY: undefined }, { ALLOWED_ORIGIN: undefined }]) {
-    const answer = await freeAccounts(new Request(origin + '/api/v1/auth/me'), env(missing))
+    const answer = await freeAccounts(new Request(origin + '/api/v1/auth/me'), env({ ...missing, ENVIRONMENT: 'production' }))
     assert.equal(answer.status, 503); assert.equal((await answer.json()).error.code, 'accounts_unavailable')
   }
 })

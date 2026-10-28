@@ -1,3 +1,8 @@
+## 28.10.2026 — VERIFIED live: sign-up open with Google and Discord (Worker 4ff91824)
+
+- Owner ran scripts/accounts-keys.mjs: 4 Worker secrets (Google and Discord client id/secret; existing Google client in project helical-liberty with the gamescout.online callback, existing Discord app), Worker version 4ff91824-5bd5-4240-8e5b-490e0ee33db1 deployed (also carries the daily-cap no-write fix).
+- Independent check: /auth/me 200 providers [google, discord], registrationOpen true, emailLogin false; /auth/google and /auth/discord 302 to the real providers with the gamescout.online callbacks; /account shows Google and Discord buttons. NOT yet verified: a real person completing a Google/Discord sign-in (owner click). E-mail registration still needs a mail sender (Resend key, or Gmail app password once the Worker can send SMTP).
+
 ## 28.10.2026 — PR26 merged to main ([skip ci]); Yandex ID sign-in added; sign-up opened in config; keys script
 
 - PR26 merged in the browser on the owner's explicit instruction (merge commit 51fbc96, [skip ci], no publication triggered); AGENTS.md now records the owner-approved accounts exception (Cloudflare D1, tables acc_*).

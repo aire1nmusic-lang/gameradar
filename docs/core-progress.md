@@ -1,3 +1,10 @@
+## 28.10.2026 — VERIFIED live: free accounts service deployed (sign-up closed)
+
+- Owner ran scripts/accounts-go-live.mjs: Worker secrets PASSWORD_PEPPER/ACCOUNTS_RATE_KEY stored (owner copy in Documents/GameScout Secrets/accounts-20261028, not in Git), D1 migration 0012 applied, Worker version b52d56b3-912e-4110-8ec6-a2a7d0550485 deployed; script live check health/games/auth-me 200.
+- Independent read-only check: /auth/me 200 {privateCore:true, registrationOpen:false, emailLogin:false, providers:[]}; register 403 registration_closed; forged origin 403; /auth/google 404 provider_disabled; /account renders the login form with "registration and recovery by mail temporarily unavailable".
+- Production now runs branch claude/free-account-auth-20261028 (PR26); main must receive it (merge with [skip ci], owner action — the session may not merge) or a later deploy from main would drop accounts.
+- Next: mail provider + Google/Discord apps → secrets → real e-mail/OAuth journey → ACCOUNTS_REGISTRATION_OPEN=true. Rollback: remove ACCOUNTS_FREE from wrangler.toml and deploy.
+
 ## 28.10.2026 — Owner approved account go-live; production steps blocked by the session's permission policy; marketing plan drafted
 
 - Owner said yes to deployment. Prepared on the PR branch: ACCOUNTS_FREE="true" in wrangler.toml (sign-up closed), dev sign-in and explicit legacy D1 accounts keep working; `npm run test:api` and `test:monitoring` PASS locally; PR CI PASS. Remote D1 shows exactly one pending migration: 0012_free_accounts.sql.

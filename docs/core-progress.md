@@ -1,3 +1,8 @@
+## 28.10.2026 — Confirmed sign-in account; device approval pending
+
+- Owner explicitly confirmed the exact sign-in account after the prior automatic account-choice rejection. The secure browserAuth chooser completed the saved-account selection; no alternative channel or secret inspection used. Google now displays its normal device-approval challenge. Owner was told the exact visible matching detail privately in chat; no account/device/challenge/session identifiers are recorded here.
+- Cloudflare authentication is NOT yet complete. Await owner device approval, then inspect the rendered transition and verify a positive signed-in Cloudflare state before investigating the upload401. No further handoff attempted after its prior rejection. No production upload, DNS/IAM/token/VM/private-data/payment/resource/archive change; accepted UI remains inmain and primary publication remainsBLOCKED. Cost0new resources; rollback none for this sign-in transition. Docs-only checkpoint[skip ci].
+
 ## 28.10.2026 — Explicit Cloudflare login approval; account-specific sign-in confirmation BLOCKED
 
 - Owner explicitly authorised the requested Cloudflare sign-in/account choice for GameScout ("разрешаю"). Reopened the same cloud-browser service after ephemeral tab cleanup; no installable Cloudflare connector was available. Read secure-auth guidance and used only browserAuth for authentication choices, never model-visible credential entry.

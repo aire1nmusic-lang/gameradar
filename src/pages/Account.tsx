@@ -63,13 +63,14 @@ export default function Account() {
   }
   async function submit(event:React.FormEvent) {
     event.preventDefault()
+    if(auth.error || (mode!=='login'&&!auth.emailLogin) || (mode==='register'&&!auth.registrationOpen)) return
     const path=mode==='register'?'/auth/register':mode==='reset'?'/auth/password/reset/request':'/auth/login'
     await run(()=>apiSend(path,{email,password,displayName:name}),mode==='login'?'Вы вошли.':'Проверьте почту. Если адрес подходит для этого действия, придёт ссылка на 20 минут.')
   }
   if(auth.loading) return <main className="mx-auto max-w-2xl p-6">Проверяем сессию…</main>
   if(!auth.privateCore) return <main className="mx-auto max-w-2xl p-6"><Notice tone="info">Новый аккаунт ещё не подключён в этом окружении.</Notice></main>
   if(!auth.user)return <AccountEntry mode={mode} setMode={m=>{setMode(m);setError('');setMessage('')}} email={email} setEmail={setEmail} password={password} setPassword={setPassword} name={name} setName={setName}
-    busy={busy} error={error} apiError={auth.error} message={message} registrationOpen={auth.registrationOpen} providers={auth.providers} submit={submit}
+    busy={busy} error={error} apiError={auth.error} message={message} registrationOpen={auth.registrationOpen} emailLogin={auth.emailLogin} providers={auth.providers} submit={submit}
     onRetry={auth.refresh} confirmation={linkToken&&<section className="space-y-3 rounded-xl border border-signal-400/20 p-4"><h2>{purpose==='reset'?'Новый пароль':'Подтвердите email'}</h2>
       {purpose==='reset'&&<Field label="Новый пароль — от 12 символов"><Input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)}/></Field>}
       <Button disabled={busy||(purpose==='reset'&&password.length<12)} onClick={()=>run(async()=>{await apiSend(purpose==='reset'?'/auth/password/reset':purpose==='email'?'/me/email/confirm':'/auth/register/confirm',{token:linkToken,password});setLinkToken('')},purpose==='reset'?'Пароль изменён. Войдите заново.':'Email подтверждён.')}>Подтвердить</Button>

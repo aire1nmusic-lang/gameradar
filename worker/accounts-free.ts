@@ -42,7 +42,7 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
   // Counted: same-site writes (a forged cross-site request cannot use up the day's budget) and Google/Discord round trips
   // (top-level navigations carry no Origin). The session check /auth/me is never counted.
   const write = !['GET', 'HEAD', 'OPTIONS'].includes(request.method) && request.headers.get('Origin') === env.ALLOWED_ORIGIN
-  const oauthTrip = request.method === 'GET' && /^\/api\/v1\/auth\/(?:google|discord)(?:\/callback)?$/.test(path)
+  const oauthTrip = request.method === 'GET' && /^\/api\/v1\/auth\/(?:yandex|google|discord)(?:\/callback)?$/.test(path)
   if (write || oauthTrip) {
     const day = new Date().toISOString().slice(0, 10), store = d1Store(env.DB), cap = dailyLimit(env)
     // Past the cap only a read happens, so hostile traffic cannot keep spending the D1 write quota shared with the catalog.
@@ -50,7 +50,7 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
   }
   const config = { origin: env.ALLOWED_ORIGIN, environment: env.ENVIRONMENT === 'development' ? 'development' : 'production', rateKey,
     mailEnabled: mailEnabled(env), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
-    oauth: { GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
+    oauth: { YANDEX_CLIENT_ID: env.YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET: env.YANDEX_CLIENT_SECRET, GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
       DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE } }
   // In-memory only: a changed secret or setting rebuilds the app.
   const key = JSON.stringify([config, pepper])

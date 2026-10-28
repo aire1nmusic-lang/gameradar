@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from '../private-api/crypto.mjs'
 import { sqliteD1 } from './helpers/d1-sqlite.mjs'
 
 const origin = 'http://127.0.0.1:5173'
-const oauth = { GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: 'did', DISCORD_CLIENT_SECRET: 'dsecret',
+const oauth = { VK_CLIENT_ID: 'vk', GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: 'did', DISCORD_CLIENT_SECRET: 'dsecret',
   YANDEX_CLIENT_ID: 'yid', YANDEX_CLIENT_SECRET: 'ysecret' }
 const stores = [['memory', () => memoryStore()], ['d1-sqlite', () => d1Store(sqliteD1(['migrations/0012_free_accounts.sql']))]]
 
@@ -37,11 +37,11 @@ function harness(makeStore, { registrationOpen = true, profiles = {}, withOAuth 
 }
 
 for (const [name, makeStore] of stores) {
-  test(`[${name}] only Google and Discord are offered, and only when configured`, async () => {
+  test(`[${name}] Yandex, Google and Discord are offered, and only when configured`, async () => {
     const h = harness(makeStore)
-    assert.deepEqual((await h.request('/api/v1/auth/me')).body.providers, ['google', 'discord'])
+    assert.deepEqual((await h.request('/api/v1/auth/me')).body.providers, ['google', 'yandex', 'discord'])
     assert.deepEqual((await harness(makeStore, { withOAuth: false }).request('/api/v1/auth/me')).body.providers, [])
-    assert.equal((await h.request('/api/v1/auth/yandex')).status, 404, 'Yandex is configured but not offered by this service')
+    assert.equal((await h.request('/api/v1/auth/vk')).status, 404, 'VK is not offered by this service')
     assert.equal((await h.request('/api/v1/auth/github')).status, 404)
     assert.equal((await h.request('/api/v1/auth/google?link=1')).status, 400)
   })

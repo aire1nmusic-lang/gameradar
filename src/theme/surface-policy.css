@@ -16,6 +16,7 @@
     .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
     .gs-account-claim,.gs-account-wallet>summary,.gs-coins-card,
     .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
+    .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
     .gs-profile-dossier,.gs-profile-support,
     .l2a .discovery,.l2a .panel:not(.gsb),.l2a .owner,
     .gs-catalog-search,.gs-epoch-summary,.gs-ranking-availability
@@ -37,7 +38,8 @@
      Search, login/claim modals, support, filters and menus all use smoky glass. */
   html[data-design="lobby"] body :is(
     .gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,
-    .gs-games-menu,[role="menu"],[role="listbox"]:not([id="gs-search-options"]),.chronicle-picker .chronicle-row,
+    .gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],
+    .gs-server-picker-popover,.chronicle-picker .chronicle-row,
     .gs-catalog-toolbar,.gs-rating-switch,.gs-profile-cta-bar,.gs-mobile-nav
   ) {
     background:var(--gs-smoke-glass)!important;
@@ -75,7 +77,7 @@
     --gs-glass-edge:rgba(255,255,255,.34);
   }
   /* Search keeps its existing bright text, in both appearance modes. */
-  html[data-design="lobby"] body .gs-search-surface {
+  html[data-design="lobby"] body .gs-search-overlay .gs-search-surface {
     background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84))!important;
   }
 
@@ -98,8 +100,11 @@
     }
   }
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"]) {
+    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
       background:rgba(25,30,39,.96)!important;
+    }
+    html[data-design="lobby"][data-color-mode="light"] body :is(.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
+      background:rgba(238,234,226,.96)!important;
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "status": "PROPOSAL_ONLY_RETAINED_ARCHIVES_VERIFIED_AWAITING_OWNER_APPROVAL",
+  "status": "EXECUTED_EXACT_SIX_AND_INDEPENDENTLY_VERIFIED",
   "inventory_run_id": 40825843281,
   "inventory_job_id": 123288569307,
   "bucket": "gamescout-ru-site",
@@ -74,5 +74,21 @@
     "run_id": 40826562212,
     "status": "SUCCESS",
     "method": "independent download, byte size and SHA256 matched original release logs"
+  },
+  "execution": {
+    "owner_approved": true,
+    "method": "existing owner Yandex console; exact six selected prefixes each contained only the allowlisted archive",
+    "before_run": 40938076531,
+    "before_job": 123673833821,
+    "after_run": 40938460536,
+    "after_job": 123675154674,
+    "objects_before": 1555,
+    "objects_after": 1549,
+    "bytes_before": 1012074316,
+    "bytes_after": 467901151,
+    "bytes_freed": 544173165,
+    "retained_archive_count": 3,
+    "retained_sha256_verified": true,
+    "incomplete_upload_untouched": true
   }
 }

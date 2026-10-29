@@ -1,3 +1,15 @@
+## 29.10.2026 — IN PROGRESS: shared page/overlay glass and stable mobile scenery
+
+- Owner requests transparent lightly frosted inline panels everywhere, smoky tinted floating UI (including search), and no background jumping on scroll. Implemented `src/theme/surface-policy.css`: a named important cascade layer over legacy unlayered overrides, consistent account hero/card/wallet/empty/claim, page panels and non-TOP rows, stronger smoky search/modals/sheets/menus/sticky bars; 5px page frost, 20px overlay frost. Removed obsolete opaque inline Modal styling. Existing world/TOP artwork and ranking behavior retained.
+- Fixed world/account/profile cover layers to fixed 100lvh with bottom:auto; previously inset:0 + auto height rescaled cover during mobile URL-bar changes. LIKELY causal fix; real Android toolbar-collapse verification still required (desktop scrolling is not that proof).
+- LOCAL VERIFIED typecheck, build 152 routes, bundle and browser-script syntax; desktop managed preview visually inspected search, computed rgba smoky tint and blur20px confirmed. Preview uses opt-in existing synthetic dev data, no production API writes. Added exact terminal.local Vite dev allowlist for managed preview (first host request was rejected; no wider allowlist).
+- Expanded existing CI responsive gate: smoky claim/search parity; inline glass; synthetic signed-in account checks all six panels, screenshot and fixed scenery before/after scroll, zero API writes. Required matrix 320x568/390x844/768x1024/1024x768/1440x900/844x390 x3games PENDING CI, not claimed passed. Browser uses supported remote CUA only, local Playwright not installed/run.
+- Publication remains subject to existing mandatory rollback backup. Latest checked storage inventory40826562212 SUCCESS, prior CI40826562107 SUCCESS; exact six-archive cleanup still not authorized/performed. No backup bypass, deletion, quota/resource/auth/DNS/payment change. Cost existing CI/hosting only. Rollback scoped source revert. Next CI matrix, fix observed regressions, then guarded release and actual-primary verification if storage permits.
+
+## 29.10.2026 — VERIFIED source/tests; NOT LIVE: exact six-archive cleanup awaits owner approval
+
+- BLOCKED main push: automated approval review rejected direct default-branch push because it triggers deployment and found publication authorization insufficient. Not bypassed; moving only a separate branch + draft PR for CI (no production workflow). Shell feature-branch push had no GitHub credentials; use connected GitHub for the same safer branch. No production mutation.
+
 ## 29.10.2026 — VERIFIED source/tests; NOT LIVE: exact six-archive cleanup awaits owner approval
 
 - Requested TOP behavior IMPLEMENTED in source12b764ee132710fbec2141c0a7b59ccb55349a32 (main includes it): one epoch-aligned30second zero-score rotation for support+people, same selected board/candidates on list→profile/back/reload, no online award, approved rank1/2/3 scenes and metal/particles update/reset for L2/Minecraft/GTA. Explicit ordinary L2 image prevents blank CSS after expiry. Positive scores preserved. Auth changes from main51fbc96 retained; other worktrees untouched.

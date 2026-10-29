@@ -1,3 +1,9 @@
+## 29.10.2026 — IN PROGRESS: exact-time assertion disproved the clock-drift-only hypothesis
+
+- Production40939109379/job123677428056 failed again at768x1024/L2 BEFORE backups/uploads. New exactDate.now assertions passed (probe began1000ms, reached29.999s), but rendered place was null. Therefore previous elapsed-delay-only hypothesis is NOT confirmed; do not dismiss the failure as cosmetic or claim live completion. Primary9436b8f unchanged.
+- Diagnostic sourced8e8469 adds public data-ranking-period/count attributes on profile plus ROTATION_EDGE_PROOF of before/edge Date.now, renderedperiod, candidatecount and rankingchips in the existing read-only browser gate. Existing exact29.999/30.001 membership/expiry checks remain strict; no production timer/scoring/TTL/permissions changed. Typecheck +7rotationunit tests+script syntax PASS. Normal production/CI pending to identify the divergence rather than weaken the gate.
+- Approved six-archive cleanup remains independently VERIFIED (40938460536,544173165bytes removed, retained3SHA256 rechecked). No further deletions or resource/DB/auth/DNS changes. Next inspect renderedperiod/candidate diagnostics, fix actual cause, pass full matrix and finish guarded publish + actual-primary verification.
+
 ## 29.10.2026 — VERIFIED cleanup; release gate exposed intermittent rotation-boundary assertion
 
 - Post-cleanup inventory40938460536/job123675154674 SUCCESS: exact3retained archives,1,549objects/467,901,151bytes; precise reduction544,173,165bytes; all3retained independently downloaded/SHA256 verified again, unfinished multipart unchanged. JSON/MD proposal now records actual executed result.

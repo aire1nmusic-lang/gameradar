@@ -1,3 +1,9 @@
+## 29.10.2026 — VERIFIED operator cleanup: exact six old archives removed; release in progress
+
+- Owner approval executed via existing operator console: selected only48b94a0/799aae4/7c0acf0/b803ecc/fd0ab89/fdeed31, inspected exact six-item confirmation, deleted them. Live console now lists only retained1190bd9/9436b8f/b11acee under _deployment-backups. No other folder/object/unfinished upload selected; no DeleteObject retry with publisher key.
+- Before mutation, fresh independent inventory40938076531/job123673833821 SUCCESS: exact9keys/sizes matched JSON allowlist,1,555objects/1,012,074,316bytes, all3retained downloaded and SHA256 matched original release logs. Expected decrease544,173,165bytes to467,901,151bytes. Post-cleanup read-only byte+hash verification launched through the same workflow; pending, console capacity display may lag.
+- PR30 merged5b8ce1f; production40937775693/job123672786681 in browser-runtime gate, not yet live. All previous mandatory backup/snapshot/rollback guards intact. No cost-cap/IAM/auth/DB/DNS/payment/VM change. Next verify post-cleanup exact bytes/hashes, then final production/actual-primary proof. Existing CI/hosting cost only; retained3rollback points independently verified.
+
 ## 29.10.2026 — IN PROGRESS: owner explicitly approved release and exact six-archive cleanup
 
 - Owner replied «Разрешаю, делай залив и удаляй архив не нужный» to the concrete PR30 + six-archive544173165byte proposal, then requested completion. Approval covers only that exact six-object JSON allowlist; retain verified1190bd9/9436b8f/b11acee, no IAM/quota/tariff/DB/DNS change. Prior automated main-publication rejection is resolved by this explicit owner permission.

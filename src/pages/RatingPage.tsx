@@ -5,7 +5,7 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { GAMES } from '@/data/games'
 import { useAsync } from '@/hooks/data'
 import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
-import { peopleOrder } from '@/services/supportProjection'
+import { useRankingPeriod, useRankingRotation } from '@/hooks/useRankingRotation'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { Container } from '@/components/layout/Container'
 import { ChipToggle } from '@/components/ui/controls'
@@ -27,8 +27,9 @@ export default function RatingPage() {
  const [expanded,setExpanded]=useState<Set<string>>(()=>new Set())
  const more=(id:string,count:number)=>count>10?<button type="button" className="gs-list-more" aria-expanded={expanded.has(id)} onClick={()=>setExpanded(previous=>{const next=new Set(previous);next.has(id)?next.delete(id):next.add(id);return next})}>{expanded.has(id)?'Свернуть':'Показать ещё'}</button>:null
  const selected=world?.id??gameId
+ const period=useRankingPeriod()
  const contextKey=`${selected}-${demo}`
- const {data:result,loading,error,reload}=useAsync<{contextKey:string;servers:GameServer[]}>(async publish=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo,servers=>publish({contextKey,servers}))}),[selected,demo],true)
+ const {data:result,loading,error,reload}=useAsync<{contextKey:string;servers:GameServer[]}>(async publish=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo,servers=>publish({contextKey,servers}))}),[selected,demo,period],true)
  const servers=result?.contextKey===contextKey?result.servers:[]
  const supportAvailable=!servers.some(s=>s.rankingAvailability?.support===false)
  useEffect(()=>{if(location.hash==='#support-studio')setSupportOpen(true)},[location.hash])
@@ -37,11 +38,10 @@ export default function RatingPage() {
  useEffect(()=>{if(!supportOpen)setSupportList(null);else if(!supportList&&servers.length)setSupportList(servers)},[supportOpen,supportList,servers])
 
  function closeSupport(){dialog.current?.close();setSupportOpen(false);if(window.location.hash==='#support-studio')history.replaceState(null,'',window.location.pathname+window.location.search)}
- useEffect(()=>{const timer=window.setInterval(()=>{if(document.visibilityState==='visible')reload()},30000);return()=>clearInterval(timer)},[reload])
  const supported=()=>{invalidateDiscoveryCache();reload()}
  useSeo({title:'Рейтинг серверов',path:'/rating',description:'Все серверы: поддержка за Coins, ближайшие открытия и голоса игроков. Прогноз позиции при поддержке.'})
  const {has,toggle}=useFavorites()
- const support=useSupportRotation(servers,!!world),people=[...servers].sort(peopleOrder)
+ const support=useSupportRotation(servers,!!world),people=useRankingRotation(servers,'people',!!world)
  return <div className="gs-rating-page pb-16"><Container className="pt-6 lg:pt-8">
   <h1 className="text-[26px] leading-tight sm:text-[30px]">Рейтинг{world?` · ${world.shortName}`:''}</h1>
   <div className="gs-rating-tools"><div className="gs-rating-switch" aria-label="Категория рейтинга">{[['support','Поддержка'],['people','Голоса']].map(([id,label])=><button key={id} type="button" aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}</div><button type="button" className="gs-support-launch" disabled={!supportAvailable} onClick={()=>setSupportOpen(true)}><WorldIcon name="coins" size={17}/>Поддержать сервер</button></div>

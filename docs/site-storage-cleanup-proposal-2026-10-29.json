@@ -1,0 +1,78 @@
+{
+  "status": "PROPOSAL_ONLY_RETAINED_ARCHIVES_VERIFIED_AWAITING_OWNER_APPROVAL",
+  "inventory_run_id": 40825843281,
+  "inventory_job_id": 123288569307,
+  "bucket": "gamescout-ru-site",
+  "bucket_total_bytes": 1012074316,
+  "bytes_to_free": 544173165,
+  "remove": [
+    {
+      "key": "_deployment-backups/48b94a0469920010e148daa1ba9d263cef107b6a/40452512685-1/site-rollback.tar.gz",
+      "bytes": 90695508,
+      "modified": "2026-10-27T05:04:40.184000+00:00"
+    },
+    {
+      "key": "_deployment-backups/799aae4d6923b65f8f0f1cdb2263131ea46d56ed/40385696392-1/site-rollback.tar.gz",
+      "bytes": 90695592,
+      "modified": "2026-10-26T19:26:35.786000+00:00"
+    },
+    {
+      "key": "_deployment-backups/7c0acf0c1b82ebd76f030606a25f47b7f867f9bf/40535576653-1/site-rollback.tar.gz",
+      "bytes": 90695495,
+      "modified": "2026-10-27T16:15:53.995000+00:00"
+    },
+    {
+      "key": "_deployment-backups/b803eccf2a8c6bec70381ae901f0b6f532e5f517/40454280755-2/site-rollback.tar.gz",
+      "bytes": 90695470,
+      "modified": "2026-10-27T07:08:14.464000+00:00"
+    },
+    {
+      "key": "_deployment-backups/fd0ab89e00d17aa3cc47b856959cddceeff6b683/40530246369-1/site-rollback.tar.gz",
+      "bytes": 90695569,
+      "modified": "2026-10-27T15:40:16.608000+00:00"
+    },
+    {
+      "key": "_deployment-backups/fdeed318e2efd68e8afd6a1dc3cad03d3d3a47f3/40452632818-1/site-rollback.tar.gz",
+      "bytes": 90695531,
+      "modified": "2026-10-27T05:17:25.212000+00:00"
+    }
+  ],
+  "keep": [
+    {
+      "key": "_deployment-backups/1190bd927606aae555380e9525568ac948ad47a1/40651635227-1/site-rollback.tar.gz",
+      "bytes": 90697313,
+      "modified": "2026-10-28T07:48:17.298000+00:00",
+      "sha256": "ecf37c0cfed92bc8dfdf8b9b91ade7c9c9da5d67d3c5de2e626a6df55f68da49",
+      "source_run_id": 40651635227
+    },
+    {
+      "key": "_deployment-backups/9436b8f440d74d45577481705676559c8e9ce872/40755901626-1/site-rollback.tar.gz",
+      "bytes": 90642918,
+      "modified": "2026-10-28T19:44:54.617000+00:00",
+      "sha256": "85ea3ff3b599cc52399ca674eae1726e71067601fc494151b98707976fd33cdc",
+      "source_run_id": 40755901626
+    },
+    {
+      "key": "_deployment-backups/b11acee85c43d0b669f0f8f9f496353a5ff8ee6f/40560892229-1/site-rollback.tar.gz",
+      "bytes": 90695578,
+      "modified": "2026-10-27T18:53:22.225000+00:00",
+      "sha256": "b6a262748bac9559f46125a4bcd701d964a561961ec3acea9a8a81aa86675669",
+      "source_run_id": 40560892229
+    }
+  ],
+  "incomplete_uploads": [
+    {
+      "Key": "_deployment-backups/05ac694cdac745b00600f771ae2ba27b523f4bce/40559730379-1/site-rollback.tar.gz",
+      "UploadId": "00065ED6A76A0428",
+      "Initiated": "2026-10-27T18:31:25.019000+00:00"
+    }
+  ],
+  "incomplete_uploads_action": "Leave untouched; not part of this proposal",
+  "boundaries": "Only exact six completed archives; no live pages/media/assets, auth/private DB, DNS/IAM/quota/tariff changes. Retain and independently verify newest three.",
+  "endpoint": "https://storage.yandexcloud.net",
+  "retained_verification": {
+    "run_id": 40826562212,
+    "status": "SUCCESS",
+    "method": "independent download, byte size and SHA256 matched original release logs"
+  }
+}

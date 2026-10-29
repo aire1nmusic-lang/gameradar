@@ -61,6 +61,7 @@ try {
   for (const [width, height] of [[320,568],[390,844],[768,1024],[1024,768],[1440,900],[844,390]]) {
     const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 1024, hasTouch: width < 1024, reducedMotion: 'reduce' })
     const page = await context.newPage()
+    await page.clock.install()
     page.setDefaultTimeout(20000)
     page.setDefaultNavigationTimeout(20000)
     let writes = 0
@@ -73,7 +74,7 @@ try {
     await page.route('**/api/v1/**', async route => {
       const req = route.request(), url = new URL(req.url()), path = url.pathname
       if (req.method() !== 'GET') { writes++; return route.abort() }
-      const apiCards = profileBoard === 'support' ? cards : cards.map(s => ({ ...s, support: { coins: 0, participants: 0 }, ...(profileBoard === 'online' ? { votes: 0, online: { ...s.online, status: 'VERIFIED', playersKnown: true, freshness: 'fresh', current: 10000 - Number(s.id.split('-').at(-1)) * 100 } } : {}), ...(profileBoard === 'ordinary' ? { votes: 0, online: { ...s.online, status: 'UNKNOWN', playersKnown: false, freshness: 'unknown' } } : {}) }))
+      const apiCards = profileBoard === 'support' ? cards : cards.map(s => ({ ...s, support: { coins: 0, participants: 0 }, ...(['online','zero'].includes(profileBoard) ? { votes: 0, online: { ...s.online, status: 'VERIFIED', playersKnown: true, freshness: 'fresh', current: 10000 - Number(s.id.split('-').at(-1)) * 100 } } : {}), ...(profileBoard === 'ordinary' ? { votes: 0, online: { ...s.online, status: 'UNKNOWN', playersKnown: false, freshness: 'unknown' } } : {}) }))
       let json = []
       if (path.endsWith('/auth/me') && authUnavailable) return route.fulfill({ status: 503, json: {error:{code:'private_api_required',message:'Private upstream is not a user-facing explanation'}} })
       if (path.endsWith('/games')) json = games
@@ -475,25 +476,20 @@ try {
       assert.equal(await page.locator('.gs-server-fullbg .gs-server-bg').count(), 1, 'Every primary game has the same full-scene profile')
       assert.equal(await page.locator('.gs-profile-distinction').count(), 1, 'A real positive TOP3 fixture earns the large header shield')
       if ([390,1440].includes(width)) {
-        for (const board of ['support','people','online']) {
+        for (const board of ['support','people']) {
           profileBoard = board
           for (const rank of [1,2,3]) {
-            await page.goto(base + `/server/qa-${game.id}-${rank-1}`)
+            await page.goto(base + `/server/qa-${game.id}-${rank-1}?ranking=${board}`)
             await page.locator(`.gs-server-profile[data-profile-place="${rank}"][data-profile-board="${board}"]`).waitFor()
             await mediaReady(page)
             assert.match(await page.locator('.gs-profile-place-shield').getAttribute('src'), new RegExp(`medal-${rank}-glass-192\\.webp$`))
             assert.equal(await page.locator('.gs-profile-place-shield').evaluate(e=>e.complete&&e.naturalWidth===192),true, 'Existing approved shield decodes')
-            assert.equal(await page.locator('.gs-profile-particle svg').first().getAttribute('class').then(s=>s.includes(board==='support'?'lucide-coins':board==='people'?'lucide-thumbs-up':'lucide-sparkles')),true,'Decoration names the actual board; online never pretends to be paid support')
+            assert.equal(await page.locator('.gs-profile-particle svg').first().getAttribute('class').then(s=>s.includes(board==='support'?'lucide-coins':'lucide-thumbs-up')),true,'Decoration matches the selected support/people board')
             await noOverflow()
             await page.locator('.gs-profile-dossier').screenshot({path:`${output}/profile-place-${game.id}-${board}-${rank}-${width}.png`})
             if(rank===1&&board==='support') await page.screenshot({path:`${output}/profile-glass-${game.id}-${width}.png`,fullPage:true})
           }
         }
-        profileBoard = 'ordinary'
-        await page.goto(base + `/server/qa-${game.id}-0`)
-        await page.getByRole('heading',{level:1}).waitFor()
-        assert.equal(await page.locator('.gs-profile-distinction,.gs-profile-particles').count(),0,'Zero scores and unknown online never receive an invented TOP place')
-        await noOverflow()
         profileBoard = 'support'
       }
       await page.goto(base + `/catalog?game=${game.id}`)
@@ -623,6 +619,75 @@ try {
         assert.ok(bg.includes('16, 27, 37'),bg)
       }
       await page.screenshot({path:`${output}/owner-ui-${game.id}-${width}.png`})
+      // Owner acceptance: zero-score list -> profile -> back/reload shares one real30s window.
+      profileBoard = 'zero'
+      const currentTime=await page.evaluate(()=>Date.now())
+      await page.clock.pauseAt(new Date(Math.floor(currentTime/30000)*30000+31000))
+      await page.goto(base + '/' + game.slug)
+      await page.locator('.gs-shelf-people .gsb-plaque').first().waitFor()
+      const zeroLink = page.locator('.gs-shelf-people .gsb-plaque[data-rank="1"] .gsb-hitbox')
+      const initialHref=await zeroLink.getAttribute('href')
+      const awarded=new Set(await page.locator('.gs-shelf-support .gsb-plaque .gsb-hitbox,.gs-shelf-people .gsb-plaque .gsb-hitbox').evaluateAll(links=>links.map(link=>new URL(link.href).pathname)))
+      const ordinary=cards.find(server=>server.gameId===game.id&&!awarded.has('/server/'+server.slug))
+      assert.ok(ordinary,'A twelve-server fixture has candidates outside both TOP3 boards')
+      await page.goto(base + '/server/' + ordinary.slug)
+      await page.locator('.gs-server-profile').waitFor()
+      await page.waitForFunction(()=>document.querySelectorAll('.gs-profile-rank-chip[data-ranking]').length===2)
+      assert.equal(await page.locator('.gs-profile-distinction,.gs-profile-particles').count(),0,'Measured online alone never awards a TOP shield')
+      assert.equal(await page.getByText(/по онлайну/i).count(),0,'No third online leaderboard on profiles')
+      await page.goto(base + '/' + game.slug)
+      await zeroLink.waitFor()
+      assert.equal(await zeroLink.getAttribute('href'),initialHref,'Reload inside the window never redraws the zero-score TOP')
+      const supportLink=page.locator('.gs-shelf-support .gsb-plaque[data-rank="1"] .gsb-hitbox')
+      await supportLink.click()
+      await page.locator('.gs-server-profile[data-profile-board="support"][data-profile-place="1"]').waitFor()
+      assert.match(await page.locator('.gs-profile-rotation-note').innerText(),/без поддержки/)
+      await page.goBack()
+      await zeroLink.waitFor()
+      const placeScenes=new Set()
+      for(const rank of [1,2,3]){
+        const link=page.locator(`.gs-shelf-people .gsb-plaque[data-rank="${rank}"] .gsb-hitbox`)
+        const expected=await link.getAttribute('href')
+        await link.click()
+        await page.waitForURL(base+expected)
+        await page.locator(`.gs-server-profile[data-profile-board="people"][data-profile-place="${rank}"]`).waitFor()
+        assert.equal(await page.locator('.gs-profile-distinction').getAttribute('data-rotating'),'true')
+        assert.match(await page.locator('.gs-profile-rotation-note').innerText(),/без голосов/)
+        const scene=await page.locator('.gs-server-bg').evaluate(e=>getComputedStyle(e).backgroundImage)
+        assert.ok(scene.includes('/media/ranks/'),'The actual background switches to the current approved place scene')
+        placeScenes.add(scene)
+        await noOverflow()
+        if(rank===1){
+          // Clock is intentionally paused: decode images without waiting for animation frames.
+          await page.locator('.gs-profile-place-shield').evaluate(image=>image.decode())
+          await page.screenshot({path:`${output}/rotating-profile-${game.id}-${width}.png`})
+        }
+        await page.goBack()
+        await page.locator('.gs-shelf-people .gsb-plaque').first().waitFor()
+        assert.equal(await zeroLink.getAttribute('href'),initialHref,'Returning does not restart or redraw the30second window')
+      }
+      assert.equal(placeScenes.size,3,'Every place has its own approved background')
+      await zeroLink.click()
+      await page.locator('.gs-server-profile[data-profile-place="1"][data-profile-board="people"]').waitFor()
+      await page.clock.runFor(28999)
+      assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),'1','Place remains through29.999seconds of the same window')
+      await page.clock.runFor(2)
+      await page.locator('.gs-profile-place-shield').waitFor({state:'detached'})
+      assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),null,'An expired rotating first place has no stale metal/shield')
+      assert.equal(await page.locator('.gs-profile-particles').count(),0)
+      const ordinaryScene=await page.locator('.gs-server-bg').evaluate(e=>getComputedStyle(e).backgroundImage)
+      assert.ok(ordinaryScene.includes('/media/worlds/')&&!ordinaryScene.includes('/media/ranks/'),'A real ordinary world image returns after leaving TOP3, never an empty CSS variable')
+      await page.locator('.gs-server-bg').evaluate(async element=>{const url=getComputedStyle(element).backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)?.[1];if(!url)throw Error('Ordinary scene missing');const image=new Image();image.src=url;await image.decode()})
+      await page.goBack()
+      await zeroLink.waitFor()
+      assert.notEqual(await zeroLink.getAttribute('href'),initialHref,'List advances on the same boundary as the profile')
+      const nextHref=await zeroLink.getAttribute('href')
+      await page.reload()
+      await zeroLink.waitFor()
+      assert.equal(await zeroLink.getAttribute('href'),nextHref,'A reload cannot reclaim the expired slot')
+      await page.clock.resume()
+      await page.clock.setSystemTime(new Date())
+      profileBoard = 'support'
       results.push({ width, height, game: game.id, top: true, supportTarget: true, opaqueClaim: true, opaqueSearch: true, contextualHome: true, footerCTA: width < 1024 })
     }
     await page.goto(base + '/catalog?game=lineage2')

@@ -7,7 +7,7 @@ import { useFavorites } from '@/hooks/useFavorites'
 import { artSrc, worldArt } from '@/data/themeMedia'
 import { formatCompact, formatNumber } from '@/lib/format'
 import { hasFreshOnline } from '@/services/discoveryRanking'
-import { peopleOrder } from '@/services/supportProjection'
+import { useRankingRotation } from '@/hooks/useRankingRotation'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { LeaderBoard } from './LeaderBoard'
 import { InlineChroniclePicker } from './InlineChroniclePicker'
@@ -43,10 +43,8 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const upcoming = servers.filter(s => s.launch && Date.parse(s.launch.at) > Date.now())
   const visible = useMemo(() => servers.filter(s => (!query.trim() ||
     `${s.name} ${s.version} ${s.rates ?? ''}`.toLocaleLowerCase('ru').includes(query.trim().toLocaleLowerCase('ru')))), [servers, query])
-  const rotatingSupport = useSupportRotation(servers)
-  const visibleIds = new Set(visible.map(s => s.id))
-  const support = rotatingSupport.filter(s => visibleIds.has(s.id))
-  const people = [...visible].sort(peopleOrder)
+  const support = useSupportRotation(visible)
+  const people = useRankingRotation(visible, 'people')
   const openings = visible.filter(s => s.launch && Date.parse(s.launch.at) > Date.now()).sort((a,b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at))
   const filtered = query.trim().length > 0
   const submit = (e: FormEvent) => { e.preventDefault(); document.getElementById('l2-catalog')?.scrollIntoView({ behavior: 'smooth' }) }

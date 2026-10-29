@@ -1,3 +1,9 @@
+## 29.10.2026 — Pre-flight for the community go-live (read-only): ready, waiting for the owner command
+
+- Live (read-only GETs): /people-rating 503 ranking_unavailable, /admin/overview and /copyright/restrictions 503 private_api_required → community not deployed yet (expected). Catalog /servers and /auth/me 200.
+- Remote D1 `wrangler d1 migrations list --remote` (read-only): exactly one pending — 0013_free_community.sql, matching scripts/community-go-live.mjs's guard. `wrangler deploy --dry-run` bundles the Worker (incl. community module, ACCOUNTS_COMMUNITY var) without upload. PR31 CI 2/2 passing, mergeable.
+- Next: owner runs `node scripts/community-go-live.mjs`; then live checks of people-rating, admin tabs after Google re-login, a real vote and claim.
+
 ## 29.10.2026 — Votes, Claims, owner edits and moderation on Cloudflare D1: VERIFIED locally end to end, NOT deployed
 
 - Research (read-only): private core contract mapped; findings: no "add new server" flow exists in privateCore mode (OwnerJoin is a static "not accepted yet" page) — nothing to port; claim proofs are SITE/DNS/MANUAL (no Discord method); legacy D1 vote/claim routes are incompatible (different paths, cookie, users table) and were not reused; free accounts returned permissions:[] so admin tabs never showed; OAuth accounts had no verified flag, so Google/Discord users could not vote or claim.

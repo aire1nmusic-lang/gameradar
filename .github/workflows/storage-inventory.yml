@@ -21,3 +21,19 @@ jobs:
           aws s3api list-objects-v2 --bucket gamescout-ru-site --prefix _deployment-backups/ --endpoint-url https://storage.yandexcloud.net --query 'Contents[].{Key:Key,Size:Size,LastModified:LastModified}' --output json
           aws s3api list-multipart-uploads --bucket gamescout-ru-site --endpoint-url https://storage.yandexcloud.net --query 'Uploads[].{Key:Key,UploadId:UploadId,Initiated:Initiated}' --output json
           aws s3 ls s3://gamescout-ru-site/ --recursive --summarize --endpoint-url https://storage.yandexcloud.net | tail -n 2
+      - name: Independently download and verify the three retained archives
+        run: |
+          python - <<'PYVERIFY'
+          import subprocess,hashlib,json,tempfile
+          keep = [{'Key': '_deployment-backups/1190bd927606aae555380e9525568ac948ad47a1/40651635227-1/site-rollback.tar.gz', 'Size': 90697313, 'LastModified': '2026-10-28T07:48:17.298000+00:00', 'key': '_deployment-backups/1190bd927606aae555380e9525568ac948ad47a1/40651635227-1/site-rollback.tar.gz', 'sha256': 'ecf37c0cfed92bc8dfdf8b9b91ade7c9c9da5d67d3c5de2e626a6df55f68da49', 'run_id': 40651635227}, {'Key': '_deployment-backups/9436b8f440d74d45577481705676559c8e9ce872/40755901626-1/site-rollback.tar.gz', 'Size': 90642918, 'LastModified': '2026-10-28T19:44:54.617000+00:00', 'key': '_deployment-backups/9436b8f440d74d45577481705676559c8e9ce872/40755901626-1/site-rollback.tar.gz', 'sha256': '85ea3ff3b599cc52399ca674eae1726e71067601fc494151b98707976fd33cdc', 'run_id': 40755901626}, {'Key': '_deployment-backups/b11acee85c43d0b669f0f8f9f496353a5ff8ee6f/40560892229-1/site-rollback.tar.gz', 'Size': 90695578, 'LastModified': '2026-10-27T18:53:22.225000+00:00', 'key': '_deployment-backups/b11acee85c43d0b669f0f8f9f496353a5ff8ee6f/40560892229-1/site-rollback.tar.gz', 'sha256': 'b6a262748bac9559f46125a4bcd701d964a561961ec3acea9a8a81aa86675669', 'run_id': 40560892229}]
+          for entry in keep:
+              key=entry['Key']
+              head=json.loads(subprocess.check_output(['aws','s3api','head-object','--bucket','gamescout-ru-site','--key',key,'--endpoint-url','https://storage.yandexcloud.net','--output','json'],text=True))
+              assert head['ContentLength']==entry['Size']
+              assert head.get('Metadata',{}).get('sha256')==entry['sha256']
+              with tempfile.NamedTemporaryFile() as local:
+                  subprocess.run(['aws','s3','cp','s3://gamescout-ru-site/'+key,local.name,'--endpoint-url','https://storage.yandexcloud.net','--only-show-errors'],check=True)
+                  with open(local.name,'rb') as downloaded: sha=hashlib.file_digest(downloaded,'sha256').hexdigest()
+                  assert sha==entry['sha256']
+              print('RETAINED_VERIFIED',json.dumps({'key':key,'bytes':head['ContentLength'],'sha256':sha}))
+          PYVERIFY

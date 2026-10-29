@@ -1,3 +1,9 @@
+## 29.10.2026 — BLOCKED live publication; exact capacity recovery proposal prepared
+
+- Source12b764ee132710fbec2141c0a7b59ccb55349a32 includes explicit L2 ordinary-scene fallback and stronger expiry/decode acceptance. LOCAL typecheck/build152routes/bundle/7rotation testsPASS; production40825843271/mainCI40825843545 in progress. The earlier09e8 production responsive matrix fully passed but backup upload was capacity-blocked. Actual primary still9436b8f (Chrome independently read).
+- VERIFIED read-only inventory40825843281:1,555completed objects/1,012,074,316bytes,9completed rollback archives; one incomplete multipart from failed40559730379 (27Oct) remains untouched. Prior cleanup authorizations cover different exact lists and do NOT authorize new archive removals; publisher DeleteObject denial is not retried.
+- Prepared docs/site-storage-cleanup-proposal-2026-10-29.json/.md: propose exactly6older26–27Oct archives/544,173,165bytes, preserve newest3(1190bd9,9436b8f,b11acee); expected completed storage467,901,151bytes before new backup. Original retained SHA256 extracted from source release logs; read-only independent download verification added and pending. No deletion, quota increase, paid resource or backup bypass. Next finish verification, request exact-list approval, then existing owner operator cleanup and guarded publish/readback.
+
 ## 29.10.2026 — BLOCKED publication: rollback storage cap; final background fallback prepared
 
 - VERIFIED production40824491217/job123284277922 passed full responsive browser gate on pinnedUbuntu24.04 and downloaded current site backup. Mandatory durable upload failed BucketMaxSizeExceeded (UploadPart) before primary snapshot/site uploads; primary remains frontend9436b8f. Never bypassed backup, raised cap, deleted archives or modified auth/DNS.

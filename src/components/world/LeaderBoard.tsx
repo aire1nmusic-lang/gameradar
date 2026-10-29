@@ -8,6 +8,7 @@ import { formatNumber } from '@/lib/format'
 import { LaunchCountdown } from '@/components/server/LaunchCountdown'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { gamePlaceScene } from '@/data/podiumScenes'
+import type { RankingContext } from '@/services/rankingPresentation'
 import './leader-board.css'
 
 export type BoardKind = 'support' | 'opening' | 'people'
@@ -52,14 +53,14 @@ function useFrost() {
 }
 
 /** One top-3 plaque: place art, glass medal, film with the server. Shared by the boards and the catalog list. */
-export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support' }: { server: GameServer; rank: number; meta: string; value: ReactNode; fav: ReactNode; art?: PlaceArt }) {
+export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support', rankingContext }: { server: GameServer; rank: number; meta: string; value: ReactNode; fav: ReactNode; art?: PlaceArt; rankingContext?: RankingContext }) {
   const gameScene = gamePlaceScene(s.gameId, art, rank)
   const place = gameScene ?? (art === 'people' ? PEOPLE_PLACE : PLACE)[rank]
   const medal = s.gameId === 'minecraft' || s.gameId === 'gtarp'
     ? `/media/ranks/${s.gameId}-rank-${rank}-approved-v1.webp`
     : `/media/ranks/medal-${rank}-glass-192.webp`
   return <div className={`server gsb-plaque p${rank}`} data-rank={rank} data-game={s.gameId} data-podium-kind={art} data-character={gameScene?.character}>
-    <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
+    <Link to={`/server/${s.slug}${rankingContext ? `?ranking=${rankingContext.board}` : ''}`} state={rankingContext ? { rankingContext } : undefined} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
     <span className="gsb-art" aria-hidden="true"><img src={place.bg} alt="" decoding="async" /></span>
     {place.hero && <img className={`gsb-hero gsb-hero-${art}`} src={place.hero} alt="" aria-hidden="true" decoding="async" />}
     <span className="gsb-medal"><img src={medal} alt={`${rank} место`} /></span>
@@ -87,9 +88,10 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   const rowNum = (s: GameServer) => kind === 'support' ? <button type="button" className="server-right gsb-num gsb-num-compact gsb-coins-action" aria-label={`Поддержать ${s.name} за GS Coins`} onClick={event => { event.preventDefault(); event.stopPropagation(); openSupport(s) }}><img className="gsb-coin" src="/media/ranks/coin-stack-96.webp" alt="" /><strong>{value(s)}</strong></button> : <span className="server-right gsb-num gsb-num-compact" aria-label={`${value(s)} ${unit}`}><ThumbsUp className="gsb-val-ic" aria-hidden /><strong>{value(s)}</strong></span>
   const avatar = (s: GameServer) => <ServerLogo name={s.name} hue={s.hue} gameId={s.gameId} src={s.logoUrl} size="sm" forceGameGlyph className="gsb-avatar" />
 
-  const plaque = (s: GameServer, rank: number) => <PlacePlaque key={s.id} server={s} rank={rank} meta={meta(s)} value={num(s)} fav={fav(s)} art={kind === 'people' ? 'people' : 'support'} />
+  const rankingContext: RankingContext | undefined = kind === 'opening' ? undefined : { gameId: game.id, board: kind, ids: rows.map(server => server.id) }
+  const plaque = (s: GameServer, rank: number) => <PlacePlaque key={s.id} server={s} rank={rank} meta={meta(s)} value={num(s)} fav={fav(s)} art={kind === 'people' ? 'people' : 'support'} rankingContext={rankingContext} />
   const row = (s: GameServer, index: number) => <div key={s.id} className={`server gsb-row ${!showAll && index >= 10 ? 'gsb-overflow' : ''}`}>
-    <Link to={`/server/${s.slug}`} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
+    <Link to={`/server/${s.slug}${rankingContext ? `?ranking=${rankingContext.board}` : ''}`} state={rankingContext ? { rankingContext } : undefined} className="gsb-hitbox" aria-label={`Открыть сервер ${s.name}`} />
     <span className="gsb-position" aria-label={`Место ${index + 1}`}>{String(index + 1).padStart(2, '0')}</span>
     {avatar(s)}<span className="gsb-txt"><span className="server-name gsb-row-name">{s.name}</span><span className="server-meta gsb-row-meta">{meta(s)}</span></span>
     {kind === 'opening' && s.launch

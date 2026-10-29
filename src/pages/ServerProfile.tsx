@@ -1,3 +1,6 @@
+import { useRankingPeriod } from '@/hooks/useRankingRotation'
+import { readRankingContext } from '@/services/rankingPresentation'
+import { gamePlaceScene } from '@/data/podiumScenes'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockBodyScroll } from '@/hooks/useUi'
@@ -32,7 +35,7 @@ import {
 } from '@/lib/format'
 import { chronicleOfVersion, getGame } from '@/data/games'
 import { themeForGame } from '@/data/themes'
-import { useAsync, useServer, useServers, useSimilarServers } from '@/hooks/data'
+import { useAsync, useServer, useSimilarServers } from '@/hooks/data'
 import { RankStrip } from '@/components/profile/RankStrip'
 import { repo } from '@/repositories'
 import { track, visitSource } from '@/services/events'
@@ -179,21 +182,31 @@ function Profile({ server: source }: { server: GameServer }) {
   // Showcase worlds get a full profile hero with the header laid over the art.
   const fullScene = ['lineage2', 'minecraft', 'gtarp'].includes(server.gameId)
   const profileArt = worldArt('hero', server.gameId)
-  const sceneStyle = server.gameId !== 'lineage2' && profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
+  const ordinarySceneStyle = server.gameId !== 'lineage2' && profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
   const showcase = !!cover && isShowcase(server.gameId)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
   const [supportOpen, setSupportOpen] = useState(() => new URLSearchParams(window.location.search).get('support') === '1')
-  const { search: profileSearch } = useLocation()
+  const { search: profileSearch, state: profileNavigation } = useLocation()
   useEffect(() => {
     if (new URLSearchParams(profileSearch).get('support') === '1') setSupportOpen(true)
   }, [profileSearch])
   const [shared, setShared] = useState(false)
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
-  const { data: peers = [], loading: peersLoading } = useServers({ gameId: server.gameId, limit: 200 }, true)
-  const profilePlace = fullScene && !peersLoading ? placeOf(server, peers) : null
+  const demo = useVisualDemo()
+  const period = useRankingPeriod()
+  const { data: peerSource = [], loading: peersLoading } = useAsync<GameServer[]>(publish => discoveryServers({ gameId: server.gameId }, demo, publish), [server.gameId, demo, period], true)
+  const preferred = new URLSearchParams(profileSearch).get('ranking')
+  const preferredBoard = preferred === 'support' || preferred === 'people' ? preferred : undefined
+  const context = readRankingContext(profileNavigation?.rankingContext, server.gameId)
+  const scopedIds = context && context.board === preferredBoard ? new Set(context.ids) : undefined
+  const peers = peerSource.filter(peer => peer.gameId === server.gameId && (!scopedIds || scopedIds.has(peer.id)))
+  const profilePlace = fullScene && peers.length > 0 ? placeOf(server, peers, period, preferredBoard) : null
+  const placeScene = profilePlace ? gamePlaceScene(server.gameId, profilePlace.board, profilePlace.place) : undefined
+  const sceneStyle = placeScene ? { '--profile-art': `url("${placeScene.bg}")`, '--profile-art-mobile': `url("${placeScene.bg}")`, '--profile-focus': '60% 30%', '--profile-focus-mobile': '65% 25%' } as CSSProperties : ordinarySceneStyle
+
 
   useSeo({
     title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
@@ -352,7 +365,7 @@ function Profile({ server: source }: { server: GameServer }) {
           </PlaceBanner>
         </div>
 
-        <RankStrip server={server} peers={peers} loading={peersLoading} />
+        <RankStrip server={server} peers={peers} loading={peersLoading} period={period} />
 
         {server.tags.length > 0 && (
           <div className="mt-5 flex flex-wrap gap-1.5 sm:mt-6">

@@ -1,6 +1,6 @@
 import type { Page, GameServer } from '@/models'
 import { SelectMenu } from '@/components/ui/SelectMenu'
-import { useSupportRotation } from '@/hooks/useSupportRotation'
+import { useRankingPeriod, useRankingRotation } from '@/hooks/useRankingRotation'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -69,14 +69,15 @@ export default function Catalog() {
   // footer «Найти свой сервер» lands here with #search: open the search and put the cursor in it
   useEffect(()=>{if(window.location.hash!=='#search')return;setSearchOpen(true);const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
 
-  const rotateSupport = !!world && sort === 'support'
+  const rotateSupport = !!world && (sort === 'support' || sort === 'votes')
+  const rankingPeriod = useRankingPeriod()
   const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
   const { data: page, loading, error, reload } = useAsync<Page<GameServer>>(
     publish => demo ? searchServers(query,true,publish) : privateCore && sort === 'votes' ? peopleSortedServers(query,publish)
       : privateCore && sort === 'support' ? supportSortedServers(query,publish)
         : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query,false,publish),
-    [JSON.stringify(query),privateCore,authLoading,demo], true)
-  const supportRows = useSupportRotation(page?.items ?? [], rotateSupport)
+    [JSON.stringify(query),privateCore,authLoading,demo,rankingPeriod], true)
+  const supportRows = useRankingRotation(page?.items ?? [], sort === 'votes' ? 'people' : 'support', rotateSupport)
   const results = rotateSupport ? supportRows.slice(0, visible) : page?.items ?? []
   const total = page?.total ?? 0
   // The selected world is context, not a removable filter. Showing it as an
@@ -247,7 +248,7 @@ export default function Catalog() {
           <>
             {view === 'grid' ? (
               <>
-              {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
+              {podium && <CatalogPodium servers={rotateSupport ? supportRows : results} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
               <div className="gs-tile-grid grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
                 {results.map((server, index) => podium && index < 3 ? null : (
                   <Fragment key={server.slug}>
@@ -263,7 +264,7 @@ export default function Catalog() {
               </>
             ) : (
               <div className="space-y-1.5">
-                {podium && <CatalogPodium servers={results.slice(0, 3)} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
+                {podium && <CatalogPodium servers={rotateSupport ? supportRows : results} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
                 {results.map((server, index) => podium && index < 3 ? null : (
                   <ServerRow key={server.slug} server={server} rank={ranked ? index+1 : undefined} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} showGame={!world} />
                 ))}

@@ -2,6 +2,18 @@
 export type GamePlaceScene = { bg: string; hero?: string; character?: string }
 const root = '/media/ranks/'
 const scenes: Record<string, Record<'support' | 'people', Record<number, GamePlaceScene>>> = {
+  lineage2: {
+    support: {
+      1: { bg: root+'l2-top1-bg-1600.webp', hero: root+'l2-top3-hero-600.webp' },
+      2: { bg: root+'l2-top2-1600.webp' },
+      3: { bg: root+'l2-top3-1600.webp' },
+    },
+    people: {
+      1: { bg: root+'l2-people1-1600.webp', hero: root+'l2-people1-hero-600.webp' },
+      2: { bg: root+'l2-people2-1600.webp' },
+      3: { bg: root+'l2-people3-1600.webp' },
+    },
+  },
   minecraft: {
     support: {
       1: { bg: root+'minecraft-support-1-bg-v3.webp', hero: root+'minecraft-support-1-hero-v3.webp', character: 'Steve' },

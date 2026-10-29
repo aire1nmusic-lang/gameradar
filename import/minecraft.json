@@ -2084,5 +2084,104 @@
     "checkedAt": "2026-10-29",
     "confidence": "confirmed",
     "notes": "Listing address corroborated on official website on 2026-10-29. Listing registration is not treated as launch."
+  },
+  {
+    "name": "HyperCraft",
+    "website": "https://hypercraftmc.net",
+    "version": "26.1.2",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.hypercraftmc.net",
+      "port": 25565
+    },
+    "key": "mc:play.hypercraftmc.net:25565",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://hypercraftmc.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://hypercraftmc.net/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366082"
+      }
+    ],
+    "checkedAt": "2026-10-29",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-29. Listing registration is not treated as launch."
+  },
+  {
+    "name": "Akvarium",
+    "website": "https://akvarium.space/",
+    "version": "26.3",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.akvarium.space",
+      "port": null
+    },
+    "key": "mc:play.akvarium.space",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://akvarium.space/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://akvarium.space/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366077"
+      }
+    ],
+    "checkedAt": "2026-10-29",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-29. Listing registration is not treated as launch."
+  },
+  {
+    "name": "aynetwork",
+    "website": "https://aynetwork.com.tr/",
+    "version": "1.21.10",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.aynetwork.com.tr",
+      "port": null
+    },
+    "key": "mc:play.aynetwork.com.tr",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://aynetwork.com.tr/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://aynetwork.com.tr/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366076"
+      }
+    ],
+    "checkedAt": "2026-10-29",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-29. Listing registration is not treated as launch."
   }
 ]

@@ -2,7 +2,9 @@ import { parseList, now, freshSince } from './core'
 // Database rows stay inside the server; public fields are selected explicitly in DTOs.
 export type Row = Record<string, any>
 export type Filters = { limit: number; offset: number; query?: string; gameId?: string; gameIds?: string[]; chronicleId?: string; versions?: string[]; modes?: string[]; regions?: string[]; languages?: string[]; minOnline?: number; minRating?: number; verifiedOnly?: boolean; hideOffline?: boolean; openedWithin?: string; wipeSoon?: boolean; onlyLaunching?: boolean; sort?: string }
-const serverSelect = `SELECT s.*, p.restricted_links, p.restricted_materials, p.support_coins, p.support_participants, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port, fo.user_id AS fc_owner_id FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN fc_owners fo ON fo.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
+// Confirmed owners of the free community core (fc_owners, migration 0013) are joined only while it is switched on,
+// so a Worker deployed before that migration, or rolled back with ACCOUNTS_COMMUNITY=false, still serves the catalog.
+const selectFor = (owners: boolean) => `SELECT s.*, p.restricted_links, p.restricted_materials, p.support_coins, p.support_participants, o.status AS online_status, o.current AS online_current, o.max AS online_max, o.checked_at, o.observed_at, o.source, o.source_tier, o.source_url, o.method AS online_method, o.latency_ms, o.note AS online_note, o.change_24h, o.peak_24h, o.avg_7d, o.peak_30d, o.uptime_24h, o.players_known, o.max_known, o.checks_24h, t.method AS target_method, t.host AS target_host, t.port AS target_port${owners ? ', fo.user_id AS fc_owner_id' : ''} FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id${owners ? ' LEFT JOIN fc_owners fo ON fo.server_id=s.id' : ''} LEFT JOIN server_online o ON o.server_id=s.id LEFT JOIN monitoring_targets t ON t.server_id=s.id AND t.enabled=1`
 /** A number counts only while it is fresh; an old one is history, not "online". */
 const FRESH = `o.players_known=1 AND COALESCE(o.observed_at,o.checked_at)>?`
 const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORTED')`
@@ -10,7 +12,8 @@ const ONLINE_STATUSES = `o.status IN ('VERIFIED','LIVE','EXTERNAL','OWNER_REPORT
 const TRUST = `(CASE o.status WHEN 'VERIFIED' THEN 1.0 WHEN 'LIVE' THEN 0.6 WHEN 'EXTERNAL' THEN 0.4 WHEN 'OWNER_REPORTED' THEN 0.25 ELSE 0 END)`
 export class Store {
   /** DEMO fixtures exist only for development; everywhere else they do not exist at all. */
-  constructor(readonly db: D1Database, readonly showDemo = false) {}
+  constructor(readonly db: D1Database, readonly showDemo = false, readonly communityOwners = false) {}
+  private get serverSelect() { return selectFor(this.communityOwners) }
   private get live() { return this.showDemo ? '' : ' AND s.is_demo=0' }
   async health() { return this.db.prepare('SELECT 1 AS ok').first() }
   async games() { return (await this.db.prepare(`SELECT g.*, (SELECT COUNT(*) FROM servers s WHERE s.game_id=g.id AND s.moderation='PUBLISHED'${this.live}) AS servers_count, (SELECT COALESCE(SUM(o.current),0) FROM server_online o JOIN servers s ON s.id=o.server_id WHERE s.game_id=g.id AND s.moderation='PUBLISHED'${this.live} AND ${ONLINE_STATUSES} AND ${FRESH}) AS players_online FROM games g ORDER BY sort_order,name`).bind(freshSince()).all<Row>()).results }
@@ -34,15 +37,15 @@ export class Store {
     if (q.wipeSoon) add('s.next_wipe_at BETWEEN ? AND ?',now(),new Date(Date.now()+7*86400000).toISOString())
     if (q.openedWithin && q.openedWithin !== 'any') add('s.opened_at>=?',new Date(Date.now()-Number(q.openedWithin.replace('d',''))*86400000).toISOString())
     const fresh = `(CASE WHEN ${FRESH.replace('?',"'"+freshSince()+"'")} THEN COALESCE(o.current,0) ELSE 0 END)`
-    const sorts: Record<string,string> = { online:`${fresh} DESC`, growth:'COALESCE(o.change_24h,0) DESC',rating:'s.rating DESC',new:'s.added_at DESC',launch:'s.launch_at ASC',votes:'s.votes_count DESC',recommended:`(MIN(${fresh},100000)*${TRUST}/100.0 + s.votes_count*2 + CASE WHEN s.owner_id IS NOT NULL OR fo.user_id IS NOT NULL THEN 10 ELSE 0 END + COALESCE(o.uptime_24h,0)/10.0) DESC` }
+    const sorts: Record<string,string> = { online:`${fresh} DESC`, growth:'COALESCE(o.change_24h,0) DESC',rating:'s.rating DESC',new:'s.added_at DESC',launch:'s.launch_at ASC',votes:'s.votes_count DESC',recommended:`(MIN(${fresh},100000)*${TRUST}/100.0 + s.votes_count*2 + CASE WHEN s.owner_id IS NOT NULL${this.communityOwners ? ' OR fo.user_id IS NOT NULL' : ''} THEN 10 ELSE 0 END + COALESCE(o.uptime_24h,0)/10.0) DESC` }
     const clause = where.join(' AND ')
-    const rows = await this.db.prepare(`${serverSelect} WHERE ${clause} ORDER BY ${sorts[q.sort ?? 'recommended'] ?? sorts.recommended},s.id LIMIT ? OFFSET ?`).bind(...values,q.limit,q.offset).all<Row>()
+    const rows = await this.db.prepare(`${this.serverSelect} WHERE ${clause} ORDER BY ${sorts[q.sort ?? 'recommended'] ?? sorts.recommended},s.id LIMIT ? OFFSET ?`).bind(...values,q.limit,q.offset).all<Row>()
     const count = await this.db.prepare(`SELECT COUNT(*) AS total FROM servers s LEFT JOIN public_server_projection p ON p.server_id=s.id LEFT JOIN server_online o ON o.server_id=s.id WHERE ${clause}`).bind(...values).first<Row>()
     return { items:rows.results,total:Number(count?.total ?? 0),limit:q.limit,offset:q.offset }
   }
-  server(key: string) { return this.db.prepare(`${serverSelect} WHERE (s.id=? OR s.slug=?)${this.live}`).bind(key,key).first<Row>() }
+  server(key: string) { return this.db.prepare(`${this.serverSelect} WHERE (s.id=? OR s.slug=?)${this.live}`).bind(key,key).first<Row>() }
   /** Cards the user manages: owned ones, plus own submissions nobody has claimed yet. */
-  async ownerServers(userId: string) { return (await this.db.prepare(`${serverSelect} WHERE s.owner_id=? OR (s.owner_id IS NULL AND s.submitted_by=?) ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
+  async ownerServers(userId: string) { return (await this.db.prepare(`${this.serverSelect} WHERE s.owner_id=? OR (s.owner_id IS NULL AND s.submitted_by=?) ORDER BY s.added_at DESC LIMIT 100`).bind(userId,userId).all<Row>()).results }
   /** Public cards for the sitemap. DEMO rows never appear here. */
   async sitemapServers() { return (await this.db.prepare("SELECT slug, updated_at FROM servers WHERE moderation='PUBLISHED' AND is_demo=0 ORDER BY updated_at DESC LIMIT 45000").all<Row>()).results }
   async supportRanking(limit:number,offset:number) { return (await this.db.prepare(`SELECT s.id AS server_id,s.slug,s.name,s.game_id,

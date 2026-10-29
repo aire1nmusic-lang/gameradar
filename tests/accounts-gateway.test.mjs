@@ -34,6 +34,6 @@ test('every route the accounts function implements is reachable through the gate
   const implemented = [...source.matchAll(/app\.(get|post)\('(\/api\/v1\/[^']+)'/g)].map(match => match[2])
   assert.ok(implemented.length >= 8)
   // Cabinet reads exist only for the Cloudflare deployment (superseded Yandex candidate does not route them).
-  const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email']
+  const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email', '/api/v1/me/email/confirm']
   for (const path of implemented.filter(p => !cabinet.includes(p))) assert.ok(path === '/api/v1/health' || path.startsWith('/api/v1/auth/'), `${path} would be hidden by the gateway`)
 })

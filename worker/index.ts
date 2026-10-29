@@ -43,7 +43,7 @@ import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
 import { sitemapXml } from './lib/sitemap.ts'
 import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, startSession, store, type AppEnv } from './lib/http.ts'
 import { accountRoutes } from './routes/accounts.ts'
-import { freeAccounts, freeAccountsCleanup } from './accounts-free.ts'
+import { communityEnabled, freeAccounts, freeAccountsCleanup } from './accounts-free.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 import { applyPublicSnapshot, parsePublicSnapshot } from './lib/public-projection.ts'
 import { deliverRelayNotice, relayNotice } from './lib/telegram-relay.ts'
@@ -97,7 +97,7 @@ function allowedOrigins(env: Env): string[] {
 }
 
 app.use('*', async (c, next) => {
-  c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
+  c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development', communityEnabled(c.env)))
 
   if(c.req.path==='/api/internal/telegram-relay'&&c.req.method==='POST') {
     if(!(await sameSecret(c.req.header('Authorization')?.replace(/^Bearer /,'')??'',c.env.PUBLIC_PROJECTION_SECRET)))throw forbidden()

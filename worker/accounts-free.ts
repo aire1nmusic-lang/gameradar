@@ -43,7 +43,7 @@ export const communityEnabled = (env: Env) => freeAccountsEnabled(env) && env.AC
 export async function freeAccounts(request: Request, env: Env): Promise<Response | null> {
   const path = new URL(request.url).pathname
   // /auth/dev is the local-development sign-in of the main Worker and stays there.
-  const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email'].includes(path)
+  const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email', '/api/v1/me/email/confirm'].includes(path)
   const community = communityEnabled(env) && COMMUNITY.test(path)
   if (!freeAccountsEnabled(env) || !(path.startsWith('/api/v1/auth/') || cabinet || community) || path === '/api/v1/auth/dev') return null
   const pepper = env.PASSWORD_PEPPER ?? '', rateKey = env.ACCOUNTS_RATE_KEY ?? ''

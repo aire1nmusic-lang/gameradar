@@ -102,6 +102,9 @@ export function mountCommunity(app, ctx) {
     q('INSERT INTO acc_audit (actor_id, action, target, created_at, details) VALUES (?, ?, ?, ?, ?)', actor, action, target, now(), JSON.stringify(details))
   const reasonOf = body => textOf(body.reason, 10, 1000)
   const ownerOf = async serverId => (await one('SELECT user_id FROM fc_owners WHERE server_id = ?', serverId))?.user_id ?? null
+  // A card with a legacy owner (servers.owner_id, old accounts) is already claimed; nobody can take it over here.
+  const legacyOwned = async serverId => !!(await one('SELECT 1 AS ok FROM servers WHERE id = ? AND owner_id IS NOT NULL', serverId))
+  const noLegacyOwner = 'NOT EXISTS (SELECT 1 FROM servers WHERE id = ? AND owner_id IS NOT NULL)'
 
   // A verified account: its own e-mail is confirmed, or Google/Discord vouched for an e-mail at the last sign-in.
   const isVerified = (user, identities) => !!user.emailVerifiedAt || identities.some(identity => identity.emailVerified)
@@ -147,9 +150,12 @@ export function mountCommunity(app, ctx) {
     if (hit && hit.until > Date.now()) return c.json(hit.rows)
     const rules = await voteRules()
     const since = new Date(clock().getTime() - rules.window_hours * 3_600_000).toISOString()
-    const rows = (await all(`SELECT s.id AS server_id, s.slug, s.name, s.game_id, COUNT(v.id) AS votes FROM servers s
-      LEFT JOIN fc_votes v ON v.server_id = s.id AND v.review_status = 'ACCEPTED' AND v.created_at > ?
-      WHERE s.moderation = 'PUBLISHED' AND s.is_demo = 0 GROUP BY s.id ORDER BY votes DESC, s.id LIMIT ? OFFSET ?`, since, limitValue, offset))
+    // Votes are counted once over the window (index on created_at), then joined: reads ≈ votes in window + servers.
+    const rows = (await all(`WITH counted AS (SELECT server_id, COUNT(*) AS votes FROM fc_votes
+        WHERE created_at > ? AND review_status = 'ACCEPTED' GROUP BY server_id)
+      SELECT s.id AS server_id, s.slug, s.name, s.game_id, COALESCE(counted.votes, 0) AS votes FROM servers s
+      LEFT JOIN counted ON counted.server_id = s.id
+      WHERE s.moderation = 'PUBLISHED' AND s.is_demo = 0 ORDER BY votes DESC, s.id LIMIT ? OFFSET ?`, since, limitValue, offset))
       .map(row => ({ ...row, votes: Number(row.votes) }))
     if (ratingCache.size > 50) ratingCache = new Map()
     ratingCache.set(key, { rows, until: Date.now() + 15_000 })
@@ -237,13 +243,13 @@ export function mountCommunity(app, ctx) {
     if (!await one("SELECT 1 AS ok FROM servers WHERE id = ? AND moderation = 'PUBLISHED' AND is_demo = 0", serverId)) fail(404, 'not_found', 'Сервер не найден в каталоге')
     const owner = await ownerOf(serverId)
     if (owner === user.id) fail(409, 'already_owned', 'Этот сервер уже доступен в вашем кабинете')
-    if (owner) fail(409, 'already_claimed', 'Владелец уже подтверждён')
+    if (owner || await legacyOwned(serverId)) fail(409, 'already_claimed', 'Владелец уже подтверждён')
     const pending = () => one("SELECT * FROM fc_claims WHERE server_id = ? AND user_id = ? AND status = 'PENDING'", serverId, user.id)
     const existing = await pending()
     if (existing) return c.json(existing, 201)
     const id = token()
     const created = await q(`INSERT INTO fc_claims (id, server_id, user_id, evidence, created_at) SELECT ?, ?, ?, ?, ?
-      WHERE NOT EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ?) ON CONFLICT DO NOTHING`, id, serverId, user.id, evidence, now(), serverId).run()
+      WHERE NOT EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ?) AND ${noLegacyOwner} ON CONFLICT DO NOTHING`, id, serverId, user.id, evidence, now(), serverId, serverId).run()
     if (!changed(created)) {
       const raced = await pending()
       if (raced) return c.json(raced, 201)
@@ -268,7 +274,8 @@ export function mountCommunity(app, ctx) {
         ON CONFLICT (claim_id) DO UPDATE SET token_hash = excluded.token_hash, method = excluded.method, target = excluded.target,
         expires_at = excluded.expires_at, checked_at = NULL, consumed_at = NULL, created_at = excluded.created_at`,
       claim.id, digest(code), body.method, target, expiresAt, now(), claim.id),
-      audit(user.id, 'claim.proof_issued', claim.id, { method: body.method }),
+      q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, 'claim.proof_issued', ?, ?, ?
+        WHERE EXISTS (SELECT 1 FROM fc_claim_proofs WHERE claim_id = ? AND token_hash = ?)`, user.id, claim.id, now(), JSON.stringify({ method: body.method }), claim.id, digest(code)),
     ])
     if (!changed(issued)) fail(409, 'claim_closed', 'Заявка уже рассмотрена')
     return c.json({ claimId: claim.id, code, method: body.method, target, expiresAt }, 201)
@@ -399,11 +406,14 @@ export function mountCommunity(app, ctx) {
     const banned = !!target.banned_at
     if ((action === 'BAN') === banned) return c.json({ ok: true, replay: true, banned })
     const notAdmin = `NOT EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND roles LIKE '%"ADMIN"%')`
-    await db.batch([
-      q(`UPDATE acc_users SET banned_at = ? WHERE id = ? AND ${notAdmin}`, action === 'BAN' ? now() : null, userId, userId),
-      ...(action === 'BAN' ? [q(`DELETE FROM acc_sessions WHERE user_id = ? AND ${notAdmin}`, userId, userId)] : []),
-      audit(admin.id, `user.${action.toLowerCase()}`, userId, { reason }),
+    // changes() = rows of the statement just before it in this batch: only the request that changed the account audits.
+    const [updated] = await db.batch([
+      q(`UPDATE acc_users SET banned_at = ? WHERE id = ? AND (banned_at IS NULL) = ? AND ${notAdmin}`, action === 'BAN' ? now() : null, userId, action === 'BAN' ? 1 : 0, userId),
+      q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ? WHERE changes() = 1`,
+        admin.id, `user.${action.toLowerCase()}`, userId, now(), JSON.stringify({ reason })),
+      ...(action === 'BAN' ? [q('DELETE FROM acc_sessions WHERE user_id = ? AND EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NOT NULL)', userId, userId)] : []),
     ])
+    if (!changed(updated)) return c.json({ ok: true, replay: true, banned: !!(await one('SELECT banned_at FROM acc_users WHERE id = ?', userId))?.banned_at })
     return c.json({ ok: true, replay: false, banned: action === 'BAN' })
   })
   app.post('/api/v1/admin/users/:id/roles', async c => {
@@ -416,10 +426,11 @@ export function mountCommunity(app, ctx) {
     if (body.action === 'GRANT') roles.add(body.role); else roles.delete(body.role)
     const next = JSON.stringify(['PLAYER', ...[...roles].filter(role => role !== 'PLAYER').sort()])
     // Compare-and-set on the previous value, so two simultaneous changes cannot silently overwrite each other.
+    if (next === target.roles) return c.json({ ok: true })
     const [updated] = await db.batch([
       q('UPDATE acc_users SET roles = ? WHERE id = ? AND roles = ?', next, userId, target.roles),
-      q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND roles = ?)`,
-        admin.id, `role.${body.action.toLowerCase()}`, userId, now(), JSON.stringify({ role: body.role }), userId, next),
+      q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ? WHERE changes() = 1`,
+        admin.id, `role.${body.action.toLowerCase()}`, userId, now(), JSON.stringify({ role: body.role })),
     ])
     if (!changed(updated) && target.roles !== next) fail(409, 'conflict', 'Роли изменились одновременно; повторите')
     return c.json({ ok: true })
@@ -446,11 +457,16 @@ export function mountCommunity(app, ctx) {
     const owner = await ownerOf(serverId)
     if (!owner) return c.json({ ok: true, replay: true, status: 'PLAYER' })
     if (owner !== userId) fail(409, 'owner_changed', 'Владелец сервера уже изменился')
-    const [revoked] = await db.batch([
+    const at = now(), gone = 'NOT EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ? AND user_id = ?)'
+    // Pending edits of the former owner close with the revocation, so they never block the next owner.
+    const [removed] = await db.batch([
       q('DELETE FROM fc_owners WHERE server_id = ? AND user_id = ?', serverId, userId),
-      audit(admin.id, 'ownership.revoked', userId, { serverId, reason }),
+      q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, 'ownership.revoked', ?, ?, ? WHERE changes() = 1`,
+        admin.id, userId, at, JSON.stringify({ serverId, reason })),
+      ...['fc_summary_edits', 'fc_fact_edits'].map(table => q(`UPDATE ${table} SET status = 'REJECTED', reviewer_id = ?, reason = ?, resolved_at = ?
+        WHERE server_id = ? AND user_id = ? AND status = 'PENDING' AND ${gone}`, admin.id, 'Права владельца отозваны', at, serverId, userId, serverId, userId)),
     ])
-    if (!changed(revoked)) fail(409, 'owner_changed', 'Владелец сервера уже изменился')
+    if (!changed(removed)) fail(409, 'owner_changed', 'Владелец сервера уже изменился')
     return c.json({ ok: true, replay: false, status: 'PLAYER' })
   })
   app.get('/api/v1/admin/servers', async c => {
@@ -486,19 +502,21 @@ export function mountCommunity(app, ctx) {
       if (edit.status === status) return c.json({ id: edit.id, status, replay: true })
       fail(409, 'edit_closed', kind === 'summary' ? 'Изменение уже рассмотрено' : 'Правка уже рассмотрена')
     }
-    const stillOwner = `EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ? AND user_id = ?)`
-    const closed = `EXISTS (SELECT 1 FROM ${table} WHERE id = ? AND status = ? AND reviewer_id = ?)`
-    const writes = [q(`UPDATE ${table} SET status = ?, reviewer_id = ?, reason = ?, resolved_at = ? WHERE id = ? AND status = 'PENDING' AND ${stillOwner}`,
-      status, reviewer.id, reason, now(), edit.id, edit.server_id, edit.user_id)]
+    // Approval needs the author to still own the card; a rejection is always possible (e.g. after a revoked ownership).
+    const stillOwner = status === 'APPROVED' ? 'AND EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ? AND user_id = ?)' : ''
+    // The nonce marks the one request that closed the edit; the card write and the audit follow only that request.
+    const nonce = token(), closed = `EXISTS (SELECT 1 FROM ${table} WHERE id = ? AND resolution_id = ?)`
+    const writes = [q(`UPDATE ${table} SET status = ?, reviewer_id = ?, reason = ?, resolved_at = ?, resolution_id = ? WHERE id = ? AND status = 'PENDING' ${stillOwner}`,
+      status, reviewer.id, reason, now(), nonce, edit.id, ...(stillOwner ? [edit.server_id, edit.user_id] : []))]
     if (status === 'APPROVED') {
       const column = kind === 'summary' ? 'summary' : FACT_COLUMNS[edit.field]
       const value = kind === 'summary' ? edit.summary : edit.field === 'modes' ? JSON.stringify(edit.value.split(',').map(mode => mode.trim()))
         : edit.value || (['site', 'discord', 'telegram'].includes(edit.field) ? null : edit.value)
-      writes.push(q(`UPDATE servers SET ${column} = ?, updated_at = ? WHERE id = ? AND ${closed}`, value, now(), edit.server_id, edit.id, status, reviewer.id))
+      writes.push(q(`UPDATE servers SET ${column} = ?, updated_at = ? WHERE id = ? AND ${closed}`, value, now(), edit.server_id, edit.id, nonce))
     }
     writes.push(q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ? WHERE ${closed}`,
       reviewer.id, `server.${kind}_${status.toLowerCase()}`, edit.id, now(),
-      JSON.stringify({ serverId: edit.server_id, ...(kind === 'fact' ? { field: edit.field } : {}), reason }), edit.id, status, reviewer.id))
+      JSON.stringify({ serverId: edit.server_id, ...(kind === 'fact' ? { field: edit.field } : {}), reason }), edit.id, nonce))
     const [updated] = await db.batch(writes)
     if (!changed(updated)) {
       const current = await one(`SELECT status FROM ${table} WHERE id = ?`, edit.id)
@@ -528,13 +546,13 @@ export function mountCommunity(app, ctx) {
       if (claim.status === body.status) return c.json(await row())
       fail(409, 'claim_closed', 'Заявка уже рассмотрена')
     }
-    const at = now()
-    const audited = q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ?
-      WHERE EXISTS (SELECT 1 FROM fc_claims WHERE id = ? AND status = ? AND reviewer_id = ?)`,
-    admin.id, 'claim.' + body.status.toLowerCase(), claim.id, at, JSON.stringify({ serverId: claim.server_id }), claim.id, body.status, admin.id)
+    const at = now(), nonce = token(), mine = 'EXISTS (SELECT 1 FROM fc_claims WHERE id = ? AND resolution_id = ?)'
+    // Everything after the claim update follows only the request whose nonce closed the claim.
+    const audited = q(`INSERT INTO acc_audit (actor_id, action, target, created_at, details) SELECT ?, ?, ?, ?, ? WHERE ${mine}`,
+      admin.id, 'claim.' + body.status.toLowerCase(), claim.id, at, JSON.stringify({ serverId: claim.server_id }), claim.id, nonce)
     if (body.status === 'REJECTED') {
-      const [closed] = await db.batch([q(`UPDATE fc_claims SET status = 'REJECTED', reviewer_id = ?, reason = ?, resolved_at = ? WHERE id = ? AND status = 'PENDING'`,
-        admin.id, reason, at, claim.id), audited])
+      const [closed] = await db.batch([q(`UPDATE fc_claims SET status = 'REJECTED', reviewer_id = ?, reason = ?, resolved_at = ?, resolution_id = ? WHERE id = ? AND status = 'PENDING'`,
+        admin.id, reason, at, nonce, claim.id), audited])
       if (!changed(closed)) fail(409, 'claim_closed', 'Заявка уже рассмотрена')
       return c.json(await row())
     }
@@ -550,17 +568,17 @@ export function mountCommunity(app, ctx) {
     const applicant = await one('SELECT id, email_verified_at, banned_at FROM acc_users WHERE id = ?', claim.user_id)
     if (!applicant || applicant.banned_at || !isVerified({ emailVerifiedAt: applicant.email_verified_at }, await identitiesOf(claim.user_id)))
       fail(403, 'applicant_ineligible', 'Заявитель должен иметь активный подтверждённый аккаунт')
-    if (await ownerOf(claim.server_id) && await ownerOf(claim.server_id) !== claim.user_id) fail(409, 'already_claimed', 'Владелец уже подтверждён')
+    if ((await ownerOf(claim.server_id) && await ownerOf(claim.server_id) !== claim.user_id) || await legacyOwned(claim.server_id))
+      fail(409, 'already_claimed', 'Владелец уже подтверждён')
     // Granted only while the claim is still pending, the same proof is live and unused, and nobody else owns the card.
-    const live = `EXISTS (SELECT 1 FROM fc_claims WHERE id = ? AND status = 'PENDING') AND EXISTS (SELECT 1 FROM fc_claim_proofs
-      WHERE claim_id = ? AND token_hash = ? AND consumed_at IS NULL AND expires_at > ?) AND EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)`
-    const granted = `EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ? AND user_id = ? AND claim_id = ?)`
+    const live = `EXISTS (SELECT 1 FROM fc_claim_proofs WHERE claim_id = ? AND token_hash = ? AND consumed_at IS NULL AND expires_at > ?)
+      AND EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)
+      AND NOT EXISTS (SELECT 1 FROM fc_owners WHERE server_id = ?) AND ${noLegacyOwner}`
     const [owner] = await db.batch([
-      q(`INSERT INTO fc_owners (server_id, user_id, claim_id, granted_at) SELECT ?, ?, ?, ? WHERE ${live}
-        ON CONFLICT (server_id) DO NOTHING`, claim.server_id, claim.user_id, claim.id, at, claim.id, claim.id, proof.token_hash, at, claim.user_id),
-      q(`UPDATE fc_claims SET status = 'VERIFIED', reviewer_id = ?, reason = ?, resolved_at = ? WHERE id = ? AND status = 'PENDING' AND ${granted}`,
-        admin.id, reason, at, claim.id, claim.server_id, claim.user_id, claim.id),
-      q(`UPDATE fc_claim_proofs SET consumed_at = ? WHERE claim_id = ? AND ${granted}`, at, claim.id, claim.server_id, claim.user_id, claim.id),
+      q(`UPDATE fc_claims SET status = 'VERIFIED', reviewer_id = ?, reason = ?, resolved_at = ?, resolution_id = ? WHERE id = ? AND status = 'PENDING' AND ${live}`,
+        admin.id, reason, at, nonce, claim.id, claim.id, proof.token_hash, at, claim.user_id, claim.server_id, claim.server_id),
+      q(`INSERT INTO fc_owners (server_id, user_id, claim_id, granted_at) SELECT ?, ?, ?, ? WHERE ${mine}`, claim.server_id, claim.user_id, claim.id, at, claim.id, nonce),
+      q(`UPDATE fc_claim_proofs SET consumed_at = ? WHERE claim_id = ? AND ${mine}`, at, claim.id, claim.id, nonce),
       audited,
     ])
     if (!changed(owner)) {

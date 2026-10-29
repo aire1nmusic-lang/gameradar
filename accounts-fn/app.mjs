@@ -26,6 +26,7 @@ import { mountCommunity } from './community.mjs'
  *   openSession({userId,expectedPasswordHash,sessionHash,replaceSessionHash,sessionExpiresAt,loginMethod,now}) -> boolean
  *   resetPassword({tokenHash,passwordHash,now}) -> boolean   consumes the token, revokes every session
  *   deleteSession(tokenHash)
+ *   linkEmail({tokenHash,userId,now}) -> 'ok'|'forbidden'|'invalid'   adds a confirmed address to an account without one
  *   identitiesOf(userId) -> [{provider,linkedAt}]
  *   saveOAuthState({stateHash,browserHash,provider,verifier,nextPath,expiresAt}) / takeOAuthState({stateHash,browserHash,provider,now}) -> {verifier,nextPath}|null
  *   oauthSignIn({provider,subject,displayName,newUserId,allowCreate,sessionHash,replaceSessionHash,sessionExpiresAt,now}) -> {status:'ok',user}|{status:'closed'|'banned'}
@@ -265,7 +266,24 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
     app.get('/api/v1/owners/me/servers', async c => { await signedIn(c); return c.json([]) })
   }
   app.get('/api/v1/coins/me', async c => { await signedIn(c); return c.json({ balance: 0, nominalRub: 50, ledger: [] }) })
-  app.post('/api/v1/me/email', async c => { await signedIn(c); fail(503, 'email_link_unavailable', 'Привязка почты к аккаунту появится позже') })
+  // Adds a confirmed address to an account that has none (e.g. created through Discord). A taken address gets the
+  // same answer and a link-less notice, so the form cannot be used to probe accounts.
+  app.post('/api/v1/me/email', async c => {
+    mailRequired()
+    const user = await signedIn(c), email = emailOf((await json(c)).email)
+    if (user.email) fail(409, 'email_exists', 'Email уже привязан; изменение требует отдельной проверки')
+    await limit(c, 'mail', email, 5)
+    if (!await issue(email, 'EMAIL', { userId: user.id }, true)) await notify(email, 'EXISTS')
+    return c.json({ sent: true }, 202)
+  })
+  app.post('/api/v1/me/email/confirm', async c => {
+    const user = await signedIn(c), body = await json(c)
+    if (typeof body.token !== 'string' || body.token.length > 128) fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    const result = await store.linkEmail({ tokenHash: digest(body.token), userId: user.id, now: clock() })
+    if (result === 'forbidden') fail(403, 'forbidden', 'Ссылка выдана другому аккаунту')
+    if (result !== 'ok') fail(400, 'token_invalid', 'Ссылка недействительна или устарела')
+    return c.json({ ok: true })
+  })
   // Everything else of the private core is not part of this service.
   app.all('/api/*', c => c.json({ error: { code: 'route_unavailable', message: 'API route unavailable' } }, 404))
   return app

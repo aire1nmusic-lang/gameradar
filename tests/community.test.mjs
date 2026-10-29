@@ -24,7 +24,8 @@ function harness({ turnstile = false } = {}) {
       ('s2', 'beta', 'Beta', 'lineage2', NULL, 'PUBLISHED', 0, '[]', '2026-01-01', '2026-01-01'),
       ('s3', 'draft', 'Draft', 'lineage2', NULL, 'PENDING_MODERATION', 0, '[]', '2026-01-01', '2026-01-01')`)
   let proofAnswer = true, clock = Date.parse('2026-10-29T10:00:00Z')
-  const app = createAccountsApp({ store: d1Store(db), passwords: { hash: hashPassword, verify: verifyPassword }, sendLinkMail: async () => {},
+  const mails = []
+  const app = createAccountsApp({ store: d1Store(db), passwords: { hash: hashPassword, verify: verifyPassword }, sendLinkMail: async (to, purpose, link) => { mails.push({ to, purpose, link }) },
     clock: () => new Date(clock),
     config: { origin, environment: 'development', rateKey: 'k'.repeat(40), mailEnabled: true, registrationOpen: true, adminEmails: 'boss@example.com', oauth,
       ...(turnstile ? { turnstileSecret: 'ts', turnstileSiteKey: 'site' } : {}) },
@@ -47,7 +48,7 @@ function harness({ turnstile = false } = {}) {
   const vote = (cookie, serverId, extra = {}) => call('POST', '/api/v1/people-rating/votes', { cookie, ip: extra.ip,
     headers: { 'Idempotency-Key': extra.key ?? `vote-key-${++n}-padding` },
     body: { serverId, deviceSignal: extra.device === undefined ? `device-${cookie.slice(0, 12)}-0000` : extra.device, pageAgeMs: 5000, ...(extra.captcha ? { captcha: extra.captcha } : {}) } })
-  return { db, call, signIn, vote, setProof: value => { proofAnswer = value }, advance: ms => { clock += ms } }
+  return { db, call, signIn, vote, mails, setProof: value => { proofAnswer = value }, advance: ms => { clock += ms } }
 }
 
 test('/auth/me: admin permissions from the role; provider-verified accounts count as verified; OWNER after a Claim', async () => {
@@ -218,4 +219,54 @@ test('proof targets come from the card site; SITE and DNS checks compare only th
   const dns = { Answer: [{ type: 16, data: '"v=spf1"' }, { type: 16, data: `"${code}"` }] }
   assert.equal(await checkProof({ method: 'DNS', target: '_gamescout.alpha.org', token_hash: digest(code) }, { fetchJson: async () => dns }), true)
   assert.equal(await checkProof({ method: 'MANUAL', target: 'x', token_hash: digest(code) }), false)
+})
+
+test('e-mail linking: a Discord account without a vouched address confirms one by link and can then vote', async () => {
+  const h = harness()
+  const eve = await h.signIn('eve'), ann = await h.signIn('ann')
+  assert.equal((await h.vote(eve, 's1')).body.error.code, 'email_unverified')
+  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: eve, body: { email: 'Eve@Example.org' } })).status, 202)
+  const mail = h.mails.find(m => m.to === 'eve@example.org' && m.purpose === 'EMAIL')
+  const token = new URLSearchParams(new URL(mail.link).hash.slice(1)).get('token')
+  assert.match(mail.link, /purpose=email/)
+  assert.equal((await h.call('POST', '/api/v1/me/email/confirm', { cookie: ann, body: { token } })).body.error.code, 'forbidden', 'a link works only for its own account')
+  assert.deepEqual((await h.call('POST', '/api/v1/me/email/confirm', { cookie: eve, body: { token } })).body, { ok: true })
+  const me = (await h.call('GET', '/api/v1/auth/me', { cookie: eve })).body.user
+  assert.deepEqual([me.email, me.emailVerified], ['eve@example.org', true])
+  assert.equal((await h.call('POST', '/api/v1/me/email/confirm', { cookie: eve, body: { token } })).body.error.code, 'token_invalid', 'one use')
+  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: eve, body: { email: 'other@example.org' } })).body.error.code, 'email_exists')
+  assert.equal((await h.vote(eve, 's1')).status, 201)
+  // A taken address gets the same answer but no link, so the form cannot probe accounts.
+  const count = h.mails.length
+  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: ann, body: { email: 'eve@example.org' } })).status, 202)
+  assert.equal(h.mails.length, count)
+})
+
+test('review fixes: a revoked owner’s pending edit closes and never blocks the next owner; concurrent approvals act once; legacy owners stay', async () => {
+  const h = harness()
+  const boss = await h.signIn('boss'), ann = await h.signIn('ann'), bob = await h.signIn('bob')
+  const grant = async (cookie, serverId) => {
+    const claim = (await h.call('POST', '/api/v1/claims', { cookie, body: { serverId, evidence: 'Я администратор этого проекта, код на сайте' } })).body
+    const proof = (await h.call('POST', `/api/v1/claims/${claim.id}/proof`, { cookie, body: { method: 'MANUAL' } })).body
+    return h.call('POST', `/api/v1/admin/claims/${claim.id}/resolve`, { cookie: boss, body: { status: 'VERIFIED', reason: 'Видел код на ресурсе', observedToken: proof.code } })
+  }
+  assert.equal((await grant(ann, 's1')).body.status, 'VERIFIED')
+  const edit = (await h.call('POST', '/api/v1/owners/me/servers/s1/summary-edits', { cookie: ann, body: { summary: 'Описание от прежнего владельца карточки' } })).body
+  const annId = (await h.call('GET', '/api/v1/auth/me', { cookie: ann })).body.user.id
+  await h.call('POST', `/api/v1/admin/users/${annId}/ownership`, { cookie: boss, body: { action: 'REVOKE', serverId: 's1', reason: 'Проект сменил владельца' } })
+  assert.equal(h.db.sqlite.prepare('SELECT status FROM fc_summary_edits WHERE id = ?').get(edit.id).status, 'REJECTED', 'closed with the revocation')
+  assert.equal((await grant(bob, 's1')).body.status, 'VERIFIED')
+  const next = await h.call('POST', '/api/v1/owners/me/servers/s1/summary-edits', { cookie: bob, body: { summary: 'Описание от нового владельца карточки' } })
+  assert.equal(next.status, 201)
+
+  // Two approvals sent at the same time: one closes the edit, the other only sees it closed.
+  const approve = () => h.call('POST', `/api/v1/admin/server-edits/${next.body.id}/resolve`, { cookie: boss, body: { status: 'APPROVED', reason: 'Сверено с сайтом проекта' } })
+  const answers = await Promise.all([approve(), approve()])
+  assert.deepEqual(answers.map(a => a.status), [200, 200])
+  assert.equal(h.db.sqlite.prepare("SELECT COUNT(*) AS n FROM acc_audit WHERE action = 'server.summary_approved'").get().n, 1)
+
+  // A card owned through the legacy accounts cannot be claimed here.
+  h.db.sqlite.exec(`INSERT INTO users (id, display_name, provider, roles, created_at) VALUES ('legacy', 'Old', 'EMAIL', '["OWNER"]', '2026-01-01');
+    UPDATE servers SET owner_id = 'legacy' WHERE id = 's2'`)
+  assert.equal((await h.call('POST', '/api/v1/claims', { cookie: ann, body: { serverId: 's2', evidence: 'Попытка забрать чужую карточку проекта' } })).body.error.code, 'already_claimed')
 })

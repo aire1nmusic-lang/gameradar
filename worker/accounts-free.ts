@@ -5,6 +5,8 @@
  * requests past its quotas instead of billing them. The app (accounts-fn/app.mjs) keeps the private API's wire
  * contract, so the frontend is unchanged. Off unless ACCOUNTS_FREE=true; sign-up stays closed unless
  * ACCOUNTS_REGISTRATION_OPEN=true. A daily cap keeps the D1/Workers quotas shared with the catalog safe.
+ * Owner decision 29.10.2026: with ACCOUNTS_COMMUNITY=true the same app also serves votes, owner Claims, owner card
+ * edits and admin moderation from D1 (accounts-fn/community.mjs, migrations/0013_free_community.sql).
  */
 import { createAccountsApp } from '../accounts-fn/app.mjs'
 import { d1Store } from '../accounts-fn/store-d1.mjs'
@@ -14,7 +16,7 @@ import { linkMail, mailEnabled, sendMail } from './lib/mailer.ts'
 import { hashPassword, verifyPassword } from './lib/password.ts'
 import { sendSmtpSocket } from './lib/smtp-socket.ts'
 
-const DEFAULT_DAILY_LIMIT = 1500
+const DEFAULT_DAILY_LIMIT = 5000
 const json = (status: number, code: string, message: string) => new Response(JSON.stringify({ error: { code, message } }),
   { status, headers: { 'Content-Type': 'application/json; charset=UTF-8', 'Cache-Control': 'no-store' } })
 
@@ -30,12 +32,20 @@ export function dailyLimit(env: Env): number {
 
 let cached: { key: string; app: ReturnType<typeof createAccountsApp> } | undefined
 
+// Routes of accounts-fn/community.mjs; the rest of the private core (Coins, payments, copyright review) stays unavailable.
+const COMMUNITY = new RegExp('^/api/v1/(?:people-rating(?:/eligibility|/votes)?|claims(?:/[^/]+/proof(?:/check)?)?'
+  + '|owners/me/servers/[^/]+/(?:summary-edits|fact-edits|monitoring)|servers/[^/]+/manage-access|copyright/(?:restrictions/[^/]+|claims)'
+  + '|admin/(?:overview|system|vote-rules|users(?:/[^/]+/(?:moderation|roles|ownership))?|servers(?:/[^/]+/monitoring-hold)?'
+  + '|server-edits(?:/[^/]+/resolve)?|server-fact-edits(?:/[^/]+/resolve)?|claims(?:/[^/]+/resolve)?|votes(?:/[^/]+/review)?))$')
+export const communityEnabled = (env: Env) => freeAccountsEnabled(env) && env.ACCOUNTS_COMMUNITY === 'true'
+
 /** Answers /api/v1/auth/* when free accounts are on; returns null for every other request. */
 export async function freeAccounts(request: Request, env: Env): Promise<Response | null> {
   const path = new URL(request.url).pathname
   // /auth/dev is the local-development sign-in of the main Worker and stays there.
   const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email'].includes(path)
-  if (!freeAccountsEnabled(env) || !(path.startsWith('/api/v1/auth/') || cabinet) || path === '/api/v1/auth/dev') return null
+  const community = communityEnabled(env) && COMMUNITY.test(path)
+  if (!freeAccountsEnabled(env) || !(path.startsWith('/api/v1/auth/') || cabinet || community) || path === '/api/v1/auth/dev') return null
   const pepper = env.PASSWORD_PEPPER ?? '', rateKey = env.ACCOUNTS_RATE_KEY ?? ''
   // SMTP (e.g. Gmail with an app password) goes over a Cloudflare TCP socket.
   const mailEnv: Env = env.MAIL_DRIVER === 'smtp' ? { ...env, SMTP_SEND: sendSmtpSocket } : env
@@ -50,20 +60,24 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
   if (write || oauthTrip) {
     const day = new Date().toISOString().slice(0, 10), store = d1Store(env.DB), cap = dailyLimit(env)
     // Past the cap only a read happens, so hostile traffic cannot keep spending the D1 write quota shared with the catalog.
-    if (await store.dailyCount(day) >= cap || await store.dailyHit(day) > cap) return json(503, 'accounts_daily_limit', 'Вход и регистрация на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
+    if (await store.dailyCount(day) >= cap || await store.dailyHit(day) > cap) return json(503, 'accounts_daily_limit', 'Аккаунты и голосование на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
   }
   const config = { origin: env.ALLOWED_ORIGIN, environment: env.ENVIRONMENT === 'development' ? 'development' : 'production', rateKey,
     adminEmails: env.ADMIN_EMAILS ?? '', mailEnabled: mailEnabled(mailEnv), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
     oauth: { GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
-      DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE } }
+      DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE },
+    turnstileSecret: env.TURNSTILE_SECRET || undefined, turnstileSiteKey: env.TURNSTILE_SITE_KEY || undefined, contactEmail: env.CONTACT_EMAIL ?? env.ADMIN_EMAILS?.split(',')[0]?.trim(),
+    community: communityEnabled(env) }
   // In-memory only: a changed secret or setting rebuilds the app.
   const key = JSON.stringify([config, pepper])
   if (cached?.key !== key) cached = { key, app: createAccountsApp({ store: d1Store(env.DB), config,
     passwords: { hash: password => hashPassword(password, pepper), verify: (password, stored) => verifyPassword(password, stored, pepper) },
     sendLinkMail: (to, purpose, link) => sendMail(mailEnv, linkMail(to, purpose, link)),
-    sendNotice: (to, kind, url) => sendMail(mailEnv, noticeMail(to, kind, url)) }) }
-  // Cloudflare sets CF-Connecting-IP itself; a client cannot choose it.
-  return cached.app.fetch(request, { clientIp: request.headers.get('CF-Connecting-IP') ?? 'unknown' })
+    sendNotice: (to, kind, url) => sendMail(mailEnv, noticeMail(to, kind, url)),
+    community: config.community ? { db: env.DB } : null }) }
+  // Cloudflare sets CF-Connecting-IP and request.cf itself; a client cannot choose them.
+  const asn = (request as Request & { cf?: { asn?: number } }).cf?.asn
+  return cached.app.fetch(request, { clientIp: request.headers.get('CF-Connecting-IP') ?? 'unknown', clientAsn: asn ? String(asn) : undefined })
 }
 
 /** Hourly cleanup of expired links, sessions and counters (called from the cron). */

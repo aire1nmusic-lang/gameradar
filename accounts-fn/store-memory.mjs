@@ -72,7 +72,7 @@ export function memoryStore() {
     async deleteSession(tokenHash) { dropSession(tokenHash) },
     async identitiesOf(userId) {
       return [...identities.entries()].filter(([, row]) => row.userId === userId)
-        .map(([key, row]) => ({ provider: key.split('|')[0], linkedAt: row.createdAt }))
+        .map(([key, row]) => ({ provider: key.split('|')[0], linkedAt: row.createdAt, emailVerified: !!row.emailVerified }))
     },
     async saveOAuthState({ stateHash, browserHash, provider, verifier, nextPath, expiresAt }) {
       states.set(stateHash, { browserHash, provider, verifier, nextPath, expiresAt })
@@ -83,7 +83,7 @@ export function memoryStore() {
       states.delete(stateHash)
       return { verifier: row.verifier, nextPath: row.nextPath }
     },
-    async oauthSignIn({ provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now, grantAdmin }) {
+    async oauthSignIn({ provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now, grantAdmin, emailVerified }) {
       const key = `${provider}|${subject}`
       let userId = identities.get(key)?.userId
       if (!userId) {
@@ -94,6 +94,7 @@ export function memoryStore() {
       }
       const user = users.get(userId)
       if (user.bannedAt) return { status: 'banned' }
+      identities.get(key).emailVerified = !!emailVerified
       if (grantAdmin && !user.roles.includes('ADMIN')) { user.roles = ['PLAYER', 'ADMIN']; record(userId, 'role.admin', provider, now) }
       record(userId, 'identity.login', provider, now)
       dropSession(replaceSessionHash)

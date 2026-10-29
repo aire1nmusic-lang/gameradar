@@ -106,8 +106,8 @@ export function d1Store(db) {
     },
 
     async identitiesOf(userId) {
-      const { results } = await db.prepare('SELECT provider, created_at FROM acc_identities WHERE user_id = ? ORDER BY provider').bind(userId).all()
-      return results.map(row => ({ provider: row.provider, linkedAt: date(row.created_at) }))
+      const { results } = await db.prepare('SELECT provider, created_at, email_verified FROM acc_identities WHERE user_id = ? ORDER BY provider').bind(userId).all()
+      return results.map(row => ({ provider: row.provider, linkedAt: date(row.created_at), emailVerified: !!row.email_verified }))
     },
 
     async saveOAuthState({ stateHash, browserHash, provider, verifier, nextPath, expiresAt }) {
@@ -133,6 +133,8 @@ export function d1Store(db) {
         db.prepare(`INSERT INTO acc_users (id, email, display_name, password_hash, created_at) VALUES (?, NULL, ?, NULL, ?)`).bind(userId, displayName, at),
         db.prepare(`INSERT INTO acc_identities (provider, subject, user_id, created_at) VALUES (?, ?, ?, ?)`).bind(provider, subject, userId, at))
       const ok = 'EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)'
+      // Whether the provider vouched for the account's e-mail at this sign-in (the address itself is not kept).
+      statements.push(db.prepare('UPDATE acc_identities SET email_verified = ? WHERE provider = ? AND subject = ?').bind(args.emailVerified ? 1 : 0, provider, subject))
       // Admin comes only from the configured list of provider-verified addresses; it is never removed here.
       if (args.grantAdmin) statements.push(db.prepare(`UPDATE acc_users SET roles = '["PLAYER","ADMIN"]' WHERE id = ? AND banned_at IS NULL`).bind(userId))
       statements.push(

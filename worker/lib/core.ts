@@ -6,6 +6,12 @@ export interface Env {
   ACCOUNTS_IN_D1?: string
   /** "true" serves /api/v1/auth/* from the free-plan accounts service (worker/accounts-free.ts, tables acc_*). */
   ACCOUNTS_FREE?: string
+  /** Votes, Claims, owner edits and moderation on D1 next to the free accounts (accounts-fn/community.mjs). */
+  ACCOUNTS_COMMUNITY?: string
+  /** Cloudflare Turnstile pair for suspicious votes; both or neither. */
+  TURNSTILE_SECRET?: string
+  TURNSTILE_SITE_KEY?: string
+  CONTACT_EMAIL?: string
   /** "true" opens sign-up in the free-plan accounts service; existing accounts sign in regardless. */
   ACCOUNTS_REGISTRATION_OPEN?: string
   /** Account operations (POST) allowed per UTC day before the service answers 503 accounts_daily_limit (default 1500). */

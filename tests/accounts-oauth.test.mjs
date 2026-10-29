@@ -4,12 +4,12 @@ import { createAccountsApp } from '../accounts-fn/app.mjs'
 import { memoryStore } from '../accounts-fn/store-memory.mjs'
 import { d1Store } from '../accounts-fn/store-d1.mjs'
 import { hashPassword, verifyPassword } from '../private-api/crypto.mjs'
-import { sqliteD1 } from './helpers/d1-sqlite.mjs'
+import { allMigrations, sqliteD1 } from './helpers/d1-sqlite.mjs'
 
 const origin = 'http://127.0.0.1:5173'
 const oauth = { VK_CLIENT_ID: 'vk', GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: 'did', DISCORD_CLIENT_SECRET: 'dsecret',
   YANDEX_CLIENT_ID: 'yid', YANDEX_CLIENT_SECRET: 'ysecret' }
-const stores = [['memory', () => memoryStore()], ['d1-sqlite', () => d1Store(sqliteD1(['migrations/0012_free_accounts.sql']))]]
+const stores = [['memory', () => memoryStore()], ['d1-sqlite', () => d1Store(sqliteD1(allMigrations()))]]
 
 function harness(makeStore, { registrationOpen = true, profiles = {}, withOAuth = true } = {}) {
   const store = makeStore(), calls = []

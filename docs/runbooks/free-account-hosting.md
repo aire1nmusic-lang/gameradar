@@ -198,3 +198,11 @@ Intended settings; every value must be re-read against the console before use (`
 5. Only then open `REGISTRATION_OPEN=true` and propose the DNS change.
 
 Rollback: set `REGISTRATION_OPEN` unset; restore the previous gateway spec/DNS; keep the YDB database and its backups.
+
+## Community on D1 (owner decision 29.10.2026)
+
+- Votes + people's rating, owner Claims (SITE/DNS/MANUAL proof, 30-minute codes), owner summary/fact edits and admin moderation (users, bans, roles, ownership revoke, claims, votes, vote rules, server edits, events) run in `accounts-fn/community.mjs` on the same Worker, behind `ACCOUNTS_COMMUNITY="true"`. Wire contract = `private-api/app.mjs` for these routes; frontend unchanged.
+- Tables `fc_*` + `acc_identities.email_verified` + `acc_audit.details` (migrations/0013_free_community.sql, additive). Owners live in `fc_owners` (legacy `servers.owner_id` references the old users table and is untouched); catalog reads join `fc_owners`, so **apply 0013 before deploying** — `node scripts/community-go-live.mjs` does migration → deploy → live check; deploy-cloudflare.yml now applies pending migrations before `wrangler deploy`.
+- Verified account = own e-mail confirmed, or Google/Discord vouched for an e-mail at the latest sign-in (address still not stored). Permissions come from roles (`acc_users.roles`); only permissions the free core serves are granted, so Coins/payments/copyright/nickname tabs stay hidden.
+- Votes: one guarded `INSERT … SELECT WHERE` counts the window and the IP/device/ASN daily limits atomically; IP/device stored only as HMAC(ACCOUNTS_RATE_KEY). Suspicious votes need Cloudflare Turnstile (`TURNSTILE_SITE_KEY` var + `TURNSTILE_SECRET` secret, free) — without it they are refused with `captcha_required`.
+- Daily cap default raised to 5000 operations (votes are counted). Rollback: `ACCOUNTS_COMMUNITY="false"` + deploy (tables stay, unused).

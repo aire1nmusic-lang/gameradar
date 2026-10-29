@@ -20,6 +20,9 @@ PUBLIC_ONLY = "true"
 # Owner decision 28.10.2026: sign-up open (e-mail, Google, Discord).
 ACCOUNTS_FREE = "true"
 ACCOUNTS_REGISTRATION_OPEN = "true"
+# Owner decision 29.10.2026: votes, owner Claims, owner card edits and admin moderation on D1 too
+# (accounts-fn/community.mjs). Needs migration 0013 applied BEFORE deploying: node scripts/community-go-live.mjs
+ACCOUNTS_COMMUNITY = "true"
 # Sign-up mail goes out through the team Gmail (free; worker/lib/smtp-socket.ts). Needs the SMTP_PASSWORD secret:
 # a Google app password of this mailbox. Gmail allows about 500 recipients a day.
 MAIL_DRIVER = "smtp"

@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { digest, equal, keyed, passwordValid, token } from './primitives.mjs'
 import { authorizeUrl, enabledProviders, exchangeProfile, isProvider, safeNext } from '../worker/lib/oauth.ts'
 import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
+import { mountCommunity } from './community.mjs'
 
 /**
  * Accounts-only GameScout API: registration by e-mail link, sign-in, session, logout, password recovery.
@@ -12,6 +13,8 @@ import { emergencyBlocks, emergencyLimit } from '../private-api/security.mjs'
  * (serverless YDB) and `store-memory.mjs` is the reference used by tests. Everything else the private core does
  * (Claims, votes, Coins, payments) is deliberately NOT here: those routes answer 404 `route_unavailable`.
  * Sign-in through Google and Discord is supported (sign-in/sign-up only, no linking to an existing account).
+ * With `community` (a D1 binding) the same app also serves votes, Claims, owner edits and admin moderation
+ * (community.mjs, owner decision 29.10.2026); without it those routes keep the empty/unavailable answers below.
  *
  * store contract — every method is atomic (one serializable transaction in YDB):
  *   ping()
@@ -71,7 +74,7 @@ export function userDto(user, identities = []) {
  */
 /** passwords: {hash(password), verify(password, stored)} — scrypt in Node (private-api/crypto.mjs), PBKDF2+pepper in a Worker. */
 export function createAccountsApp({ store, config, passwords, sendLinkMail, sendNotice = async () => {}, clock = () => new Date(),
-  oauthExchange = exchangeProfile }) {
+  oauthExchange = exchangeProfile, community: communityStorage = null }) {
   if (typeof passwords?.hash !== 'function' || typeof passwords?.verify !== 'function') throw new Error('password_hashing_required')
   if ((config.rateKey ?? '').length < 32) throw new Error('private_keys_required')
   const origin = new URL(config.origin).origin
@@ -147,9 +150,14 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
   })
 
   app.get('/api/v1/health', async c => { await store.ping(); return c.json({ status: 'ok', storage: 'ydb-serverless', scope: 'accounts' }) })
+  let community = null
+  const describeUser = async user => {
+    const identities = await store.identitiesOf(user.id)
+    return { ...userDto(user, identities), ...(community ? await community.describe(user, identities) : {}) }
+  }
   app.get('/api/v1/auth/me', async c => {
     const user = await currentUser(c)
-    return c.json({ user: user ? userDto(user, await store.identitiesOf(user.id)) : null, providers: providers(), emailLogin: !!config.mailEnabled,
+    return c.json({ user: user ? await describeUser(user) : null, providers: providers(), emailLogin: !!config.mailEnabled,
       registrationOpen: registrationOpen(), privateCore: true, devAuthEnabled: false })
   })
   app.post('/api/v1/auth/register', async c => {
@@ -240,7 +248,8 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
     const providerEmail = profile.emailVerified && typeof profile.email === 'string' ? profile.email.toLowerCase() : ''
     const result = await store.oauthSignIn({ provider, subject: String(profile.id), displayName: safeName(profile.displayName),
       newUserId: token(), allowCreate: registrationOpen(), sessionHash: digest(raw), replaceSessionHash: sessionHash(c),
-      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now, grantAdmin: !!providerEmail && adminEmails.includes(providerEmail) })
+      sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now, grantAdmin: !!providerEmail && adminEmails.includes(providerEmail),
+      emailVerified: !!providerEmail })
     if (result.status !== 'ok') return back(result.status)
     c.header('Set-Cookie', oauthCookie('', 0))
     c.header('Set-Cookie', cookie(raw, 604800), { append: true })
@@ -249,8 +258,12 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
   // Cabinet reads the account page makes. Accounts in this service cannot own Claims, servers or Coins yet,
   // so the true answer is "none"; writes (Claims, e-mail linking) stay unavailable.
   const signedIn = async c => { const user = await currentUser(c); if (!user) fail(401, 'unauthorized', 'Войдите в аккаунт'); return user }
-  app.get('/api/v1/owners/me/claims', async c => { await signedIn(c); return c.json([]) })
-  app.get('/api/v1/owners/me/servers', async c => { await signedIn(c); return c.json([]) })
+  if (communityStorage) community = mountCommunity(app, { db: communityStorage.db, config, clock, fail, textOf, json, limit, currentUser, origin,
+    identitiesOf: id => store.identitiesOf(id), captchaVerify: communityStorage.captchaVerify, proofCheck: communityStorage.proofCheck })
+  else {
+    app.get('/api/v1/owners/me/claims', async c => { await signedIn(c); return c.json([]) })
+    app.get('/api/v1/owners/me/servers', async c => { await signedIn(c); return c.json([]) })
+  }
   app.get('/api/v1/coins/me', async c => { await signedIn(c); return c.json({ balance: 0, nominalRub: 50, ledger: [] }) })
   app.post('/api/v1/me/email', async c => { await signedIn(c); fail(503, 'email_link_unavailable', 'Привязка почты к аккаунту появится позже') })
   // Everything else of the private core is not part of this service.

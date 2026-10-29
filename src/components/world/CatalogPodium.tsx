@@ -12,6 +12,7 @@ import './leader-board.css'
 export function CatalogPodium({ servers, metric }: { servers: GameServer[]; metric: 'auto' | 'support' | 'votes' }) {
   const { has, toggle } = useFavorites()
   const navigate = useNavigate()
+  const rankingContext = metric === 'auto' ? undefined : { gameId: servers[0]?.gameId, board: metric === 'votes' ? 'people' as const : 'support' as const, ids: servers.map(server => server.id) }
   const meta = (s: GameServer) => [chronicleOfVersion(s.gameId, s.version)?.label ?? s.version, s.rates ? `x${String(s.rates).replace(/^[x×]/i, '')}` : ''].filter(Boolean).join(' · ')
   const value = (s: GameServer) => {
     if (metric === 'support') return <button type="button" className="server-right gsb-num gsb-coins-action" aria-label={`Поддержать ${s.name} за GS Coins`} onClick={event => {event.preventDefault();event.stopPropagation();navigate(`/server/${s.slug}?support=1`)}}><img className="gsb-coin" src="/media/ranks/coin-stack-96.webp" alt="" /><span><small>GS Coins</small><strong>{formatNumber(s.support?.coins ?? 0)}</strong></span></button>
@@ -22,6 +23,6 @@ export function CatalogPodium({ servers, metric }: { servers: GameServer[]; metr
   }
   const fav = (s: GameServer) => <button type="button" className={`fav gsb-fav ${has(s.slug) ? 'selected' : ''}`} aria-pressed={has(s.slug)} aria-label={has(s.slug) ? `Убрать ${s.name} из избранного` : `${s.name} в избранное`} onClick={e => { e.preventDefault(); e.stopPropagation(); toggle(s.slug) }}><Heart size={14} fill={has(s.slug) ? 'currentColor' : 'none'} /></button>
   return <div className="gs-rating-page gs-catalog-podium"><div className="gsb gsb-plain" data-game={servers[0]?.gameId}><div className="gsb-list">
-    {servers.slice(0, 3).map((s, i) => <PlacePlaque key={s.id} server={s} rank={i + 1} meta={meta(s)} value={value(s)} fav={fav(s)} art={metric === 'votes' ? 'people' : 'support'} />)}
+    {servers.slice(0, 3).map((s, i) => <PlacePlaque key={s.id} server={s} rank={i + 1} meta={meta(s)} value={value(s)} fav={fav(s)} art={metric === 'votes' ? 'people' : 'support'} rankingContext={rankingContext} />)}
   </div></div></div>
 }

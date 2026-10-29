@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { publicPages, publicRecords, ORIGIN, escapeHtml } from '../scripts/public-pages.mjs'
 
 const pages = publicPages()
@@ -29,6 +29,11 @@ function checkPublicHtml(source, page) {
   assert.equal(extract(source, /<meta name="robots" content="([^"]+)"/), 'index, follow', `${page.path}: robots`)
   assert.equal((source.match(/<link\b[^>]*rel=["']canonical["']/g) ?? []).length, 1, `${page.path}: single canonical`)
   assert.match(source, /<h1>/, `${page.path}: visible initial content`)
+  // Link previews in Telegram/VK/Discord read only this HTML.
+  assert.equal(extract(source, /<meta property="og:title" content="([^"]+)"/), escapeHtml(page.title), `${page.path}: og:title`)
+  assert.equal(extract(source, /<meta property="og:url" content="([^"]+)"/), ORIGIN + page.path, `${page.path}: og:url`)
+  const image = extract(source, /<meta property="og:image" content="([^"]+)"/)
+  assert.ok(image.startsWith(ORIGIN + '/og/') && existsSync(new URL('../public' + image.slice(ORIGIN.length), import.meta.url)), `${page.path}: og:image file`)
   checkStructuredData(source, page)
 }
 function checkNoindexHtml(source, path) {
@@ -37,6 +42,13 @@ function checkNoindexHtml(source, path) {
   assert.match(source, /<h1>/, `${path}: visible initial content`)
 }
 assert.equal(new Set(pages.map(page => page.path)).size, pages.length, 'public paths must be unique')
+{
+  const home = html('/')
+  for (const type of ['Organization', 'WebSite']) assert.ok(home.includes(`"@type":"${type}"`), `/: ${type} JSON-LD`)
+  const codes = JSON.parse(readFileSync(new URL('../src/data/siteVerification.json', import.meta.url), 'utf8'))
+  for (const [name, code] of [['yandex-verification', codes.yandex], ['google-site-verification', codes.google]])
+    assert.equal(home.includes(`<meta name="${name}"`), !!code, `/: ${name} only when its code is set`)
+}
 for (const page of pages) {
   const body = html(page.path)
   checkPublicHtml(body, page)

@@ -9,7 +9,7 @@ import { useAsync } from '@/hooks/data'
 import { discoveryServers } from '@/services/catalogService'
 import { ThemeScope } from '@/theme'
 import { lightWorldTheme } from '@/theme/lightWorld'
-import { breadcrumbs, useSeo } from '@/lib/seo'
+import { breadcrumbs, gamePreviewImage, useSeo } from '@/lib/seo'
 import { useAppearance } from '@/theme/appearance'
 import { WorldGuide, faqJsonLd, worldSeo } from '@/components/world/WorldGuide'
 
@@ -53,6 +53,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   useSeo({
     title: seo?.title ?? `Серверы ${worldName}`,
     path: worldPath,
+    image: gamePreviewImage(game?.id),
     description: seo?.description ?? `Серверы ${worldName} в каталоге GameScout: онлайн с указанием источника, открытия, рейтинг и голосование.`,
     jsonLd: [
       ...(seo?.faq.length ? [faqJsonLd(seo.faq)] : []),

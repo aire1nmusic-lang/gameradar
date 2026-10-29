@@ -3,6 +3,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ORIGIN, escapeHtml, publicPages } from './public-pages.mjs'
 
+// Codes from Yandex.Webmaster / Google Search Console ("meta tag" method). Public by design, not secrets.
+const verification = JSON.parse(readFileSync(new URL('../src/data/siteVerification.json', import.meta.url), 'utf8'))
+const verificationTags = [['yandex-verification', verification.yandex], ['google-site-verification', verification.google]]
+  .filter(([, code]) => /^[A-Za-z0-9_-]{6,100}$/.test(code ?? '')).map(([name, code]) => `<meta name="${name}" content="${code}" />`).join('')
+
 const template = readFileSync('dist/index.html', 'utf8')
 const rootStart = template.indexOf('<div id="root">')
 const rootPlaceholder = '<div id="root"></div>'
@@ -16,7 +21,12 @@ function render(page) {
   const description = escapeHtml(page.description)
   let html = template.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
     .replace(/<meta\s+name="description"\s+content="[\s\S]*?"\s*\/>/, `<meta name="description" content="${description}" />`)
-  html = html.replace('</head>', `<meta name="robots" content="${page.noindex ? 'noindex, nofollow' : 'index, follow'}" />${page.noindex ? '' : `<link rel="canonical" href="${escapeHtml(canonical)}" /><script type="application/ld+json" data-seo="jsonld">${json([{ '@context': 'https://schema.org', '@type': 'WebPage', name: page.title, url: canonical, inLanguage: 'ru' }, ...(page.jsonLd ?? [])])}</script>`}${style}</head>`)
+  // Link previews (Telegram, VK, Discord) read only the initial HTML, so the social tags must be here, not only in the app.
+  const image = ORIGIN + (page.image ?? '/og/default.jpg')
+  const social = [['og:title', page.title], ['og:description', page.description], ['og:type', 'website'], ['og:site_name', 'GameScout'], ['og:locale', 'ru_RU'],
+    ['og:url', canonical], ['og:image', image], ['og:image:width', '1200'], ['og:image:height', '630']].map(([key, value]) => `<meta property="${key}" content="${escapeHtml(value)}" />`).join('')
+    + `<meta name="twitter:card" content="summary_large_image" /><meta name="twitter:image" content="${escapeHtml(image)}" />`
+  html = html.replace('</head>', `${page.path === '/' ? verificationTags : ''}${social}<meta name="robots" content="${page.noindex ? 'noindex, nofollow' : 'index, follow'}" />${page.noindex ? '' : `<link rel="canonical" href="${escapeHtml(canonical)}" /><script type="application/ld+json" data-seo="jsonld">${json([{ '@context': 'https://schema.org', '@type': 'WebPage', name: page.title, url: canonical, inLanguage: 'ru' }, ...(page.jsonLd ?? [])])}</script>`}${style}</head>`)
   const body = `<div id="root"><div class="seo-snapshot"><header><a href="/">GameScout</a><a href="/catalog">Каталог</a><a href="/rating">Рейтинги</a></header><main>${page.body}</main></div></div>`
   return html.replace(rootPlaceholder, body)
 }

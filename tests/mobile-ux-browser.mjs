@@ -381,7 +381,7 @@ try {
       assert.ok(voteHeadings.length>0,'Profile has a player-rating heading')
       for(const heading of voteHeadings) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(213, 255, 145)','Both responsive player-rating headings stay readable on transparent glass')
       const glass=await page.locator('.gs-profile-dossier').evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundImage,blur:s.backdropFilter,color:s.color}})
-      assert.ok(glass.background.includes('0.13)')&&glass.background.includes('0.2)'), 'Approved glass transmits the world scene instead of opaque pearl panels')
+      assert.ok(glass.background.includes('0.12)')&&/0\.04[0-9]*\)/.test(glass.background), 'Page glass transmits the scene with the shared light matte tint')
       assert.ok(glass.blur.includes('blur(5px)'), 'Owner-selected light diffusion preserves scene detail at every viewport')
       assert.equal(await page.getByRole('heading',{level:1}).evaluate(e=>getComputedStyle(e).color),'rgb(243, 247, 250)')
       const shield = page.locator('.gs-profile-place-shield')
@@ -432,7 +432,9 @@ try {
 
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).click()
       await page.locator('.gs-ui-modal-panel').waitFor()
-      assert.equal(await page.locator('.gs-ui-modal-panel').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(25, 28, 36)')
+      const modalGlass=await page.locator('.gs-ui-modal-panel').evaluate(e=>({background:getComputedStyle(e).backgroundImage,blur:getComputedStyle(e).backdropFilter}))
+      assert.ok(modalGlass.background.includes('0.78)')&&modalGlass.background.includes('0.84)'), 'Overlapping claim panel uses tinted smoky glass')
+      assert.ok(modalGlass.blur.includes('blur(20px)'), 'Modal frost separates overlapping content')
       const modal = await page.locator('.gs-ui-modal-panel').boundingBox()
       assert.ok(modal.x >= 0 && modal.x + modal.width <= width + 1 && modal.y >= 0 && modal.y + modal.height <= height + 1)
       await page.screenshot({ path: `${output}/claim-${game.id}-${width}.png` })
@@ -443,7 +445,8 @@ try {
       await input.fill('QA')
       await page.getByRole('option', { name: /QA Очень длинное/ }).first().waitFor()
       const background = await page.locator('.gs-search-surface').evaluate(e => getComputedStyle(e).backgroundImage)
-      assert.ok(background.includes('rgb(19, 31, 44)') && !background.includes('rgba('), background)
+      assert.equal(background,modalGlass.background,'Search and claim use the same smoky glass')
+      assert.ok((await page.locator('.gs-search-surface').evaluate(e=>getComputedStyle(e).backdropFilter)).includes('blur(20px)'))
       assert.equal(await input.evaluate(e=>getComputedStyle(e).borderTopWidth),'0px','Search has one outer field, no nested input frame')
       assert.equal(await input.getAttribute('aria-label'),'Название сервера, версия или режим')
       await page.getByRole('button',{name:'Очистить запрос',exact:true}).click()
@@ -616,7 +619,7 @@ try {
       for(const step of await page.locator('.gs-owner-step').all()) {
         assert.equal(await step.locator('strong').evaluate(e=>getComputedStyle(e).color),'rgb(243, 247, 250)','Owner steps have bright text on dark glass')
         const bg=await step.evaluate(e=>getComputedStyle(e).backgroundImage)
-        assert.ok(bg.includes('16, 27, 37'),bg)
+        assert.ok(bg.includes('0.12)')&&/0\.04[0-9]*\)/.test(bg), 'Inline owner steps share transparent page glass: '+bg)
       }
       await page.screenshot({path:`${output}/owner-ui-${game.id}-${width}.png`})
       // Owner acceptance: zero-score list -> profile -> back/reload shares one real30s window.
@@ -688,7 +691,7 @@ try {
       await page.clock.resume()
       await page.clock.setSystemTime(new Date())
       profileBoard = 'support'
-      results.push({ width, height, game: game.id, top: true, supportTarget: true, opaqueClaim: true, opaqueSearch: true, contextualHome: true, footerCTA: width < 1024 })
+      results.push({ width, height, game: game.id, top: true, supportTarget: true, smokyClaim: true, smokySearch: true, contextualHome: true, footerCTA: width < 1024 })
     }
     await page.goto(base + '/catalog?game=lineage2')
     const toolbar = page.locator('.gs-catalog-toolbar')
@@ -737,7 +740,7 @@ try {
     if (width < 768) {
       const clip={x:0,y:80,width,height:100}
       const scene=await page.screenshot({clip,animations:'disabled'})
-      const hidden=await page.addStyleTag({content:'#root .gs-account-layout:not(#qa-hide-scene)::before{background-image:none!important}'})
+      const hidden=await page.addStyleTag({content:'@layer gs-surfaces { #root .gs-account-layout::before{background-image:none!important} }'})
       const withoutScene=await page.screenshot({clip,animations:'disabled'})
       await hidden.evaluate(element=>element.remove())
       if(scene.equals(withoutScene)) {
@@ -749,6 +752,30 @@ try {
     assert.equal(await page.locator('.gs-account-layout > header').evaluate(e => getComputedStyle(e).backgroundColor), 'rgba(0, 0, 0, 0)')
     await noOverflow()
     await page.screenshot({ path: `${output}/account-${width}.png` })
+    // A read-only synthetic account covers the owner-reported mixed panel finishes.
+    await page.route('**/api/v1/auth/me', route=>route.fulfill({json:{privateCore:true,emailLogin:true,registrationOpen:true,providers:[],user:{id:'qa-glass-player',displayName:'QA Player',roles:['PLAYER'],permissions:[],emailVerified:false,loginMethod:'google'}}}))
+    await page.route('**/api/v1/coins/me', route=>route.fulfill({json:{balance:0,nominalRub:50,ledger:[]}}))
+    await page.reload()
+    await page.locator('.gs-account-card').waitFor()
+    await page.locator('.gs-account-claim').click()
+    const accountPanels=await page.locator('.gs-account-hero,.gs-account-card,.gs-coins-card,.gs-account-empty,.gs-account-claim,.gs-account-wallet>summary').evaluateAll(elements=>elements.map(e=>({background:getComputedStyle(e).backgroundImage,blur:getComputedStyle(e).backdropFilter})))
+    assert.ok(accountPanels.length>=6,'All reported account panels are present')
+    for(const panel of accountPanels) {
+      assert.equal(panel.background,accountPanels[0].background,'Every inline account panel shares one glass tint')
+      assert.ok(panel.blur.includes('blur(5px)'), 'Account panels have a light matte finish')
+    }
+    await noOverflow()
+    await mediaReady(page)
+    const scenery=async()=>page.locator(width<768?'.gs-account-layout':'.gs-world-backdrop').evaluate((e,mobile)=>{const s=getComputedStyle(e,mobile?'::before':null);return {height:s.height,position:s.position,focus:s.backgroundPosition,image:s.backgroundImage}},width<768)
+    const sceneBefore=await scenery()
+    await page.evaluate(()=>window.scrollTo(0,Math.min(400,document.documentElement.scrollHeight-innerHeight)))
+    assert.deepEqual(await scenery(),sceneBefore,'Scrolling does not resize or reposition the fixed cover')
+    assert.equal(sceneBefore.position,'fixed')
+    await page.screenshot({path:`${output}/account-signed-in-glass-${width}.png`})
+    await page.unroute('**/api/v1/auth/me')
+    await page.unroute('**/api/v1/coins/me')
+    await page.reload()
+    await page.locator('.gs-account-entry').waitFor()
     // A private API outage must not advertise open registration; recover without a reload.
     authUnavailable = true
     await page.reload()

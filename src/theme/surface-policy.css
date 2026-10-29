@@ -1,0 +1,110 @@
+/* Owner standard, 29.10.2026. Important declarations in this named layer beat
+   legacy unlayered !important rules without another specificity escalation.
+   Only surface properties belong here; keep component layout and artwork intact. */
+@layer gs-surfaces {
+  html[data-design="lobby"] {
+    --gs-page-glass:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
+    --gs-smoke-glass:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84));
+    --gs-glass-edge:rgba(255,255,255,.23);
+    --gs-glass-highlight:inset 0 1px 0 rgba(255,255,255,.14);
+  }
+
+  /* A small blur on standalone page panels, never on every descendant/row.
+     Account hero, empty state, claim and wallet share exactly the same finish. */
+  html[data-design="lobby"] body :where(
+    .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,
+    .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
+    .gs-account-claim,.gs-account-wallet>summary,.gs-coins-card,
+    .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
+    .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
+    .gs-profile-dossier,.gs-profile-support,
+    .l2a .discovery,.l2a .panel:not(.gsb),.l2a .owner,
+    .gs-catalog-search,.gs-epoch-summary,.gs-ranking-availability
+  ) {
+    background:var(--gs-page-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+    box-shadow:var(--gs-glass-highlight),0 12px 32px -24px rgba(0,0,0,.55)!important;
+    -webkit-backdrop-filter:blur(5px) saturate(110%)!important;
+    backdrop-filter:blur(5px) saturate(110%)!important;
+  }
+
+  /* Compact rows use the same transparent tint without stacking blur layers. */
+  html[data-design="lobby"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gs-top-row) {
+    background:var(--gs-page-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+  }
+
+  /* Floating UI needs stronger tint and frost to separate overlapping text.
+     Search, login/claim modals, support, filters and menus all use smoky glass. */
+  html[data-design="lobby"] body :is(
+    .gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,
+    .gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],
+    .gs-server-picker-popover,.chronicle-picker .chronicle-row,
+    .gs-catalog-toolbar,.gs-rating-switch,.gs-profile-cta-bar,.gs-mobile-nav
+  ) {
+    background:var(--gs-smoke-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+    box-shadow:var(--gs-glass-highlight),0 24px 64px -24px rgba(0,0,0,.7)!important;
+    -webkit-backdrop-filter:blur(20px) saturate(85%)!important;
+    backdrop-filter:blur(20px) saturate(85%)!important;
+  }
+  /* Keep the scene visible outside dialogs; blur belongs on the panel itself. */
+  html[data-design="lobby"] body :is(.gs-search-overlay,.gs-ui-modal,.gs-sheet)>button {
+    background:rgba(5,8,13,.36)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  html[data-design="lobby"] body dialog::backdrop {
+    background:rgba(5,8,13,.36)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  html[data-design="lobby"] body .gs-search-input-row {
+    background:linear-gradient(150deg,rgba(255,255,255,.10),rgba(255,255,255,.035))!important;
+    border-color:var(--gs-glass-edge)!important;
+  }
+  html[data-design="lobby"] body .gs-search-input-row:focus-within {
+    border-color:var(--lb-lime,#c6ff52)!important;
+  }
+  html[data-design="lobby"] body :is(.gs-ui-modal-panel,.gs-sheet>div) :is(.surface,.surface-raised),
+  html[data-design="lobby"] body .gs-support-dialog :is(.gs-support-form,.gs-support-preview,.gs-support-dialog-head) {
+    background:var(--gs-page-glass)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+
+  /* Preserve the existing light ink palette without introducing opaque slabs. */
+  html[data-design="lobby"][data-color-mode="light"] {
+    --gs-page-glass:linear-gradient(150deg,rgba(255,251,244,.42),rgba(255,251,244,.26));
+    --gs-smoke-glass:linear-gradient(150deg,rgba(238,234,226,.80),rgba(222,218,210,.86));
+    --gs-glass-edge:rgba(255,255,255,.34);
+  }
+  /* Search keeps its existing bright text, in both appearance modes. */
+  html[data-design="lobby"] body .gs-search-overlay .gs-search-surface {
+    background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84))!important;
+  }
+
+  /* Fixed cover images must use a stable large viewport, not inset:0 / auto
+     height that changes as the mobile browser toolbar collapses. No JS resize
+     listener: the image size stays constant while scrolling and updates on rotate. */
+  html[data-design="lobby"] body :is(.gs-world-backdrop,.gs-server-bg,.l2a .scene),
+  html[data-design="lobby"] body .gs-account-layout::after {
+    position:fixed!important;
+    top:0!important;bottom:auto!important;
+    height:100vh!important;height:100lvh!important;
+    min-height:0!important;
+    animation:none!important;transition:none!important;
+  }
+  @media(max-width:767px) {
+    html[data-design="lobby"] body .gs-account-layout::before {
+      top:0!important;bottom:auto!important;
+      height:100vh!important;height:100lvh!important;
+      animation:none!important;transition:none!important;
+    }
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
+      background:rgba(25,30,39,.96)!important;
+    }
+    html[data-design="lobby"][data-color-mode="light"] body :is(.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
+      background:rgba(238,234,226,.96)!important;
+    }
+  }
+}

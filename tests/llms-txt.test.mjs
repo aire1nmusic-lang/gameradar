@@ -3,9 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { ORIGIN, publicPages } from '../scripts/public-pages.mjs'
 
-const text = readFileSync('public/llms.txt', 'utf8').split('
-').join('
-')
+const text = readFileSync('public/llms.txt', 'utf8').split('\r\n').join('\n')
 // Indexable app routes that have no route-specific static HTML yet.
 const SPA_ROUTES = ['/openings', '/rating', '/sitemap.xml']
 

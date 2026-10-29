@@ -26,6 +26,20 @@ const fact = (label, value) => `${label}: ${value || 'не указано'}`
 
 const legal = JSON.parse(readFileSync(new URL('../src/data/legal.json', import.meta.url), 'utf8'))
 const about = JSON.parse(readFileSync(new URL('../src/data/about.json', import.meta.url), 'utf8'))
+const guides = JSON.parse(readFileSync(new URL('../src/data/worldGuides.json', import.meta.url), 'utf8'))
+// Same wording as the app (src/components/world/WorldGuide.tsx).
+export const chronicleDescription = meta => `${meta.intro} Рейты, дата открытия и онлайн с указанием источника.`
+export function serverCount(count) {
+  const last = count % 10, tens = count % 100
+  const word = last === 1 && tens !== 11 ? 'сервер' : last >= 2 && last <= 4 && (tens < 12 || tens > 14) ? 'сервера' : 'серверов'
+  return `В каталоге ${count} ${word}.`
+}
+const chronicleGuide = (game, slug) => guides.chronicles[`${GAME_SLUG[game]}/${slug}`] ?? { label: slug, title: `Серверы ${GAME_NAME[game]} ${slug}`, intro: `Серверы ${GAME_NAME[game]}: ${slug}.` }
+const chronicleLabel = (game, slug) => chronicleGuide(game, slug).label
+const faqHtml = faq => faq.length ? `<h2>Вопросы и ответы</h2>${faq.map(([question, answer]) => `<h3>${escapeHtml(question)}</h3><p>${escapeHtml(answer)}</p>`).join('')}` : ''
+const faqPage = faq => ({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })) })
+const itemList = (name, items) => ({ '@context': 'https://schema.org', '@type': 'ItemList', name, numberOfItems: items.length,
+  itemListElement: items.slice(0, 100).map((record, index) => ({ '@type': 'ListItem', position: index + 1, url: `${ORIGIN}/server/${record.slug}`, name: record.name })) })
 function legalBody(doc, dated = `Редакция от ${legal.updated}`) {
   const sections = doc.sections.map(section => `<h2>${escapeHtml(section.heading)}</h2>${(section.paragraphs || []).map(text => `<p>${escapeHtml(text)}</p>`).join('')}${section.list ? `<ul>${section.list.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}`).join('')
   const links = (doc.links || []).map(link => `<a href="${escapeHtml(link.to)}">${escapeHtml(link.label)}</a>`).join(' · ')
@@ -48,14 +62,21 @@ export function publicPages(records = publicRecords()) {
   ]
   for (const game of games) {
     const subset = records.filter(record => record.game === game)
-    pages.push({ path: `/${GAME_SLUG[game]}`, title: `${GAME_NAME[game]} — серверы GameScout`, description: `Каталог серверов ${GAME_NAME[game]} с проверенными характеристиками.`, body: `<h1>Серверы ${GAME_NAME[game]}</h1><p>Актуальный онлайн загружается отдельно.</p><ul class="seo-cards">${cards(subset)}</ul><p><a href="/catalog?game=${game}">Каталог с фильтрами</a></p>` })
-    if (game === 'lineage2') {
-      const others = subset.filter(record => !['Interlude', 'High Five', 'Essence'].includes(record.version))
-      pages.push({ path: '/lineage-2/other', title: 'Lineage 2 — Другие хроники — GameScout', description: 'Classic, ранние хроники и другие версии Lineage 2.', body: `<h1>Lineage 2 — Другие хроники</h1><ul class="seo-cards">${cards(others)}</ul><p><a href="/lineage-2">Все серверы Lineage 2</a></p>` })
-    }
-    for (const chronicle of [...new Set(subset.map(record => record.chronicle).filter(Boolean))]) {
-      const items = subset.filter(record => record.chronicle === chronicle)
-      pages.push({ path: `/${GAME_SLUG[game]}/${chronicle}`, title: `${GAME_NAME[game]} ${chronicle} — GameScout`, description: `Серверы ${GAME_NAME[game]}: ${chronicle}.`, body: `<h1>${escapeHtml(GAME_NAME[game])} — ${escapeHtml(chronicle)}</h1><ul class="seo-cards">${cards(items)}</ul><p><a href="/${GAME_SLUG[game]}">Все серверы ${GAME_NAME[game]}</a></p>` })
+    const guide = guides.games[game], base = `/${GAME_SLUG[game]}`
+    const chroniclePath = chronicle => `${base}/${chronicle}`
+    const chronicleSlugs = [...new Set(subset.map(record => record.chronicle).filter(Boolean))]
+    if (game === 'lineage2' && !chronicleSlugs.includes('other')) chronicleSlugs.push('other')
+    const chronicleLinks = chronicleSlugs.map(slug => `<a href="${chroniclePath(slug)}">${escapeHtml(chronicleLabel(game, slug))}</a>`).join(' · ')
+    const worldPage = (path, title, description, heading, intro, items, extra = '', faq = []) => pages.push({ path, title: title + ' — GameScout', description,
+      body: `<h1>${escapeHtml(heading)}</h1><p>${escapeHtml(intro)}</p><p>${escapeHtml(serverCount(items.length))}</p><ul class="seo-cards">${cards(items)}</ul>${extra}${faqHtml(faq)}`,
+      jsonLd: [itemList(heading, items), ...(faq.length ? [faqPage(faq)] : [])] })
+    worldPage(base, guide.title, guide.description, `Серверы ${GAME_NAME[game]}`, guide.intro, subset,
+      `<p>${chronicleLinks}</p><p><a href="/catalog?game=${game}">Каталог с фильтрами</a> · <a href="/about">Как проверяется онлайн</a></p>`, guide.faq)
+    for (const slug of chronicleSlugs) {
+      const items = slug === 'other' ? subset.filter(record => !['Interlude', 'High Five', 'Essence'].includes(record.version)) : subset.filter(record => record.chronicle === slug)
+      const meta = chronicleGuide(game, slug)
+      worldPage(chroniclePath(slug), meta.title, chronicleDescription(meta), `${GAME_NAME[game]} — ${meta.label}`, meta.intro, items,
+        `<p><a href="${base}">Все серверы ${GAME_NAME[game]}</a> · ${chronicleLinks}</p>`)
     }
   }
   for (const record of records) {

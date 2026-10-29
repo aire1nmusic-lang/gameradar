@@ -11,6 +11,7 @@ import { ThemeScope } from '@/theme'
 import { lightWorldTheme } from '@/theme/lightWorld'
 import { breadcrumbs, useSeo } from '@/lib/seo'
 import { useAppearance } from '@/theme/appearance'
+import { WorldGuide, faqJsonLd, worldSeo } from '@/components/world/WorldGuide'
 
 /**
  * A game world: /minecraft, /lineage-2, /lineage-2/interlude.
@@ -48,11 +49,13 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
+  const seo = game ? worldSeo(game, chronicle) : null
   useSeo({
-    title: `Серверы ${worldName}`,
+    title: seo?.title ?? `Серверы ${worldName}`,
     path: worldPath,
-    description: `Серверы ${worldName} в каталоге GameScout: онлайн с указанием источника, открытия, рейтинг и голосование.`,
+    description: seo?.description ?? `Серверы ${worldName} в каталоге GameScout: онлайн с указанием источника, открытия, рейтинг и голосование.`,
     jsonLd: [
+      ...(seo?.faq.length ? [faqJsonLd(seo.faq)] : []),
       breadcrumbs([
         { name: 'GameScout', path: '/' },
         ...(game ? [{ name: game.name, path: '/' + game.slug }] : []),
@@ -63,7 +66,10 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
   const { data: servers = [], loading, error, reload } = useAsync<GameServer[]>(publish => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo,publish), [game?.id, chronicle?.id,demo,rankingPeriod], true)
 
   if (!game) return null
-  if (game) return <LineageDiscovery game={game} chronicle={chronicle} servers={servers} loading={loading} error={error} reload={reload} demo={demo} />
+  if (game) return <>
+    <LineageDiscovery game={game} chronicle={chronicle} servers={servers} loading={loading} error={error} reload={reload} demo={demo} />
+    <WorldGuide game={game} chronicle={chronicle} count={loading || error || demo ? null : servers.length} />
+  </>
   return null
 }
 

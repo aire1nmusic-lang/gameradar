@@ -16,7 +16,7 @@ function render(page) {
   const description = escapeHtml(page.description)
   let html = template.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
     .replace(/<meta\s+name="description"\s+content="[\s\S]*?"\s*\/>/, `<meta name="description" content="${description}" />`)
-  html = html.replace('</head>', `<meta name="robots" content="${page.noindex ? 'noindex, nofollow' : 'index, follow'}" />${page.noindex ? '' : `<link rel="canonical" href="${escapeHtml(canonical)}" /><script type="application/ld+json" data-seo="jsonld">${json({ '@context': 'https://schema.org', '@type': 'WebPage', name: page.title, url: canonical, inLanguage: 'ru' })}</script>`}${style}</head>`)
+  html = html.replace('</head>', `<meta name="robots" content="${page.noindex ? 'noindex, nofollow' : 'index, follow'}" />${page.noindex ? '' : `<link rel="canonical" href="${escapeHtml(canonical)}" /><script type="application/ld+json" data-seo="jsonld">${json([{ '@context': 'https://schema.org', '@type': 'WebPage', name: page.title, url: canonical, inLanguage: 'ru' }, ...(page.jsonLd ?? [])])}</script>`}${style}</head>`)
   const body = `<div id="root"><div class="seo-snapshot"><header><a href="/">GameScout</a><a href="/catalog">Каталог</a><a href="/rating">Рейтинги</a></header><main>${page.body}</main></div></div>`
   return html.replace(rootPlaceholder, body)
 }

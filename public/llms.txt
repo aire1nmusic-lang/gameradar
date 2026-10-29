@@ -1,0 +1,47 @@
+# GameScout
+
+> GameScout (https://gamescout.online) — русскоязычный каталог игровых серверов Lineage 2, Minecraft и GTA RP (FiveM, RAGE:MP). У каждого сервера своя карточка: версия или хроника, рейты или режим, регион, дата открытия, ссылки проекта и онлайн с подписью источника и времени обновления.
+
+Главное правило: число онлайна всегда подписано источником. «Проверено GameScout» (VERIFIED) означает только собственное измерение GameScout (протокол игры, API сервера или агент владельца). Счётчик самого проекта помечается «по данным владельца», число стороннего мониторинга — названием этого мониторинга. Если ни один источник не ответил, онлайн неизвестен (это не ноль). Для Lineage 2 точный проверенный онлайн возможен только через API или агент владельца. Подробности — на странице методики.
+
+При цитировании указывайте источник и время, которые показаны рядом с числом на странице сервера: данные меняются, число без даты может быть устаревшим.
+
+## Главное
+
+- [О проекте и методика](https://gamescout.online/about): откуда берутся карточки, статусы онлайна, как считается общий топ
+- [Каталог серверов](https://gamescout.online/catalog): все серверы с фильтрами по игре, хронике, режиму и региону
+- [Открытия серверов](https://gamescout.online/openings): ближайшие запуски с датой и временем
+- [Рейтинг серверов](https://gamescout.online/rating): общий топ, голоса игроков и поддержка
+- [Владельцам серверов](https://gamescout.online/owners): добавление сервера, подтверждение прав, проверенный онлайн
+
+## Lineage 2
+
+- [Все серверы Lineage 2](https://gamescout.online/lineage-2)
+- [Interlude](https://gamescout.online/lineage-2/interlude)
+- [High Five](https://gamescout.online/lineage-2/high-five)
+- [Essence](https://gamescout.online/lineage-2/essence)
+- [Classic](https://gamescout.online/lineage-2/classic)
+- [Другие хроники](https://gamescout.online/lineage-2/other)
+
+## Minecraft
+
+- [Все серверы Minecraft](https://gamescout.online/minecraft)
+- [Выживание](https://gamescout.online/minecraft/survival)
+- [Анархия](https://gamescout.online/minecraft/anarchy)
+- [BedWars](https://gamescout.online/minecraft/bedwars)
+- [SkyBlock](https://gamescout.online/minecraft/skyblock)
+- [Prison](https://gamescout.online/minecraft/prison)
+
+## GTA RP
+
+- [Все серверы GTA RP](https://gamescout.online/gta-rp)
+- [FiveM](https://gamescout.online/gta-rp/fivem)
+- [RAGE:MP](https://gamescout.online/gta-rp/ragemp)
+
+## Optional
+
+- [Карта сайта](https://gamescout.online/sitemap.xml): все страницы серверов
+- [Пользовательское соглашение](https://gamescout.online/terms)
+- [Политика обработки персональных данных](https://gamescout.online/privacy)
+- [Правообладателям](https://gamescout.online/copyright)
+- Контакт: gamescout.team@gmail.com

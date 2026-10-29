@@ -8,7 +8,7 @@
 import type { Row } from './store.ts'
 
 const ORIGIN = 'https://gamescout.online'
-const SECTIONS = ['/', '/catalog', '/games', '/openings', '/rating', '/owners']
+const SECTIONS = ['/', '/catalog', '/games', '/openings', '/rating', '/owners', '/about']
 
 const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 

@@ -2051,5 +2051,38 @@
     "checkedAt": "2026-10-28",
     "confidence": "confirmed",
     "notes": "Listing address corroborated on official website on 2026-10-28. Listing registration is not treated as launch."
+  },
+  {
+    "name": "FizzMC",
+    "website": "https://fizzmc.fun",
+    "version": "1.21.11",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "play.fizzmc.fun",
+      "port": 30036
+    },
+    "key": "mc:play.fizzmc.fun:30036",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://fizzmc.fun/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://fizzmc.fun/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366056"
+      }
+    ],
+    "checkedAt": "2026-10-29",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-29. Listing registration is not treated as launch."
   }
 ]

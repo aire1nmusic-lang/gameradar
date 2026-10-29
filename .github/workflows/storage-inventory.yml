@@ -1,3 +1,4 @@
+# Recheck exact six-archive cleanup approved by owner on 29 October 2026.
 name: Read-only release storage inventory
 on:
   push:

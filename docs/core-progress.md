@@ -1,3 +1,9 @@
+## 29.10.2026 — IN PROGRESS: TOP rotation passed; pin compatible release runner
+
+- VERIFIED PR29 CI40822906745/job123279199771 SUCCESS: 320x568,390x844,768x1024,1024x768,1440x900,844x390 x L2/Minecraft/GTA. Positive TOP1/2/3 and zero-score list→profile/back/reload, both boards, distinct scenes and29.999/30second expiry PASS, noAPIwrites. Artifact12875272922 downloaded; phone+desktop and sampled tablet/landscape screenshots reviewed.
+- Merged source1d4c94d5650266a7bb75993a0c70adf3ed16f5a4, preserving main51fbc96 free accounts. Production40824066002/job123282932280 and mainCI40824065899 FAILED installing Playwright: ubuntu-latest rolled to unsupported ubuntu26.04-x64. Failure BEFORE backup/uploads/primary activation; site unchanged. This is runner compatibility, not a product regression or an approval rejection.
+- Fix only ci.yml and deploy-production.yml runner to supported ubuntu-24.04; retain every test, backup, publish and rollback guard. No cloud resources, secrets, auth or DNS changes. Local workflow diff check pending; next rerun via the normal main pipeline and verify actual primary. Cost existingCI/hosting only; rollback scoped source revert and existing mandatory archive.
+
 ## 29.10.2026 — Shared 30-second TOP presentation and profile scenes IN PROGRESS
 
 - Owner explicitly authorizes zero-score random TOP3 for30seconds and requires list→profile consistency plus full profile background finish in all3games. Remove the unintended online-award fallback/online RankStrip; only support/people can award a profile.

@@ -1,3 +1,8 @@
+## 29.10.2026 — Owner decision: votes, claims, server submissions and moderation move to Cloudflare (free); IN PROGRESS
+
+- Owner answered "Да, на Cloudflare" to: move votes, owner claims, adding servers and admin moderation to Cloudflare Worker + D1 free, like accounts; Coins and payments stay in Yandex/PostgreSQL. AGENTS.md updated with this owner-approved extension (same paragraph as the 28.10 accounts exception).
+- Approach (same as accounts): keep the private-core HTTP contract the frontend uses with privateCore:true, implement it on D1 with guarded atomic batches, reuse the acc_* sessions/roles. Mapping of the private-core routes, tables and tests in progress (read-only research). Nothing deployed; no migration applied.
+
 ## 29.10.2026 — Launch readiness audit (live, read-only); user-facing private-core message; owner letter draft; IndexNow
 
 - Owner: "делай сам все что сможешь, до конца". Live read-only audit (GET only + one server page load, no writes) → docs/launch-readiness-2026-10-29.md. VERIFIED working: catalog (~120 servers), server pages with sourced online (DonutSMP 28 279, external monitor), support ranking read, Gmail sign-up mail, Google sign-in. BLOCKED (PUBLIC_ONLY gate → 503 private_api_required, private PostgreSQL VMs stopped for cost): votes + people rating, add server, claims, owner cabinet tools, admin moderation, copyright requests; Coins purchase (no payments).

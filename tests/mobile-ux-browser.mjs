@@ -675,12 +675,15 @@ try {
       await page.locator('.gs-server-profile[data-profile-place="1"][data-profile-board="people"]').waitFor()
       // Navigation/screenshot work may consume emulated time across documents.
       // Test absolute shared-window edges, not a fixed delay from an assumed clock.
+      const beforeState=await page.locator('.gs-server-profile').evaluate(e=>({now:Date.now(),period:e.dataset.rankingPeriod,count:e.dataset.rankingCount,place:e.dataset.profilePlace,rankChips:[...e.querySelectorAll('.gs-profile-rank-chip')].map(e=>e.textContent)}))
       const beforeEdge=await page.evaluate(()=>Date.now())
       const lastMillisecond=zeroWindowStart+29999
       assert.ok(beforeEdge<=lastMillisecond,`Fixture crossed its window before the boundary check: ${beforeEdge-zeroWindowStart}ms`)
       await page.clock.runFor(lastMillisecond-beforeEdge)
       assert.equal(await page.evaluate(()=>Date.now()),lastMillisecond,'Boundary probe is exactly29.999seconds into the shared window')
-      assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),'1',`Place remains through29.999seconds of the same window (probe started at ${beforeEdge-zeroWindowStart}ms)`)
+      const edgeState=await page.locator('.gs-server-profile').evaluate(e=>({now:Date.now(),period:e.dataset.rankingPeriod,count:e.dataset.rankingCount,place:e.dataset.profilePlace,rankChips:[...e.querySelectorAll('.gs-profile-rank-chip')].map(e=>e.textContent),url:location.pathname+location.search}))
+      console.log('ROTATION_EDGE_PROOF '+JSON.stringify({width,game:game.id,zeroWindowStart,beforeState,edgeState}))
+      assert.equal(edgeState.place,'1',`Place remains through29.999seconds of the same window: ${JSON.stringify({beforeState,edgeState,zeroWindowStart})}`)
       await page.clock.runFor(2)
       assert.equal(await page.evaluate(()=>Date.now()),zeroWindowStart+30001,'Expiry probe crosses the exact shared boundary')
       await page.locator('.gs-profile-place-shield').waitFor({state:'detached'})

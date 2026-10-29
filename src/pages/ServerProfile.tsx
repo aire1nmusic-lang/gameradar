@@ -254,7 +254,7 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board}>
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board} data-ranking-period={period} data-ranking-count={peers.length}>
       {/* Same full-page world scene and compact identity header in every primary game. */}
       {fullScene && <div aria-hidden className="gs-server-bg" style={sceneStyle} />}
       {/* hero: art of the server's world */}

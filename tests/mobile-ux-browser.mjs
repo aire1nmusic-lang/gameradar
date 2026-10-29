@@ -625,7 +625,8 @@ try {
       // Owner acceptance: zero-score list -> profile -> back/reload shares one real30s window.
       profileBoard = 'zero'
       const currentTime=await page.evaluate(()=>Date.now())
-      await page.clock.pauseAt(new Date(Math.floor(currentTime/30000)*30000+31000))
+      const zeroWindowStart=(Math.floor(currentTime/30000)+1)*30000
+      await page.clock.pauseAt(new Date(zeroWindowStart+1000))
       await page.goto(base + '/' + game.slug)
       await page.locator('.gs-shelf-people .gsb-plaque').first().waitFor()
       const zeroLink = page.locator('.gs-shelf-people .gsb-plaque[data-rank="1"] .gsb-hitbox')
@@ -672,9 +673,16 @@ try {
       assert.equal(placeScenes.size,3,'Every place has its own approved background')
       await zeroLink.click()
       await page.locator('.gs-server-profile[data-profile-place="1"][data-profile-board="people"]').waitFor()
-      await page.clock.runFor(28999)
-      assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),'1','Place remains through29.999seconds of the same window')
+      // Navigation/screenshot work may consume emulated time across documents.
+      // Test absolute shared-window edges, not a fixed delay from an assumed clock.
+      const beforeEdge=await page.evaluate(()=>Date.now())
+      const lastMillisecond=zeroWindowStart+29999
+      assert.ok(beforeEdge<=lastMillisecond,`Fixture crossed its window before the boundary check: ${beforeEdge-zeroWindowStart}ms`)
+      await page.clock.runFor(lastMillisecond-beforeEdge)
+      assert.equal(await page.evaluate(()=>Date.now()),lastMillisecond,'Boundary probe is exactly29.999seconds into the shared window')
+      assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),'1',`Place remains through29.999seconds of the same window (probe started at ${beforeEdge-zeroWindowStart}ms)`)
       await page.clock.runFor(2)
+      assert.equal(await page.evaluate(()=>Date.now()),zeroWindowStart+30001,'Expiry probe crosses the exact shared boundary')
       await page.locator('.gs-profile-place-shield').waitFor({state:'detached'})
       assert.equal(await page.locator('.gs-server-profile').getAttribute('data-profile-place'),null,'An expired rotating first place has no stale metal/shield')
       assert.equal(await page.locator('.gs-profile-particles').count(),0)

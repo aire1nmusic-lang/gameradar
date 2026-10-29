@@ -181,8 +181,8 @@ function Profile({ server: source }: { server: GameServer }) {
   const cover = server.gameId === 'lineage2' ? L2_SERVER_COVER : serverArt(server)
   // Showcase worlds get a full profile hero with the header laid over the art.
   const fullScene = ['lineage2', 'minecraft', 'gtarp'].includes(server.gameId)
-  const profileArt = worldArt('hero', server.gameId)
-  const ordinarySceneStyle = server.gameId !== 'lineage2' && profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
+  const profileArt = server.gameId === 'lineage2' ? L2_SERVER_COVER : worldArt('hero', server.gameId)
+  const ordinarySceneStyle = profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
   const showcase = !!cover && isShowcase(server.gameId)
   const { has, toggle } = useFavorites()
   const favorite = has(server.slug)

@@ -1,0 +1,23 @@
+name: Read-only release storage inventory
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/storage-inventory.yml']
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ru-central1
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - name: List release archives and unfinished uploads without changing storage
+        run: |
+          aws s3api list-objects-v2 --bucket gamescout-ru-site --prefix _deployment-backups/ --endpoint-url https://storage.yandexcloud.net --query 'Contents[].{Key:Key,Size:Size,LastModified:LastModified}' --output json
+          aws s3api list-multipart-uploads --bucket gamescout-ru-site --endpoint-url https://storage.yandexcloud.net --query 'Uploads[].{Key:Key,UploadId:UploadId,Initiated:Initiated}' --output json
+          aws s3 ls s3://gamescout-ru-site/ --recursive --summarize --endpoint-url https://storage.yandexcloud.net | tail -n 2

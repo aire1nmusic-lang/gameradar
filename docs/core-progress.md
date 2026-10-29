@@ -1,3 +1,10 @@
+## 29.10.2026 — BLOCKED publication: rollback storage cap; final background fallback prepared
+
+- VERIFIED production40824491217/job123284277922 passed full responsive browser gate on pinnedUbuntu24.04 and downloaded current site backup. Mandatory durable upload failed BucketMaxSizeExceeded (UploadPart) before primary snapshot/site uploads; primary remains frontend9436b8f. Never bypassed backup, raised cap, deleted archives or modified auth/DNS.
+- Preparing narrow read-only workflow to list existing release archives, unfinished multipart uploads and total storage bytes. Need a concrete recovery/cleanup option before requesting any destructive action or cost-cap increase. Existing credentials/production environment only; no resource creation.
+- Code review found L2 ordinary style was undefined: React clears custom properties but retains an empty style attribute, so the CSS [style] selector can mask the default world image after a rotating place expires. Always set L2 ordinary artwork explicitly; strengthened browser assertion to require/decode a real /media/worlds/ image after expiry. All other ranking behavior unchanged.
+- LOCAL VERIFIED fallback typecheck,152route build,browser syntax and7rotation testsPASS; previous full18case browser pass and source PR29 details below. Next verify final fallback, read inventory, retain durable rollback guard and publish only once storage can accept the verified backup. Cost existingCI/hosting only; rollback scoped source revert.
+
 ## 29.10.2026 — IN PROGRESS: TOP rotation passed; pin compatible release runner
 
 - VERIFIED PR29 CI40822906745/job123279199771 SUCCESS: 320x568,390x844,768x1024,1024x768,1440x900,844x390 x L2/Minecraft/GTA. Positive TOP1/2/3 and zero-score list→profile/back/reload, both boards, distinct scenes and29.999/30second expiry PASS, noAPIwrites. Artifact12875272922 downloaded; phone+desktop and sampled tablet/landscape screenshots reviewed.

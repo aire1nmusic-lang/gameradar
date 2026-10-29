@@ -1,3 +1,10 @@
+## 29.10.2026 — VERIFIED cleanup; release gate exposed intermittent rotation-boundary assertion
+
+- Post-cleanup inventory40938460536/job123675154674 SUCCESS: exact3retained archives,1,549objects/467,901,151bytes; precise reduction544,173,165bytes; all3retained independently downloaded/SHA256 verified again, unfinished multipart unchanged. JSON/MD proposal now records actual executed result.
+- Production40937775693/job123672786681 stopped BEFORE backup/snapshot/uploads: browser768x1024/L2 reported null TOPplace after a fixed28999msadvance intended to probe29.999s. Earlier320/390 and prior fullfeatureCI passed. Actual primary remains9436b8f; no live product regression asserted from this test failure alone.
+- Source39b6d52 now measures actual emulatedDate.now immediately before the edge and advances to the absolute shared-window29.999s timestamp, asserting that exacttimestamp, then30.001s and the unchanged expiry/image reset requirements. This removes the test's unverified assumption that navigation/screenshot work consumed0ms; it does not relax the30second product contract. Seven rotation unit tests + script syntax/diff PASS. HYPOTHESIS: cross-document emulated clock drift caused the intermittent failure; repeated full browser gate pending to confirm. No product timer/order/scoring or release guard changed.
+- Owner authorization remains active for release. New normal production/CI launched from39b6d52; watch final gate and actual primary. Retained3backups available; enough storage for the mandatory new backup. Existing CI/hosting cost only, no IAM/quota/auth/DB/DNS/VM/payment change.
+
 ## 29.10.2026 — VERIFIED operator cleanup: exact six old archives removed; release in progress
 
 - Owner approval executed via existing operator console: selected only48b94a0/799aae4/7c0acf0/b803ecc/fd0ab89/fdeed31, inspected exact six-item confirmation, deleted them. Live console now lists only retained1190bd9/9436b8f/b11acee under _deployment-backups. No other folder/object/unfinished upload selected; no DeleteObject retry with publisher key.

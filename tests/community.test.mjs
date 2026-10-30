@@ -14,6 +14,7 @@ const profiles = {
   ann: { id: 'g-ann', displayName: 'Ann', email: 'ann@gmail.com', emailVerified: true },
   bob: { id: 'g-bob', displayName: 'Bob', email: 'bob@gmail.com', emailVerified: true },
   eve: { id: 'd-eve', displayName: 'Eve', email: 'eve@mail.test', emailVerified: false },
+  zed: { id: 'd-zed', displayName: 'Zed', email: null, emailVerified: false },
 }
 
 function harness({ turnstile = false } = {}) {
@@ -37,7 +38,7 @@ function harness({ turnstile = false } = {}) {
     const response = await app.fetch(new Request(origin + path, init), { clientIp: ip })
     return { status: response.status, body: response.headers.get('Content-Type')?.includes('json') ? await response.json() : null }
   }
-  const signIn = async (who, provider = who === 'eve' ? 'discord' : 'google') => {
+  const signIn = async (who, provider = ['eve', 'zed'].includes(who) ? 'discord' : 'google') => {
     const start = await app.fetch(new Request(`${origin}/api/v1/auth/${provider}?next=/account`), { clientIp: '203.0.113.9' })
     const state = new URL(start.headers.get('Location')).searchParams.get('state')
     const browser = start.headers.getSetCookie().find(line => line.startsWith('gs_private_oauth=')).split(';')[0].split('=')[1]
@@ -142,8 +143,8 @@ test('Claims: MANUAL proof needs the code the ADMIN saw; self-review and rejecti
   assert.equal((await h.call('POST', `/api/v1/claims/${claim.id}/proof/check`, { cookie: bob })).body.error.code, 'admin_review_required')
   const resolve = body => h.call('POST', `/api/v1/admin/claims/${claim.id}/resolve`, { cookie: boss, body })
   assert.equal((await resolve({ status: 'VERIFIED', reason: 'Видел код в Discord', observedToken: 'wrong' })).body.error.code, 'proof_required')
-  h.advance(31 * 60_000)
-  assert.equal((await resolve({ status: 'VERIFIED', reason: 'Видел код в Discord', observedToken: proof.code })).body.error.code, 'proof_required', 'expired after 30 minutes')
+  h.advance(4 * 86_400_000 + 60_000)
+  assert.equal((await resolve({ status: 'VERIFIED', reason: 'Видел код в Discord', observedToken: proof.code })).body.error.code, 'proof_required', 'expired after 4 days')
   const fresh = (await h.call('POST', `/api/v1/claims/${claim.id}/proof`, { cookie: bob, body: { method: 'MANUAL' } })).body
   assert.equal((await resolve({ status: 'VERIFIED', reason: 'Видел код в Discord', observedToken: ` ${fresh.code} ` })).body.status, 'VERIFIED')
   assert.equal((await resolve({ status: 'REJECTED', reason: 'Передумал после решения' })).body.error.code, 'claim_closed')
@@ -236,9 +237,11 @@ test('e-mail linking: a Discord account without a vouched address confirms one b
   assert.equal((await h.call('POST', '/api/v1/me/email/confirm', { cookie: eve, body: { token } })).body.error.code, 'token_invalid', 'one use')
   assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: eve, body: { email: 'other@example.org' } })).body.error.code, 'email_exists')
   assert.equal((await h.vote(eve, 's1')).status, 201)
+  // Google already vouched for Ann's address at sign-in, so her account has one.
+  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: ann, body: { email: 'new@example.org' } })).body.error.code, 'email_exists')
   // A taken address gets the same answer but no link, so the form cannot probe accounts.
-  const count = h.mails.length
-  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: ann, body: { email: 'eve@example.org' } })).status, 202)
+  const zed = await h.signIn('zed'), count = h.mails.length
+  assert.equal((await h.call('POST', '/api/v1/me/email', { cookie: zed, body: { email: 'eve@example.org' } })).status, 202)
   assert.equal(h.mails.length, count)
 })
 
@@ -269,4 +272,14 @@ test('review fixes: a revoked owner’s pending edit closes and never blocks the
   h.db.sqlite.exec(`INSERT INTO users (id, display_name, provider, roles, created_at) VALUES ('legacy', 'Old', 'EMAIL', '["OWNER"]', '2026-01-01');
     UPDATE servers SET owner_id = 'legacy' WHERE id = 's2'`)
   assert.equal((await h.call('POST', '/api/v1/claims', { cookie: ann, body: { serverId: 's2', evidence: 'Попытка забрать чужую карточку проекта' } })).body.error.code, 'already_claimed')
+})
+
+test('claim form contract of 30.10: options without documents, DOCUMENT method refused, claim list names the server', async () => {
+  const h = harness()
+  const ann = await h.signIn('ann')
+  assert.deepEqual((await h.call('GET', '/api/v1/claims/options', { cookie: ann })).body, { available: true, attachments: false, maxFiles: 0, maxFileBytes: 0, reviewDays: 3 })
+  const claim = (await h.call('POST', '/api/v1/claims', { cookie: ann, body: { serverId: 's1', evidence: 'Способ: файл на сайте. Официальный ресурс: alpha' } })).body
+  assert.equal((await h.call('POST', `/api/v1/claims/${claim.id}/proof`, { cookie: ann, body: { method: 'DOCUMENT' } })).body.error.code, 'documents_unavailable')
+  assert.equal((await h.call('POST', `/api/v1/claims/${claim.id}/attachments`, { cookie: ann, body: { name: 'a.png', mime: 'image/png', data: 'AA==' } })).body.error.code, 'attachments_unavailable')
+  assert.equal((await h.call('GET', '/api/v1/owners/me/claims', { cookie: ann })).body[0].name, 'Alpha')
 })

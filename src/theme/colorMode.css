@@ -508,3 +508,39 @@ html[data-color-mode='light'] .gs-site-header.gs-header-world-art .gs-wordmark__
 .gs-world-utility .gs-rating-page h1,.gs-world-utility .gs-catalog-page h1,.gs-world-utility .gs-openings-page h1 { font-family:var(--font-sans); }
 
 html[data-color-mode='light'] .gs-discovery-world .gs-world-ranks .gs-panel { box-shadow: none !important; }
+
+/* Compact account navigation and a single continuous wallet surface. */
+.gs-account-shortcuts { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+.gs-account-shortcuts .gs-button { min-width:0;min-height:52px;height:auto;padding:10px 8px;white-space:normal;text-align:center;line-height:1.35;font-size:12px;gap:6px; }
+.gs-account-shortcuts .gs-button svg { flex-shrink:0;width:16px;height:16px; }
+.gs-account-wallet>summary { list-style:none;display:flex; }
+.gs-account-wallet>summary::-webkit-details-marker { display:none; }
+.gs-account-wallet[open]>.gs-wallet-chevron,.gs-account-wallet[open]>summary .gs-wallet-chevron { transform:rotate(180deg); }
+.gs-account-wallet[open]>summary { border-radius:22px 22px 0 0; }
+.gs-claim-option { overflow-wrap:anywhere; }
+.gs-account-claim { scroll-margin-top:100px; }
+@media(max-width:349px) { .gs-account-shortcuts .gs-button { flex-direction:column;gap:5px; } }
+.gs-account-page .gs-button:disabled { opacity:.45!important;box-shadow:none!important; }
+
+/* Shared app-owned choice menus; the platform select sheet is not used. */
+.gs-select-menu>button[role=combobox] { text-align:left;min-height:44px; }
+.gs-select-menu>button[role=combobox]>span { min-width:0;overflow-wrap:anywhere;white-space:normal;line-height:1.4; }
+.gs-select-menu>button[role=combobox]>svg { flex-shrink:0; }
+.gs-select-menu>button[role=combobox]:focus-visible { outline:2px solid #c6ff52;outline-offset:3px; }
+.gs-select-menu>button[role=combobox]:disabled { opacity:.45; }
+.gs-select-options { background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84));color:#f3f5f7;backdrop-filter:blur(20px);padding:6px;border:1px solid rgba(255,255,255,.23);border-radius:14px;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#ffffff50 transparent;font-family:var(--font-sans); }
+.gs-select-options>[role=option] { display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;padding:11px 12px;text-align:left;line-height:1.4;font-size:14px;overflow-wrap:anywhere; }
+.gs-select-options>[role=option]+[role=option] { margin-top:5px; }
+.gs-select-options>[role=option]>span { min-width:0; }
+.gs-select-options>[role=option]>svg { flex-shrink:0;color:#c6ff52; }
+.gs-select-options>.gs-claim-option { display:block; }
+.gs-select-options>.gs-claim-option>span { display:block;margin-top:4px;color:#c5ccd5;font-size:12px; }
+.gs-select-options>p { padding:12px;font-size:14px; }
+.gs-server-picker [role=option] { border:1px solid rgba(255,255,255,.18);margin-block:5px;background:rgba(255,255,255,.035); }
+
+.gs-select-options::-webkit-scrollbar { width:6px; }
+.gs-select-options::-webkit-scrollbar-thumb { background:#ffffff45;border-radius:8px; }
+.gs-select-options>.gs-claim-option { font-weight:600; }
+.gs-select-options>.gs-claim-option>span { font-weight:400; }
+
+.gs-select-options>.gs-claim-option>span { opacity:1; }

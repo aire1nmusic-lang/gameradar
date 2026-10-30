@@ -6,7 +6,7 @@ import { artSrc, worldArt } from '@/data/themeMedia'
 const STEPS = [
   { icon: Search, title: 'Найди свой сервер', text: 'Каталог уже собран из открытых источников. Открой карточку своего проекта.' },
   { icon: BadgeCheck, title: 'Подтверди права', text: 'Подай заявку на владение: код на сайте или в DNS — и карточка станет твоей.' },
-  { icon: LayoutDashboard, title: 'Управляй карточкой', text: 'Описание, факты, мониторинг онлайна и поддержка игроков — в личном кабинете.' },
+  { icon: LayoutDashboard, title: 'Управляй карточкой', text: 'Описание и факты о сервере можно будет редактировать через личный кабинет после подтверждения прав.' },
 ]
 
 /** «Твой сервер в GameScout»: how an owner gets a card today (new cards are not accepted yet). */

@@ -95,7 +95,7 @@ EMAIL`)
       states.delete(stateHash)
       return { verifier: row.verifier, nextPath: row.nextPath }
     },
-    async oauthSignIn({ provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now, grantAdmin, emailVerified }) {
+    async oauthSignIn({ provider, subject, displayName, verifiedEmail, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now, grantAdmin, emailVerified }) {
       const key = `${provider}|${subject}`
       let userId = identities.get(key)?.userId
       if (!userId) {
@@ -107,6 +107,9 @@ EMAIL`)
       const user = users.get(userId)
       if (user.bannedAt) return { status: 'banned' }
       identities.get(key).emailVerified = !!emailVerified
+      if (!user.email && verifiedEmail && !byEmail.has(verifiedEmail)) {
+        user.email = verifiedEmail; user.emailVerifiedAt = now; byEmail.set(verifiedEmail, userId)
+      }
       if (grantAdmin && !user.roles.includes('ADMIN')) { user.roles = ['PLAYER', 'ADMIN']; record(userId, 'role.admin', provider, now) }
       record(userId, 'identity.login', provider, now)
       dropSession(replaceSessionHash)

@@ -33,7 +33,7 @@ export function dailyLimit(env: Env): number {
 let cached: { key: string; app: ReturnType<typeof createAccountsApp> } | undefined
 
 // Routes of accounts-fn/community.mjs; the rest of the private core (Coins, payments, copyright review) stays unavailable.
-const COMMUNITY = new RegExp('^/api/v1/(?:people-rating(?:/eligibility|/votes)?|claims(?:/[^/]+/proof(?:/check)?)?'
+const COMMUNITY = new RegExp('^/api/v1/(?:people-rating(?:/eligibility|/votes)?|claims(?:/options|/[^/]+/(?:proof(?:/check)?|attachments))?'
   + '|owners/me/servers/[^/]+/(?:summary-edits|fact-edits|monitoring)|servers/[^/]+/manage-access|copyright/(?:restrictions/[^/]+|claims)'
   + '|admin/(?:overview|system|vote-rules|users(?:/[^/]+/(?:moderation|roles|ownership))?|servers(?:/[^/]+/monitoring-hold)?'
   + '|server-edits(?:/[^/]+/resolve)?|server-fact-edits(?:/[^/]+/resolve)?|claims(?:/[^/]+/resolve)?|votes(?:/[^/]+/review)?))$')

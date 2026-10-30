@@ -66,7 +66,7 @@ for (const [name, makeStore] of stores) {
     assert.equal(done.set.gs_private_oauth.value, '')
     const me = (await h.request('/api/v1/auth/me', { gs_private_session: done.set.gs_private_session.value })).body.user
     assert.equal(me.displayName, 'Gamer Name'); assert.equal(me.loginMethod, 'google')
-    assert.equal(me.email, null, 'the provider e-mail is not copied into the account'); assert.equal(me.hasPassword, false)
+    assert.equal(me.email, 'gamer@gmail.com', 'verified provider email is stored on the authenticated identity'); assert.equal(me.emailVerified,true); assert.equal(me.hasPassword, false)
     assert.deepEqual(me.identities.map(x => x.provider), ['google'])
 
     // The state is single use.
@@ -115,3 +115,13 @@ for (const [name, makeStore] of stores) {
     assert.equal((await h.request('/api/v1/coins/me')).status, 401)
   })
 }
+
+for(const [name,makeStore] of stores) test(`[${name}] provider email enriches only its own identity: unverified, collision and changed mail cannot take over`,async()=>{
+  const h=harness(makeStore,{profiles:{a:{id:'a',displayName:'A',email:'shared@example.com',emailVerified:true},b:{id:'b',displayName:'B',email:'shared@example.com',emailVerified:true},c:{id:'c',displayName:'C',email:'unverified@example.com',emailVerified:false},a2:{id:'a',displayName:'A',email:'changed@example.com',emailVerified:true}}})
+  async function sign(code){const round=await h.start('google');const done=await h.request(`/api/v1/auth/google/callback?code=${code}&state=${round.state}`,{gs_private_oauth:round.browser});return (await h.request('/api/v1/auth/me',{gs_private_session:done.set.gs_private_session.value})).body.user}
+  const a=await sign('a'),b=await sign('b'),c=await sign('c'),again=await sign('a2')
+  assert.equal(a.email,'shared@example.com');assert.equal(a.emailVerified,true)
+  assert.notEqual(a.id,b.id);assert.equal(b.email,null);assert.equal(b.emailVerified,false)
+  assert.equal(c.email,null);assert.equal(c.emailVerified,false)
+  assert.equal(again.id,a.id);assert.equal(again.email,a.email,'A provider address change never overwrites the account mailbox')
+})

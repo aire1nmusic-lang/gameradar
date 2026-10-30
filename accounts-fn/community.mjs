@@ -7,7 +7,7 @@ import { assertPublicHost, fetchPublicText } from '../worker/adapters/network.ts
  * Coins, payments, copyright requests and nickname review are not here and stay unavailable.
  *
  * It keeps the wire contract of `private-api/app.mjs` for these routes (paths, bodies, DTO field names, error
- * codes, proof codes valid 30 minutes, reason 10–1000 characters, no self-review), so the frontend that already
+ * codes, proof codes valid 4 days, reason 10–1000 characters, no self-review), so the frontend that already
  * talks to the private core works unchanged. Schema: migrations/0013_free_community.sql.
  *
  * D1 has no locks or interactive transactions. Every decision that must not race is one statement whose WHERE
@@ -25,7 +25,8 @@ const PERMISSIONS = {
   FINANCE: [],
 }
 const GRANTABLE = ['MODERATOR', 'FINANCE', 'COPYRIGHT', 'SUPPORT']
-const PROOF_TTL_MS = 30 * 60_000
+// Same as the private core since 30.10.2026: owners get 4 days to place the code; review takes up to 3 days.
+const PROOF_TTL_MS = 4 * 86_400_000
 const DAY_MS = 86_400_000
 const FACT_COLUMNS = { version: 'version', rates: 'rates', region: 'region', openedAt: 'opened_at', country: 'country',
   modes: 'modes', site: 'website', discord: 'discord', telegram: 'telegram' }
@@ -237,6 +238,15 @@ export function mountCommunity(app, ctx) {
 
   /* ── Claims and the owner's cabinet ────────────────────────────────────── */
 
+  // Documents (scans, screenshots) are personal data and are not stored on the free service: that method stays off.
+  app.get('/api/v1/claims/options', async c => {
+    await requireUser(c)
+    return c.json({ available: true, attachments: false, maxFiles: 0, maxFileBytes: 0, reviewDays: 3 })
+  })
+  app.post('/api/v1/claims/:id/attachments', async c => {
+    await requireUser(c, true)
+    fail(503, 'attachments_unavailable', 'Документы пока не принимаются. Выберите код на сайте, в DNS или на публичном ресурсе проекта.')
+  })
   app.post('/api/v1/claims', async c => {
     const user = await requireUser(c, true), body = await json(c), serverId = textOf(body.serverId, 1, 100), evidence = textOf(body.evidence, 20, 3000)
     await limit(c, 'claims', user.id, 10)
@@ -261,6 +271,7 @@ export function mountCommunity(app, ctx) {
   app.post('/api/v1/claims/:id/proof', async c => {
     const user = await requireUser(c, true), body = await json(c)
     await limit(c, 'claim_proof', user.id, 10)
+    if (body.method === 'DOCUMENT') fail(400, 'documents_unavailable', 'Документы пока не принимаются. Выберите код на сайте, в DNS или на публичном ресурсе проекта.')
     if (!['SITE', 'DNS', 'MANUAL'].includes(body.method)) fail(400, 'invalid_method', 'Выберите способ проверки')
     const claim = await one('SELECT c.*, s.website FROM fc_claims c JOIN servers s ON s.id = c.server_id WHERE c.id = ? AND c.user_id = ?', c.req.param('id'), user.id)
     if (!claim) fail(404, 'not_found', 'Заявка не найдена')
@@ -300,10 +311,10 @@ export function mountCommunity(app, ctx) {
   })
   app.get('/api/v1/owners/me/claims', async c => {
     const user = await requireUser(c)
-    return c.json((await all(`SELECT c.id, c.server_id, c.status, c.evidence, c.reason, c.created_at,
+    return c.json((await all(`SELECT c.id, c.server_id, s.name, s.game_id, c.status, c.evidence, c.reason, c.created_at,
       p.method AS proof_method, p.checked_at AS proof_checked_at, p.expires_at AS proof_expires_at,
       (c.status = 'VERIFIED' AND COALESCE(o.user_id = c.user_id, 0)) AS access_active
-      FROM fc_claims c LEFT JOIN fc_owners o ON o.server_id = c.server_id LEFT JOIN fc_claim_proofs p ON p.claim_id = c.id
+      FROM fc_claims c JOIN servers s ON s.id = c.server_id LEFT JOIN fc_owners o ON o.server_id = c.server_id LEFT JOIN fc_claim_proofs p ON p.claim_id = c.id
       WHERE c.user_id = ? ORDER BY c.created_at DESC LIMIT 100`, user.id)).map(row => ({ ...row, access_active: !!row.access_active })))
   })
   app.get('/api/v1/owners/me/servers', async c => {
@@ -530,10 +541,10 @@ export function mountCommunity(app, ctx) {
   app.post('/api/v1/admin/server-fact-edits/:id/resolve', c => resolveEdit(c, 'fc_fact_edits', 'fact'))
   app.get('/api/v1/admin/claims', async c => {
     await permission(c, 'claims.review')
-    return c.json(await all(`SELECT c.*, s.name, s.game_id, s.website, p.method AS proof_method, p.target AS proof_target,
+    return c.json((await all(`SELECT c.*, s.name, s.game_id, s.website, p.method AS proof_method, p.target AS proof_target,
       p.expires_at AS proof_expires_at, p.checked_at AS proof_checked_at
       FROM fc_claims c JOIN servers s ON s.id = c.server_id LEFT JOIN fc_claim_proofs p ON p.claim_id = c.id
-      WHERE c.status = 'PENDING' ORDER BY c.created_at LIMIT 100`))
+      WHERE c.status = 'PENDING' ORDER BY c.created_at LIMIT 100`)).map(row => ({ ...row, attachments: [] })))
   })
   app.post('/api/v1/admin/claims/:id/resolve', async c => {
     const admin = await ownershipAdmin(c), body = await json(c), reason = reasonOf(body)

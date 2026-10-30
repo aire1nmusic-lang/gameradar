@@ -1691,3 +1691,36 @@ test('mail unavailable leaves password sign-in working but refuses registration/
   assert.equal((await login.json()).user.id,registered.user.id)
   assert.match(login.headers.get('Set-Cookie'),/HttpOnly; SameSite=Lax/)
 })
+
+test('claim documents stay private and bounded; foreign reads, fake MIME and approval without explicit document review fail',async t=>{
+  const h=await harness(t,{rawClaims:true}),owner=await h.register('document-owner@example.com'),stranger=await h.register('document-stranger@example.com'),admin=await h.register('document-admin@example.com')
+  await h.db.query("INSERT INTO gs_user_roles(user_id,role) VALUES($1,'ADMIN')",[admin.user.id])
+  await h.db.query("INSERT INTO gs_server_registry(server_id,game_id,name,slug) VALUES('document-server','minecraft','Documents server','documents-server')")
+  const options=await h.request('/claims/options',undefined,owner.cookie)
+  assert.equal(options.body.maxFiles,3);assert.equal(options.body.maxFileBytes,1048576)
+  const claim=(await h.request('/claims',{serverId:'document-server',evidence:'Документ о правах на домен сервера.'},owner.cookie)).body
+  const path=`/claims/${claim.id}/attachments`,proof=`/claims/${claim.id}/proof`
+  assert.equal((await h.request(proof,{method:'DOCUMENT'},owner.cookie)).status,409)
+  const file={name:'domain.pdf',mime:'application/pdf',data:Buffer.from('%PDF-1.7 synthetic document fixture').toString('base64')}
+  assert.equal((await h.request(path,{...file,data:Buffer.from('<html>fake</html>').toString('base64')},owner.cookie)).status,400)
+  assert.equal((await h.request(path,file,stranger.cookie)).status,404)
+  const stored=await h.request(path,file,owner.cookie);assert.equal(stored.status,201,JSON.stringify(stored.body))
+  assert.equal((await h.request(path,file,owner.cookie)).body.id,stored.body.id,'Retry is deduplicated by server SHA256')
+  const download=path+'/'+stored.body.id
+  assert.equal((await h.request(download,undefined,stranger.cookie)).status,403)
+  const response=await h.request(download,undefined,admin.cookie)
+  assert.equal(response.status,200);assert.equal(response.r.headers.get('Content-Type'),'application/octet-stream');assert.match(response.r.headers.get('Content-Disposition'),/^attachment;/)
+  assert.deepEqual(Buffer.from(await response.r.arrayBuffer()),Buffer.from(file.data,'base64'))
+  for(let i=0;i<2;i++)assert.equal((await h.request(path,{...file,name:`domain-${i}.pdf`,data:Buffer.from('%PDF-1.7 additional fixture '+i).toString('base64')},owner.cookie)).status,201)
+  assert.equal((await h.request(path,{...file,data:Buffer.from('%PDF-1.7 fourth file').toString('base64')},owner.cookie)).status,409)
+  assert.equal((await h.request(path,{...file,data:Buffer.alloc(1048577).toString('base64')},owner.cookie)).status,400)
+  assert.equal((await h.request(proof,{method:'DOCUMENT'},owner.cookie)).status,201)
+  const decision={status:'VERIFIED',reason:'Документы открыты и права на домен независимо сверены.'},approve=`/admin/claims/${claim.id}/resolve`
+  assert.equal((await h.request(approve,decision,admin.cookie)).status,409)
+  assert.equal((await h.request(approve,{...decision,documentsReviewed:true},owner.cookie)).status,403)
+  assert.equal((await h.request(approve,{...decision,documentsReviewed:true},admin.cookie)).status,200)
+  assert.equal((await h.request(path,file,owner.cookie)).status,409,'Resolved evidence cannot be changed')
+  assert.equal((await h.request('/owners/me/servers',undefined,owner.cookie)).body[0].server_id,'document-server')
+  const outbox=(await h.db.query("SELECT payload FROM gs_public_outbox WHERE server_id='document-server' ORDER BY version DESC LIMIT 1")).rows[0].payload
+  assert.equal(JSON.stringify(outbox).includes('domain.pdf'),false);assert.equal(JSON.stringify(outbox).includes(file.data),false)
+})

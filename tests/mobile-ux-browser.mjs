@@ -874,6 +874,8 @@ try {
     }
     await noOverflow()
     assert.equal(await page.locator('select').count(),0,'Public forms use the same app-owned dropdown')
+    await page.goto(base+'/account?game=lineage2')
+    await page.locator('.gs-account-card').waitFor()
     await page.unroute('**/api/v1/auth/me')
     await page.unroute('**/api/v1/coins/me')
     await page.reload()

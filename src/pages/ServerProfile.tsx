@@ -472,7 +472,7 @@ function OnlineSection({ server }: { server: GameServer }) {
   const { status, change24h, peak24h, avg7d, peak30d } = server.online
   const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
   const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
-    useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range], true)
+    useAsync(() => ONLINE_VERIFICATION_AVAILABLE ? repo.servers.onlineHistory(server.id, range) : Promise.resolve([]), [server.id, range], true)
 
   if (status === 'PENDING' && server.launch) {
     return (

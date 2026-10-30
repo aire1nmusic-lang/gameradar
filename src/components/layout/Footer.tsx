@@ -44,7 +44,7 @@ export function Footer() {
   if(compactPrivate)return <footer className="gs-site-footer gs-private-footer relative pb-24 md:pb-5">
     <Container><FooterFaq /></Container>
     <Container className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 py-4 text-sm">
-      <Link to="/terms">Условия</Link><Link to="/privacy">Приватность</Link><Link to="/copyright">Правообладателям</Link><span>© 2026 GameScout</span>
+      <Link to="/about">О проекте</Link><Link to="/terms">Условия</Link><Link to="/privacy">Приватность</Link><Link to="/copyright">Правообладателям</Link><span>© 2026 GameScout</span>
     </Container>
   </footer>
   return (
@@ -92,6 +92,7 @@ export function Footer() {
 
         <div className={`${compactPrivate?'lg:mt-12':'lg:mt-12'} flex flex-col gap-2 border-white/6 text-[11px] text-ink-500 lg:border-t lg:pt-6 lg:text-[12px] sm:flex-row sm:items-center sm:justify-between`}>
           <div className="flex min-w-0 flex-wrap gap-x-5 gap-y-2 sm:shrink-0">
+            <Link to="/about" className="transition-colors hover:text-ink-300">О проекте</Link>
             <Link to="/terms" className="transition-colors hover:text-ink-300">Условия</Link>
             <Link to="/privacy" className="transition-colors hover:text-ink-300">Приватность</Link>
             <Link to="/copyright" className="hidden transition-colors hover:text-ink-300 sm:inline">Правообладателям</Link>

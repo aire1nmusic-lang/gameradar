@@ -18,6 +18,7 @@ import GameWorld from '@/pages/GameWorld'
 import Account from '@/pages/Account'
 const Privacy = lazy(() => import('@/pages/Legal').then(page => ({default:page.Privacy})))
 const Terms = lazy(() => import('@/pages/Legal').then(page => ({default:page.Terms})))
+const About = lazy(() => import('@/pages/Legal').then(page => ({default:page.About})))
 const Copyright = lazy(() => import('@/pages/Copyright'))
 const Design = lazy(() => import('@/pages/Design'))
 
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="copyright" element={<DeferredPage><Copyright /></DeferredPage>} />
         <Route path="privacy" element={<DeferredPage><Privacy /></DeferredPage>} />
         <Route path="terms" element={<DeferredPage><Terms /></DeferredPage>} />
+        <Route path="about" element={<DeferredPage><About /></DeferredPage>} />
         <Route path="boost" element={<DeferredPage><Boost /></DeferredPage>} />
         <Route path="states" element={<DeferredPage><UiStates /></DeferredPage>} />
         <Route path="design" element={<DeferredPage><Design /></DeferredPage>} />

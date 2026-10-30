@@ -1,10 +1,13 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 
 /**
  * Minimal Cloudflare D1 stand-in on node:sqlite (same SQLite engine family) for local contract tests:
  * prepare().bind().first()/all()/run() and an atomic batch(). Not a substitute for a real D1 check.
  */
+/** Every D1 migration in order, as `wrangler d1 migrations apply` runs them. */
+export const allMigrations = () => readdirSync('migrations').filter(name => name.endsWith('.sql')).sort().map(name => `migrations/${name}`)
+
 export function sqliteD1(migrations = []) {
   const sqlite = new DatabaseSync(':memory:')
   sqlite.exec('PRAGMA foreign_keys = ON')

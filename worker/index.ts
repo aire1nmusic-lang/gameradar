@@ -43,7 +43,7 @@ import { budgetedNetwork, subrequestBudget } from './lib/network.ts'
 import { sitemapXml } from './lib/sitemap.ts'
 import { clientIp, currentUser, isAdmin, readJson, requireAdmin, requireUser, startSession, store, type AppEnv } from './lib/http.ts'
 import { accountRoutes } from './routes/accounts.ts'
-import { freeAccounts, freeAccountsCleanup } from './accounts-free.ts'
+import { communityEnabled, freeAccounts, freeAccountsCleanup } from './accounts-free.ts'
 import { deliverVotifierVotes } from './lib/votes.ts'
 import { applyPublicSnapshot, parsePublicSnapshot } from './lib/public-projection.ts'
 import { deliverRelayNotice, relayNotice } from './lib/telegram-relay.ts'
@@ -97,7 +97,7 @@ function allowedOrigins(env: Env): string[] {
 }
 
 app.use('*', async (c, next) => {
-  c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development'))
+  c.set('store', new Store(c.env.DB, c.env.ENVIRONMENT === 'development', communityEnabled(c.env)))
 
   if(c.req.path==='/api/internal/telegram-relay'&&c.req.method==='POST') {
     if(!(await sameSecret(c.req.header('Authorization')?.replace(/^Bearer /,'')??'',c.env.PUBLIC_PROJECTION_SECRET)))throw forbidden()
@@ -126,7 +126,10 @@ app.use('*', async (c, next) => {
 
   if (c.env.PUBLIC_ONLY === 'true' && !(c.req.method === 'GET' && (
     /^\/api\/v1\/(health|games|rating|people-rating|support\/ranking|servers(?:\/[^/]+(?:\/online-history)?)?|sitemap\.xml)$/.test(c.req.path) || c.req.path==='/sitemap.xml'
-  ))) throw new ApiError(503,'Приватный API обслуживается в Yandex Cloud','private_api_required')
+  ))) {
+    // Shown to people as is: votes, owner claims and new cards are off until the private core is back.
+    throw new ApiError(503,'Эта функция временно недоступна: голосование, заявки владельцев и добавление серверов откроются после запуска.','private_api_required')
+  }
 
   const proxyAuth = c.req.header(PROXY_AUTH_HEADER)
   if (proxyAuth && (await sameSecret(proxyAuth, c.env.PROXY_SECRET))) {

@@ -67,7 +67,7 @@ import {
   ThemedButton,
 } from '@/theme'
 import { ServerList } from '@/components/server/ServerRow'
-import { breadcrumbs, useSeo } from '@/lib/seo'
+import { breadcrumbs, gamePreviewImage, useSeo } from '@/lib/seo'
 import { SupportStudio } from '@/components/rating/SupportStudio'
 import '@/components/profile/profile-identity.css'
 import { WorldIcon } from '@/components/icons/WorldIcon'
@@ -211,6 +211,7 @@ function Profile({ server: source }: { server: GameServer }) {
     title: `${server.name} — сервер ${game.name}${chronicle ? ' ' + chronicle.label : server.version ? ' ' + server.version : ''}`,
     description: [server.summary, server.rates && `Рейты ${server.rates}`, server.languages.length ? `Язык: ${server.languages.join(', ')}` : ''].filter(Boolean).join('. '),
     path: `/server/${server.slug}`,
+    image: gamePreviewImage(server.gameId),
     noindex: server.moderation !== 'PUBLISHED' || !!server.demo,
     jsonLd: [
       breadcrumbs([

@@ -15,7 +15,13 @@ export interface SeoInput {
   noindex?: boolean
   /** schema.org objects, rendered as one JSON-LD script */
   jsonLd?: Record<string, unknown>[]
+  /** link-preview picture, a 1200×630 file under /og/ (same as the prerendered page) */
+  image?: string
 }
+
+const PREVIEW_IMAGES = new Set(['lineage2', 'minecraft', 'gtarp'])
+/** The prerendered preview picture of a game (scripts/public-pages.mjs GAME_IMAGE). */
+export const gamePreviewImage = (gameId: string | undefined) => gameId && PREVIEW_IMAGES.has(gameId) ? `/og/${gameId}.jpg` : undefined
 
 function meta(attr: 'name' | 'property', key: string, content: string) {
   let element = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
@@ -60,6 +66,7 @@ function jsonLd(objects: Record<string, unknown>[] | undefined) {
  */
 export function useSeo(input: SeoInput) {
   const { title, description, path, noindex } = input
+  const image = SITE_ORIGIN + (input.image ?? '/og/default.jpg')
   const ld = JSON.stringify(input.jsonLd ?? null)
   useEffect(() => {
     const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — навигатор по игровым серверам`
@@ -74,10 +81,12 @@ export function useSeo(input: SeoInput) {
     meta('property', 'og:type', 'website')
     meta('property', 'og:locale', 'ru_RU')
     if (url) meta('property', 'og:url', url)
-    meta('name', 'twitter:card', 'summary')
+    meta('property', 'og:image', image)
+    meta('name', 'twitter:card', 'summary_large_image')
+    meta('name', 'twitter:image', image)
     canonical(noindex ? undefined : url)
     jsonLd(JSON.parse(ld) ?? undefined)
-  }, [title, description, path, noindex, ld])
+  }, [title, description, path, noindex, ld, image])
 }
 
 export const breadcrumbs = (items: { name: string; path: string }[]) => ({

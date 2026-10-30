@@ -70,9 +70,21 @@ export function memoryStore() {
       return true
     },
     async deleteSession(tokenHash) { dropSession(tokenHash) },
+    async linkEmail({ tokenHash, userId, now }) {
+      const row = tokens.get(tokenHash)
+      if (!row || row.purpose !== 'EMAIL' || !live(row, now)) return 'invalid'
+      if (row.payload.userId !== userId) return 'forbidden'
+      const user = users.get(userId)
+      if (!user || user.email || user.bannedAt || byEmail.has(row.email)) return 'invalid'
+      tokens.delete(tokenHash); slots.delete(`${row.email}
+EMAIL`)
+      user.email = row.email; user.emailVerifiedAt = now; byEmail.set(row.email, userId)
+      record(userId, 'email.verified', userId, now)
+      return 'ok'
+    },
     async identitiesOf(userId) {
       return [...identities.entries()].filter(([, row]) => row.userId === userId)
-        .map(([key, row]) => ({ provider: key.split('|')[0], linkedAt: row.createdAt }))
+        .map(([key, row]) => ({ provider: key.split('|')[0], linkedAt: row.createdAt, emailVerified: !!row.emailVerified }))
     },
     async saveOAuthState({ stateHash, browserHash, provider, verifier, nextPath, expiresAt }) {
       states.set(stateHash, { browserHash, provider, verifier, nextPath, expiresAt })
@@ -94,6 +106,7 @@ export function memoryStore() {
       }
       const user = users.get(userId)
       if (user.bannedAt) return { status: 'banned' }
+      identities.get(key).emailVerified = !!emailVerified
       if (!user.email && verifiedEmail && !byEmail.has(verifiedEmail)) {
         user.email = verifiedEmail; user.emailVerifiedAt = now; byEmail.set(verifiedEmail, userId)
       }

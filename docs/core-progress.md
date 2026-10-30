@@ -1,3 +1,11 @@
+## 30.10.2026 — PR28 and PR31 merged; production deploy BLOCKED by rollback storage cap again; exact 6-archive proposal
+
+- Owner: "сливай". Main had moved (PR33–35, b2ea6e3 verified provider e-mail fill). Merged main into both branches; kept both: provider-verified e-mail now fills an empty account address (main) + ADMIN_EMAILS role + identity email_verified flag (ours). Community adapted to the 30.10 claim form: GET /claims/options {available:true, attachments:false}, proof codes 4 days, DOCUMENT method and attachments refused (personal documents are not stored on the free service), claim list carries server name. Tests: accounts+community 45+4, private 69, test:api, SEO, bundle PASS; PR31 CI PASS.
+- PR28 merged 5fc21ed ([skip ci]); PR31 retargeted to main and merged a8984f8. Production run 41114164150 FAILED at "Persist and verify durable rollback archive": BucketMaxSizeExceeded. Nothing uploaded; live stays 9742b53 (/about, /llms.txt still 404).
+- Read-only inventory 41116289378: 1,633 objects / 1,031,845,112 bytes, 9 archives (~88 MB each), 3 newest verified by SHA-256. Proposal docs/site-storage-cleanup-proposal-2026-10-30.md: remove exactly the 6 oldest (550,269,311 bytes), keep 3 newest. Deletion = owner action in the Yandex console (irreversible; Claude does not delete). Then re-run 41114164150, verify live pages, run scripts/indexnow.mjs.
+- Root cause: no archive rotation; ~6 releases fill the 1 GB bucket. Needs a one-time owner-approved "keep newest N" rule.
+- Owner also reports gamescout.online does not open without VPN (connection reset). Not reproducible from this machine (egress NL). LIKELY Russian ISP filtering of Cloudflare; the Yandex-hosted RU path (bucket gamescout-ru-site + API Gateway) exists but routing it needs a production DNS decision.
+
 ## 30.10.2026 — VERIFIED live: community core on Cloudflare D1 (owner ran community-go-live, DONE)
 
 - Owner ran `node scripts/community-go-live.mjs` → migration 0013 applied remotely, Worker deployed, DONE.

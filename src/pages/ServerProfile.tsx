@@ -49,7 +49,7 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
-import { LiveDot, STATUS_META, StatusBadge, VerifiedLine } from '@/components/trust/status'
+import { LiveDot, STATUS_META, StatusBadge, VerifiedLine, ONLINE_VERIFICATION_AVAILABLE } from '@/components/trust/status'
 import { ObservedHistoryChart } from '@/components/charts/ObservedHistoryChart'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
@@ -516,7 +516,7 @@ function OnlineSection({ server }: { server: GameServer }) {
     )
   }
 
-  if (!server.online.playersKnown || server.online.checksPerDay <= 0) {
+  if (!ONLINE_VERIFICATION_AVAILABLE || !server.online.playersKnown || server.online.checksPerDay <= 0) {
     return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
   }
 

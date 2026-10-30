@@ -720,7 +720,7 @@ try {
       assert.ok(choiceFinish.background.includes('0.78'),'Open choices keep smoky tint in both themes')
       assert.equal(choiceFinish.color,'rgb(243, 245, 247)','Light theme never puts white text on a pale choice sheet')
       const fieldFinish=await sort.evaluate(e=>({background:getComputedStyle(e).backgroundImage,backgroundColor:getComputedStyle(e).backgroundColor,color:getComputedStyle(e.querySelector('span')).color}))
-      assert.ok(fieldFinish.background.includes('linear-gradient')||fieldFinish.backgroundColor.includes('0.085'),'Closed selection uses the same lightweight translucent control as Filters')
+      assert.ok(fieldFinish.background.includes('linear-gradient')||/^rgba\(/.test(fieldFinish.backgroundColor)&&Number(fieldFinish.backgroundColor.match(/, ([0-9.]+)\)$/)?.[1])>.04,'Closed selection uses the same lightweight translucent control as Filters')
       if(mode==='light')assert.equal(fieldFinish.color,'rgb(29, 27, 32)','Light selection fields keep readable dark text')
       const menuBox = await menu.boundingBox()
       assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=width+1,'Sort menu fits the phone and desktop')

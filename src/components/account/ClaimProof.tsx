@@ -11,7 +11,7 @@ export function ClaimProof({id,onChecked}:{id:string;onChecked:()=>Promise<void>
     setBusy(true);setError('');setMessage('')
     try {
       if(check){await apiSend(`/claims/${id}/proof/check`,{});setMessage('Код найден. Окончательное решение принимает администратор.');await onChecked()}
-      else {setProof(await apiSend<Proof>(`/claims/${id}/proof`,{method}));setMessage('Новый код заменил предыдущий. Он действует 30 минут.')}
+      else {setProof(await apiSend<Proof>(`/claims/${id}/proof`,{method}));setMessage('Новый код заменил предыдущий. Он действует 4 дня; проверка заявки — до 3 дней.')}
     } catch(e){setError(e instanceof Error?e.message:'Не удалось проверить код')}
     finally{setBusy(false)}
   }
@@ -19,7 +19,7 @@ export function ClaimProof({id,onChecked}:{id:string;onChecked:()=>Promise<void>
     <Field label="Где разместить проверочный код"><Select value={method} onChange={value=>{setMethod(value);setProof(null)}} options={[
       {value:'SITE',label:'Файл на официальном сайте'},{value:'DNS',label:'DNS TXT официального сайта'},
       {value:'MANUAL',label:'Публичный ресурс — проверка администратором'}]}/></Field>
-    <Button disabled={busy} onClick={()=>void run(false)}>Получить код на 30 минут</Button>
+    <Button disabled={busy} onClick={()=>void run(false)}>Получить проверочный код</Button>
     {proof&&<><p className="break-all text-sm">{proof.method==='DNS'?'Имя TXT-записи: ':proof.method==='SITE'?'Адрес файла: ':''}{proof.target==='PUBLIC_RESOURCE_ADMIN_REVIEW'?'Разместите код на уже указанном официальном сайте/Discord/Telegram и укажите ссылку в основании заявки.':proof.target}</p>
       <p className="text-sm">{proof.method==='SITE'?'В файле должна быть только эта строка.':proof.method==='DNS'?'Значение TXT — только эта строка.':'Администратор должен лично увидеть эту строку на официальном ресурсе.'}</p>
       <code className="block select-all break-all rounded bg-black/30 p-3">{proof.code}</code>

@@ -8,14 +8,14 @@ import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 import { Notice } from '@/components/ui/feedback'
 import { AccountCoins } from '@/components/account/AccountCoins'
 import { AccountEntry } from '@/components/account/AccountEntry'
-import { ClaimProof } from '@/components/account/ClaimProof'
+import { ClaimApplication } from '@/components/account/ClaimApplication'
 import { GsMark } from '@/components/layout/Logo'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 const Admin=lazy(()=>import('./Admin'))
 
-type Claim = { id:string; server_id:string; status:string; access_active?:boolean; reason?:string; evidence?:string; name?:string }
+import type { OwnershipClaim } from '@/components/account/ClaimApplication'
 type Owned = {server_id:string;name:string;slug:string;game_id:string}
 type SummaryEdit = {id:string;summary:string;status:string;reason?:string;created_at:string}
 type FactEdit = {id:string;field:string;value:string;status:string;reason?:string;created_at:string}
@@ -32,9 +32,8 @@ export default function Account() {
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState('')
   const [message,setMessage]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false)
   const [linkToken,setLinkToken]=useState(''),[purpose,setPurpose]=useState('')
-  const [claims,setClaims]=useState<Claim[]>([]),[owned,setOwned]=useState<Owned[]>([])
-  const [serverId,setServerId]=useState(()=>new URLSearchParams(location.search).get('claim')??'')
-  const [evidence,setEvidence]=useState('')
+  const [claims,setClaims]=useState<OwnershipClaim[]>([]),[owned,setOwned]=useState<Owned[]>([])
+  const [ownerLoading,setOwnerLoading]=useState(true),[ownerError,setOwnerError]=useState('')
   useEffect(()=>{
     const consumeLink=()=>{
       const params=new URLSearchParams(location.hash.slice(1))
@@ -50,8 +49,12 @@ export default function Account() {
   },[])
   async function reload() {
     await auth.refresh()
-    const [c,s]=await Promise.all([apiRequest<Claim[]>('/owners/me/claims'),apiRequest<Owned[]>('/owners/me/servers')])
-    setClaims(c);setOwned(s)
+    setOwnerLoading(true);setOwnerError('')
+    try {
+      const [c,s]=await Promise.all([apiRequest<OwnershipClaim[]>('/owners/me/claims'),apiRequest<Owned[]>('/owners/me/servers')])
+      setClaims(c);setOwned(s)
+    } catch {setOwnerError('Список ваших серверов временно недоступен. Подтверждённые права сохраняются.')}
+    finally {setOwnerLoading(false)}
 
   }
   useEffect(()=>{ if(auth.privateCore&&auth.user) void reload().catch(e=>setError(e.message)) },[auth.privateCore,auth.user?.id])
@@ -124,39 +127,29 @@ export default function Account() {
           </div>
         </div>
       </div>
-      {!profile?.email&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="mt-4 flex gap-2">
+      {!profile?.email&&profile?.loginMethod==='email'&&<form onSubmit={e=>{e.preventDefault();void run(()=>apiSend('/me/email',{email}),'Ссылка отправлена на почту.')}} className="mt-4 flex gap-2">
         <Input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email"/>
         <Button type="submit" disabled={busy}>Подтвердить</Button>
       </form>}
     </section>
 
-    {!isAdmin&&<Button to={scoped('/favorites')} icon={<WorldIcon name="favorite" size={16}/>}>Избранные серверы</Button>}
-    {!isAdmin&&<Button to={scoped('/rating')+'#support-studio'} icon={<WorldIcon name="coins" size={16}/>} className="min-h-11">Поддержка проектов</Button>}
-    <details className="gs-account-wallet" open={!canManage}><summary>Мои Coins</summary><AccountCoins key={auth.user.id}/></details>
+    {!isAdmin&&<nav className="gs-account-shortcuts" aria-label="Разделы аккаунта"><Button to={scoped('/favorites')} icon={<WorldIcon name="favorite" size={16}/>}>Избранные серверы</Button>
+    <Button to={scoped('/rating')+'#support-studio'} icon={<WorldIcon name="coins" size={16}/>} className="min-h-11">Поддержка проектов</Button></nav>}
+    <AccountCoins key={auth.user.id} initiallyOpen={!canManage}/>
     </aside>
     <div className="gs-account-workspace space-y-5">
 
     {canManage ? <Suspense fallback={<p>Загружаем управление…</p>}><Admin embedded/></Suspense> : <section className="gs-account-servers space-y-3">
-      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><WorldIcon name="chevronRight" size={18} className="opacity-55"/></h2>
-      {!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
+      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><span className="text-[12px] font-normal opacity-65">{owned.length}</span></h2>
+      {ownerLoading?<p role="status" className="text-sm">Загружаем ваши серверы…</p>:ownerError?<div className="gs-account-empty rounded-[22px] border p-5"><p role="status" className="text-sm">{ownerError}</p><Button className="mt-3" onClick={()=>void reload()}>Повторить загрузку</Button></div>:!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
         <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>
         <h3 className="mt-4 text-[15px] font-semibold">Подтверждённых серверов пока нет</h3>
-        <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed opacity-62">Добавьте сервер, чтобы отслеживать онлайн, рейтинг и получать уведомления.</p>
-        <Button to={scoped('/catalog')} className="gs-find-server mt-5 h-11 min-w-[220px] rounded-xl" icon={<WorldIcon name="search" size={16}/>} iconRight={<WorldIcon name="chevronRight" size={16}/>}>Найти серверы</Button>
+        <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed opacity-62">Здесь появятся только серверы, права на которые подтверждены за вашим аккаунтом.</p>
+        <a className="mt-4 inline-flex min-h-11 items-center text-sm text-signal-400 underline underline-offset-4" href="#claim-server">Подтвердить свой сервер</a>
       </div>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
 
-      <details className="gs-account-claim rounded-[18px] border p-4">
-        <summary className="cursor-pointer list-none text-[13px] font-semibold">Подтвердить права на сервер</summary>
-        <div className="mt-4 space-y-3">
-          <p className="text-[12px] opacity-62">Заявку проверяет администратор. Пароли и секреты не присылайте.</p>
-          <form className="space-y-3" onSubmit={e=>{e.preventDefault();void run(async()=>{await apiSend('/claims',{serverId,evidence});await reload()},'Заявка передана на проверку.')}}>
-            <Field label="ID сервера"><Input required value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
-            <Field label="Основание и способ подтверждения"><Textarea required minLength={20} maxLength={3000} value={evidence} onChange={e=>setEvidence(e.target.value)}/></Field>
-            <Button type="submit" disabled={busy||!profile?.emailVerified}>Подать Claim</Button>
-          </form>
-          {claims.map(c=><div key={c.id} className="space-y-2 text-[12px]"><p>{c.server_id}: {c.status==='PENDING'?'На проверке':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={reload}/>}</div>)}
-        </div>
-      </details>
+      <ClaimApplication claims={claims} emailVerified={profile?.emailVerified===true} onChanged={reload}/>
+
     </section>}
 
 

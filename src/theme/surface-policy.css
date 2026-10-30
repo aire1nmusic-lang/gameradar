@@ -14,7 +14,7 @@
   html[data-design="lobby"] body :where(
     .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,
     .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
-    .gs-account-claim,.gs-account-wallet>summary,.gs-coins-card,
+    .gs-account-claim,.gs-coins-card,
     .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
     .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
     .gs-profile-dossier,.gs-profile-support,
@@ -28,6 +28,11 @@
     backdrop-filter:blur(5px) saturate(110%)!important;
   }
 
+  /* A wallet is one glass panel, including its expanded header and content. */
+  html[data-design="lobby"] body .gs-account-wallet>summary {
+    background:transparent!important;border:0!important;box-shadow:none!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
   /* Compact rows use the same transparent tint without stacking blur layers. */
   html[data-design="lobby"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gs-top-row) {
     background:var(--gs-page-glass)!important;

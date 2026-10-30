@@ -234,8 +234,11 @@ export function createAccountsApp({ store, config, passwords, sendLinkMail, send
     try { profile = await oauthExchange(oauthEnv, provider, code, new URL(c.req.url).searchParams, row.verifier) }
     catch { return back('provider') }
     const raw = token(), now = clock()
-    // No provider e-mail enters the account e-mail: mailbox proof stays separate (no account takeover by e-mail).
+    // A verified provider mailbox may fill this identity's empty address. Never find/merge accounts by email.
+    const verifiedEmail = profile.emailVerified === true && typeof profile.email === 'string'
+      && profile.email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email) ? profile.email.trim().toLowerCase() : null
     const result = await store.oauthSignIn({ provider, subject: String(profile.id), displayName: safeName(profile.displayName),
+      verifiedEmail,
       newUserId: token(), allowCreate: registrationOpen(), sessionHash: digest(raw), replaceSessionHash: sessionHash(c),
       sessionExpiresAt: new Date(now.getTime() + SESSION_TTL_MS), now })
     if (result.status !== 'ok') return back(result.status)

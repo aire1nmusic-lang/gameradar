@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, ReactNode, Ref, TextareaHTMLAttributes } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -193,7 +193,7 @@ export function Field({
 const inputClasses =
   'w-full rounded-md border border-white/9 bg-ink-900/70 px-3.5 text-[14px] text-ink-50 placeholder:text-ink-500 transition-colors duration-200 hover:border-white/16 focus:border-signal-400/50 focus:outline-none focus:ring-2 focus:ring-signal-400/15'
 
-export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement> & {ref?:Ref<HTMLInputElement>}) {
   return <input className={cn(inputClasses, 'h-11', className)} {...rest} />
 }
 

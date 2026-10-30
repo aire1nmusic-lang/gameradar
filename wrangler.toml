@@ -23,6 +23,8 @@ ACCOUNTS_REGISTRATION_OPEN = "true"
 # Owner decision 29.10.2026: votes, owner Claims, owner card edits and admin moderation on D1 too
 # (accounts-fn/community.mjs). Needs migration 0013 applied BEFORE deploying: node scripts/community-go-live.mjs
 ACCOUNTS_COMMUNITY = "true"
+# Cloudflare Turnstile for suspicious votes (public site key). Active only together with the TURNSTILE_SECRET secret.
+TURNSTILE_SITE_KEY = "0x4AAAAAAFtJ-1NcslFtmZBH"
 # Sign-up mail goes out through the team Gmail (free; worker/lib/smtp-socket.ts). Needs the SMTP_PASSWORD secret:
 # a Google app password of this mailbox. Gmail allows about 500 recipients a day.
 MAIL_DRIVER = "smtp"

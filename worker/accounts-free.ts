@@ -66,7 +66,8 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
     adminEmails: env.ADMIN_EMAILS ?? '', mailEnabled: mailEnabled(mailEnv), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
     oauth: { GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
       DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE },
-    turnstileSecret: env.TURNSTILE_SECRET || undefined, turnstileSiteKey: env.TURNSTILE_SITE_KEY || undefined, contactEmail: env.CONTACT_EMAIL ?? env.ADMIN_EMAILS?.split(',')[0]?.trim(),
+    // Turnstile is on only with both keys: a site key alone (secret not stored yet) must not take accounts down.
+    ...(env.TURNSTILE_SECRET && env.TURNSTILE_SITE_KEY ? { turnstileSecret: env.TURNSTILE_SECRET, turnstileSiteKey: env.TURNSTILE_SITE_KEY } : {}), contactEmail: env.CONTACT_EMAIL ?? env.ADMIN_EMAILS?.split(',')[0]?.trim(),
     community: communityEnabled(env) }
   // In-memory only: a changed secret or setting rebuilds the app.
   const key = JSON.stringify([config, pepper])

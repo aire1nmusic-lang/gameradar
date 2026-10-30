@@ -20,7 +20,7 @@ export function OwnerBand() {
               <div className="mb-2 text-[11px] font-medium tracking-[0.14em] text-ink-400 uppercase">Владельцам серверов</div>
               <h2 className="text-[24px] leading-tight sm:text-[28px]">{privateCore?'Подтвердите права на свой сервер':'Добавьте сервер бесплатно'}</h2>
               <p className="mt-3 max-w-xl text-[14.5px] leading-relaxed text-ink-300">
-                {privateCore?'Найдите опубликованную карточку и подайте Claim. После проверки администратором можно предложить фактические правки для карточки.':'Размещение, статистика карточки и проверка онлайна не стоят ничего. Платить нужно только за продвижение — и только если вы этого захотите.'}
+                {privateCore?'Найдите свою карточку в каталоге. Приём заявок на управление откроется после подключения сервиса проверки прав.':'Размещение карточки бесплатно. Продвижение — отдельная необязательная возможность.'}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Button to={privateCore?'/catalog':'/add-server'} variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>
@@ -33,8 +33,8 @@ export function OwnerBand() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <Perk icon={<ShieldCheck size={15} className="text-signal-400" />} title={privateCore?'Claim с проверкой':'Verified Online'}>
-                {privateCore?'Права выдаются только на конкретный сервер после решения администратора.':'Подтвердите владение и подключите независимую проверку онлайна'}
+              <Perk icon={<ShieldCheck size={15} className="text-signal-400" />} title="Подтверждение прав">
+                Управление карточкой будет доступно после подтверждения прав на конкретный сервер.
               </Perk>
               <Perk icon={<BarChart3 size={15} className="text-ink-300" />} title={privateCore?'Правки карточки':'Статистика карточки'}>
                 {privateCore?'Описание и характеристики публикуются после проверки; неполные показатели не выдумываются.':'Просмотры, переходы и позиция в каталоге по вашей игре'}

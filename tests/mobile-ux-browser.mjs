@@ -371,12 +371,10 @@ try {
       await page.goto(base + `/server/qa-${game.id}-0`)
       await page.getByRole('button', { name: 'Это мой сервер', exact: true }).waitFor()
       assert.equal(await page.locator('.gs-server-profile nav a').first().getAttribute('href'), '/' + game.slug)
-      for(const label of ['7 дней','30 дней','24 часа']){
-        await page.getByRole('button',{name:label,exact:true}).click()
-        assert.equal(await page.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true')
-        assert.equal(await page.getByRole('button',{name:label,exact:true}).evaluate(e=>getComputedStyle(e).color),'rgb(23, 33, 40)','Selected lime chart control has dark readable ink')
-        await noOverflow()
-      }
+      assert.equal(await page.getByRole('heading',{name:'Данные GameScout'}).count(),0,'Unlaunched online verification never exposes the empty proof panel')
+      for(const label of ['7 дней','30 дней','24 часа']) assert.equal(await page.getByRole('button',{name:label,exact:true}).count(),0,'Unlaunched monitoring chart is hidden, including '+label)
+      await page.getByText('Точные данные об онлайне пока недоступны.',{exact:true}).waitFor()
+      await noOverflow()
       const voteHeadings=await page.locator('.gs-vote-panel > div.uppercase').all()
       assert.ok(voteHeadings.length>0,'Profile has a player-rating heading')
       for(const heading of voteHeadings) assert.equal(await heading.evaluate(e=>getComputedStyle(e).color),'rgb(213, 255, 145)','Both responsive player-rating headings stay readable on transparent glass')

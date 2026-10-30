@@ -8,12 +8,12 @@ import { useTicker } from '@/hooks/useUi'
 
 function Row({ label, value, tone, href }: { label: string; value: string; tone?: 'signal' | 'warn' | 'danger'; href?: string }) {
   const className = cn(
-    'min-w-0 [overflow-wrap:anywhere] text-right font-mono text-[12px]',
+    'min-w-0 shrink-0 [overflow-wrap:anywhere] text-right font-mono text-[12px]',
     tone === 'signal' ? 'text-signal-400' : tone === 'warn' ? 'text-warn-400' : tone === 'danger' ? 'text-danger-400' : 'text-ink-100',
   )
   return (
     <div className="flex items-start justify-between gap-4 py-2">
-      <span className="max-w-[60%] shrink-0 text-[12.5px] text-ink-400">{label}</span>
+      <span className="min-w-0 max-w-[55%] flex-1 text-[12.5px] leading-snug text-ink-400">{label}</span>
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer nofollow" className={cn(className, 'underline decoration-white/20 underline-offset-2 hover:decoration-white/60')}>
           {value}

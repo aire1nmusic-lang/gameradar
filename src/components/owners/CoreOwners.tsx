@@ -1,5 +1,5 @@
 import { ArrowRight, CalendarClock, CheckCircle2, Flame, Mail, Radar, ShieldCheck, Trophy, Users } from 'lucide-react'
-import { formatCompact, formatNumber, plural } from '@/lib/format'
+import { formatNumber, plural } from '@/lib/format'
 import { worldArt } from '@/data/themeMedia'
 import { useServers } from '@/hooks/data'
 import { useSeo } from '@/lib/seo'
@@ -11,7 +11,7 @@ const CONTACT = 'gamescout.team@gmail.com'
 const mailto = (subject: string) => `mailto:${CONTACT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent('Игра и хроника / режим:\nНазвание сервера:\nСайт проекта:\nКак с вами связаться:\n')}`
 
 const PLACES = [
-  { game: 'lineage2', icon: <Flame size={16} />, title: 'Топ по онлайну', text: 'Место определяет только измеренный онлайн с названным источником. Его нельзя купить.' },
+  { game: 'lineage2', icon: <Flame size={16} />, title: 'Каталог по играм', text: 'Игроки находят серверы по игре, хроникам, рейтам и режимам. Бесплатные карточки доступны в поиске.' },
   { game: 'minecraft', icon: <CalendarClock size={16} />, title: 'Скоро открытие', text: 'Дата старта попадает на витрину мира и в календарь открытий с обратным отсчётом.' },
   { game: 'gtarp', icon: <Trophy size={16} />, title: 'Выбор игроков', text: 'Голоса подтверждённых игроков. Вы сами решаете, чем заслужить их.' },
 ]
@@ -19,31 +19,30 @@ const PLACES = [
 const STEPS = [
   { n: 1, title: 'Найдите свою карточку', text: 'Мы уже собрали серверы Lineage 2, Minecraft и GTA RP из открытых источников. Откройте карточку и нажмите «Это мой сервер».' },
   { n: 2, title: 'Подтвердите права', text: 'Опишите, как проверить владение. Администратор проверит и откроет вам управление именно этим сервером.' },
-  { n: 3, title: 'Подключите проверку онлайна', text: 'С проверкой на карточке появляется отметка Verified Online: игроки видят, что число измерено, а не заявлено.' },
+  { n: 3, title: 'Управляйте карточкой', text: 'После подтверждения прав сможете обновлять описание и сведения о проекте в личном кабинете.' },
 ]
 
 const FAQ = [
-  { q: 'Размещение платное?', a: 'Карточка, место в каталоге, история онлайна и участие в рейтинге бесплатны. Платные форматы продвижения появятся позже и всегда будут помечены как реклама.' },
-  { q: 'Можно ли купить место в рейтинге?', a: 'Coins меняют место только в разделе «Лидеры поддержки». «Выбор игроков» определяется голосами, а порядок по онлайну — данными серверов. Поддержка не добавляет голоса или онлайн.' },
+  { q: 'Размещение платное?', a: 'Карточка сервера, присутствие в каталоге и участие в доступных рейтингах бесплатны. Платное продвижение появится отдельно и всегда будет отмечено как реклама.' },
+  { q: 'Можно ли купить место в рейтинге?', a: 'Нет. Поддержка Coins отображается отдельно от голосов игроков. Платное продвижение будет маркироваться и не будет продавать позиции в органической выдаче.' },
   { q: 'Моего сервера нет в каталоге.', a: 'Напишите нам: игра, хроника или режим, сайт проекта. Мы проверим данные по открытым источникам и добавим карточку.' },
 ]
 
 /** The page an owner lands on: what the server gets here, how to connect, what is free. */
 export function CoreOwners() {
-  useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Как попасть в топ GameScout: подтвердите сервер, подключите проверку онлайна и получите место по фактам.' })
+  useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Найдите свою карточку GameScout, узнайте об управлении сервером и бесплатном размещении.' })
   const { data: servers = [], loading } = useServers({ limit: 200 }, true)
-  const online = servers.reduce((sum, server) => sum + (server.online.playersKnown === true && server.online.freshness === 'fresh' ? server.online.current : 0), 0)
   const openings = servers.filter((server) => server.launch && Date.parse(server.launch.at) > Date.now()).length
 
   return (
     <div className="pb-16">
-      <section className="relative isolate overflow-hidden">
-        <WorldArtSurface art={worldArt('hero', 'lineage2')} scrim="poster" sizes="100vw" width={1600} />
-        <Container className="relative py-14 sm:py-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-3 py-1 text-[12px] text-white/80 backdrop-blur"><ShieldCheck size={13} /> Владельцам серверов</div>
+      <section className="relative isolate">
+        <Container className="relative py-8 sm:py-12">
+          <div className="gs-owners-hero-glass rounded-[24px] border p-6 sm:p-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-3 py-1 text-[12px] text-white/80"><ShieldCheck size={13} /> Владельцам серверов</div>
           <h1 className="mt-4 max-w-2xl text-[32px] leading-[1.1] font-semibold text-white sm:text-[46px]">Пусть игроки находят ваш сервер первым</h1>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/80">
-            GameScout сравнивает серверы по фактам: онлайн с источником, дата открытия, голоса игроков. Подтвердите сервер — и вы на витрине мира, в рейтинге и в поиске.
+            GameScout помогает игрокам находить серверы по игре, хроникам и режимам, а также изучать даты открытия и доступные данные. Найдите свой проект в каталоге и узнайте, как получить управление карточкой.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button to="/catalog" variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>Найти свой сервер</Button>
@@ -51,19 +50,19 @@ export function CoreOwners() {
           </div>
           {/* Counters keep their place while loading, so the hero does not grow under the reader. */}
           {(loading || servers.length > 0) && (
-            <dl className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+            <dl className="mt-8 grid max-w-xl grid-cols-2 gap-3">
               {[
                 [loading ? '—' : formatNumber(servers.length), plural(servers.length, ['сервер', 'сервера', 'серверов']) + ' в каталоге'],
-                [online > 0 ? formatCompact(online) : '—', 'игроков онлайн сейчас'],
                 [loading ? '—' : String(openings), plural(openings, ['открытие', 'открытия', 'открытий']) + ' впереди'],
               ].map(([value, label]) => (
-                <div key={label} className="rounded-xl border border-white/12 bg-black/35 px-3.5 py-3 backdrop-blur">
+                <div key={label} className="rounded-xl border border-white/12 bg-black/35 px-3.5 py-3">
                   <dt className="num font-display text-[24px] leading-none font-semibold text-white">{value}</dt>
                   <dd className="mt-1.5 text-[11.5px] text-white/65">{label}</dd>
                 </div>
               ))}
             </dl>
           )}
+          </div>
         </Container>
       </section>
 
@@ -96,7 +95,7 @@ export function CoreOwners() {
         </ol>
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-[13.5px] text-ink-200">
           <Radar size={18} className="mt-0.5 shrink-0 text-signal-300" />
-          <p>Регистрация владельцев откроется вместе с запуском личных кабинетов. Чтобы не ждать, напишите на <a className="underline" href={mailto('Заявка владельца сервера')}>{CONTACT}</a>: игра, название, сайт. Мы подготовим карточку заранее.</p>
+          <p>Приём заявок на подтверждение прав пока не подключён. Чтобы подготовить карточку заранее, напишите на <a className="underline" href={mailto('Заявка владельца сервера')}>{CONTACT}</a>: игра, название, сайт. Мы подготовим карточку заранее.</p>
         </div>
       </Container>
 
@@ -105,9 +104,6 @@ export function CoreOwners() {
         <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {[
             'Карточка сервера со знаком вашей хроники или режима (Interlude, SkyBlock, FiveM…)',
-            'Место в «Топ по онлайну» по измеренному числу игроков',
-            'Отметка Verified Online при подключённой проверке',
-            'История онлайна за 24 часа, 7 и 30 дней',
             'Участие в разделе «Выбор игроков» по голосам',
             'Витрина «Скоро открытие» с обратным отсчётом',
           ].map((item) => (
@@ -122,14 +118,14 @@ export function CoreOwners() {
 
       <Container className="mt-14">
         <h2 className="text-[24px] sm:text-[28px]">Частые вопросы</h2>
-        <div className="mt-5 max-w-3xl divide-y divide-white/6 overflow-hidden rounded-xl border border-white/7">
+        <div className="gs-owners-faq mt-5 max-w-3xl divide-y divide-white/15 overflow-hidden rounded-2xl border">
           {FAQ.map((item) => (
-            <details key={item.q} className="group bg-white/[0.02] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer items-center justify-between gap-4 text-[14.5px] text-ink-50">
+            <details key={item.q} className="group px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-4 text-[15px] font-medium text-white">
                 {item.q}
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-white/10 text-ink-400 transition-transform duration-200 group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 max-w-2xl text-[13.5px] leading-relaxed text-ink-400">{item.a}</p>
+              <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-white/85">{item.a}</p>
             </details>
           ))}
         </div>

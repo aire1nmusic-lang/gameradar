@@ -49,9 +49,8 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { EmptyState, Notice, Skeleton } from '@/components/ui/feedback'
 import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
-import { LiveDot, STATUS_META, StatusBadge, VerifiedLine } from '@/components/trust/status'
+import { LiveDot, STATUS_META, StatusBadge, VerifiedLine, ONLINE_VERIFICATION_AVAILABLE } from '@/components/trust/status'
 import { ObservedHistoryChart } from '@/components/charts/ObservedHistoryChart'
-import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
 import { useAuth } from '@/hooks/useAuth'
@@ -254,7 +253,7 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board}>
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board} data-ranking-period={period} data-ranking-count={peers.length}>
       {/* Same full-page world scene and compact identity header in every primary game. */}
       {fullScene && <div aria-hidden className="gs-server-bg" style={sceneStyle} />}
       {/* hero: art of the server's world */}
@@ -389,7 +388,6 @@ function Profile({ server: source }: { server: GameServer }) {
           <aside className="min-w-0 space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <div className="hidden lg:block"><VotePanel server={server} anchor={false} /></div>
-              <TrustPanel online={server.online} />
               <LinksCard server={server} restricted={restrictions?.restrictedLinks??[]} />
               {(authUser || registrationOpen) && <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />}
             </div>
@@ -474,7 +472,7 @@ function OnlineSection({ server }: { server: GameServer }) {
   const { status, change24h, peak24h, avg7d, peak30d } = server.online
   const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
   const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
-    useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range], true)
+    useAsync(() => ONLINE_VERIFICATION_AVAILABLE ? repo.servers.onlineHistory(server.id, range) : Promise.resolve([]), [server.id, range], true)
 
   if (status === 'PENDING' && server.launch) {
     return (
@@ -516,6 +514,10 @@ function OnlineSection({ server }: { server: GameServer }) {
         )}
       </section>
     )
+  }
+
+  if (!ONLINE_VERIFICATION_AVAILABLE || !server.online.playersKnown || server.online.checksPerDay <= 0) {
+    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
   }
 
   return (
@@ -582,9 +584,9 @@ function OnlineSection({ server }: { server: GameServer }) {
 
       <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
         <StatTile className="hidden sm:block" label="Сейчас" value={currentKnown ? formatPlayers(server.online) : '—'} accent={status === 'VERIFIED' && currentKnown} />
-        <StatTile short="Пик 24 ч" label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
-        <StatTile short="Сред. 7 дн." label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
-        <StatTile short="Пик 30 дн." label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
+        <StatTile short="Пик 24 ч" label="Пик за 24 часа" value={server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
+        <StatTile short="Сред. 7 дн." label="Среднее за 7 дней" value={peak30d > 0 ? formatNumber(avg7d) : '—'} />
+        <StatTile short="Пик 30 дн." label="Пик за 30 дней" value={peak30d > 0 ? formatNumber(peak30d) : '—'} />
       </div>
     </section>
   )

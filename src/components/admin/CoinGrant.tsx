@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { apiRequest } from '@/repositories/http/client'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Textarea } from '@/components/ui/controls'
+import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 
 export function CoinGrant({userId,onChanged}:{userId:string;onChanged:()=>void}) {
   const [coins,setCoins]=useState(''),[category,setCategory]=useState('GIFT'),[reason,setReason]=useState('')
@@ -24,9 +24,7 @@ export function CoinGrant({userId,onChanged}:{userId:string;onChanged:()=>void})
     <summary className="cursor-pointer">Начислить GS Coins</summary>
     <p className="text-xs text-ink-400">Основание видно только в административном журнале. Пользователь получает обычные Coins.</p>
     <Field label="Количество"><Input type="number" min={1} max={1000} step={1} value={coins} disabled={busy} onChange={e=>setCoins(e.target.value)}/></Field>
-    <Field label="Основание"><select className="w-full rounded-md bg-ink-800 p-2" value={category} disabled={busy} onChange={e=>setCategory(e.target.value)}>
-      <option value="GIFT">Подарок</option><option value="BARTER">Бартер</option><option value="PROMO">Промо-акция</option>
-    </select></Field>
+    <Field label="Основание"><Select value={category} disabled={busy} onChange={setCategory} options={[{value:'GIFT',label:'Подарок'},{value:'BARTER',label:'Бартер'},{value:'PROMO',label:'Промо-акция'}]}/></Field>
     <Field label="Внутренняя заметка"><Textarea minLength={10} maxLength={500} value={reason} disabled={busy} onChange={e=>setReason(e.target.value)}/></Field>
     <Button disabled={busy||!valid} onClick={()=>void grant()}>{busy?'Начисляем…':'Начислить'}</Button>
     {message&&<p role="status" className="break-words text-sm">{message}</p>}

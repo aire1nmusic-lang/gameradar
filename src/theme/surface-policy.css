@@ -1,0 +1,267 @@
+/* Owner standard, 29.10.2026. Important declarations in this named layer beat
+   legacy unlayered !important rules without another specificity escalation.
+   Only surface properties belong here; keep component layout and artwork intact. */
+@layer gs-surfaces {
+  html[data-design="lobby"] {
+    --gs-page-glass:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
+    --gs-smoke-glass:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84));
+    --gs-glass-edge:rgba(255,255,255,.23);
+    --gs-glass-highlight:inset 0 1px 0 rgba(255,255,255,.14);
+  }
+
+  /* A small blur on standalone page panels, never on every descendant/row.
+     Account hero, empty state, claim and wallet share exactly the same finish. */
+  html[data-design="lobby"] body :where(
+    .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,
+    .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
+    .gs-account-claim,.gs-coins-card,.gs-select-menu>button,
+    .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
+    .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
+    .gs-profile-dossier,.gs-profile-support,
+    .l2a .discovery,.l2a .panel:not(.gsb),.l2a .owner,
+    .gs-catalog-search,.gs-epoch-summary,.gs-ranking-availability
+  ) {
+    background:var(--gs-page-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+    box-shadow:var(--gs-glass-highlight),0 12px 32px -24px rgba(0,0,0,.55)!important;
+    -webkit-backdrop-filter:blur(5px) saturate(110%)!important;
+    backdrop-filter:blur(5px) saturate(110%)!important;
+  }
+
+  html[data-design="lobby"] body .gs-select-menu>button {
+    color:var(--g-ink,#f3f5f7)!important;
+  }
+  html[data-design="lobby"] body .gs-select-menu>button>span {color:inherit!important;}
+
+  /* A wallet is one glass panel, including its expanded header and content. */
+  html[data-design="lobby"] body .gs-account-wallet>summary {
+    background:transparent!important;border:0!important;box-shadow:none!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  /* Floating choices stay smoky in both themes, with clearly separated rows. */
+  html[data-design="lobby"] body .gs-select-options,
+  html[data-design="lobby"][data-color-mode="light"] body .gs-select-options {color:#f3f5f7!important;}
+  html[data-design="lobby"] body .gs-select-options [role="option"] {
+    color:#f3f5f7!important;background:rgba(255,255,255,.035)!important;
+    border:1px solid rgba(255,255,255,.16)!important;border-radius:10px!important;
+  }
+  html[data-design="lobby"] body .gs-select-options [role="option"]:is(:hover,:focus-visible,[data-active="true"],[aria-selected="true"]) {
+    background:rgba(198,255,82,.13)!important;border-color:rgba(198,255,82,.48)!important;
+  }
+  /* Compact rows use the same transparent tint without stacking blur layers. */
+  html[data-design="lobby"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gs-top-row) {
+    background:var(--gs-page-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+  }
+
+  /* Floating UI needs stronger tint and frost to separate overlapping text.
+     Search, login/claim modals, support, filters and menus all use smoky glass. */
+  html[data-design="lobby"] body :is(
+    .gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,
+    .gs-games-menu,[role="menu"],.gs-select-options,
+    .gs-server-picker-popover,.chronicle-picker .chronicle-row,
+    .gs-catalog-toolbar,.gs-rating-switch,.gs-profile-cta-bar,.gs-mobile-nav
+  ) {
+    background:var(--gs-smoke-glass)!important;
+    border-color:var(--gs-glass-edge)!important;
+    box-shadow:var(--gs-glass-highlight),0 24px 64px -24px rgba(0,0,0,.7)!important;
+    -webkit-backdrop-filter:blur(20px) saturate(85%)!important;
+    backdrop-filter:blur(20px) saturate(85%)!important;
+  }
+  /* Keep the scene visible outside dialogs; blur belongs on the panel itself. */
+  html[data-design="lobby"] body :is(.gs-search-overlay,.gs-ui-modal,.gs-sheet)>button {
+    background:rgba(5,8,13,.36)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  html[data-design="lobby"] body dialog::backdrop {
+    background:rgba(5,8,13,.36)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  html[data-design="lobby"] body .gs-search-input-row {
+    background:linear-gradient(150deg,rgba(255,255,255,.10),rgba(255,255,255,.035))!important;
+    border-color:var(--gs-glass-edge)!important;
+  }
+  html[data-design="lobby"] body .gs-search-input-row:focus-within {
+    border-color:var(--lb-lime,#c6ff52)!important;
+  }
+  html[data-design="lobby"] body :is(.gs-ui-modal-panel,.gs-sheet>div) :is(.surface,.surface-raised),
+  html[data-design="lobby"] body .gs-support-dialog :is(.gs-support-form,.gs-support-preview,.gs-support-dialog-head) {
+    background:var(--gs-page-glass)!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+
+  /* Preserve the existing light ink palette without introducing opaque slabs. */
+  html[data-design="lobby"][data-color-mode="light"] {
+    --gs-page-glass:linear-gradient(150deg,rgba(255,251,244,.42),rgba(255,251,244,.26));
+    --gs-smoke-glass:linear-gradient(150deg,rgba(238,234,226,.80),rgba(222,218,210,.86));
+    --gs-glass-edge:rgba(255,255,255,.34);
+  }
+  /* Search keeps its existing bright text, in both appearance modes. */
+  html[data-design="lobby"] body :is(.gs-search-overlay .gs-search-surface,.gs-select-options) {
+    background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84))!important;
+  }
+
+  /* Fixed cover images must use a stable large viewport, not inset:0 / auto
+     height that changes as the mobile browser toolbar collapses. No JS resize
+     listener: the image size stays constant while scrolling and updates on rotate. */
+  html[data-design="lobby"] body :is(.gs-world-backdrop,.gs-server-bg,.l2a .scene),
+  html[data-design="lobby"] body .gs-account-layout::after {
+    position:fixed!important;
+    top:0!important;bottom:auto!important;
+    height:100vh!important;height:100lvh!important;
+    min-height:0!important;
+    animation:none!important;transition:none!important;
+  }
+  @media(max-width:767px) {
+    html[data-design="lobby"] body .gs-account-layout::before {
+      top:0!important;bottom:auto!important;
+      height:100vh!important;height:100lvh!important;
+      animation:none!important;transition:none!important;
+    }
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-options,.gs-server-picker-popover) {
+      background:rgba(25,30,39,.96)!important;
+    }
+    html[data-design="lobby"][data-color-mode="light"] body :is(.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-options,.gs-server-picker-popover) {
+      background:rgba(238,234,226,.96)!important;
+    }
+  }
+}
+
+
+/* 30.10: catalog controls share the page's glass, without nested input frames. */
+@layer gs-surfaces {
+  html[data-design="lobby"] body .gs-catalog-search {
+    display:flex!important;
+    min-width:0;
+    background:var(--gs-page-glass)!important;
+    border:1px solid var(--gs-glass-edge)!important;
+    border-radius:18px!important;
+    padding:5px 14px!important;
+    box-shadow:var(--gs-glass-highlight)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-search:focus-within {
+    border-color:var(--lb-lime,#c6ff52)!important;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--lb-lime,#c6ff52) 18%,transparent)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-search input,
+  html[data-design="lobby"] body .gs-catalog-search input:focus {
+    min-width:0;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+  /* The shared smoky :is(...) rule has two-class specificity from its other
+     alternatives; scope this override to the catalog page to beat it. */
+  html[data-design="lobby"] body .gs-catalog-page .gs-catalog-toolbar.gs-catalog-toolbar {
+    background:var(--gs-page-glass)!important;
+    border:1px solid var(--gs-glass-edge)!important;
+    border-radius:18px!important;
+    box-shadow:var(--gs-glass-highlight)!important;
+    -webkit-backdrop-filter:blur(12px) saturate(110%)!important;
+    backdrop-filter:blur(12px) saturate(110%)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger,
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-select-menu>button {
+    min-height:44px;
+    border:1px solid rgba(255,255,255,.17)!important;
+    border-radius:12px!important;
+    background:rgba(255,255,255,.085)!important;
+    color:var(--g-ink,#f3f5f7)!important;
+    box-shadow:none!important;
+    justify-content:center;
+    gap:10px;
+    font-size:14px;
+  }
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger:focus-visible,
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-select-menu>button:focus-visible {
+    outline:2px solid var(--lb-lime,#c6ff52);
+    outline-offset:2px;
+  }
+  @media(max-width:639px) {
+    html[data-design="lobby"] body .gs-catalog-toolbar>div {gap:10px!important;min-width:0;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger,
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-catalog-sort {flex:1 1 0;min-width:0;width:auto;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-catalog-sort>button {width:100%;padding:8px 10px;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger {padding:8px 10px;}
+  }
+}
+/* Claim choices are single-layer controls. Selecting a server does not focus the
+   keyboard; a dedicated search field lives inside the choice dialog. */
+.gs-claim-choice {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  width:100%;min-height:52px;padding:12px 15px;text-align:left;
+  background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.24);
+  border-radius:14px;color:inherit;font-size:15px;line-height:1.35;
+}
+.gs-claim-choice>span {min-width:0;overflow-wrap:anywhere;}
+.gs-claim-choice>svg {flex:none;opacity:.85;}
+.gs-claim-choice-placeholder {opacity:.7;}
+.gs-claim-choice:focus-visible,.gs-claim-dialog-row:focus-visible,.gs-claim-method-row:focus-visible,.gs-claim-back:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px;}
+.gs-claim-choice:hover {border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.11);}
+.gs-claim-dialog-search {display:flex;align-items:center;gap:9px;padding:0 10px;border:1px solid rgba(255,255,255,.24);border-radius:12px;background:rgba(255,255,255,.09);}
+.gs-claim-dialog-search>svg {flex:none;opacity:.8;}
+.gs-claim-dialog-search input,.gs-claim-dialog-search input:focus {flex:1;min-width:0;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:none!important;font-size:16px!important;}
+.gs-claim-dialog-search:focus-within {border-color:var(--lb-lime,#c6ff52);box-shadow:0 0 0 3px rgba(198,255,82,.12);}
+.gs-claim-dialog-caption {margin:16px 0 8px;color:#d1d8df;font-size:12px;}
+.gs-claim-dialog-list {max-height:min(42dvh,420px);min-height:80px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+.gs-claim-dialog-row,.gs-claim-method-row {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;min-height:58px;padding:11px 14px;text-align:left;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
+  border-radius:12px;color:inherit;
+}
+.gs-claim-dialog-row+.gs-claim-dialog-row,.gs-claim-method-row+.gs-claim-method-row {margin-top:7px;}
+.gs-claim-dialog-row:is(:hover,[aria-selected=true]),.gs-claim-method-row:hover {border-color:rgba(198,255,82,.48);background:rgba(198,255,82,.11);}
+.gs-claim-dialog-row strong,.gs-claim-method-row strong {display:block;font-size:14px;font-weight:650;overflow-wrap:anywhere;}
+.gs-claim-dialog-row small,.gs-claim-method-row small {display:block;margin-top:3px;font-size:12px;color:#c9d1dc;}
+.gs-claim-dialog-row>svg,.gs-claim-method-row>svg {flex:none;color:#c6ff52;}
+.gs-claim-dialog-message {padding:20px 10px;text-align:center;font-size:14px;color:#d1d8df;}
+.gs-claim-back {display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;min-height:40px;color:#d2deec;font-size:13px;}
+.gs-claim-method-guide h4 {margin:14px 0 6px;font-size:15px;font-weight:700;color:#f6f6f1;}
+.gs-claim-method-guide p,.gs-claim-method-guide li {font-size:14px;line-height:1.55;color:#e0e5ed;}
+.gs-claim-method-guide ol {padding-left:22px;list-style:decimal;}
+.gs-claim-method-guide li+li {margin-top:8px;}
+.gs-claim-method-guide .gs-claim-method-note {padding:12px;margin:16px 0;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(255,255,255,.07);font-size:13px;}
+@layer gs-surfaces {
+  /* Both color modes use a readable charcoal dialog for ownership instructions. */
+  html[data-design="lobby"] body .gs-ui-modal-panel:has(.gs-claim-server-dialog,.gs-claim-method-list,.gs-claim-method-guide) {
+    background:linear-gradient(150deg,rgba(43,48,57,.97),rgba(18,23,31,.98))!important;
+    color:#f3f5f7!important;
+    border-color:rgba(255,255,255,.24)!important;
+  }
+}
+@media(max-width:639px) {
+  .gs-claim-dialog-list {max-height:min(39dvh,380px);}
+  .gs-claim-choice {font-size:14px;}
+  .gs-claim-method-guide h4 {font-size:14px;}
+}
+
+
+/* 30.10: The owners landing page relies on the world backdrop outside the
+   cards. Neither the hero nor FAQ should overlay a second artwork or a
+   nearly invisible sheet that makes text disappear in the world scene. */
+.gs-owners-hero-glass {
+  background:linear-gradient(145deg,rgba(47,54,64,.78),rgba(25,29,38,.83));
+  border-color:rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.19),0 24px 60px -35px rgba(0,0,0,.65);
+}
+.gs-owners-faq {
+  background:linear-gradient(145deg,rgba(40,45,56,.89),rgba(18,23,32,.92));
+  border-color:rgba(255,255,255,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 20px 48px -26px rgba(0,0,0,.72);
+}
+.gs-owners-faq>details {background:transparent!important;}
+.gs-owners-faq>details[open] {background:rgba(255,255,255,.045)!important;}
+.gs-owners-faq>details+details {border-top:1px solid rgba(255,255,255,.18);}
+.gs-owners-faq summary {color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+.gs-owners-faq details>p {color:#eef0f5!important;}
+@media(max-width:639px) {
+  .gs-owners-hero-glass {padding:22px 19px;}
+  .gs-owners-faq>details {padding:18px 19px;}
+}

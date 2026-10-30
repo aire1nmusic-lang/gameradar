@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiSend } from '@/repositories/http/client'
 import { useSeo } from '@/lib/seo'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Textarea } from '@/components/ui/controls'
+import { Field, Input, Select, Textarea } from '@/components/ui/controls'
 
 export default function Copyright() {
   useSeo({title:'Правообладателям',description:'Как сообщить GameScout о спорной ссылке или описании игрового сервера.',path:'/copyright'})
@@ -31,9 +31,7 @@ export default function Copyright() {
       <Field label="Ваше имя или организация"><Input required maxLength={120} value={claimantName} onChange={e=>setClaimantName(e.target.value)}/></Field>
       <Field label="Контактный email для уточнений"><Input type="email" required maxLength={254} value={contactEmail} onChange={e=>setContactEmail(e.target.value)}/></Field>
       <Field label="ID сервера"><Input required maxLength={100} value={serverId} onChange={e=>setServerId(e.target.value)}/></Field>
-      <label className="block space-y-1 text-sm">Спорный материал<select required value={materialKey} onChange={e=>setMaterialKey(e.target.value)} className="block w-full rounded-md border border-white/15 bg-ink-900 p-2 text-ink-50">
-        <option value="site">Сайт проекта</option><option value="discord">Discord</option><option value="telegram">Telegram</option><option value="description">Описание сервера</option>
-      </select></label>
+      <Field label="Спорный материал" required><Select required value={materialKey} onChange={setMaterialKey} options={[{value:'site',label:'Сайт проекта'},{value:'discord',label:'Discord'},{value:'telegram',label:'Telegram'},{value:'description',label:'Описание сервера'}]}/></Field>
       <Field label="Точный URL спорного материала"><Input type="url" required maxLength={2048} value={materialUrl} onChange={e=>setMaterialUrl(e.target.value)}/></Field>
       {materialKey==='description'&&<p className="text-xs text-ink-400">Укажите адрес страницы сервера вида https://gamescout.online/server/имя-сервера#description. Ограничение затронет только текст описания.</p>}
       <Field label="Ваши права на материал"><Textarea required minLength={20} maxLength={3000} value={rightsBasis} onChange={e=>setRightsBasis(e.target.value)}/></Field>

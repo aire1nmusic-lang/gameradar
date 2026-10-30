@@ -20,7 +20,7 @@ export function RankStrip({ server, peers, loading = false, period = rankingPeri
       const Icon = board === 'support' ? Coins : ThumbsUp
       return <span key={board} className={chip} data-ranking={board} data-rotating={rotating || undefined}>
         <RankMedal gameId={server.gameId} rank={rank} className="h-6 w-6 text-[12px]" />
-        <Icon size={13} className="opacity-70" /> №{rank} · {board === 'support' ? 'Поддержка' : 'Выбор игроков'}{rotating && ' · ротация'}
+        <Icon size={13} className="opacity-70" /> №{rank} · {board === 'support' ? 'Поддержка' : 'Выбор игроков'}
       </span>
     })}
     {opening && <span className={chip}><span className="grid h-6 w-6 place-items-center rounded-full bg-promo-500/20 text-promo-200"><CalendarClock size={13} /></span>открытие {formatCountdown(opening)}</span>}

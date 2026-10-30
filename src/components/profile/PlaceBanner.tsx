@@ -14,7 +14,7 @@ export function PlaceBanner({ rank, children }: { rank: ProfilePlace | null; chi
   return <div className="gs-profile-distinction" data-place={rank.place} data-board={rank.board} data-rotating={rank.rotating || undefined}>
     <img className="gs-profile-place-shield" src={`/media/ranks/medal-${rank.place}-glass-192.webp`} width="192" height="192" alt={`ТОП-${rank.place}`} />
     <div className="gs-profile-distinction-body">
-      <div className="gs-profile-place-copy"><span>{PLACE_BOARD[rank.board]}</span><strong>{PLACE_TITLE[rank.place]}</strong>{rank.rotating && <small className="gs-profile-rotation-note">Ротация · {rank.board === 'people' ? 'без голосов' : 'без поддержки'}</small>}</div>
+      <div className="gs-profile-place-copy"><span>{PLACE_BOARD[rank.board]}</span><strong>{PLACE_TITLE[rank.place]}</strong></div>
       {children}
     </div>
   </div>

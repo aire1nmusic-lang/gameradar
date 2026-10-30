@@ -1,5 +1,7 @@
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
-import { Check, ChevronDown } from 'lucide-react'
+import { createContext, useContext } from 'react'
+import { SelectMenu } from './SelectMenu'
+import type { InputHTMLAttributes, ReactNode, Ref, TextareaHTMLAttributes } from 'react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Segmented<T extends string>({
@@ -165,6 +167,8 @@ export function ChipToggle({
   )
 }
 
+const FieldContext=createContext<{label:string;required?:boolean}|null>(null)
+
 export function Field({
   label,
   hint,
@@ -179,21 +183,21 @@ export function Field({
   className?: string
 }) {
   return (
-    <label className={cn('block', className)}>
+    <FieldContext.Provider value={{label,required}}><label className={cn('block', className)}>
       <span className="mb-1.5 flex items-center gap-1 text-[13px] font-medium text-ink-200">
         {label}
         {required && <span className="text-signal-400">*</span>}
       </span>
       {children}
       {hint && <span className="mt-1.5 block text-[12px] text-ink-400">{hint}</span>}
-    </label>
+    </label></FieldContext.Provider>
   )
 }
 
 const inputClasses =
   'w-full rounded-md border border-white/9 bg-ink-900/70 px-3.5 text-[14px] text-ink-50 placeholder:text-ink-500 transition-colors duration-200 hover:border-white/16 focus:border-signal-400/50 focus:outline-none focus:ring-2 focus:ring-signal-400/15'
 
-export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement> & {ref?:Ref<HTMLInputElement>}) {
   return <input className={cn(inputClasses, 'h-11', className)} {...rest} />
 }
 
@@ -201,33 +205,9 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
   return <textarea className={cn(inputClasses, 'min-h-[104px] py-3 leading-relaxed', className)} {...rest} />
 }
 
-export function Select({
-  value,
-  onChange,
-  options,
-  className,
-}: {
-  value: string
-  onChange: (value: string) => void
-  options: Array<{ value: string; label: string }>
-  className?: string
-}) {
-  return (
-    <div className={cn('relative', className)}>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={cn(inputClasses, 'h-11 appearance-none pr-9')}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-ink-900">
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-400" />
-    </div>
-  )
+export function Select({value,onChange,options,className,label,disabled,required}:{value:string;onChange:(value:string)=>void;options:Array<{value:string;label:string}>;className?:string;label?:string;disabled?:boolean;required?:boolean}) {
+ const field=useContext(FieldContext)
+ return <SelectMenu value={value} onChange={onChange} options={options} className={className} label={label??field?.label??'Выберите вариант'} disabled={disabled} required={required??field?.required}/>
 }
 
 export function RangeSlider({

@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils'
 import { formatSeconds } from '@/lib/format'
 import { OnlineStatus, type OnlineData } from '@/models'
 
+/** Public feature switch: enable only when an operational online verifier exists. */
+export const ONLINE_VERIFICATION_AVAILABLE = false
+
 interface StatusMeta {
   label: string
   short: string
@@ -100,7 +103,7 @@ export const STATUS_META: Record<OnlineStatus, StatusMeta> = {
     pill: 'border-white/10 bg-white/[0.03]',
     text: 'text-ink-400',
     dot: 'bg-ink-500',
-    caption: 'Источники онлайна сейчас не отвечают',
+    caption: 'Достоверные данные об онлайне пока недоступны',
   },
 }
 
@@ -143,8 +146,9 @@ export function StatusBadge({
   launching?: boolean
   className?: string
 }) {
-  const meta = STATUS_META[status]
-  const pending = status === OnlineStatus.Pending ? pendingCopy(launching) : undefined
+  const displayStatus = !ONLINE_VERIFICATION_AVAILABLE && ([OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking] as OnlineStatus[]).includes(status) ? OnlineStatus.Unknown : status
+  const meta = STATUS_META[displayStatus]
+  const pending = displayStatus === OnlineStatus.Pending ? pendingCopy(launching) : undefined
   return (
     <span
       className={cn(
@@ -156,7 +160,7 @@ export function StatusBadge({
       )}
       title={pending?.caption ?? meta.caption}
     >
-      {withDot && status === OnlineStatus.Verified ? <LiveDot status={status} /> : meta.icon}
+      {withDot && displayStatus === OnlineStatus.Verified ? <LiveDot status={displayStatus} /> : meta.icon}
       {pending?.label ?? meta.label}
     </span>
   )
@@ -188,6 +192,7 @@ export function VerifiedLine({
   size?: 'xs' | 'sm'
 }) {
   const status = online?.status ?? statusProp ?? OnlineStatus.Pending
+  if (!ONLINE_VERIFICATION_AVAILABLE && ([OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking] as OnlineStatus[]).includes(status)) return null
   const seconds = online ? (online.observedAgoSec ?? online.checkedAgoSec) : (secondsProp ?? 0)
   const source = online?.source ?? sourceProp
   const base = cn('flex items-center gap-1.5 font-mono', size === 'xs' ? 'text-[10.5px]' : 'text-[11.5px]', className)

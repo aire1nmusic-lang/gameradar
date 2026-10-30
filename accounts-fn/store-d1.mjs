@@ -123,7 +123,7 @@ export function d1Store(db) {
     },
 
     async oauthSignIn(args, retry = true) {
-      const { provider, subject, displayName, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now } = args
+      const { provider, subject, displayName, verifiedEmail, newUserId, allowCreate, sessionHash, replaceSessionHash, sessionExpiresAt, now } = args
       const at = iso(now)
       const identity = await one('SELECT user_id FROM acc_identities WHERE provider = ? AND subject = ?', provider, subject)
       const userId = identity?.user_id ?? newUserId
@@ -133,6 +133,10 @@ export function d1Store(db) {
         db.prepare(`INSERT INTO acc_users (id, email, display_name, password_hash, created_at) VALUES (?, NULL, ?, NULL, ?)`).bind(userId, displayName, at),
         db.prepare(`INSERT INTO acc_identities (provider, subject, user_id, created_at) VALUES (?, ?, ?, ?)`).bind(provider, subject, userId, at))
       const ok = 'EXISTS (SELECT 1 FROM acc_users WHERE id = ? AND banned_at IS NULL)'
+      if (verifiedEmail) statements.push(db.prepare(`UPDATE acc_users SET email = ?, email_verified_at = ?
+        WHERE id = ? AND email IS NULL AND banned_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM acc_users WHERE email = ?)`)
+        .bind(verifiedEmail, at, userId, verifiedEmail))
       // Admin comes only from the configured list of provider-verified addresses; it is never removed here.
       if (args.grantAdmin) statements.push(db.prepare(`UPDATE acc_users SET roles = '["PLAYER","ADMIN"]' WHERE id = ? AND banned_at IS NULL`).bind(userId))
       statements.push(

@@ -584,9 +584,9 @@ function OnlineSection({ server }: { server: GameServer }) {
 
       <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
         <StatTile className="hidden sm:block" label="Сейчас" value={currentKnown ? formatPlayers(server.online) : '—'} accent={status === 'VERIFIED' && currentKnown} />
-        <StatTile short="Пик 24 ч" label="Пик за 24 часа" value={server.online.playersKnown !== false && server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
-        <StatTile short="Сред. 7 дн." label="Среднее за 7 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(avg7d) : '—'} />
-        <StatTile short="Пик 30 дн." label="Пик за 30 дней" value={server.online.playersKnown !== false && peak30d > 0 ? formatNumber(peak30d) : '—'} />
+        <StatTile short="Пик 24 ч" label="Пик за 24 часа" value={server.online.checksPerDay > 0 ? formatNumber(peak24h) : '—'} />
+        <StatTile short="Сред. 7 дн." label="Среднее за 7 дней" value={peak30d > 0 ? formatNumber(avg7d) : '—'} />
+        <StatTile short="Пик 30 дн." label="Пик за 30 дней" value={peak30d > 0 ? formatNumber(peak30d) : '—'} />
       </div>
     </section>
   )

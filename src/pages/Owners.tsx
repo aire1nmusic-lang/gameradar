@@ -121,7 +121,7 @@ function LegacyOwners() {
       {/* hero */}
       <section className="relative overflow-hidden pt-12 pb-10 lg:pt-16">
         <Container>
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className={ONLINE_VERIFICATION_AVAILABLE?"grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center":"max-w-3xl"}>
             <div>
               <Badge tone="signal" className="mb-4">
                 Бесплатно и навсегда
@@ -323,9 +323,9 @@ function LegacyOwners() {
       {/* faq */}
       <Container className="py-10">
         <h2 className="text-[24px] sm:text-[30px]">Частые вопросы</h2>
-        <div className="mt-6 max-w-3xl divide-y divide-white/6 overflow-hidden rounded-xl border border-white/7">
+        <div className="gs-owners-faq mt-6 max-w-3xl divide-y divide-white/15 overflow-hidden rounded-2xl border">
           {FAQ.filter(item=>ONLINE_VERIFICATION_AVAILABLE||!item.q.includes('Verified Online')&&!item.q.includes('обновляется онлайн')).map((item) => (
-            <details key={item.q} className="group bg-white/[0.02] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
+            <details key={item.q} className="group px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex cursor-pointer items-center justify-between gap-4 text-[14.5px] text-ink-50">
                 {item.q}
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-white/10 text-ink-400 transition-transform duration-200 group-open:rotate-45">

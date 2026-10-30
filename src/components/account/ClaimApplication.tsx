@@ -5,6 +5,7 @@ import type { GameServer } from '@/models'
 import { apiRequest, apiSend } from '@/repositories/http/client'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Select } from '@/components/ui/controls'
+import { FloatingListbox } from '@/components/ui/SelectMenu'
 import { ClaimProof } from './ClaimProof'
 
 export type OwnershipClaim={id:string;server_id:string;status:string;access_active?:boolean;reason?:string;name?:string;proof_method?:string}
@@ -28,7 +29,8 @@ export function ClaimApplication({claims,emailVerified,onChanged}:{claims:Owners
     return()=>{live=false;clearTimeout(timer)}
   },[game,query])
   useEffect(()=>{if(!initial)return;let live=true;repo.servers.byId(initial).then(server=>{if(live&&server){setSelected(server);setGame(server.gameId)}}).catch(()=>{});return()=>{live=false}},[initial])
-  const choose=(server:GameServer)=>{setSelected(server);setExpanded(false);setActive(-1);searchRef.current?.focus()}
+  useEffect(()=>{if(expanded&&active>=0)document.getElementById(`${listId}-${active}`)?.scrollIntoView({block:'nearest'})},[expanded,active,listId])
+  const choose=(server:GameServer)=>{setSelected(server);setActive(-1);searchRef.current?.focus({preventScroll:true});setExpanded(false)}
   async function submit(e:React.FormEvent) {
     e.preventDefault();if(!selected||!options?.available||!emailVerified)return
     if(method==='DOCUMENT'&&!files.length){setError('Приложите хотя бы один файл подтверждения.');return}
@@ -55,11 +57,11 @@ export function ClaimApplication({claims,emailVerified,onChanged}:{claims:Owners
         <div className="gs-claim-picker relative">
           <label htmlFor={listId+'-input'} className="mb-1.5 block text-[13px] font-medium">Сервер</label>
           <Input id={listId+'-input'} ref={searchRef} role="combobox" aria-autocomplete="list" aria-controls={listId} aria-expanded={expanded} aria-activedescendant={active>=0?`${listId}-${active}`:undefined} autoComplete="off" placeholder="Название сервера" value={selected?selected.name:query}
-            onFocus={()=>setExpanded(true)} onChange={e=>{setSelected(undefined);setQuery(e.target.value);setExpanded(true)}} onBlur={e=>{if(!e.currentTarget.parentElement?.contains(e.relatedTarget))setExpanded(false)}}
+            onFocus={()=>setExpanded(true)} onChange={e=>{setSelected(undefined);setQuery(e.target.value);setExpanded(true)}} onBlur={e=>{if(!e.currentTarget.parentElement?.contains(e.relatedTarget)&&!document.getElementById(listId)?.contains(e.relatedTarget))setExpanded(false)}}
             onKeyDown={e=>{if(e.key==='Escape'){setExpanded(false);return}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();setExpanded(true);setActive(i=>Math.max(0,Math.min(items.length-1,i+(e.key==='ArrowDown'?1:-1))))}if(e.key==='Enter'&&expanded&&active>=0&&items[active]){e.preventDefault();choose(items[active])}}}/>
-          {expanded&&<div className="gs-server-picker-popover absolute inset-x-0 top-full z-20 mt-2 max-h-64 overflow-auto rounded-xl border p-2" role="listbox" aria-label="Серверы выбранной игры" id={listId}>
-            {searching?<p className="p-3 text-sm" role="status">Ищем серверы…</p>:searchError?<p className="p-3 text-sm" role="status">{searchError}</p>:!items.length?<p className="p-3 text-sm">Серверов не найдено</p>:items.map((server,index)=><button key={server.id} type="button" role="option" id={`${listId}-${index}`} aria-selected={selected?.id===server.id||active===index} className="gs-claim-option block min-h-11 w-full rounded-lg p-3 text-left text-sm hover:bg-white/10 aria-selected:bg-white/10" onMouseDown={e=>e.preventDefault()} onClick={()=>choose(server)}>{server.name}<span className="block text-xs opacity-65">{server.version||server.gameId}</span></button>)}
-          </div>}
+          {expanded&&<FloatingListbox anchor={searchRef} id={listId} label="Серверы выбранной игры" className="gs-claim-results" onDismiss={()=>setExpanded(false)}>
+            {searching?<p className="p-3 text-sm" role="status">Ищем серверы…</p>:searchError?<p className="p-3 text-sm" role="status">{searchError}</p>:!items.length?<p className="p-3 text-sm">Серверов не найдено</p>:items.map((server,index)=><button key={server.id} data-game={server.gameId} type="button" role="option" id={`${listId}-${index}`} aria-selected={selected?.id===server.id||active===index} className="gs-claim-option" tabIndex={-1} onMouseDown={e=>e.preventDefault()} onClick={()=>choose(server)}>{server.name}<span className="block text-xs opacity-65">{server.version||server.gameId}</span></button>)}
+          </FloatingListbox>}
         </div>
         <Field label="Способ подтверждения"><Select value={method} onChange={value=>{setMethod(value);setFiles([])}} options={methods}/></Field>
         <p className="text-sm leading-relaxed">{instructions[method]}</p>

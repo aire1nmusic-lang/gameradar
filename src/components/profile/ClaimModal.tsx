@@ -86,7 +86,7 @@ export function ClaimModal({ server, open, onClose }: { server: GameServer; open
 
   let body: React.ReactNode
   if (auth.privateCore) {
-    body=<div className="space-y-4"><p>Войдите в единый аккаунт и подайте заявку на проверку прав.</p><Button to={`/account?claim=${encodeURIComponent(server.id)}`} onClick={onClose}>Открыть заявку Claim</Button></div>
+    body=<div className="space-y-4"><p>Войдите в единый аккаунт и подайте заявку на проверку прав.</p><Button to={`/account?claim=${encodeURIComponent(server.id)}`} onClick={onClose}>Подтвердить права на сервер</Button></div>
   } else if (auth.loading || loadingClaims) {
     body = (
       <div className="flex items-center gap-2 text-[13px] text-ink-300">

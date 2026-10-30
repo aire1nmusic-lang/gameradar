@@ -8,6 +8,7 @@ import { enqueueTelegram } from './copyright.mjs'
 import { operationalSnapshot } from './operations.mjs'
 import { coinIntegrity } from './coin-monitor.mjs'
 import { emergencyBlocks, emergencyLimit } from './security.mjs'
+import { claimDocument, CLAIM_FILE_BYTES } from './claim-documents.mjs'
 import { proofTarget, checkClaimProof } from './claim-proof.mjs'
 import { assertPort, assertPublicHost, assertPublicUrl } from '../worker/adapters/network.ts'
 // Keep the provider-specific transports already present in the repository.
@@ -165,8 +166,12 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const paymentCallback=c.req.method==='POST' && new URL(c.req.url).pathname==='/api/v1/payments/robokassa/result'
       if (!paymentCallback && c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
       // Bound bytes, including chunked requests, before parsing or password hashing.
+      const documentUpload=/^\/api\/v1\/claims\/[^/]+\/attachments$/.test(new URL(c.req.url).pathname)
+      if(documentUpload)await requireUser(c,true)
+      const byteLimit=documentUpload?Math.ceil(CLAIM_FILE_BYTES/3)*4+2048:16384
+      if(Number(c.req.header('Content-Length'))>byteLimit)fail(413,'body_too_large','Запрос слишком большой')
       const bytes=await c.req.raw.arrayBuffer()
-      if (bytes.byteLength>16384) fail(413,'body_too_large','Запрос слишком большой')
+      if (bytes.byteLength>byteLimit) fail(413,'body_too_large','Запрос слишком большой')
       c.req.raw=new Request(c.req.url,{method:c.req.method,headers:c.req.raw.headers,body:bytes})
       const expected=paymentCallback?'application/x-www-form-urlencoded':'application/json'
       if (!(c.req.header('Content-Type')??'').startsWith(expected)) fail(415,'content_type',`Ожидается ${expected}`)
@@ -354,6 +359,11 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       }
       const user=(await tx.query('SELECT * FROM gs_users WHERE id=$1 FOR UPDATE',[userId])).rows[0]
       if (user.banned_at) fail(403,'banned','Аккаунт заблокирован')
+      if (!user.email && profile.emailVerified===true && typeof profile.email==='string') {
+        const providerEmail=emailOf(profile.email)
+        await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))',['mailbox:'+providerEmail])
+        await tx.query('UPDATE gs_users SET email=$1,email_verified_at=now() WHERE id=$2 AND email IS NULL AND NOT EXISTS(SELECT 1 FROM gs_users WHERE email=$1)',[providerEmail,userId])
+      }
       if (!identity) await tx.query('INSERT INTO gs_identities(provider,subject,user_id) VALUES($1,$2,$3)',[provider,profile.id,userId])
       await audit(tx,userId,row.link_session_hash?'identity.linked':'identity.login',provider)
       return row.link_session_hash?null:await startSession(c,tx,userId,provider)
@@ -362,6 +372,43 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     return c.redirect(row.next_path)
   })
 
+  app.get('/api/v1/claims/options',async c=>{
+    await requireUser(c)
+    return c.json({available:true,attachments:true,maxFiles:3,maxFileBytes:CLAIM_FILE_BYTES,reviewDays:3})
+  })
+  app.post('/api/v1/claims/:id/attachments',async c=>{
+    const user=await requireUser(c,true)
+    await limit(c,'claim_documents',user.id,20)
+    let document
+    try {document=claimDocument(await json(c))} catch {fail(400,'invalid_document','Нужен PDF, JPG или PNG до 1 МБ с корректным содержимым и именем')}
+    const result=await db.transaction(async tx=>{
+      const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 AND user_id=$2 FOR UPDATE',[c.req.param('id'),user.id])).rows[0]
+      if(!claim)fail(404,'not_found','Заявка не найдена')
+      if(claim.status!=='PENDING')fail(409,'claim_closed','Заявка уже рассмотрена')
+      const rows=(await tx.query('SELECT id,name,mime,sha256 FROM gs_claim_documents WHERE claim_id=$1',[claim.id])).rows
+      const prior=rows.find(row=>row.sha256===document.sha256)
+      if(prior)return prior
+      if(rows.length>=3)fail(409,'document_limit','К заявке можно приложить до 3 файлов')
+      const id=token()
+      await tx.query('INSERT INTO gs_claim_documents(id,claim_id,name,mime,data,sha256) VALUES($1,$2,$3,$4,$5,$6)',[id,claim.id,document.name,document.mime,document.data,document.sha256])
+      await audit(tx,user.id,'claim.document_added',claim.id,{documentId:id})
+      return {id,name:document.name,mime:document.mime}
+    })
+    return c.json(result,201)
+  })
+  app.get('/api/v1/claims/:id/attachments/:documentId',async c=>{
+    const user=await requireUser(c)
+    const claim=(await db.query('SELECT user_id FROM gs_claims WHERE id=$1',[c.req.param('id')])).rows[0]
+    if(!claim)fail(404,'not_found','Заявка не найдена')
+    if(claim.user_id!==user.id)await permission(c,'claims.review')
+    const document=(await db.query('SELECT name,mime,data FROM gs_claim_documents WHERE id=$1 AND claim_id=$2',[c.req.param('documentId'),c.req.param('id')])).rows[0]
+    if(!document)fail(404,'not_found','Документ не найден')
+    await audit(db,user.id,'claim.document_downloaded',c.req.param('id'),{documentId:c.req.param('documentId')})
+    c.header('Content-Type','application/octet-stream')
+    c.header('Content-Disposition',`attachment; filename="evidence"; filename*=UTF-8''${encodeURIComponent(document.name).replace(/'/g,'%27')}`)
+    c.header('Content-Security-Policy',"sandbox; default-src 'none'")
+    return c.body(new Uint8Array(document.data))
+  })
   app.post('/api/v1/claims',async c=>{
     const user=await requireUser(c,true), body=await json(c), serverId=textOf(body.serverId,1,100), evidence=textOf(body.evidence,20,3000)
     await limit(c,'claims',user.id,10)
@@ -381,15 +428,16 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.post('/api/v1/claims/:id/proof',async c=>{
     const user=await requireUser(c,true),body=await json(c)
     await limit(c,'claim_proof',user.id,10)
-    if(!['SITE','DNS','MANUAL'].includes(body.method))fail(400,'invalid_method','Выберите способ проверки')
+    if(!['SITE','DNS','MANUAL','DOCUMENT'].includes(body.method))fail(400,'invalid_method','Выберите способ проверки')
     const result=await db.transaction(async tx=>{
       const claim=(await tx.query('SELECT * FROM gs_claims WHERE id=$1 AND user_id=$2 FOR UPDATE',[c.req.param('id'),user.id])).rows[0]
       if(!claim)fail(404,'not_found','Заявка не найдена')
       if(claim.status!=='PENDING')fail(409,'claim_closed','Заявка уже рассмотрена')
       const server=(await tx.query('SELECT website FROM gs_server_registry WHERE server_id=$1',[claim.server_id])).rows[0]
       let target
-      try{target=proofTarget(server?.website,body.method)}catch{fail(400,'official_site_required','Для этого способа нужен официальный HTTPS-сайт в карточке; выберите ручную проверку')}
-      const code=token(),expiresAt=new Date(Date.now()+30*60*1000).toISOString()
+      if(body.method==='DOCUMENT'&&!(await tx.query('SELECT id FROM gs_claim_documents WHERE claim_id=$1 LIMIT 1',[claim.id])).rows.length)fail(409,'documents_required','Сначала приложите подтверждающий документ')
+      try{target=body.method==='DOCUMENT'?'PRIVATE_DOCUMENTS_ADMIN_REVIEW':proofTarget(server?.website,body.method)}catch{fail(400,'official_site_required','Для этого способа нужен официальный HTTPS-сайт в карточке; выберите ручную проверку')}
+      const code=token(),expiresAt=new Date(Date.now()+4*24*60*60*1000).toISOString()
       await tx.query(`INSERT INTO gs_claim_proofs(claim_id,token_hash,method,target,expires_at) VALUES($1,$2,$3,$4,$5)
         ON CONFLICT(claim_id) DO UPDATE SET token_hash=EXCLUDED.token_hash,method=EXCLUDED.method,target=EXCLUDED.target,
         expires_at=EXCLUDED.expires_at,checked_at=NULL,consumed_at=NULL,created_at=now()`,[claim.id,digest(code),body.method,target,expiresAt])
@@ -404,7 +452,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     const proof=(await db.query(`SELECT p.* FROM gs_claim_proofs p JOIN gs_claims c ON c.id=p.claim_id
       WHERE c.id=$1 AND c.user_id=$2 AND c.status='PENDING' AND p.expires_at>now() AND p.consumed_at IS NULL`,[c.req.param('id'),user.id])).rows[0]
     if(!proof)fail(409,'proof_expired','Получите новый проверочный код')
-    if(proof.method==='MANUAL')fail(409,'admin_review_required','Код на публичном ресурсе проверяет администратор')
+    if(['MANUAL','DOCUMENT'].includes(proof.method))fail(409,'admin_review_required','Код на публичном ресурсе проверяет администратор')
     let matched=false
     try{matched=await proofCheck(proof)}catch{fail(422,'proof_unreachable','Ресурс недоступен; проверьте размещение кода или выберите ручную проверку')}
     if(!matched)fail(422,'proof_mismatch','Код на официальном ресурсе не найден')
@@ -419,7 +467,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   })
   app.get('/api/v1/owners/me/claims',async c=>{
     const user=await requireUser(c)
-    return c.json((await db.query(`SELECT c.id,c.server_id,c.status,c.evidence,c.reason,c.created_at,
+    return c.json((await db.query(`SELECT c.id,c.server_id,r.name,c.status,c.evidence,c.reason,c.created_at,
       p.method AS proof_method,p.checked_at AS proof_checked_at,p.expires_at AS proof_expires_at,
       (c.status='VERIFIED' AND COALESCE(r.owner_id=c.user_id,false)) AS access_active
       FROM gs_claims c JOIN gs_server_registry r ON r.server_id=c.server_id LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
@@ -1218,7 +1266,8 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
   app.get('/api/v1/admin/claims',async c=>{
     await permission(c,'claims.review')
     return c.json((await db.query(`SELECT c.*,s.name,s.game_id,s.website,p.method AS proof_method,
-      p.target AS proof_target,p.expires_at AS proof_expires_at,p.checked_at AS proof_checked_at
+      p.target AS proof_target,p.expires_at AS proof_expires_at,p.checked_at AS proof_checked_at,
+      (SELECT COALESCE(jsonb_agg(jsonb_build_object('id',d.id,'name',d.name)), '[]'::jsonb) FROM gs_claim_documents d WHERE d.claim_id=c.id) AS attachments
       FROM gs_claims c JOIN gs_server_registry s USING(server_id) LEFT JOIN gs_claim_proofs p ON p.claim_id=c.id
       WHERE c.status='PENDING' ORDER BY c.created_at LIMIT 100`)).rows)
   })
@@ -1237,8 +1286,10 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       if (body.status==='VERIFIED') {
         const proof=(await tx.query('SELECT * FROM gs_claim_proofs WHERE claim_id=$1 FOR UPDATE',[claim.id])).rows[0]
         if(!proof||proof.consumed_at||Date.parse(proof.expires_at)<=Date.now())fail(409,'proof_required','Нужен действующий проверочный код владельца')
-        if(proof.method!=='MANUAL'&&proof.target!==proofTarget(server.website,proof.method))fail(409,'proof_changed','Официальный сайт изменён; получите новый код')
-        if(proof.method==='MANUAL') {
+        if(!['MANUAL','DOCUMENT'].includes(proof.method)&&proof.target!==proofTarget(server.website,proof.method))fail(409,'proof_changed','Официальный сайт изменён; получите новый код')
+        if(proof.method==='DOCUMENT') {
+          if(body.documentsReviewed!==true||!(await tx.query('SELECT id FROM gs_claim_documents WHERE claim_id=$1 LIMIT 1',[claim.id])).rows.length)fail(409,'documents_review_required','Откройте документы и подтвердите их ручную проверку')
+        } else if(proof.method==='MANUAL') {
           if(typeof body.observedToken!=='string'||digest(body.observedToken.trim())!==proof.token_hash)
             fail(409,'proof_required','Введите код, который вы лично увидели на официальном публичном ресурсе проекта')
         } else if(!proof.checked_at)fail(409,'proof_required','Владелец должен сначала проверить код на сайте или в DNS')

@@ -158,10 +158,12 @@ export default function Admin({embedded=false}:{embedded?:boolean}) {
               onClick={()=>void act(()=>apiSend(`/admin/server-fact-edits/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')]}))}>{status==='APPROVED'?'Опубликовать':'Отклонить'}</Button>)}</div>
           </>}
           {active.id==='claims'&&<><strong>{value(row,'name')} · {value(row,'server_id')}</strong><p className="whitespace-pre-wrap break-words">{value(row,'evidence')}</p>
+            {Array.isArray(row.attachments)&&row.attachments.map((file:{id:string;name:string})=><a className="block min-h-11 break-words py-2 underline" key={file.id} href={`/api/v1/claims/${encodeURIComponent(value(row,'id'))}/attachments/${encodeURIComponent(file.id)}`}>Скачать подтверждение: {file.name}</a>)}
+            {row.proof_method==='DOCUMENT'&&<label className="flex items-center gap-2"><input type="checkbox" checked={reasons['documents:'+value(row,'id')]==='yes'} onChange={e=>setReasons({...reasons,['documents:'+value(row,'id')]:e.target.checked?'yes':''})}/>Документы открыты и проверены</label>}
             {auth.user?.roles.includes('ADMIN')&&<><Textarea aria-label="Основание решения" minLength={10} maxLength={1000} value={reasons[value(row,'id')]??''} onChange={e=>setReasons({...reasons,[value(row,'id')]:e.target.value})}/>
             <Field label="Код ручного подтверждения"><Input aria-label="Код, лично проверенный на официальном ресурсе" placeholder="Одноразовый код с ресурса проекта" maxLength={96} value={reasons['proof:'+value(row,'id')]??''} onChange={e=>setReasons({...reasons,['proof:'+value(row,'id')]:e.target.value})}/></Field>
             <div className="flex gap-2">{(['VERIFIED','REJECTED'] as const).map(status=><Button key={status} disabled={busy||(reasons[value(row,'id')]??'').trim().length<10}
-              onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')],observedToken:reasons['proof:'+value(row,'id')]}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
+              onClick={()=>void act(()=>apiSend(`/admin/claims/${encodeURIComponent(value(row,'id'))}/resolve`,{status,reason:reasons[value(row,'id')],observedToken:reasons['proof:'+value(row,'id')],documentsReviewed:reasons['documents:'+value(row,'id')]==='yes'}))}>{status==='VERIFIED'?'Подтвердить':'Отклонить'}</Button>)}</div>
             </>}
           </>}
           {active.id==='votes'&&<><strong>{value(row,'server_id')} · {row.review_status==='VOIDED'?'Исключён из рейтинга':'Учитывается'}</strong>

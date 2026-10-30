@@ -88,7 +88,7 @@ export default function Account() {
     panel.open=true
     requestAnimationFrame(()=>{
       panel.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})
-      panel.querySelector('select')?.focus({preventScroll:true})
+      panel.querySelector<HTMLElement>('[role=combobox]')?.focus({preventScroll:true})
     })
   }
 

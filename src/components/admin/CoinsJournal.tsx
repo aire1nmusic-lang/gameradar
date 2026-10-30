@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '@/repositories/http/client'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/controls'
+import { Input, Select } from '@/components/ui/controls'
 
 type Entry={id:string;user_id:string;kind:string;delta:number;related_id:string|null;details:unknown;created_at:string}
 type Journal={items:Entry[];total:number;page:number;pageSize:number}
@@ -27,7 +27,7 @@ export function CoinsJournal() {
     <form className="flex flex-wrap gap-2" onSubmit={e=>{e.preventDefault();load(1)}}>
       <Input className="min-w-0" aria-label="ID пользователя" placeholder="ID пользователя" value={userId} onChange={e=>setUserId(e.target.value)}/>
       <Input className="min-w-0" aria-label="ID связанной операции" placeholder="ID Поддержки или заказа" value={relatedId} onChange={e=>setRelatedId(e.target.value)}/>
-      <select aria-label="Тип операции" className="surface rounded-lg p-2" value={kind} onChange={e=>setKind(e.target.value)}><option value="">Все операции</option>{['PURCHASE','SUPPORT','AVATAR','LINK_SLOT','REFUND','ADJUSTMENT'].map(k=><option key={k}>{k}</option>)}</select>
+      <Select label="Тип операции" value={kind} onChange={setKind} options={[{value:'',label:'Все операции'},...['PURCHASE','SUPPORT','AVATAR','LINK_SLOT','REFUND','ADJUSTMENT'].map(value=>({value,label:value}))]}/>
       <Button disabled={loading}>Найти</Button>
     </form>
     {error&&<p role="alert">{error}</p>}{loading?<p>Загрузка…</p>:data&&<>

@@ -171,6 +171,7 @@ export function FilterPanel({
 
         <Group title="Дата открытия">
           <SelectMenu
+            label="Дата открытия"
             value={filters.openedWithin}
             onChange={(value) => patch({ openedWithin: value as CatalogFilters['openedWithin'] })}
             options={[

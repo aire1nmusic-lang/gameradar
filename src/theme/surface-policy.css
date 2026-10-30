@@ -14,7 +14,7 @@
   html[data-design="lobby"] body :where(
     .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,
     .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
-    .gs-account-claim,.gs-coins-card,
+    .gs-account-claim,.gs-coins-card,.gs-select-menu>button,
     .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
     .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
     .gs-profile-dossier,.gs-profile-support,
@@ -28,10 +28,25 @@
     backdrop-filter:blur(5px) saturate(110%)!important;
   }
 
+  html[data-design="lobby"] body .gs-select-menu>button {
+    color:var(--g-ink,#f3f5f7)!important;
+  }
+  html[data-design="lobby"] body .gs-select-menu>button>span {color:inherit!important;}
+
   /* A wallet is one glass panel, including its expanded header and content. */
   html[data-design="lobby"] body .gs-account-wallet>summary {
     background:transparent!important;border:0!important;box-shadow:none!important;
     -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  }
+  /* Floating choices stay smoky in both themes, with clearly separated rows. */
+  html[data-design="lobby"] body .gs-select-options,
+  html[data-design="lobby"][data-color-mode="light"] body .gs-select-options {color:#f3f5f7!important;}
+  html[data-design="lobby"] body .gs-select-options [role="option"] {
+    color:#f3f5f7!important;background:rgba(255,255,255,.035)!important;
+    border:1px solid rgba(255,255,255,.16)!important;border-radius:10px!important;
+  }
+  html[data-design="lobby"] body .gs-select-options [role="option"]:is(:hover,:focus-visible,[data-active="true"],[aria-selected="true"]) {
+    background:rgba(198,255,82,.13)!important;border-color:rgba(198,255,82,.48)!important;
   }
   /* Compact rows use the same transparent tint without stacking blur layers. */
   html[data-design="lobby"] body :is(.gs-row,.gs-row-line,.gs-server-card):not(.gs-top-row) {
@@ -43,7 +58,7 @@
      Search, login/claim modals, support, filters and menus all use smoky glass. */
   html[data-design="lobby"] body :is(
     .gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,
-    .gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],
+    .gs-games-menu,[role="menu"],.gs-select-options,
     .gs-server-picker-popover,.chronicle-picker .chronicle-row,
     .gs-catalog-toolbar,.gs-rating-switch,.gs-profile-cta-bar,.gs-mobile-nav
   ) {
@@ -82,7 +97,7 @@
     --gs-glass-edge:rgba(255,255,255,.34);
   }
   /* Search keeps its existing bright text, in both appearance modes. */
-  html[data-design="lobby"] body .gs-search-overlay .gs-search-surface {
+  html[data-design="lobby"] body :is(.gs-search-overlay .gs-search-surface,.gs-select-options) {
     background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84))!important;
   }
 
@@ -105,10 +120,10 @@
     }
   }
   @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
+    html[data-design="lobby"] body :is(.gs-search-surface,.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-options,.gs-server-picker-popover) {
       background:rgba(25,30,39,.96)!important;
     }
-    html[data-design="lobby"][data-color-mode="light"] body :is(.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-menu>[role="listbox"],.gs-server-picker-popover) {
+    html[data-design="lobby"][data-color-mode="light"] body :is(.gs-ui-modal-panel,.gs-sheet>div,dialog,.gs-games-menu,[role="menu"],.gs-select-options,.gs-server-picker-popover) {
       background:rgba(238,234,226,.96)!important;
     }
   }

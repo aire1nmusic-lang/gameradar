@@ -2249,5 +2249,38 @@
     "checkedAt": "2026-10-30",
     "confidence": "confirmed",
     "notes": "Listing address corroborated on official website on 2026-10-30. Listing registration is not treated as launch."
+  },
+  {
+    "name": "2Builders4Tools",
+    "website": "https://2b4t.net/",
+    "version": "26.2",
+    "endpoint": {
+      "method": "GAME_PROTOCOL",
+      "host": "2b4t.net",
+      "port": 20400
+    },
+    "key": "mc:2b4t.net:20400",
+    "game": "minecraft",
+    "chronicle": null,
+    "languages": [],
+    "country": null,
+    "openedAt": null,
+    "source": {
+      "name": "Официальный сайт",
+      "url": "https://2b4t.net/"
+    },
+    "refs": [
+      {
+        "name": "Официальный сайт",
+        "url": "https://2b4t.net/"
+      },
+      {
+        "name": "Minecraft-MP listing",
+        "url": "https://minecraft-mp.com/server-s366136"
+      }
+    ],
+    "checkedAt": "2026-10-30",
+    "confidence": "confirmed",
+    "notes": "Listing address corroborated on official website on 2026-10-30. Listing registration is not treated as launch."
   }
 ]

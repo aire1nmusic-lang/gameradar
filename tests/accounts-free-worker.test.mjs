@@ -78,3 +78,8 @@ test('community routes are served from D1 only with ACCOUNTS_COMMUNITY=true; an 
   assert.equal(e.DB.sqlite.prepare('SELECT COUNT(*) AS n FROM fc_votes').get().n, 1)
   assert.ok(!JSON.stringify(e.DB.sqlite.prepare('SELECT * FROM fc_votes').get()).includes('203.0.113.9'), 'the IP is stored only as a keyed hash')
 })
+
+test('Turnstile turns on only with both keys; a site key alone keeps accounts working', async () => {
+  const e = env({ ACCOUNTS_COMMUNITY: 'true', TURNSTILE_SITE_KEY: '0xsite' })
+  assert.equal((await freeAccounts(new Request(origin + '/api/v1/auth/me'), e)).status, 200)
+})

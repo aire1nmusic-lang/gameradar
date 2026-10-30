@@ -156,7 +156,9 @@
     -webkit-backdrop-filter:none!important;
     backdrop-filter:none!important;
   }
-  html[data-design="lobby"] body .gs-catalog-toolbar {
+  /* The shared smoky :is(...) rule has two-class specificity from its other
+     alternatives; scope this override to the catalog page to beat it. */
+  html[data-design="lobby"] body .gs-catalog-page .gs-catalog-toolbar.gs-catalog-toolbar {
     background:var(--gs-page-glass)!important;
     border:1px solid var(--gs-glass-edge)!important;
     border-radius:18px!important;

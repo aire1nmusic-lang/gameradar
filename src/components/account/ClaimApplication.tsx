@@ -8,6 +8,7 @@ import { Field, Input, Select } from '@/components/ui/controls'
 import { ClaimProof } from './ClaimProof'
 
 export type OwnershipClaim={id:string;server_id:string;status:string;access_active?:boolean;reason?:string;name?:string;proof_method?:string}
+type IssuedProof={claimId:string;code:string;method:string;target:string;expiresAt:string}
 type Options={available:boolean;attachments:boolean;maxFiles:number;maxFileBytes:number}
 const methods=[{value:'SITE',label:'Файл на официальном сайте'},{value:'DNS',label:'DNS-запись домена'},{value:'MANUAL',label:'Код на официальном ресурсе'},{value:'DOCUMENT',label:'Документ или скриншот доступа'}]
 const instructions:Record<string,string>={SITE:'Разместите выданный код в файле на официальном сайте сервера.',DNS:'Добавьте выданный код в TXT-запись домена официального сайта.',MANUAL:'Разместите код на официальном сайте, в Discord или Telegram проекта. Укажите прямую ссылку на публикацию.',DOCUMENT:'Загрузите один из вариантов: подтверждение домена у регистратора, договор хостинга с названием проекта или скриншот панели управления с адресом сервера. Можно приложить до 3 файлов. Закройте пароли, ключи, паспортные данные и платёжные реквизиты.'}
@@ -17,6 +18,7 @@ export function ClaimApplication({claims,emailVerified,onChanged}:{claims:Owners
   const [items,setItems]=useState<GameServer[]>([]),[searching,setSearching]=useState(false),[searchError,setSearchError]=useState('')
   const [expanded,setExpanded]=useState(false),[active,setActive]=useState(-1),[method,setMethod]=useState('SITE'),[resource,setResource]=useState('')
   const [options,setOptions]=useState<Options>(),[optionsLoading,setOptionsLoading]=useState(true),[files,setFiles]=useState<File[]>([])
+  const [proof,setProof]=useState<IssuedProof>()
   const [busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
   const listId=useId(),searchRef=useRef<HTMLInputElement>(null)
   useEffect(()=>{let live=true;apiRequest<Options>('/claims/options').then(value=>{if(live)setOptions(value)}).catch(()=>{}).finally(()=>{if(live)setOptionsLoading(false)});return()=>{live=false}},[])
@@ -38,8 +40,9 @@ export function ClaimApplication({claims,emailVerified,onChanged}:{claims:Owners
         const bytes=new Uint8Array(await file.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192))
         await apiSend(`/claims/${encodeURIComponent(claim.id)}/attachments`,{name:file.name,mime:file.type,data:btoa(binary)})
       }
-      if(method==='DOCUMENT')await apiSend(`/claims/${encodeURIComponent(claim.id)}/proof`,{method})
-      setFiles([]);setMessage('Заявка сохранена. Проверка — до 3 дней. Для проверки сайтом, DNS или публичным ресурсом получите код ниже.');await onChanged()
+      const issued=await apiSend<IssuedProof>(`/claims/${encodeURIComponent(claim.id)}/proof`,{method})
+      if(method!=='DOCUMENT')setProof(issued)
+      setFiles([]);setMessage(method==='DOCUMENT'?'Документы переданы. Проверка — до 3 дней.':'Заявка сохранена. Разместите выданный код на официальном ресурсе; проверка — до 3 дней.');await onChanged()
     } catch(e){setError(e instanceof Error?e.message:'Не удалось отправить заявку. При повторе уже сохранённая заявка будет продолжена.')}
     finally{setBusy(false)}
   }
@@ -70,7 +73,14 @@ export function ClaimApplication({claims,emailVerified,onChanged}:{claims:Owners
         <Button type="submit" variant="primary" disabled={busy||!selected||!options?.available||!emailVerified||method==='DOCUMENT'&&!files.length}>{busy?'Сохраняем…':optionsLoading?'Проверяем доступность…':'Отправить на проверку'}</Button>
       </form>
       {error&&<p role="alert" className="text-sm text-danger-300">{error}</p>}{message&&<p role="status" className="text-sm text-signal-400">{message}</p>}
-      {claims.map(c=><div key={c.id} className="space-y-2 border-t border-white/15 pt-4 text-sm"><p><strong>{c.name??c.server_id}</strong> · {c.status==='PENDING'?'На проверке · до 3 дней':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&c.proof_method==='DOCUMENT'?<p>Документы переданы администратору.</p>:c.status==='PENDING'&&<ClaimProof id={c.id} onChecked={onChanged}/>}</div>)}
+      {proof&&<div className="space-y-3 border-t border-white/15 pt-4">
+        <h3 className="text-sm font-semibold">Подтверждение: {methods.find(m=>m.value===proof.method)?.label}</h3>
+        <p className="break-all text-sm">{proof.method==='DNS'?'Имя TXT-записи: ':proof.method==='SITE'?'Адрес файла: ':''}{proof.method==='MANUAL'?'Опубликуйте код на указанном официальном ресурсе.':proof.target}</p>
+        <code className="block select-all break-all rounded-lg border border-white/15 p-3 text-sm">{proof.code}</code>
+        <p className="text-xs">{proof.method==='SITE'?'В файле должна быть только строка кода.':proof.method==='DNS'?'Значение TXT-записи — только строка кода.':'Администратор лично проверит размещение кода.'} Код действует 4 дня.</p>
+        {proof.method!=='MANUAL'&&<Button disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await apiSend(`/claims/${encodeURIComponent(proof.claimId)}/proof/check`,{});setMessage('Код найден. Заявка передана администратору — до 3 дней.');await onChanged()}catch(e){setError(e instanceof Error?e.message:'Не удалось проверить код')}finally{setBusy(false)}}}>Проверить размещение кода</Button>}
+      </div>}
+      {claims.map(c=><div key={c.id} className="space-y-2 border-t border-white/15 pt-4 text-sm"><p><strong>{c.name??c.server_id}</strong> · {c.status==='PENDING'?'На проверке · до 3 дней':c.status==='REJECTED'?'Отклонено':c.access_active?'Владение подтверждено':'Права владельца сняты'}{c.reason?` · ${c.reason}`:''}</p>{c.status==='PENDING'&&c.proof_method==='DOCUMENT'?<p>Документы переданы администратору.</p>:c.status==='PENDING'&&c.id!==proof?.claimId&&<ClaimProof initialMethod={c.proof_method} id={c.id} onChecked={onChanged}/>}</div>)}
     </div>
   </details>
 }

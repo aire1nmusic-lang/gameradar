@@ -166,8 +166,12 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
       const paymentCallback=c.req.method==='POST' && new URL(c.req.url).pathname==='/api/v1/payments/robokassa/result'
       if (!paymentCallback && c.req.header('Origin')!==origin) fail(403,'origin_forbidden','Источник запроса не разрешён')
       // Bound bytes, including chunked requests, before parsing or password hashing.
+      const documentUpload=/^\/api\/v1\/claims\/[^/]+\/attachments$/.test(new URL(c.req.url).pathname)
+      if(documentUpload)await requireUser(c,true)
+      const byteLimit=documentUpload?Math.ceil(CLAIM_FILE_BYTES/3)*4+2048:16384
+      if(Number(c.req.header('Content-Length'))>byteLimit)fail(413,'body_too_large','Запрос слишком большой')
       const bytes=await c.req.raw.arrayBuffer()
-      if (bytes.byteLength>(/^\/api\/v1\/claims\/[^/]+\/attachments$/.test(new URL(c.req.url).pathname)?Math.ceil(CLAIM_FILE_BYTES/3)*4+2048:16384)) fail(413,'body_too_large','Запрос слишком большой')
+      if (bytes.byteLength>byteLimit) fail(413,'body_too_large','Запрос слишком большой')
       c.req.raw=new Request(c.req.url,{method:c.req.method,headers:c.req.raw.headers,body:bytes})
       const expected=paymentCallback?'application/x-www-form-urlencoded':'application/json'
       if (!(c.req.header('Content-Type')??'').startsWith(expected)) fail(415,'content_type',`Ожидается ${expected}`)
@@ -399,6 +403,7 @@ export function createApp({ db, config, oauthExchange=exchangeProfile, publicFet
     if(claim.user_id!==user.id)await permission(c,'claims.review')
     const document=(await db.query('SELECT name,mime,data FROM gs_claim_documents WHERE id=$1 AND claim_id=$2',[c.req.param('documentId'),c.req.param('id')])).rows[0]
     if(!document)fail(404,'not_found','Документ не найден')
+    await audit(db,user.id,'claim.document_downloaded',c.req.param('id'),{documentId:c.req.param('documentId')})
     c.header('Content-Type','application/octet-stream')
     c.header('Content-Disposition',`attachment; filename="evidence"; filename*=UTF-8''${encodeURIComponent(document.name).replace(/'/g,'%27')}`)
     c.header('Content-Security-Policy',"sandbox; default-src 'none'")

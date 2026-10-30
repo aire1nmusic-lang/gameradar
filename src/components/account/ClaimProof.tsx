@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/Button'
 import { Field, Select } from '@/components/ui/controls'
 
 type Proof={code:string;method:string;target:string;expiresAt:string}
-export function ClaimProof({id,onChecked}:{id:string;onChecked:()=>Promise<void>}) {
-  const [method,setMethod]=useState('SITE'),[proof,setProof]=useState<Proof|null>(null)
+export function ClaimProof({id,onChecked,initialMethod='SITE'}:{id:string;onChecked:()=>Promise<void>;initialMethod?:string}) {
+  const [method,setMethod]=useState(initialMethod),[proof,setProof]=useState<Proof|null>(null)
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('')
   async function run(check:boolean) {
     setBusy(true);setError('');setMessage('')

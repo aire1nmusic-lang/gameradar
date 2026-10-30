@@ -146,7 +146,7 @@ export function StatusBadge({
   launching?: boolean
   className?: string
 }) {
-  const displayStatus = !ONLINE_VERIFICATION_AVAILABLE && [OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking].includes(status) ? OnlineStatus.Unknown : status
+  const displayStatus = !ONLINE_VERIFICATION_AVAILABLE && ([OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking] as OnlineStatus[]).includes(status) ? OnlineStatus.Unknown : status
   const meta = STATUS_META[displayStatus]
   const pending = displayStatus === OnlineStatus.Pending ? pendingCopy(launching) : undefined
   return (
@@ -192,7 +192,7 @@ export function VerifiedLine({
   size?: 'xs' | 'sm'
 }) {
   const status = online?.status ?? statusProp ?? OnlineStatus.Pending
-  if (!ONLINE_VERIFICATION_AVAILABLE && [OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking].includes(status)) return null
+  if (!ONLINE_VERIFICATION_AVAILABLE && ([OnlineStatus.Verified,OnlineStatus.Live,OnlineStatus.Checking] as OnlineStatus[]).includes(status)) return null
   const seconds = online ? (online.observedAgoSec ?? online.checkedAgoSec) : (secondsProp ?? 0)
   const source = online?.source ?? sourceProp
   const base = cn('flex items-center gap-1.5 font-mono', size === 'xs' ? 'text-[10.5px]' : 'text-[11.5px]', className)

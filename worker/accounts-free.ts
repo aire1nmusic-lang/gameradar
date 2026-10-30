@@ -12,6 +12,7 @@ import { noticeMail } from '../accounts-fn/mail.mjs'
 import type { Env } from './lib/core.ts'
 import { linkMail, mailEnabled, sendMail } from './lib/mailer.ts'
 import { hashPassword, verifyPassword } from './lib/password.ts'
+import { sendSmtpSocket } from './lib/smtp-socket.ts'
 
 const DEFAULT_DAILY_LIMIT = 1500
 const json = (status: number, code: string, message: string) => new Response(JSON.stringify({ error: { code, message } }),
@@ -33,8 +34,11 @@ let cached: { key: string; app: ReturnType<typeof createAccountsApp> } | undefin
 export async function freeAccounts(request: Request, env: Env): Promise<Response | null> {
   const path = new URL(request.url).pathname
   // /auth/dev is the local-development sign-in of the main Worker and stays there.
-  if (!freeAccountsEnabled(env) || !path.startsWith('/api/v1/auth/') || path === '/api/v1/auth/dev') return null
+  const cabinet = ['/api/v1/owners/me/claims', '/api/v1/owners/me/servers', '/api/v1/coins/me', '/api/v1/me/email'].includes(path)
+  if (!freeAccountsEnabled(env) || !(path.startsWith('/api/v1/auth/') || cabinet) || path === '/api/v1/auth/dev') return null
   const pepper = env.PASSWORD_PEPPER ?? '', rateKey = env.ACCOUNTS_RATE_KEY ?? ''
+  // SMTP (e.g. Gmail with an app password) goes over a Cloudflare TCP socket.
+  const mailEnv: Env = env.MAIL_DRIVER === 'smtp' ? { ...env, SMTP_SEND: sendSmtpSocket } : env
   // Without its own secrets the service stays closed rather than running with weak hashing or shared keys.
   // A local development Worker without them keeps its previous behaviour (dev sign-in, regression tests).
   if (pepper.length < 32 || rateKey.length < 32 || !env.ALLOWED_ORIGIN)
@@ -49,15 +53,15 @@ export async function freeAccounts(request: Request, env: Env): Promise<Response
     if (await store.dailyCount(day) >= cap || await store.dailyHit(day) > cap) return json(503, 'accounts_daily_limit', 'Вход и регистрация на сегодня исчерпали бесплатный лимит. Попробуйте завтра.')
   }
   const config = { origin: env.ALLOWED_ORIGIN, environment: env.ENVIRONMENT === 'development' ? 'development' : 'production', rateKey,
-    mailEnabled: mailEnabled(env), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
+    adminEmails: env.ADMIN_EMAILS ?? '', mailEnabled: mailEnabled(mailEnv), registrationOpen: env.ACCOUNTS_REGISTRATION_OPEN === 'true', emergencyMode: env.EMERGENCY_MODE === 'true',
     oauth: { GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID: env.DISCORD_CLIENT_ID,
       DISCORD_CLIENT_SECRET: env.DISCORD_CLIENT_SECRET, OAUTH_TEST_BASE: env.OAUTH_TEST_BASE, DISCORD_API_BASE: env.DISCORD_API_BASE } }
   // In-memory only: a changed secret or setting rebuilds the app.
   const key = JSON.stringify([config, pepper])
   if (cached?.key !== key) cached = { key, app: createAccountsApp({ store: d1Store(env.DB), config,
     passwords: { hash: password => hashPassword(password, pepper), verify: (password, stored) => verifyPassword(password, stored, pepper) },
-    sendLinkMail: (to, purpose, link) => sendMail(env, linkMail(to, purpose, link)),
-    sendNotice: (to, kind, url) => sendMail(env, noticeMail(to, kind, url)) }) }
+    sendLinkMail: (to, purpose, link) => sendMail(mailEnv, linkMail(to, purpose, link)),
+    sendNotice: (to, kind, url) => sendMail(mailEnv, noticeMail(to, kind, url)) }) }
   // Cloudflare sets CF-Connecting-IP itself; a client cannot choose it.
   return cached.app.fetch(request, { clientIp: request.headers.get('CF-Connecting-IP') ?? 'unknown' })
 }

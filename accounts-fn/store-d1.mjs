@@ -137,6 +137,8 @@ export function d1Store(db) {
         WHERE id = ? AND email IS NULL AND banned_at IS NULL
         AND NOT EXISTS (SELECT 1 FROM acc_users WHERE email = ?)`)
         .bind(verifiedEmail, at, userId, verifiedEmail))
+      // Admin comes only from the configured list of provider-verified addresses; it is never removed here.
+      if (args.grantAdmin) statements.push(db.prepare(`UPDATE acc_users SET roles = '["PLAYER","ADMIN"]' WHERE id = ? AND banned_at IS NULL`).bind(userId))
       statements.push(
         db.prepare(`INSERT INTO acc_audit (actor_id, action, target, created_at) SELECT ?, 'identity.login', ?, ? WHERE ${ok}`).bind(userId, provider, at, userId),
         db.prepare(`DELETE FROM acc_sessions WHERE token_hash = ? AND ${ok}`).bind(replaceSessionHash, userId),

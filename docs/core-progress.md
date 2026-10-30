@@ -1,3 +1,38 @@
+## 28.10.2026 — VERIFIED live: Worker sends mail through the team Gmail (version 3acd7461)
+
+- Owner ran `node scripts/accounts-keys.mjs SMTP_PASSWORD` → secret stored, Worker version 3acd7461-1e32-447c-9867-68c40661fe5b deployed from PR28 branch, DONE. Live /auth/me: emailLogin true, registrationOpen true, providers [google, discord].
+- Independent check: one password-reset request for gamescout.team@gmail.com (no account with that e-mail → link-less NO_ACCOUNT notice, nothing created) with `wrangler tail`: 202, outcome ok, wall 1165 ms, no mail_dispatch_failed log → Gmail accepted the message over TLS 465 from Cloudflare (VERIFIED send; inbox delivery LIKELY, owner can see the letter).
+- NOT yet: a real person completing e-mail sign-up via the link (owner/first player). Production runs branch claude/accounts-yandex-20261028 (PR28); main must receive it with [skip ci] (owner merge) or a deploy from main drops Gmail mail and the admin/cabinet fix.
+- Next: Yandex.Metrika (needs the counter number from the owner).
+
+## 28.10.2026 — E-mail sign-up mail through the team Gmail (free); VERIFIED locally, deploy + app password pending
+
+- Status before this step: admin-by-verified-e-mail and the cabinet fix are live (owner deploy; /coins/me 401 without a session, no "Yandex Cloud" errors). Owner's ADMIN role appears after the next Google sign-in (log out, log in). E-mail registration was still off: no mail sender.
+- Cloudflare Email Sending needs Workers Paid, Resend needs a new account — owner wants neither. Built Gmail SMTP from the Worker over Cloudflare TCP sockets: worker/lib/smtp-socket.ts (implicit TLS 465, AUTH LOGIN, dot-stuffing, errors carry only step+code), worker/cloudflare-sockets.d.ts, message builder moved to private-api/smtp-message.mjs (shared with the Node SMTP client). wrangler.toml: MAIL_DRIVER=smtp, smtp.gmail.com:465, SMTP_USER/MAIL_FROM gamescout.team@gmail.com. Gmail limit about 500 recipients/day (below the 1500 daily cap of account operations).
+- scripts/accounts-keys.mjs now asks SMTP_PASSWORD instead of RESEND_API_KEY and accepts key names: `node scripts/accounts-keys.mjs SMTP_PASSWORD` asks only the Gmail app password (spaces removed), stores the secret, deploys, checks /auth/me.
+- VERIFIED locally: wrangler dev (workerd) + fresh local D1 + fake plain SMTP on 127.0.0.1:2525 — register → letter delivered through cloudflare:sockets (EHLO, AUTH, MAIL, RCPT, DATA) → link token → register/confirm → session (/auth/me) → password login 200. typecheck PASS, test:accounts-fn PASS, smtp.test 5/5, test:api PASS.
+- NOT verified: TLS to smtp.gmail.com from Cloudflare and the real app password (LIKELY; port 465 is not blocked on Workers). Until SMTP_PASSWORD is stored, mailEnabled stays false and the site keeps e-mail sign-up hidden exactly as before. Rollback: MAIL_DRIVER back to resend (or delete the secret) and deploy.
+- Next: owner runs the one command above; real sign-up with a test address; then Yandex.Metrika.
+
+## 28.10.2026 — VERIFIED real Google sign-in; admin by verified e-mail; cabinet errors removed (built, deploy pending)
+
+- Owner signed in with Google on the live site: account created, cabinet shows "Вход через Google" (VERIFIED real provider round trip). Visible issues: role PLAYER for gamescout.team@gmail.com (should be admin) and red "Приватный API обслуживается в Yandex Cloud" lines from cabinet calls (claims/servers/coins) that hit the paused private core.
+- Built: ADMIN_EMAILS (wrangler var, gamescout.team@gmail.com) — Google/Discord sign-in with a provider-VERIFIED address on the list gets roles PLAYER+ADMIN (unverified address never trusted; role never removed automatically); free service answers cabinet reads truthfully empty for its accounts (owners/me/claims [], owners/me/servers [], coins/me 0) and refuses /me/email with a clear message. Admin tools themselves still run in the paused private core.
+- VERIFIED locally: test:accounts-fn 35/35, test:api PASS, typecheck PASS. Deploy pending (owner command: node scripts/accounts-keys.mjs, Enter on every key).
+
+## 28.10.2026 — VERIFIED live: sign-up open with Google and Discord (Worker 4ff91824)
+
+- Owner ran scripts/accounts-keys.mjs: 4 Worker secrets (Google and Discord client id/secret; existing Google client in project helical-liberty with the gamescout.online callback, existing Discord app), Worker version 4ff91824-5bd5-4240-8e5b-490e0ee33db1 deployed (also carries the daily-cap no-write fix).
+- Independent check: /auth/me 200 providers [google, discord], registrationOpen true, emailLogin false; /auth/google and /auth/discord 302 to the real providers with the gamescout.online callbacks; /account shows Google and Discord buttons. NOT yet verified: a real person completing a Google/Discord sign-in (owner click). E-mail registration still needs a mail sender (Resend key, or Gmail app password once the Worker can send SMTP).
+
+## 28.10.2026 — PR26 merged to main ([skip ci]); Yandex ID sign-in added; sign-up opened in config; keys script
+
+- PR26 merged in the browser on the owner's explicit instruction (merge commit 51fbc96, [skip ci], no publication triggered); AGENTS.md now records the owner-approved accounts exception (Cloudflare D1, tables acc_*).
+- UPDATE same day: owner wants e-mail + Google + Discord only — Yandex removed again. Mail: Cloudflare Email Sending needs Workers Paid (not free), so MAIL_DRIVER=resend (free plan 3 000/month, 100/day per Resend), MAIL_FROM=no-reply@gamescout.online in wrangler.toml; the keys script asks RESEND_API_KEY, Google, Discord.
+- Owner already has a Yandex ID OAuth app: free accounts now also offer Yandex (oauth.ts provider; same browser-bound one-use state; e-mail not copied). wrangler.toml: ACCOUNTS_REGISTRATION_OPEN="true" — without a mail provider only Yandex/Google/Discord sign-up works; e-mail registration stays unavailable.
+- scripts/accounts-keys.mjs: owner pastes Yandex/Google/Discord keys (hidden input), script stores Worker secrets, deploys, reports live providers. Worker deploys remain blocked for the session by the permission policy. Redirect URI the Yandex app must contain: https://gamescout.online/api/v1/auth/yandex/callback.
+- VERIFIED: test:accounts-fn 33/33, test:api PASS, typecheck PASS. NOT verified: real Yandex sign-in (needs owner's keys and one click on the live site).
+
 ## 30.10.2026 — PENDING QA: hide unused online verification, remove ranking jargon, owner glass
 
 - Android screenshot complaint: profile showed «№49 · Поддержка · ротация» and «№35 · Выбор игроков · ротация», misleading disconnected trust table with «Успешных проверок за 24 ч» wrapping, owners hero embedded a second artwork layer over the global scene, owners FAQ nearly transparent. Owner says direct online verification is NOT launched and cannot be promoted as working.

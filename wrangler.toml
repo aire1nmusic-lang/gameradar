@@ -17,8 +17,18 @@ ENVIRONMENT = "production"
 DEV_AUTH_ENABLED = "false"
 PUBLIC_ONLY = "true"
 # Free-plan accounts (worker/accounts-free.ts). Needs secrets PASSWORD_PEPPER and ACCOUNTS_RATE_KEY, else answers 503.
-# Sign-up stays closed until ACCOUNTS_REGISTRATION_OPEN = "true" is added after a real e-mail test.
+# Owner decision 28.10.2026: sign-up open (e-mail, Google, Discord).
 ACCOUNTS_FREE = "true"
+ACCOUNTS_REGISTRATION_OPEN = "true"
+# Sign-up mail goes out through the team Gmail (free; worker/lib/smtp-socket.ts). Needs the SMTP_PASSWORD secret:
+# a Google app password of this mailbox. Gmail allows about 500 recipients a day.
+MAIL_DRIVER = "smtp"
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = "465"
+SMTP_USER = "gamescout.team@gmail.com"
+MAIL_FROM = "GameScout <gamescout.team@gmail.com>"
+# Accounts signing in through Google/Discord with one of these provider-verified addresses get the ADMIN role.
+ADMIN_EMAILS = "gamescout.team@gmail.com"
 ALLOWED_ORIGIN = "https://gamescout.online"
 # Probes per cron tick; each costs a few subrequests (DNS + connect).
 MONITOR_BATCH = "8"

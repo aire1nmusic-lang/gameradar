@@ -7,14 +7,14 @@ import { hashPassword, verifyPassword } from '../private-api/crypto.mjs'
 import { sqliteD1 } from './helpers/d1-sqlite.mjs'
 
 const origin = 'http://127.0.0.1:5173'
-const oauth = { GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: 'did', DISCORD_CLIENT_SECRET: 'dsecret',
+const oauth = { VK_CLIENT_ID: 'vk', GOOGLE_CLIENT_ID: 'gid', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: 'did', DISCORD_CLIENT_SECRET: 'dsecret',
   YANDEX_CLIENT_ID: 'yid', YANDEX_CLIENT_SECRET: 'ysecret' }
 const stores = [['memory', () => memoryStore()], ['d1-sqlite', () => d1Store(sqliteD1(['migrations/0012_free_accounts.sql']))]]
 
 function harness(makeStore, { registrationOpen = true, profiles = {}, withOAuth = true } = {}) {
   const store = makeStore(), calls = []
   const app = createAccountsApp({ store, passwords: { hash: hashPassword, verify: verifyPassword }, sendLinkMail: async () => {},
-    config: { origin, environment: 'development', rateKey: 'k'.repeat(40), mailEnabled: true, registrationOpen, ...(withOAuth ? { oauth } : {}) },
+    config: { origin, environment: 'development', rateKey: 'k'.repeat(40), mailEnabled: true, registrationOpen, adminEmails: 'Boss@Example.com', ...(withOAuth ? { oauth } : {}) },
     oauthExchange: async (env, provider, code, query, verifier) => {
       calls.push({ provider, code, verifier })
       const profile = profiles[code]
@@ -42,6 +42,7 @@ for (const [name, makeStore] of stores) {
     assert.deepEqual((await h.request('/api/v1/auth/me')).body.providers, ['google', 'discord'])
     assert.deepEqual((await harness(makeStore, { withOAuth: false }).request('/api/v1/auth/me')).body.providers, [])
     assert.equal((await h.request('/api/v1/auth/yandex')).status, 404, 'Yandex is configured but not offered by this service')
+    assert.equal((await h.request('/api/v1/auth/vk')).status, 404, 'VK is not offered by this service')
     assert.equal((await h.request('/api/v1/auth/github')).status, 404)
     assert.equal((await h.request('/api/v1/auth/google?link=1')).status, 400)
   })
@@ -95,6 +96,23 @@ for (const [name, makeStore] of stores) {
     const failing = await closed.start('discord')
     assert.match((await closed.request(`/api/v1/auth/discord/callback?code=nope&state=${failing.state}`, { gs_private_oauth: failing.browser })).location, /reason=provider/)
     assert.match((await closed.request('/api/v1/auth/discord/callback?state=x', { gs_private_oauth: 'y' })).location, /reason=invalid/)
+  })
+
+  test(`[${name}] admin role only for a provider-verified address on the admin list; cabinet reads are empty, not errors`, async () => {
+    const h = harness(makeStore, { profiles: { boss: { id: 'g-boss', displayName: 'Boss', email: 'boss@example.com', emailVerified: true },
+      fake: { id: 'g-fake', displayName: 'Fake', email: 'boss@example.com', emailVerified: false } } })
+    const signIn = async code => {
+      const trip = await h.start('google')
+      const done = await h.request(`/api/v1/auth/google/callback?code=${code}&state=${trip.state}`, { gs_private_oauth: trip.browser })
+      return done.set.gs_private_session.value
+    }
+    const boss = await signIn('boss'), fake = await signIn('fake')
+    assert.deepEqual((await h.request('/api/v1/auth/me', { gs_private_session: boss })).body.user.roles, ['PLAYER', 'ADMIN'])
+    assert.deepEqual((await h.request('/api/v1/auth/me', { gs_private_session: fake })).body.user.roles, ['PLAYER'], 'unverified e-mail is not trusted')
+    assert.deepEqual((await h.request('/api/v1/owners/me/claims', { gs_private_session: boss })).body, [])
+    assert.deepEqual((await h.request('/api/v1/owners/me/servers', { gs_private_session: boss })).body, [])
+    assert.deepEqual((await h.request('/api/v1/coins/me', { gs_private_session: boss })).body, { balance: 0, nominalRub: 50, ledger: [] })
+    assert.equal((await h.request('/api/v1/coins/me')).status, 401)
   })
 }
 

@@ -838,7 +838,7 @@ try {
     await gameChoice.press('m');await gameChoice.press('Enter')
     assert.equal(await gameChoice.getAttribute('data-value'),'minecraft','Type-ahead selects Minecraft')
     await gameChoice.click()
-    await page.getByRole('heading',{name:'Мои серверы',exact:true}).click()
+    await page.getByText('Мои серверы',{exact:true}).click()
     assert.equal(await gameChoice.getAttribute('aria-expanded'),'false','Outside click closes the menu')
     const methodChoice=page.getByRole('combobox',{name:'Способ подтверждения',exact:true})
     for(const [label,value] of [['Файл на официальном сайте','SITE'],['DNS-запись домена','DNS'],['Код на официальном ресурсе','MANUAL'],['Документ или скриншот доступа','DOCUMENT']]) {

@@ -542,3 +542,5 @@ html[data-color-mode='light'] .gs-discovery-world .gs-world-ranks .gs-panel { bo
 .gs-select-options::-webkit-scrollbar-thumb { background:#ffffff45;border-radius:8px; }
 .gs-select-options>.gs-claim-option { font-weight:600; }
 .gs-select-options>.gs-claim-option>span { font-weight:400; }
+
+.gs-select-options>.gs-claim-option>span { opacity:1; }

@@ -474,10 +474,6 @@ function OnlineSection({ server }: { server: GameServer }) {
   const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
     useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range], true)
 
-  if (!server.online.playersKnown || server.online.checksPerDay <= 0) {
-    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
-  }
-
   if (status === 'PENDING' && server.launch) {
     return (
       <section className="surface rounded-xl p-4 sm:p-6">
@@ -518,6 +514,10 @@ function OnlineSection({ server }: { server: GameServer }) {
         )}
       </section>
     )
+  }
+
+  if (!server.online.playersKnown || server.online.checksPerDay <= 0) {
+    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
   }
 
   return (

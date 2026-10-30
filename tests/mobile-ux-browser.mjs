@@ -734,13 +734,14 @@ try {
       await menu.getByRole('option',{name:'Общий топ',exact:true}).waitFor()
       await sort.press('Escape')
       await menu.waitFor({state:'detached'})
-      const matte = await toolbar.evaluate(e=>getComputedStyle(e).backgroundImage)
+      const glassMatch=await toolbar.evaluate(e=>{const expected=document.createElement('div');expected.style.backgroundImage=getComputedStyle(document.documentElement).getPropertyValue('--gs-page-glass').trim();document.body.appendChild(expected);const result={actual:getComputedStyle(e).backgroundImage,expected:getComputedStyle(expected).backgroundImage};expected.remove();return result})
+      const matte=glassMatch.actual
       await page.goto(base + '/rating?game=lineage2')
       const tabs=page.locator('.gs-rating-switch')
       await page.evaluate(mode=>{document.documentElement.dataset.colorMode=mode},mode)
       if (width<768) {
         await tabs.waitFor({state:'visible'})
-        assert.ok(matte.includes(mode==='dark'?'0.12':'0.42'),'Catalog toolbar uses each theme\'s page glass, not the darker rating overlay')
+        assert.equal(matte,glassMatch.expected,'Catalog toolbar uses exactly the same page-glass gradient as adjacent search')
         await tabs.getByRole('button',{name:'Голоса',exact:true}).click()
         assert.equal(await tabs.getByRole('button',{name:'Голоса',exact:true}).getAttribute('aria-pressed'),'true')
         await tabs.getByRole('button',{name:'Поддержка',exact:true}).click()

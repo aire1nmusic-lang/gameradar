@@ -51,7 +51,6 @@ import { Segmented } from '@/components/ui/controls'
 import { Modal } from '@/components/ui/overlays'
 import { LiveDot, STATUS_META, StatusBadge, VerifiedLine } from '@/components/trust/status'
 import { ObservedHistoryChart } from '@/components/charts/ObservedHistoryChart'
-import { TrustPanel } from '@/components/profile/TrustPanel'
 import { ServerMedia } from '@/components/profile/ServerMedia'
 import { VotePanel } from '@/components/profile/VotePanel'
 import { useAuth } from '@/hooks/useAuth'
@@ -389,7 +388,6 @@ function Profile({ server: source }: { server: GameServer }) {
           <aside className="min-w-0 space-y-4">
             <div className="lg:sticky lg:top-24 lg:space-y-4">
               <div className="hidden lg:block"><VotePanel server={server} anchor={false} /></div>
-              <TrustPanel online={server.online} />
               <LinksCard server={server} restricted={restrictions?.restrictedLinks??[]} />
               {(authUser || registrationOpen) && <OwnerCard onClaim={() => setClaimOpen(true)} owned={!!server.ownerId} />}
             </div>
@@ -475,6 +473,10 @@ function OnlineSection({ server }: { server: GameServer }) {
   const currentKnown = server.online.playersKnown === true && server.online.freshness === 'fresh'
   const { data: samples,loading:historyLoading,error:historyError,reload:reloadHistory } =
     useAsync(() => repo.servers.onlineHistory(server.id, range), [server.id, range], true)
+
+  if (!server.online.playersKnown || server.online.checksPerDay <= 0) {
+    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
+  }
 
   if (status === 'PENDING' && server.launch) {
     return (

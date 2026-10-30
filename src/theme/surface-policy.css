@@ -241,3 +241,27 @@
   .gs-claim-choice {font-size:14px;}
   .gs-claim-method-guide h4 {font-size:14px;}
 }
+
+
+/* 30.10: The owners landing page relies on the world backdrop outside the
+   cards. Neither the hero nor FAQ should overlay a second artwork or a
+   nearly invisible sheet that makes text disappear in the world scene. */
+.gs-owners-hero-glass {
+  background:linear-gradient(145deg,rgba(47,54,64,.78),rgba(25,29,38,.83));
+  border-color:rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.19),0 24px 60px -35px rgba(0,0,0,.65);
+}
+.gs-owners-faq {
+  background:linear-gradient(145deg,rgba(40,45,56,.89),rgba(18,23,32,.92));
+  border-color:rgba(255,255,255,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 20px 48px -26px rgba(0,0,0,.72);
+}
+.gs-owners-faq>details {background:transparent!important;}
+.gs-owners-faq>details[open] {background:rgba(255,255,255,.045)!important;}
+.gs-owners-faq>details+details {border-top:1px solid rgba(255,255,255,.18);}
+.gs-owners-faq summary {color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+.gs-owners-faq details>p {color:#eef0f5!important;}
+@media(max-width:639px) {
+  .gs-owners-hero-glass {padding:22px 19px;}
+  .gs-owners-faq>details {padding:18px 19px;}
+}

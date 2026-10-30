@@ -48,7 +48,7 @@ export default function Catalog() {
     games: params.get('game') ? [params.get('game')!] : world ? [world.id] : [],
     modes: params.get('mode') ? [params.get('mode')!] : [],
     versions: params.get('version') ? [params.get('version')!] : [],
-    verifiedOnly: params.get('verified') === '1',
+    verifiedOnly: false,
   }))
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'recommended')
   useEffect(() => { if (!authLoading && !privateCore && sort === 'support') setSort('recommended') },[authLoading,privateCore,sort])
@@ -126,7 +126,7 @@ export default function Catalog() {
       games: params.get('game') ? [params.get('game')!] : world ? [world.id] : [],
       modes: params.get('mode') ? [params.get('mode')!] : [],
       versions: params.get('version') ? [params.get('version')!] : [],
-      verifiedOnly: params.get('verified') === '1',
+      verifiedOnly: false,
     }))
     setSort((params.get('sort') as SortKey) ?? 'recommended')
     // eslint-disable-next-line react-hooks/exhaustive-deps

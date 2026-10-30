@@ -740,7 +740,7 @@ try {
       await page.evaluate(mode=>{document.documentElement.dataset.colorMode=mode},mode)
       if (width<768) {
         await tabs.waitFor({state:'visible'})
-        assert.ok(matte.includes('0.12'),'Catalog toolbar uses the same light page glass, not the darker rating overlay')
+        assert.ok(matte.includes(mode==='dark'?'0.12':'0.42'),'Catalog toolbar uses each theme\'s page glass, not the darker rating overlay')
         await tabs.getByRole('button',{name:'Голоса',exact:true}).click()
         assert.equal(await tabs.getByRole('button',{name:'Голоса',exact:true}).getAttribute('aria-pressed'),'true')
         await tabs.getByRole('button',{name:'Поддержка',exact:true}).click()

@@ -1,3 +1,14 @@
+## 30.10.2026 — VERIFIED CI and visual review; final disabled-action contrast fix enters guarded release
+
+- Source57325f1 CI41010767027/job123916013213 terminal SUCCESS: six viewports x3games browser matrix, account shortcuts row/keyboard server selection/no redundant email form/one wallet header/unavailable document/top-up states; no API writes. Core/accounts/release/real PostgreSQL+encrypted restore PASS (25migrations only disposable DB). Artifact12956879488 downloaded; account screenshots320/390/768/1440 visually reviewed: shortcuts fit, wallet one continuous glass, no overlap.
+- Visual review caught disabled claim submit still bright because legacy account opacity reset overrides Tailwind disabled styling. Final small fix explicitly dims disabled account buttons/removes shadow; browser assertion now checks both disabled semantics and opacity<.7. Complete mandatory release gate must pass this final source before upload; prior CI is evidence for the preceding source, not a claim this final selector has already passed.
+- PR32 ready to merge within owner authorization, mandatory backup/snapshot/rollback unchanged. Production private core disconnected: claims/files cannot yet be sent, payment endpoint503, real sales closed. Additive025 prepared only, no production DB migration/new resource/payment activation. Rollback UI/Worker source revert; keep document table/data if private code is later rolled back, never drop evidence as routine rollback. Existing CI/hosting cost only. Next merge, watch final production gate, actual-primary version and live public UX check.
+
+## 30.10.2026 — IN PROGRESS: PR32 final source57325f1 in mandatory CI
+
+- PR32 source57325f105211027580547b1a86192226158e42f4 now issues the selected SITE/DNS/MANUAL proof immediately after claim creation; documents issue their own manual-review proof. Resumed pending claims remember proof method. Document upload checks verified session before accepting the larger body; downloads add private audit entries. Focused private document test + typecheck PASS again.
+- CI41010767027 running; prior preliminary run superseded, no deployment yet. Managed preview remains unavailable. Need full browser matrix, screenshot review, merge guarded production then actual-primary readback. Private API/real sales remain disconnected, document migration unexecuted in production; do not claim functional live claims/payments.
+
 ## 30.10.2026 — VERIFIED LOCAL: account/ownership code; responsive CI pending
 
 - Typecheck/build156routes/bundle/script syntax PASS. Existing accounts33checks and private47checks PASS, plus new identity-mailbox collision/unverified/change tests on memory+SQLite and new PostgreSQL-compatible document flow (private ACL, MIME signature, size/count, deduplicated retries, explicit admin review, no public projection) PASS. New private migration025 is prepared only, NOT applied to production.

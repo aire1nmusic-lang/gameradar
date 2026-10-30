@@ -520,3 +520,4 @@ html[data-color-mode='light'] .gs-discovery-world .gs-world-ranks .gs-panel { bo
 .gs-claim-option { overflow-wrap:anywhere; }
 .gs-account-claim:target { scroll-margin-top:100px; }
 @media(max-width:349px) { .gs-account-shortcuts .gs-button { flex-direction:column;gap:5px; } }
+.gs-account-page .gs-button:disabled { opacity:.45!important;box-shadow:none!important; }

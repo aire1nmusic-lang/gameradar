@@ -128,3 +128,116 @@
     }
   }
 }
+
+
+/* 30.10: catalog controls share the page's glass, without nested input frames. */
+@layer gs-surfaces {
+  html[data-design="lobby"] body .gs-catalog-search {
+    display:flex!important;
+    min-width:0;
+    background:var(--gs-page-glass)!important;
+    border:1px solid var(--gs-glass-edge)!important;
+    border-radius:18px!important;
+    padding:5px 14px!important;
+    box-shadow:var(--gs-glass-highlight)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-search:focus-within {
+    border-color:var(--lb-lime,#c6ff52)!important;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--lb-lime,#c6ff52) 18%,transparent)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-search input,
+  html[data-design="lobby"] body .gs-catalog-search input:focus {
+    min-width:0;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    outline:0!important;
+    box-shadow:none!important;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+  /* The shared smoky :is(...) rule has two-class specificity from its other
+     alternatives; scope this override to the catalog page to beat it. */
+  html[data-design="lobby"] body .gs-catalog-page .gs-catalog-toolbar.gs-catalog-toolbar {
+    background:var(--gs-page-glass)!important;
+    border:1px solid var(--gs-glass-edge)!important;
+    border-radius:18px!important;
+    box-shadow:var(--gs-glass-highlight)!important;
+    -webkit-backdrop-filter:blur(12px) saturate(110%)!important;
+    backdrop-filter:blur(12px) saturate(110%)!important;
+  }
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger,
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-select-menu>button {
+    min-height:44px;
+    border:1px solid rgba(255,255,255,.17)!important;
+    border-radius:12px!important;
+    background:rgba(255,255,255,.085)!important;
+    color:var(--g-ink,#f3f5f7)!important;
+    box-shadow:none!important;
+    justify-content:center;
+    gap:10px;
+    font-size:14px;
+  }
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger:focus-visible,
+  html[data-design="lobby"] body .gs-catalog-toolbar .gs-select-menu>button:focus-visible {
+    outline:2px solid var(--lb-lime,#c6ff52);
+    outline-offset:2px;
+  }
+  @media(max-width:639px) {
+    html[data-design="lobby"] body .gs-catalog-toolbar>div {gap:10px!important;min-width:0;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger,
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-catalog-sort {flex:1 1 0;min-width:0;width:auto;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-catalog-sort>button {width:100%;padding:8px 10px;}
+    html[data-design="lobby"] body .gs-catalog-toolbar .gs-filter-trigger {padding:8px 10px;}
+  }
+}
+/* Claim choices are single-layer controls. Selecting a server does not focus the
+   keyboard; a dedicated search field lives inside the choice dialog. */
+.gs-claim-choice {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  width:100%;min-height:52px;padding:12px 15px;text-align:left;
+  background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.24);
+  border-radius:14px;color:inherit;font-size:15px;line-height:1.35;
+}
+.gs-claim-choice>span {min-width:0;overflow-wrap:anywhere;}
+.gs-claim-choice>svg {flex:none;opacity:.85;}
+.gs-claim-choice-placeholder {opacity:.7;}
+.gs-claim-choice:focus-visible,.gs-claim-dialog-row:focus-visible,.gs-claim-method-row:focus-visible,.gs-claim-back:focus-visible {outline:2px solid var(--lb-lime,#c6ff52);outline-offset:2px;}
+.gs-claim-choice:hover {border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.11);}
+.gs-claim-dialog-search {display:flex;align-items:center;gap:9px;padding:0 10px;border:1px solid rgba(255,255,255,.24);border-radius:12px;background:rgba(255,255,255,.09);}
+.gs-claim-dialog-search>svg {flex:none;opacity:.8;}
+.gs-claim-dialog-search input,.gs-claim-dialog-search input:focus {flex:1;min-width:0;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:none!important;font-size:16px!important;}
+.gs-claim-dialog-search:focus-within {border-color:var(--lb-lime,#c6ff52);box-shadow:0 0 0 3px rgba(198,255,82,.12);}
+.gs-claim-dialog-caption {margin:16px 0 8px;color:#d1d8df;font-size:12px;}
+.gs-claim-dialog-list {max-height:min(42dvh,420px);min-height:80px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+.gs-claim-dialog-row,.gs-claim-method-row {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;min-height:58px;padding:11px 14px;text-align:left;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);
+  border-radius:12px;color:inherit;
+}
+.gs-claim-dialog-row+.gs-claim-dialog-row,.gs-claim-method-row+.gs-claim-method-row {margin-top:7px;}
+.gs-claim-dialog-row:is(:hover,[aria-selected=true]),.gs-claim-method-row:hover {border-color:rgba(198,255,82,.48);background:rgba(198,255,82,.11);}
+.gs-claim-dialog-row strong,.gs-claim-method-row strong {display:block;font-size:14px;font-weight:650;overflow-wrap:anywhere;}
+.gs-claim-dialog-row small,.gs-claim-method-row small {display:block;margin-top:3px;font-size:12px;color:#c9d1dc;}
+.gs-claim-dialog-row>svg,.gs-claim-method-row>svg {flex:none;color:#c6ff52;}
+.gs-claim-dialog-message {padding:20px 10px;text-align:center;font-size:14px;color:#d1d8df;}
+.gs-claim-back {display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;min-height:40px;color:#d2deec;font-size:13px;}
+.gs-claim-method-guide h4 {margin:14px 0 6px;font-size:15px;font-weight:700;color:#f6f6f1;}
+.gs-claim-method-guide p,.gs-claim-method-guide li {font-size:14px;line-height:1.55;color:#e0e5ed;}
+.gs-claim-method-guide ol {padding-left:22px;list-style:decimal;}
+.gs-claim-method-guide li+li {margin-top:8px;}
+.gs-claim-method-guide .gs-claim-method-note {padding:12px;margin:16px 0;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(255,255,255,.07);font-size:13px;}
+@layer gs-surfaces {
+  /* Both color modes use a readable charcoal dialog for ownership instructions. */
+  html[data-design="lobby"] body .gs-ui-modal-panel:has(.gs-claim-server-dialog,.gs-claim-method-list,.gs-claim-method-guide) {
+    background:linear-gradient(150deg,rgba(43,48,57,.97),rgba(18,23,31,.98))!important;
+    color:#f3f5f7!important;
+    border-color:rgba(255,255,255,.24)!important;
+  }
+}
+@media(max-width:639px) {
+  .gs-claim-dialog-list {max-height:min(39dvh,380px);}
+  .gs-claim-choice {font-size:14px;}
+  .gs-claim-method-guide h4 {font-size:14px;}
+}

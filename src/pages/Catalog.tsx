@@ -65,9 +65,8 @@ export default function Catalog() {
   const adTheme = useMemo(() => themeForGame(filters.games[0] ?? 'core'), [filters.games])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [searchOpen,setSearchOpen]=useState(()=>Boolean(params.get('q'))||(typeof window!=='undefined'&&window.location.hash==='#search'))
   // footer «Найти свой сервер» lands here with #search: open the search and put the cursor in it
-  useEffect(()=>{if(window.location.hash!=='#search')return;setSearchOpen(true);const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
+  useEffect(()=>{if(window.location.hash!=='#search')return;const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
 
   const rotateSupport = !!world && (sort === 'support' || sort === 'votes')
   const rankingPeriod = useRankingPeriod()
@@ -147,13 +146,13 @@ export default function Catalog() {
           </span>
         </div>
 
-        <div className={(searchOpen?'gs-catalog-search is-open ':'gs-catalog-search ')+"mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22"}>
+        <div className="gs-catalog-search mt-4 flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-ink-900 p-1.5 pl-4 focus-within:border-white/22">
 
           <input
             value={filters.query}
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
             placeholder="Название сервера, игра, режим…"
-            className="h-9 min-w-0 flex-1 bg-transparent text-[15px] text-ink-50 placeholder:text-ink-500 focus:outline-none"
+            className="h-11 min-w-0 flex-1 border-0 bg-transparent text-[16px] text-ink-50 placeholder:text-ink-300 focus:outline-none"
           />
           {filters.query && (
             <button onClick={() => setFilters({ ...filters, query: '' })} aria-label="Очистить" className="grid h-8 w-8 place-items-center rounded-md text-ink-400 hover:bg-white/6 hover:text-ink-50">
@@ -166,7 +165,6 @@ export default function Catalog() {
       {/* the toolbar follows the list: filters, active chips, sort, view */}
       <div className="gs-catalog-toolbar relative z-30 mt-3 border-y border-white/[0.07] bg-ink-950/92 py-2 backdrop-blur-md">
         <Container className="flex items-center gap-2">
-          <button type="button" className="gs-catalog-search-toggle" aria-label="Поиск серверов" aria-expanded={searchOpen} onClick={()=>setSearchOpen(!searchOpen)}><WorldIcon name={searchOpen?'close':'search'} size={17}/></button>
           <button
             onClick={() => setFiltersOpen(true)}
             className="gs-filter-trigger inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-[13px] text-ink-100 transition-colors hover:border-white/20"
@@ -178,7 +176,7 @@ export default function Catalog() {
             )}
           </button>
 
-          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          <div className={"no-scrollbar min-w-0 flex-1 items-center gap-1.5 overflow-x-auto "+(chips.length?'flex':'hidden')}>
             {chips.map((chip) => (
               <button
                 key={chip.key}
@@ -200,7 +198,7 @@ export default function Catalog() {
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
             options={SORT_OPTIONS.filter(option=>privateCore||option.key!=='support').map((option) => ({ value: option.key, label: COMPACT_SORT_LABELS[option.key] }))}
-            className="w-[130px] shrink-0 sm:w-[150px] [&_select]:h-9 [&_select]:text-[13px]"
+            className="gs-catalog-sort w-[130px] shrink-0 sm:w-[150px]"
           />
 
           <div className="hidden shrink-0 items-center rounded-md border border-white/10 bg-white/[0.03] p-0.5 sm:flex">

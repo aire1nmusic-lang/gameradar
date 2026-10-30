@@ -150,7 +150,7 @@ export default function Account() {
     <div className="gs-account-workspace space-y-5">
 
     {canManage ? <Suspense fallback={<p>Загружаем управление…</p>}><Admin embedded/></Suspense> : <section className="gs-account-servers space-y-3">
-      <h2 className="flex items-center justify-between text-[18px] font-semibold"><span>Мои серверы</span><span className="text-[12px] font-normal opacity-65">{owned.length}</span></h2>
+      <h2 className="text-[18px] font-semibold">Мои серверы</h2>
       {ownerLoading?<p role="status" className="text-sm">Загружаем ваши серверы…</p>:ownerError?<div className="gs-account-empty rounded-[22px] border p-5"><p role="status" className="text-sm">{ownerError}</p><Button className="mt-3" onClick={()=>void reload()}>Повторить загрузку</Button></div>:!owned.length?<div className="gs-account-empty rounded-[22px] border px-5 py-7 text-center">
         <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>
         <h3 className="mt-4 text-[15px] font-semibold">Подтверждённых серверов пока нет</h3>

@@ -27,14 +27,14 @@ import { Logo } from '@/components/layout/Logo'
 import { useSeo } from '@/lib/seo'
 import { OwnerJoin } from '@/components/owners/OwnerJoin'
 
-const STEPS = ['Основное', 'Проверка онлайна', 'Владение', 'Готово']
+const STEPS = ['Основное', 'Адрес сервера', 'Владение', 'Готово']
 
 const CONNECT_METHODS = [
   {
     id: 'protocol',
     icon: <Server size={16} />,
     title: 'Прямой игровой протокол',
-    body: 'GameScout сам опрашивает сервер по адресу и порту: Minecraft — Server List Ping, Lineage 2 — логин-сервер (без числа игроков).',
+    body: 'Адрес игрового сервера. Для Minecraft — игровой порт; для Lineage 2 — адрес логин-сервера.',
     placeholder: 'play.example.com:25565',
     games: ['minecraft', 'lineage2'],
   },
@@ -42,7 +42,7 @@ const CONNECT_METHODS = [
     id: 'api',
     icon: <Globe2 size={16} />,
     title: 'Прямой адрес сервера FiveM',
-    body: 'GameScout читает info.json, dynamic.json и players.json напрямую с вашего сервера — без мастер-листа Cfx.re.',
+    body: 'Адрес игрового сервера FiveM с портом, который можно будет использовать для подключения.',
     placeholder: 'http://play.example.com:30120',
     games: ['gtarp'],
   },
@@ -50,7 +50,7 @@ const CONNECT_METHODS = [
     id: 'none',
     icon: <FileCode2 size={16} />,
     title: 'Подключить позже',
-    body: 'Онлайн не будет измеряться, пока вы не укажете адрес в кабинете владельца.',
+    body: 'Адрес можно будет указать позже.',
     placeholder: '',
     games: [] as string[],
   },
@@ -190,7 +190,7 @@ export default function AddServer() {
         <div className="max-w-2xl">
           <h1 className="text-[28px] leading-tight sm:text-[36px]">Добавьте сервер бесплатно</h1>
           <p className="mt-3 text-[14.5px] text-ink-300">
-            Размещение, статистика и проверка онлайна не стоят ничего. Заполнение занимает около трёх минут.
+            Размещение карточки бесплатно. Мониторинг онлайна пока недоступен.
           </p>
         </div>
 
@@ -448,8 +448,8 @@ function StepConnect({ form, patch }: { form: FormState; patch: (next: Partial<F
   return (
     <div className="space-y-5">
       <Panel
-        title="Проверка онлайна"
-        description="GameScout сам измеряет онлайн и показывает источник. Подключение бесплатное; VERIFIED получает только то, что GameScout посчитал сам."
+        title="Адрес игрового сервера"
+        description="Можно указать адрес для будущего подключения мониторинга. Сейчас функция измерения онлайна недоступна."
       >
         <div className="grid gap-3">
           {methods.map((item) => (
@@ -487,7 +487,7 @@ function StepConnect({ form, patch }: { form: FormState; patch: (next: Partial<F
 
         {method.id !== 'none' && (
           <div className="mt-5">
-            <Field label="Адрес для проверки" hint={method.id === 'api' ? 'Полный адрес с портом, как в F8 → connect' : 'Адрес и порт; порт можно не указывать'}>
+            <Field label="Адрес игрового сервера" hint={method.id === 'api' ? 'Полный адрес с портом, как в F8 → connect' : 'Адрес и порт; порт можно не указывать'}>
               <Input value={form.address} onChange={(event) => patch({ address: event.target.value })} placeholder={method.placeholder} />
             </Field>
           </div>
@@ -495,8 +495,8 @@ function StepConnect({ form, patch }: { form: FormState; patch: (next: Partial<F
 
         <Notice tone="info" className="mt-4">
           {method.id === 'none'
-            ? 'Без источника карточка показывает «Онлайн ещё не измерялся». Адрес можно указать позже в кабинете владельца.'
-            : 'Адрес сохранится вместе с карточкой. Первая проверка пройдёт автоматически после модерации — результат и источник появятся на карточке и в кабинете.'}
+            ? 'Точные данные об онлайне пока недоступны. Адрес можно будет указать позже.'
+            : 'Адрес сохранится вместе с карточкой. Автоматическая проверка онлайна пока не запущена.'}
         </Notice>
       </Panel>
     </div>
@@ -537,7 +537,7 @@ function StepDone({ form, verified, created, monitoringError }: { form: FormStat
           <div className="text-[14px] font-medium text-ink-50">{created?.name ?? form.name ?? 'Ваш сервер'} добавлен</div>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-300">
             Модерация занимает до 24 часов. После публикации карточка появится в каталоге и поиске.
-            {verified && ' Адрес мониторинга сохранён — проверка запустится автоматически после публикации.'}
+            {verified && ' Адрес сохранён для будущего подключения мониторинга.'}
           </p>
         </div>
       </div>
@@ -551,7 +551,7 @@ function StepDone({ form, verified, created, monitoringError }: { form: FormStat
       <div className="mt-5 space-y-2.5">
         {[
           'Карточка появится в каталоге по вашей игре',
-          verified ? 'Онлайн будет проверяться автоматически, с указанием источника' : 'Адрес для проверки онлайна можно указать в кабинете',
+          verified ? 'Адрес сервера сохранён' : 'Адрес сервера можно будет добавить позже',
           'Подтвердите владение: на карточке кнопка «Это мой сервер»',
           'Статистика переходов станет доступна сразу после публикации',
         ].map((item) => (

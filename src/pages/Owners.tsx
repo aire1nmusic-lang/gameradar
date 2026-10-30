@@ -25,6 +25,8 @@ import { useSeo } from '@/lib/seo'
 import { useAuth } from '@/hooks/useAuth'
 import { CoreOwners } from '@/components/owners/CoreOwners'
 
+const ONLINE_VERIFICATION_AVAILABLE = false
+
 const BENEFITS = [
   {
     icon: <Users size={17} />,
@@ -111,7 +113,7 @@ export default function Owners() {
 }
 
 function LegacyOwners() {
-  useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Подтвердите владение сервером, подключите Verified Online и голосование с выдачей наград.' })
+  useSeo({ title: 'Владельцам серверов', path: '/owners', description: 'Как разместить сервер GameScout и подтвердить права на свою карточку.' })
   const { data: promos = [] } = useAsync(() => promoProducts(), [])
 
   return (
@@ -128,8 +130,8 @@ function LegacyOwners() {
                 Ваш сервер найдут те, кто действительно ищет
               </h1>
               <p className="mt-5 max-w-xl text-[15.5px] leading-relaxed text-ink-300">
-                GameScout — площадка, где игроки выбирают сервер по проверенным данным. Разместите проект, подтвердите
-                владение и подключите независимую проверку онлайна.
+                GameScout помогает игрокам находить серверы. Найдите свой проект в каталоге и узнайте, как получить управление карточкой.
+                
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button to="/add-server" variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>
@@ -149,7 +151,7 @@ function LegacyOwners() {
               </div>
             </div>
 
-            <div className="surface-raised relative overflow-hidden rounded-2xl p-6">
+            {ONLINE_VERIFICATION_AVAILABLE && <div className="surface-raised relative overflow-hidden rounded-2xl p-6">
               <div
                 className="pointer-events-none absolute -top-24 -right-20 h-64 w-64 rounded-full opacity-20 blur-[80px]"
                 style={{ background: 'radial-gradient(closest-side, var(--color-signal-500), transparent)' }}
@@ -183,7 +185,7 @@ function LegacyOwners() {
                   ))}
                 </div>
               </div>
-            </div>
+            </div>}
           </div>
         </Container>
       </section>
@@ -192,7 +194,7 @@ function LegacyOwners() {
       <Container className="py-10">
         <h2 className="text-[24px] sm:text-[30px]">Что даёт размещение</h2>
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {BENEFITS.map((benefit) => (
+          {BENEFITS.filter(benefit=>ONLINE_VERIFICATION_AVAILABLE||!['Verified Online','История онлайна'].includes(benefit.title)).map((benefit) => (
             <div key={benefit.title} className="surface interactive rounded-xl p-5">
               <div className="mb-3.5 grid h-10 w-10 place-items-center rounded-lg border border-white/8 bg-white/[0.035] text-ink-200">
                 {benefit.icon}
@@ -205,7 +207,7 @@ function LegacyOwners() {
       </Container>
 
       {/* verified online */}
-      <Container className="scroll-mt-24 py-10" id="verified">
+      {ONLINE_VERIFICATION_AVAILABLE && <Container className="scroll-mt-24 py-10" id="verified">
         <div className="surface rounded-2xl p-6 sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-2xl">
@@ -261,7 +263,7 @@ function LegacyOwners() {
             </Button>
           </div>
         </div>
-      </Container>
+      </Container>}
 
       {/* promo */}
       <Container className="scroll-mt-24 py-10" id="promo">
@@ -273,7 +275,7 @@ function LegacyOwners() {
             </div>
             <h2 className="text-[24px] sm:text-[30px]">Платные форматы — по желанию</h2>
             <p className="mt-3 text-[14.5px] leading-relaxed text-ink-300">
-              Продвижение усиливает видимость, но не влияет на независимый рейтинг и проверку онлайна. Все платные
+              Продвижение повышает видимость рекламного блока, но не продаёт места в органическом рейтинге. Платные
               места отмечены для игроков.
             </p>
           </div>
@@ -322,7 +324,7 @@ function LegacyOwners() {
       <Container className="py-10">
         <h2 className="text-[24px] sm:text-[30px]">Частые вопросы</h2>
         <div className="mt-6 max-w-3xl divide-y divide-white/6 overflow-hidden rounded-xl border border-white/7">
-          {FAQ.map((item) => (
+          {FAQ.filter(item=>ONLINE_VERIFICATION_AVAILABLE||!item.q.includes('Verified Online')&&!item.q.includes('обновляется онлайн')).map((item) => (
             <details key={item.q} className="group bg-white/[0.02] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex cursor-pointer items-center justify-between gap-4 text-[14.5px] text-ink-50">
                 {item.q}
@@ -343,7 +345,7 @@ function LegacyOwners() {
           <div className="relative">
             <h2 className="text-[26px] sm:text-[32px]">Разместите сервер за 3 минуты</h2>
             <p className="mx-auto mt-3 max-w-lg text-[14.5px] text-ink-300">
-              Заполните карточку, подключите проверку онлайна и получайте игроков, которые ищут именно ваш формат.
+              Добавьте карточку, чтобы игроки могли найти ваш проект по игре и режиму.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Button to="/add-server" variant="primary" size="lg" iconRight={<ArrowRight size={16} />}>

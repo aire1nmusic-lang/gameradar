@@ -14,7 +14,7 @@
   html[data-design="lobby"] body :where(
     .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,
     .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,
-    .gs-account-claim,.gs-coins-card,
+    .gs-account-claim,.gs-coins-card,.gs-select-menu>button,
     .gs-vote-panel,.gs-empty,.gs-notice,.gs-owner-step,
     .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,
     .gs-profile-dossier,.gs-profile-support,
@@ -27,6 +27,11 @@
     -webkit-backdrop-filter:blur(5px) saturate(110%)!important;
     backdrop-filter:blur(5px) saturate(110%)!important;
   }
+
+  html[data-design="lobby"] body .gs-select-menu>button {
+    color:var(--g-ink,#f3f5f7)!important;
+  }
+  html[data-design="lobby"] body .gs-select-menu>button>span {color:inherit!important;}
 
   /* A wallet is one glass panel, including its expanded header and content. */
   html[data-design="lobby"] body .gs-account-wallet>summary {
@@ -92,7 +97,7 @@
     --gs-glass-edge:rgba(255,255,255,.34);
   }
   /* Search keeps its existing bright text, in both appearance modes. */
-  html[data-design="lobby"] body .gs-search-overlay .gs-search-surface {
+  html[data-design="lobby"] body :is(.gs-search-overlay .gs-search-surface,.gs-select-options) {
     background:linear-gradient(150deg,rgba(43,48,57,.78),rgba(18,23,31,.84))!important;
   }
 

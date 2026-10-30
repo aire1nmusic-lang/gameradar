@@ -715,6 +715,12 @@ try {
       await sort.click()
       const menu = page.getByRole('listbox',{name:'Сортировка',exact:true})
       await menu.waitFor({state:'visible'})
+      const choiceFinish=await menu.evaluate(e=>({background:getComputedStyle(e).backgroundImage,color:getComputedStyle(e.querySelector('[role=option]')).color}))
+      assert.ok(choiceFinish.background.includes('0.78'),'Open choices keep smoky tint in both themes')
+      assert.equal(choiceFinish.color,'rgb(243, 245, 247)','Light theme never puts white text on a pale choice sheet')
+      const fieldFinish=await sort.evaluate(e=>({background:getComputedStyle(e).backgroundImage,blur:getComputedStyle(e).backdropFilter,color:getComputedStyle(e.querySelector('span')).color}))
+      assert.ok(fieldFinish.background.includes('linear-gradient')&&fieldFinish.blur.includes('blur(5px)'),'Closed selection field uses transparent matte glass')
+      if(mode==='light')assert.equal(fieldFinish.color,'rgb(29, 27, 32)','Light selection fields keep readable dark text')
       const menuBox = await menu.boundingBox()
       assert.ok(menuBox.x>=0&&menuBox.x+menuBox.width<=width+1,'Sort menu fits the phone and desktop')
       await noOverflow()
@@ -809,6 +815,8 @@ try {
     }
     const gameChoice=page.getByRole('combobox',{name:'Игра',exact:true})
     const serverChoice=page.getByRole('combobox',{name:'Сервер',exact:true})
+    const inlineFinish=await gameChoice.evaluate(e=>({background:getComputedStyle(e).backgroundImage,blur:getComputedStyle(e).backdropFilter}))
+    assert.ok(inlineFinish.background.includes('0.12')&&inlineFinish.blur.includes('blur(5px)'),'Game selector has the same light page glass as the surrounding form')
     for(const world of games.filter(g=>['lineage2','minecraft','gtarp'].includes(g.id))) {
       await gameChoice.click()
       const menu=page.getByRole('listbox',{name:'Игра',exact:true})

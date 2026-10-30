@@ -1,3 +1,11 @@
+## 30.10.2026 — VERIFIED live: community core on Cloudflare D1 (owner ran community-go-live, DONE)
+
+- Owner ran `node scripts/community-go-live.mjs` → migration 0013 applied remotely, Worker deployed, DONE.
+- Independent read-only check: /people-rating 200 from D1 (was 503 ranking_unavailable); /admin/overview and /people-rating/eligibility 401 unauthorized without a session (was 503 private_api_required); /copyright/restrictions/:id 200 empty lists; catalog /games, /servers/:key 200; /auth/me privateCore true. Server page (DonutSMP) as a visitor: no internal error texts, "Войти для голосования".
+- Owner screenshot after Google re-login: role "Администратор", admin tabs Обзор/Серверы/Сообщество, overview users 2, servers 152, claims 0, votes 0 (VERIFIED admin role from ADMIN_EMAILS via Google).
+- NOT yet verified live: a real vote, a real Claim → admin approval, e-mail linking (owner's Google account shows "Email не привязан" — can now link one in the cabinet). Note: people-rating and support ranking also return servers of hidden games (CS2 etc.); the frontend filters by game, harmless.
+- Next owner items: merge PR28 then PR31; approve the storage cleanup so the site (SEO pages, llms.txt, link previews) can publish; then `node scripts/indexnow.mjs`; optional Webmaster/Search Console codes and Turnstile.
+
 ## 29.10.2026 — Independent review of the community core fixed before go-live; e-mail linking added; still NOT deployed
 
 - Owner: cannot sign in now, do what is possible without them. Done without production access.

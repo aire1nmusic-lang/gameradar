@@ -82,6 +82,16 @@ export default function Account() {
   const canManage = !!profile?.permissions?.length
   const playerStatus=isAdmin?'Администратор':profile?.roles?.includes('OWNER')?'Владелец сервера':'Игрок'
   const copyEmail=()=>{if(profile?.email&&navigator.clipboard)void navigator.clipboard.writeText(profile.email)}
+  const openClaimForm=()=>{
+    const panel=document.getElementById('claim-server')
+    if(!(panel instanceof HTMLDetailsElement))return
+    panel.open=true
+    requestAnimationFrame(()=>{
+      panel.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})
+      panel.querySelector('select')?.focus({preventScroll:true})
+    })
+  }
+
 
   return <main className={`gs-account-page gs-account-premium ${canManage?'gs-account-manager':''} mx-auto w-full space-y-6 px-4 py-6 sm:py-8`}>
     <section className="gs-account-hero relative overflow-hidden rounded-[26px] border px-5 py-6 sm:px-7 sm:py-8">
@@ -145,7 +155,7 @@ export default function Account() {
         <span className="gs-account-empty-icon mx-auto grid h-14 w-14 place-items-center rounded-full"><WorldIcon name="servers" size={25}/></span>
         <h3 className="mt-4 text-[15px] font-semibold">Подтверждённых серверов пока нет</h3>
         <p className="mx-auto mt-2 max-w-sm text-[12px] leading-relaxed opacity-62">Здесь появятся только серверы, права на которые подтверждены за вашим аккаунтом.</p>
-        <a className="mt-4 inline-flex min-h-11 items-center text-sm text-signal-400 underline underline-offset-4" href="#claim-server">Подтвердить свой сервер</a>
+        <button type="button" className="mt-4 inline-flex min-h-11 items-center text-sm text-signal-400 underline underline-offset-4" aria-controls="claim-server" onClick={openClaimForm}>Подтвердить свой сервер</button>
       </div>:owned.map(s=><div key={s.server_id} className="space-y-3"><OwnerSummary server={s}/><OwnerFacts server={s}/><OwnerMonitoring server={s}/></div>)}
 
       <ClaimApplication claims={claims} emailVerified={profile?.emailVerified===true} onChanged={reload}/>

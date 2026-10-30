@@ -152,6 +152,18 @@ jobs:
           aws s3 sync "s3://$YC_BUCKET/" "$RUNNER_TEMP/site-rollback/"             --endpoint-url "$YC_S3_ENDPOINT"             --exclude "assets/*"             --exclude "_deployment-backups/*"             --only-show-errors
           test -f "$RUNNER_TEMP/site-rollback/index.html"
 
+      # Off until the owner sets the repository variable ROLLBACK_ARCHIVES_KEEP (at least 3): then archives older
+      # than the newest N are removed before the new one is stored, so the 1 GB bucket never blocks a release.
+      - name: Rotate old rollback archives (owner opt-in)
+        if: ${{ vars.ROLLBACK_ARCHIVES_KEEP != '' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ru-central1
+          AWS_EC2_METADATA_DISABLED: "true"
+          ROLLBACK_ARCHIVES_KEEP: ${{ vars.ROLLBACK_ARCHIVES_KEEP }}
+        run: node scripts/rotate-release-backups.mjs
+
       - name: Persist and verify durable rollback archive
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}

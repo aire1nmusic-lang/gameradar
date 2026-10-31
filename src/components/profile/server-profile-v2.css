@@ -1,0 +1,101 @@
+/*
+ * Server page, owner review 31.10: the site's base background instead of the world scene, solid panels that stand out,
+ * and a living contour that runs around every panel. Top places: gold / silver / purple contour, coins and likes.
+ */
+
+.gs-server-profile.gs-sp2 { --sp-accent: var(--lb-lime, #c6ff52); --sp-accent-2: #7fe0ff; --sp-panel: #15191e; --sp-panel-2: #1b2027; --sp-line: rgba(255,255,255,.09); }
+.gs-server-profile.gs-sp2[data-profile-place="1"] { --sp-accent: #f2c75c; --sp-accent-2: #fff0b3; --profile-metal: #f2c75c; --profile-metal-dark: #a8781f; }
+.gs-server-profile.gs-sp2[data-profile-place="2"] { --sp-accent: #d9e3ee; --sp-accent-2: #ffffff; --profile-metal: #d9e3ee; --profile-metal-dark: #7f8fa2; }
+.gs-server-profile.gs-sp2[data-profile-place="3"] { --sp-accent: #b28cff; --sp-accent-2: #e6d8ff; --profile-metal: #b28cff; --profile-metal-dark: #6b46c9; }
+
+/* Base background: the site's own dark ground with a faint glow in the place / accent colour. No scene, no full-screen animation. */
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-server-bg:not(#a):not(#b) {
+  background: radial-gradient(1200px 520px at 12% -10%, color-mix(in srgb, var(--sp-accent) 9%, transparent), transparent 70%), radial-gradient(900px 600px at 100% 30%, color-mix(in srgb, var(--sp-accent-2) 5%, transparent), transparent 70%), #0b0d11 !important;
+}
+.gs-server-profile.gs-sp2 .gs-server-bg::after { content: none !important; animation: none !important; display: none !important; }
+
+@layer gs-owner {
+/* Solid panels instead of glass over art: readable and noticeable. */
+html[data-design=lobby] body .gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *):not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) {
+  background: linear-gradient(160deg, var(--sp-panel-2), var(--sp-panel)) !important;
+  border: 1px solid var(--sp-line) !important;
+  box-shadow: 0 18px 44px -26px rgba(0,0,0,.85) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  border-radius: 18px !important;
+}
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) {
+  background: radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--sp-accent) 12%, transparent), transparent 70%), linear-gradient(160deg, var(--sp-panel-2), var(--sp-panel)) !important;
+}
+}
+.gs-server-profile.gs-sp2 :is(h1,h2,h3,p,th,td,dt,dd,small,.gs-profile-facts,.gs-profile-place-copy,.gs-profile-support strong):not(dialog *) { -webkit-text-stroke: 0 !important; }
+.gs-server-profile.gs-sp2 .gs-profile-dossier h1 { font-size: clamp(28px, 4vw, 42px) !important; letter-spacing: -.01em; }
+
+/* The living contour: a light that runs around each panel. A rotating conic layer (compositor-only transform, no repaint)
+   under an inner cover that leaves a 1.5px ring; paused for reduced motion. */
+.gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *) { position: relative; isolation: isolate; overflow: hidden; }
+html[data-design=lobby] body .gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *)::before {
+  content: "" !important; display: block !important; position: absolute !important; z-index: -2 !important; inset: auto !important; left: 50% !important; top: 50% !important;
+  width: max(160%, 560px) !important; height: auto !important; aspect-ratio: 1; padding: 0 !important; border-radius: 0 !important; pointer-events: none !important;
+  background: conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, var(--sp-accent) 18%, transparent) 30deg, var(--sp-accent) 58deg, var(--sp-accent-2) 70deg, var(--sp-accent) 82deg, color-mix(in srgb, var(--sp-accent) 18%, transparent) 110deg, transparent 150deg, transparent 360deg) !important;
+  -webkit-mask: none !important; mask: none !important;
+  transform: translate(-50%, -50%) rotate(0deg); will-change: transform;
+  animation: gs-sp-spin 8s linear infinite !important; opacity: 1;
+}
+html[data-design=lobby] body .gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *)::after {
+  content: "" !important; display: block !important; position: absolute !important; z-index: -1 !important; inset: 1.5px !important; border-radius: calc(18px - 1.5px) !important; pointer-events: none !important;
+  background: linear-gradient(160deg, var(--sp-panel-2), var(--sp-panel)) !important; animation: none !important;
+}
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(dialog *)::after {
+  background: radial-gradient(700px 240px at 0% 0%, color-mix(in srgb, var(--sp-accent) 12%, var(--sp-panel-2)), var(--sp-panel-2) 70%), var(--sp-panel) !important;
+}
+html[data-design=lobby] body .gs-server-profile.gs-sp2:not([data-profile-place]) :is(.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *)::before { opacity: .5; animation-duration: 11s !important; }
+.gs-server-profile.gs-sp2 :is(.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):nth-of-type(2n)::before { animation-delay: -4s !important; }
+@keyframes gs-sp-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* Coins and likes: real metal coins and badges in the place colour, falling (support) or rising (players' choice). */
+.gs-server-profile.gs-sp2 .gs-profile-particles { color: var(--sp-accent); z-index: 0; }
+.gs-server-profile.gs-sp2 .gs-profile-particle { filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
+.gs-server-profile.gs-sp2 .gs-profile-particle svg { fill: initial; }
+.gs-sp-token { display: block; width: 34px; height: 34px; }
+.gs-profile-particle:nth-child(2n) .gs-sp-token { width: 26px; height: 26px; }
+.gs-profile-particle:nth-child(3n) .gs-sp-token { width: 40px; height: 40px; }
+@keyframes gs-profile-fall { 0% { opacity: 0; transform: translate3d(0,-30px,0) rotate(-18deg); } 8%,72% { opacity: .9; } 100% { opacity: 0; transform: translate3d(var(--particle-drift),1200px,0) rotate(220deg); } }
+@keyframes gs-profile-rise { 0% { opacity: 0; transform: translate3d(0,30px,0) rotate(-8deg) scale(.9); } 8%,72% { opacity: .85; } 100% { opacity: 0; transform: translate3d(var(--particle-drift),-1200px,0) rotate(24deg) scale(1.05); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-design=lobby] body .gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *)::before { animation: none !important; transform: translate(-50%, -50%) rotate(200deg) !important; }
+}
+/* Tokens drift behind the panels, never over text. */
+.gs-server-profile.gs-sp2 :is(.gs-profile-dossier,.surface,.surface-raised,.gs-vote-panel,.gs-profile-support,.gs-panel):not(dialog *) { z-index: 1; }
+/* The support button had its own shimmer ::after with an id-level selector; the contour cover must win there too. */
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-support:not(#a):not(#b)::after {
+  content: "" !important; display: block !important; position: absolute !important; z-index: -1 !important; inset: 1.5px !important; left: 1.5px !important; right: 1.5px !important; top: 1.5px !important; bottom: 1.5px !important; width: auto !important; height: auto !important;
+  border-radius: calc(18px - 1.5px) !important; transform: none !important; opacity: 1 !important;
+  background: linear-gradient(160deg, var(--sp-panel-2), var(--sp-panel)) !important; animation: none !important; pointer-events: none !important;
+}
+
+/* Phones: the running light stays on the header and the vote panel (top places) — each rotating layer is a large GPU texture
+   at phone pixel density; the other panels keep a still contour. Tokens drop their shadow filter. */
+@media (hover: none), (pointer: coarse), (max-width: 1023px) {
+  html[data-design=lobby] body .gs-server-profile.gs-sp2 :is(.surface,.surface-raised,.gs-profile-support,.gs-panel):not(dialog *)::before { animation: none !important; transform: translate(-50%, -50%) rotate(210deg) !important; will-change: auto !important; width: 140% !important; }
+  html[data-design=lobby] body .gs-server-profile.gs-sp2:not([data-profile-place]) .gs-vote-panel:not(dialog *)::before { animation: none !important; transform: translate(-50%, -50%) rotate(210deg) !important; will-change: auto !important; }
+  .gs-server-profile.gs-sp2 .gs-profile-particle { filter: none !important; }
+}
+
+/* The header lets its identity overlap upwards (over the hero): it must not clip. Its contour is a masked ring whose
+   conic angle turns instead of a clipped rotating layer — one element, so the repaint stays cheap. */
+@property --gs-run { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(dialog *):not(#a):not(#b):not(#c) { overflow: visible !important; }
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(dialog *):not(#a):not(#b)::before {
+  inset: -1px !important; left: -1px !important; top: -1px !important; width: auto !important; height: auto !important; aspect-ratio: auto !important;
+  padding: 1.5px !important; border-radius: inherit !important; transform: none !important; will-change: auto !important;
+  background: conic-gradient(from var(--gs-run), transparent 0deg, color-mix(in srgb, var(--sp-accent) 18%, transparent) 40deg, var(--sp-accent) 70deg, var(--sp-accent-2) 84deg, var(--sp-accent) 98deg, color-mix(in srgb, var(--sp-accent) 18%, transparent) 130deg, transparent 170deg, transparent 360deg) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important; -webkit-mask-composite: xor !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important; mask-composite: exclude !important;
+  z-index: 2 !important; animation: gs-sp-run 8s linear infinite !important;
+}
+html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(dialog *):not(#a):not(#b)::after { content: none !important; display: none !important; }
+@keyframes gs-sp-run { to { --gs-run: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-design=lobby] body .gs-server-profile.gs-sp2 .gs-profile-dossier:not(dialog *):not(#a):not(#b)::before { animation: none !important; --gs-run: 200deg; }
+}

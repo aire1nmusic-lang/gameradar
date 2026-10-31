@@ -1,0 +1,77 @@
+/* Support dialog, owner review 31.10: one clean surface, sticky header, two aligned columns on desktop, a full-width sheet on phones. */
+@layer gs-owner {
+html body dialog.gs-support-dialog:not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) {
+  --sd-bg: #121519; --sd-panel: #1a1e23; --sd-panel-2: #20252b; --sd-line: rgba(255,255,255,.1); --sd-text: #fff7e9; --sd-muted: #a6adb7; --sd-accent: #c8ff55;
+  width: min(980px, calc(100% - 32px)) !important; max-width: none !important; max-height: calc(100dvh - 32px) !important;
+  padding: 0 !important; border: 1px solid var(--sd-line) !important; border-radius: 22px !important;
+  background: var(--sd-bg) !important; color: var(--sd-text) !important; box-shadow: 0 40px 100px rgba(0,0,0,.7) !important;
+  overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain !important; }
+html body dialog.gs-support-dialog::backdrop { background: rgba(5,7,10,.72) !important; backdrop-filter: none !important; }
+html body dialog.gs-support-dialog .gs-support-dialog-head:not(#a):not(#b):not(#c):not(#d):not(#e):not(#f):not(#g):not(#h):not(#i) {
+  position: sticky !important; top: 0 !important; z-index: 50 !important; margin: 0 !important; padding: 14px 18px !important;
+  display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important;
+  background: var(--sd-bg) !important; background-image: none !important; background-color: var(--sd-bg) !important; border-bottom: 1px solid var(--sd-line) !important; backdrop-filter: none !important; }
+html body dialog.gs-support-dialog .gs-support-dialog-head h2:not(#a):not(#b):not(#c):not(#d):not(#e) { margin: 0 !important; font: 700 20px/1.2 var(--font-display) !important; color: var(--sd-text) !important; }
+html body dialog.gs-support-dialog .gs-support-dialog-head button:not(#a):not(#b):not(#c):not(#d):not(#e) {
+  width: 44px !important; height: 44px !important; flex: none !important; border-radius: 12px !important; border: 1px solid var(--sd-line) !important;
+  background: var(--sd-panel) !important; color: var(--sd-text) !important; box-shadow: none !important; outline: none !important; }
+html body dialog.gs-support-dialog .gs-support-dialog-head button:focus-visible { outline: 2px solid var(--sd-accent) !important; outline-offset: 2px !important; }
+
+html body dialog.gs-support-dialog .gs-support-studio:not(#a):not(#b):not(#c):not(#d):not(#e) {
+  display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; padding: 16px 18px 18px !important; margin: 0 !important;
+  position: relative !important; z-index: 0 !important; isolation: isolate !important; }
+html body dialog.gs-support-dialog :is(.gs-support-form,.gs-support-preview):not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) {
+  min-width: 0 !important; margin: 0 !important; padding: 18px !important; border-radius: 18px !important;
+  background: var(--sd-panel) !important; border: 1px solid var(--sd-line) !important; border-top: 1px solid var(--sd-line) !important;
+  box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html body dialog.gs-support-dialog .gs-support-eyebrow:not(#a):not(#b) { font: 700 11px/1.3 var(--font-sans) !important; letter-spacing: .12em !important; text-transform: uppercase !important; color: var(--sd-muted) !important; }
+html body dialog.gs-support-dialog .gs-support-target:not(#a):not(#b):not(#c) {
+  display: grid !important; grid-template-columns: auto minmax(0, 1fr) !important; gap: 14px !important; align-items: center !important;
+  padding: 14px !important; border-radius: 16px !important; background: var(--sd-panel-2) !important; border: 1px solid var(--sd-line) !important; }
+html body dialog.gs-support-dialog .gs-support-target-copy:not(#a) { display: grid !important; gap: 4px !important; min-width: 0 !important; }
+html body dialog.gs-support-dialog .gs-support-target-meta:not(#a):not(#b) { font-size: 13px !important; color: var(--sd-muted) !important; overflow-wrap: anywhere !important; }
+.gs-support-open-server { justify-self: start !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; min-height: 36px !important; margin-top: 2px !important; font: 700 13.5px/1 var(--font-sans) !important; color: var(--lb-lime, #c6ff52) !important; text-decoration: none !important; }
+.gs-support-open-server:hover { text-decoration: underline !important; text-underline-offset: 3px !important; }
+html body dialog.gs-support-dialog .gs-support-amount-section:not(#a) { display: grid !important; gap: 12px !important; margin-top: 18px !important; }
+html body dialog.gs-support-dialog .gs-support-stepper:not(#a):not(#b) { display: grid !important; grid-template-columns: 48px minmax(0,1fr) 48px !important; align-items: center !important; gap: 10px !important; }
+html body dialog.gs-support-dialog .gs-support-stepper button:not(#a):not(#b):not(#c) { width: 48px !important; height: 48px !important; border-radius: 14px !important; border: 1px solid var(--sd-line) !important; background: var(--sd-panel-2) !important; color: var(--sd-text) !important; display: grid !important; place-items: center !important; }
+html body dialog.gs-support-dialog .gs-support-rubles:not(#a):not(#b) { margin: 0 !important; font-size: 15px !important; color: var(--sd-text) !important; display: grid !important; gap: 2px !important; }
+html body dialog.gs-support-dialog .gs-support-rubles small:not(#a) { font-size: 12.5px !important; color: var(--sd-muted) !important; }
+html body dialog.gs-support-dialog .gs-support-presets:not(#a):not(#b) { display: grid !important; grid-template-columns: repeat(5, minmax(0,1fr)) !important; gap: 8px !important; }
+html body dialog.gs-support-dialog .gs-amount-preset:not(#a):not(#b):not(#c) { min-height: 46px !important; border-radius: 12px !important; border: 1px solid var(--sd-line) !important; background: var(--sd-panel-2) !important; color: var(--sd-text) !important; font: 700 15px var(--font-sans) !important; }
+html body dialog.gs-support-dialog .gs-amount-preset[aria-pressed="true"]:not(#a):not(#b):not(#c) { background: var(--sd-accent) !important; color: var(--lb-lime-ink, #11160a) !important; border-color: transparent !important; }
+html body dialog.gs-support-dialog .gs-support-preview-head:not(#a) { display: flex !important; justify-content: space-between !important; gap: 12px !important; }
+html body dialog.gs-support-dialog .gs-support-preview h3:not(#a):not(#b) { margin: 4px 0 0 !important; font: 700 19px/1.2 var(--font-display) !important; color: var(--sd-text) !important; }
+html body dialog.gs-support-dialog .gs-position-summary:not(#a):not(#b) { display: grid !important; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) !important; align-items: end !important; gap: 10px !important; margin: 14px 0 !important; padding: 14px !important; border-radius: 14px !important; background: var(--sd-panel-2) !important; border: 1px solid var(--sd-line) !important; }
+html body dialog.gs-support-dialog .gs-projection-list:not(#a):not(#b) { max-height: none !important; overflow: visible !important; display: grid !important; gap: 6px !important; }
+html body dialog.gs-support-dialog .gs-projection-row:not(#a):not(#b):not(#c) { display: flex !important; align-items: center !important; gap: 10px !important; min-height: 56px !important; padding: 8px 12px !important; border-radius: 12px !important; border: 1px solid var(--sd-line) !important; background: var(--sd-panel-2) !important; }
+html body dialog.gs-support-dialog .gs-projection-target:not(#a):not(#b):not(#c) { border-color: color-mix(in srgb, var(--sd-accent) 55%, transparent) !important; background: color-mix(in srgb, var(--sd-accent) 10%, var(--sd-panel-2)) !important; }
+html body dialog.gs-support-dialog .gs-support-checkout:not(#a):not(#b):not(#c) { display: grid !important; gap: 6px !important; justify-items: stretch !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important; }
+html body dialog.gs-support-dialog .gs-support-login:not(#a):not(#b):not(#c) { display: flex !important; justify-content: center !important; align-items: center !important; min-height: 52px !important; margin: 0 !important; border-radius: 14px !important; background: var(--sd-accent) !important; color: var(--lb-lime-ink, #11160a) !important; font: 800 15.5px var(--font-sans) !important; text-decoration: none !important; }
+html body dialog.gs-support-dialog .gs-support-checkout > a:last-child:not(#a):not(#b) { justify-self: center !important; margin-top: 2px !important; color: var(--sd-muted) !important; }
+
+@media (min-width: 768px) {
+  html body dialog.gs-support-dialog .gs-support-studio:not(#a):not(#b):not(#c):not(#d):not(#e) { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) !important; align-items: start !important; }
+  html body dialog.gs-support-dialog .gs-support-checkout:not(#a):not(#b):not(#c) { grid-column: 1 / -1 !important; }
+}
+/* Phones: a full-width sheet from the bottom; nothing scrolls sideways, the header stays on top. */
+@media (max-width: 767px) {
+  html body dialog.gs-support-dialog:not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) {
+    width: 100% !important; max-height: 92dvh !important; margin: auto 0 0 !important; border-radius: 22px 22px 0 0 !important; border-bottom: 0 !important; }
+  html body dialog.gs-support-dialog .gs-support-studio:not(#a):not(#b):not(#c):not(#d):not(#e) { padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px)) !important; gap: 12px !important; }
+  html body dialog.gs-support-dialog :is(.gs-support-form,.gs-support-preview):not(#a):not(#b):not(#c):not(#d):not(#e):not(#f) { padding: 14px !important; }
+  html body dialog.gs-support-dialog .gs-amount-preset:not(#a):not(#b):not(#c) { min-height: 44px !important; font-size: 14px !important; }
+}
+
+}
+
+@layer gs-owner {
+  /* Children placed explicitly: the legacy studio grid put them into implicit content-sized columns (a long server name
+     squeezed the form to nothing between 768 and 860 px). */
+  html body dialog.gs-support-dialog .gs-support-studio > *:not(#a):not(#b):not(#c):not(#d):not(#e) { grid-column: 1 / -1 !important; grid-row: auto !important; min-width: 0 !important; width: auto !important; max-width: none !important; }
+  @media (min-width: 768px) {
+    html body dialog.gs-support-dialog .gs-support-studio > .gs-support-form:not(#a):not(#b):not(#c):not(#d):not(#e) { grid-column: 1 !important; grid-row: 1 !important; }
+    html body dialog.gs-support-dialog .gs-support-studio > .gs-support-preview:not(#a):not(#b):not(#c):not(#d):not(#e) { grid-column: 2 !important; grid-row: 1 !important; }
+    html body dialog.gs-support-dialog .gs-support-studio > .gs-support-checkout:not(#a):not(#b):not(#c):not(#d):not(#e) { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  }
+}

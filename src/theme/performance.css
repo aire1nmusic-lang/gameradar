@@ -1,0 +1,30 @@
+/* Rendering budget: off-screen rows and the footer are laid out and painted only when they come near the viewport. */
+.gsb .gsb-row,
+.gs-row-line,
+.gs-opening-card,
+footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
+}
+footer { contain-intrinsic-size: auto 420px; }
+
+/*
+ * Touch screens: no backdrop blur. A phone re-blurs every blurred panel on every scroll frame (the main cause of
+ * scroll jank); panels get a dense dark base instead so text over art stays readable. Desktop keeps the glass.
+ * In the gs-owner layer so it also beats the gs-surfaces layer.
+ */
+@layer gs-owner {
+  @media (hover: none), (pointer: coarse), (max-width: 1023px) {
+    *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    html[data-design="lobby"] body :is(
+      .surface,.surface-raised,.gs-panel,.gt-panel,.gt-card,.gs-vote-panel,.gs-empty,.gs-notice,
+      .gs-account-hero,.gs-account-card,.gs-account-glass,.gs-account-empty,.gs-account-claim,.gs-coins-card,
+      .gs-support-studio,.gs-support-form,.gs-support-preview,.gs-rating-tools,.gs-profile-dossier,.gs-profile-support,
+      .l2a .discovery,.l2a .panel,.l2a .owner,.gs-catalog-search,.gs-epoch-summary,.gs-select-menu>button,
+      .gsb .gsb-frost,.gs-inline-picker,.gs-row,.gs-row-line,.gs-server-card,.gs-opening-card,.gs-live-item
+    ) { background-color: rgba(13, 16, 21, .84) !important; }
+    /* The account page keeps its header transparent over its own scene. */
+    html[data-design="lobby"] body :not(.gs-account-layout) > .gs-site-header,
+    html[data-design="lobby"] body .gs-mobile-nav { background-color: rgba(10, 12, 16, .94) !important; }
+  }
+}

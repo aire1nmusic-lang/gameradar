@@ -1,0 +1,6 @@
+/* Chronicle / mode pages on phones: their art is landscape-only and crops badly in portrait — the site's base background instead
+   (owner, 31.10). The main world pages keep their own portrait art. */
+@media (max-width: 767px) {
+  html[data-design="lobby"] body .l2a.l2a--chronicle .scene:before { background-image: none !important; }
+  html[data-design="lobby"] body .l2a.l2a--chronicle .scene { background: radial-gradient(900px 420px at 20% -10%, rgba(198, 255, 82, .06), transparent 70%), #0b0d11 !important; }
+}

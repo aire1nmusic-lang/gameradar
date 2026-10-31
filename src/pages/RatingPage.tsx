@@ -5,7 +5,7 @@ import { useLocation, useSearchParams } from 'react-router-dom'
 import { GAMES } from '@/data/games'
 import { useAsync } from '@/hooks/data'
 import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
-import { useRankingPeriod, useRankingRotation } from '@/hooks/useRankingRotation'
+import { useRankingRotation } from '@/hooks/useRankingRotation'
 import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { Container } from '@/components/layout/Container'
 import { ChipToggle } from '@/components/ui/controls'
@@ -18,6 +18,7 @@ import { useSeo } from '@/lib/seo'
 import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { LeaderBoard } from '@/components/world/LeaderBoard'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useRootClass } from '@/hooks/useRootClass'
 
 export default function RatingPage() {
  const demo=useVisualDemo(),{game:world}=useWorldNavigation(),[params]=useSearchParams(),[gameId,setGameId]=useState('all')
@@ -27,9 +28,8 @@ export default function RatingPage() {
  const [expanded,setExpanded]=useState<Set<string>>(()=>new Set())
  const more=(id:string,count:number)=>count>10?<button type="button" className="gs-list-more" aria-expanded={expanded.has(id)} onClick={()=>setExpanded(previous=>{const next=new Set(previous);next.has(id)?next.delete(id):next.add(id);return next})}>{expanded.has(id)?'Свернуть':'Показать ещё'}</button>:null
  const selected=world?.id??gameId
- const period=useRankingPeriod()
  const contextKey=`${selected}-${demo}`
- const {data:result,loading,error,reload}=useAsync<{contextKey:string;servers:GameServer[]}>(async publish=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo,servers=>publish({contextKey,servers}))}),[selected,demo,period],true)
+ const {data:result,loading,error,reload}=useAsync<{contextKey:string;servers:GameServer[]}>(async publish=>({contextKey,servers:await discoveryServers({gameId:selected==='all'?undefined:selected},demo,servers=>publish({contextKey,servers}))}),[selected,demo],true)
  const servers=result?.contextKey===contextKey?result.servers:[]
  const supportAvailable=!servers.some(s=>s.rankingAvailability?.support===false)
  useEffect(()=>{if(location.hash==='#support-studio')setSupportOpen(true)},[location.hash])
@@ -39,6 +39,7 @@ export default function RatingPage() {
 
  function closeSupport(){dialog.current?.close();setSupportOpen(false);if(window.location.hash==='#support-studio')history.replaceState(null,'',window.location.pathname+window.location.search)}
  const supported=()=>{invalidateDiscoveryCache();reload()}
+ useRootClass('gs-dialog-open',!!(supportOpen&&supportAvailable&&supportList),'html')
  useSeo({title:'Рейтинг серверов',path:'/rating',description:'Все серверы: поддержка за Coins, ближайшие открытия и голоса игроков. Прогноз позиции при поддержке.'})
  const {has,toggle}=useFavorites()
  const support=useSupportRotation(servers,!!world),people=useRankingRotation(servers,'people',!!world)
@@ -56,7 +57,7 @@ export default function RatingPage() {
     <RankPanel className="gs-rating-people" title="Выбор игроков" hint={`Голоса игроков · ${people.length} серверов`} icon={<WorldIcon name="vote"/>}><div className={'gs-rating-list '+(expanded.has('people')?'gs-rating-expanded':'gs-rating-preview')} tabIndex={0} role="region" aria-label="Все серверы по голосам">{people.length?people.map((s,i)=><ServerRow key={s.id} server={s} rank={i+1} metric="votes" className={i>=10?'gs-list-overflow-desktop gs-list-overflow-phone':undefined} compact showGame={!world}/>):<ShelfNote title="Серверов пока нет" text="Проекты появятся после публикации в каталоге."/>}</div>{more('people',people.length)}</RankPanel>
    </div>}
   </>}
- {supportOpen&&supportAvailable&&supportList&&<dialog ref={node=>{dialog.current=node;if(node&&!node.open)node.showModal()}} className="gs-support-dialog" aria-label="Поддержать сервер" onCancel={e=>{e.preventDefault();closeSupport()}} onClick={e=>{if(e.target===dialog.current)closeSupport()}}><div className="gs-support-dialog-head"><h2>Поддержка сервера</h2><button type="button" aria-label="Закрыть поддержку" onClick={closeSupport}><WorldIcon name="close"/></button></div><SupportStudio key={`${selected}-${demo}-${params.get('server')??''}`} servers={supportList} demo={demo} initialServer={params.get('server')} onSupported={supported}/></dialog>}
+ {supportOpen&&supportAvailable&&supportList&&<dialog ref={node=>{dialog.current=node;if(node&&!node.open)node.showModal()}} className="gs-support-dialog" aria-label="Поддержать сервер" onCancel={e=>{e.preventDefault();closeSupport()}} onClick={e=>{if(e.target===dialog.current)closeSupport()}}><div className="gs-support-dialog-head"><h2>Поддержка сервера</h2><button type="button" aria-label="Закрыть поддержку" onClick={closeSupport}><WorldIcon name="close"/></button></div><SupportStudio key={`${selected}-${demo}-${params.get('server')??''}`} servers={supportList} demo={demo} initialServer={params.get('server')} onSupported={supported} onOpenServer={closeSupport}/></dialog>}
  </Container></div>
 }
 

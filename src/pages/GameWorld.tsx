@@ -1,4 +1,3 @@
-import { useRankingPeriod } from '@/hooks/useRankingRotation'
 import type { GameServer } from '@/models'
 import { LineageDiscovery } from '@/components/world/LineageDiscovery'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
@@ -45,7 +44,6 @@ export default function GameWorld() {
 
 function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlug?: string }) {
   const demo=useVisualDemo()
-  const rankingPeriod=useRankingPeriod()
   const { game, chronicle } = resolveWorld(gameSlug, chronicleSlug)
   const worldName = [game?.name, chronicle?.label].filter(Boolean).join(' ')
   const worldPath = '/' + [game?.slug, chronicle?.slug].filter(Boolean).join('/')
@@ -64,7 +62,7 @@ function WorldBody({ gameSlug, chronicleSlug }: { gameSlug: string; chronicleSlu
       ]),
     ],
   })
-  const { data: servers = [], loading, error, reload } = useAsync<GameServer[]>(publish => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo,publish), [game?.id, chronicle?.id,demo,rankingPeriod], true)
+  const { data: servers = [], loading, error, reload } = useAsync<GameServer[]>(publish => discoveryServers({gameId: game?.id, chronicleId: chronicle?.id},demo,publish), [game?.id, chronicle?.id,demo], true)
 
   if (!game) return null
   if (game) return <>

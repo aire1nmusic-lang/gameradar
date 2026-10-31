@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { MARK_G, MARK_S, MARK_VIEWBOX } from './logoPaths'
@@ -9,22 +9,12 @@ const ratio = (viewBox: string) => {
 }
 const MARK_RATIO = ratio(MARK_VIEWBOX)
 
-/**
- * The GS mark. Colours come from CSS variables (--gs-a* for the G, --gs-b* for
- * the S), so a theme can repaint it and `.gs-logo--live` can animate it.
- * Gradient ids are per instance: a logo hidden with display:none must not
- * take the others' gradients with it.
- */
-export function GsMark({ height = 30, live = false, className }: { height?: number; live?: boolean; className?: string }) {
+const NEON = { '--gs-a0': '#8b6bff', '--gs-a1': '#b44cff', '--gs-b0': '#ff5ae9', '--gs-b1': '#d81bff', '--gs-glow': 'rgb(224 44 255 / 0.55)' } as CSSProperties
+
+function MarkSvg({ height, className, style }: { height: number; className?: string; style?: CSSProperties }) {
   const id = useId().replace(/:/g, '')
   return (
-    <svg
-      viewBox={MARK_VIEWBOX}
-      height={height}
-      width={Math.round(height * MARK_RATIO)}
-      className={cn('gs-logo shrink-0', live && 'gs-logo--live', className)}
-      aria-hidden
-    >
+    <svg viewBox={MARK_VIEWBOX} height={height} width={Math.round(height * MARK_RATIO)} className={cn('gs-logo shrink-0', className)} style={style} aria-hidden>
       <defs>
         <linearGradient id={`${id}a`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" style={{ stopColor: 'var(--gs-a0, #f5f7fa)' }} />
@@ -42,15 +32,33 @@ export function GsMark({ height = 30, live = false, className }: { height?: numb
 }
 
 /**
+ * The GS mark. Colours come from CSS variables (--gs-a* for the G, --gs-b* for
+ * the S), so a theme can repaint it. `live`: the cyan and neon palettes cross-fade —
+ * two stacked copies and an opacity animation, which the compositor runs without
+ * restyling the page every frame (animating the colour variables did).
+ * Gradient ids are per instance: a logo hidden with display:none must not
+ * take the others' gradients with it.
+ */
+export function GsMark({ height = 30, live = false, className }: { height?: number; live?: boolean; className?: string }) {
+  if (!live) return <MarkSvg height={height} className={className} />
+  return (
+    <span className={cn('gs-logo-stack shrink-0', className)}>
+      <MarkSvg height={height} />
+      <MarkSvg height={height} className="gs-logo-neon" style={NEON} />
+    </span>
+  )
+}
+
+/**
  * "GameScout" set in Saira ExtraBold (112.5 % width) — the typeface closest to
  * the approved logo that stays crisp letter by letter at header size. "Game" is
- * silver, "Scout" takes the mark's accent and follows the palette animation.
+ * silver, "Scout" takes the mark's accent and cross-fades with it.
  */
 export function GsWordmark({ size = 20, live = false, className }: { size?: number; live?: boolean; className?: string }) {
   return (
-    <span className={cn('gs-logo gs-wordmark', live && 'gs-logo--live', className)} style={{ fontSize: size }}>
+    <span className={cn('gs-logo gs-wordmark', className)} style={{ fontSize: size }}>
       <span className="gs-wordmark__game">Game</span>
-      <span className="gs-wordmark__scout">Scout</span>
+      <span className="gs-wordmark__scout-wrap"><span className="gs-wordmark__scout">Scout</span>{live && <span className="gs-wordmark__scout gs-logo-neon" style={NEON} aria-hidden="true">Scout</span>}</span>
     </span>
   )
 }

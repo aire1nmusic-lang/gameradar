@@ -13,6 +13,7 @@ import { AuthModal } from './AuthModal'
 import { SearchOverlay } from '@/components/search/SearchOverlay'
 import { PortalProvider } from '@/components/home/portal'
 import { ToTop } from './ToTop'
+import { ServerQuickViewHost } from '@/components/server/quickview/ServerQuickView'
 import { WorldNavigationProvider, useWorldNavigation } from '@/hooks/useWorldNavigation'
 import { WorldPageScope } from '@/components/world/WorldPageScope'
 import './review-refinement.css'
@@ -37,7 +38,8 @@ function LayoutContent() {
   const hall = location.pathname === '/'
 
   useEffect(() => {
-    if (!location.hash) window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+    // Already at the top (first load): scrolling there anyway forced a layout before the page was ready.
+    if (!location.hash && window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }, [location.pathname, location.hash])
 
   useEffect(() => {
@@ -65,6 +67,7 @@ function LayoutContent() {
           <DesignPanel />
           <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
           <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+          <ServerQuickViewHost />
         </div>
   )
 }

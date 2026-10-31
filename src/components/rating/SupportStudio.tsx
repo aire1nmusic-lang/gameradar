@@ -9,9 +9,10 @@ import { ServerLogo } from '@/components/ui/ServerLogo'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { Minus, Plus, ChevronDown, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import './support-studio.css'
+import './support-dialog-v2.css'
 import { ServerPicker } from './ServerPicker'
 
-export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:GameServer[];demo:boolean;initialServer?:string|null;onSupported:()=>void}) {
+export function SupportStudio({servers,demo,initialServer,onSupported,onOpenServer}:{servers:GameServer[];demo:boolean;initialServer?:string|null;onSupported:()=>void;onOpenServer?:()=>void}) {
  const choices=[...servers].sort((a,b)=>a.name.localeCompare(b.name,'ru'))
  const [serverId,setServerId]=useState(choices.find(s=>s.id===initialServer||s.slug===initialServer)?.id??choices[0]?.id??'')
  const [amount,setAmount]=useState(10)
@@ -45,6 +46,8 @@ export function SupportStudio({servers,demo,initialServer,onSupported}:{servers:
      <span className="gs-support-eyebrow">Выбранный сервер</span>
      <ServerPicker servers={choices} value={serverId} onChange={id=>{setServerId(id);setExpanded(false)}}/>
      <span className="gs-support-target-meta">{getGame(target.gameId).shortName} · {target.version}{target.rates?` · ${target.rates}`:''}</span>
+     {/* Choosing a server here can also mean "show me this server": one tap to its page. */}
+     <Link className="gs-support-open-server" to={`/server/${target.slug}`} data-full-page onClick={onOpenServer}>Открыть страницу сервера<ArrowUpRight size={15} aria-hidden="true"/></Link>
     </div>
    </div>
    <div className="gs-support-amount-section">

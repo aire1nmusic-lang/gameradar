@@ -7,12 +7,12 @@ import { useFavorites } from '@/hooks/useFavorites'
 import { artSrc, worldArt } from '@/data/themeMedia'
 import { formatCompact, formatNumber } from '@/lib/format'
 import { hasFreshOnline } from '@/services/discoveryRanking'
-import { useRankingRotation } from '@/hooks/useRankingRotation'
-import { useSupportRotation } from '@/hooks/useSupportRotation'
 import { LeaderBoard } from './LeaderBoard'
 import { InlineChroniclePicker } from './InlineChroniclePicker'
 import './lineage-discovery.css'
 import './minecraft-discovery.css'
+import './world-chronicle-mobile.css'
+import { useRootClass } from '@/hooks/useRootClass'
 
 type Shelf = 'support' | 'opening' | 'people'
 // Same world page for every game; only the words and the title face differ.
@@ -33,6 +33,8 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   game: Game; chronicle?: Chronicle; servers: GameServer[]; loading: boolean; error: unknown; reload: () => void; demo: boolean
 }) {
   const { colorMode } = useAppearance()
+  useRootClass('gs-body-l2a')
+  useRootClass('gs-body-search')
   const { has, toggle } = useFavorites()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -43,19 +45,17 @@ export function LineageDiscovery({ game, chronicle, servers, loading, error, rel
   const upcoming = servers.filter(s => s.launch && Date.parse(s.launch.at) > Date.now())
   const visible = useMemo(() => servers.filter(s => (!query.trim() ||
     `${s.name} ${s.version} ${s.rates ?? ''}`.toLocaleLowerCase('ru').includes(query.trim().toLocaleLowerCase('ru')))), [servers, query])
-  const support = useSupportRotation(visible)
-  const people = useRankingRotation(visible, 'people')
   const openings = visible.filter(s => s.launch && Date.parse(s.launch.at) > Date.now()).sort((a,b) => Date.parse(a.launch!.at) - Date.parse(b.launch!.at))
   const filtered = query.trim().length > 0
   const submit = (e: FormEvent) => { e.preventDefault(); document.getElementById('l2-catalog')?.scrollIntoView({ behavior: 'smooth' }) }
   const copy = COPY[game.id] ?? COPY.lineage2
   const ratingHref = (key: Shelf) => key === 'opening' ? `/openings?game=${game.id}` : `/rating?game=${game.id}&all=${key === 'people' ? 'people' : 'support'}`
-  return <div className={`l2a l2a--${game.id} ${l2Sunset ? 'l2a--sunset' : ''} ${colorMode === 'light' ? 'light' : ''}`} style={art ? { '--art': `url("${artSrc(art, 2560)}")`, '--art-mobile': `url("${l2Sunset ? '/media/worlds/lineage-2/tower-v1-mobile-720.webp' : artSrc(art, 800)}")` } as CSSProperties : undefined}>
+  return <div className={`l2a l2a--${game.id} ${chronicle ? 'l2a--chronicle' : ''} ${l2Sunset ? 'l2a--sunset' : ''} ${colorMode === 'light' ? 'light' : ''}`} style={art ? { '--art': `url("${artSrc(art, 2560)}")`, '--art-mobile': `url("${l2Sunset ? '/media/worlds/lineage-2/tower-v1-mobile-720.webp' : artSrc(art, 800)}")` } as CSSProperties : undefined}>
     <div className="scene" aria-hidden="true"><div className="atmosphere"/></div>
     <div className="wrap l2-content">
       <section className="hero gs-hero" aria-labelledby="l2-world-title"><div className="hero-copy"><div className="breadcrumb"><Link to="/">Зал миров</Link><span/><Link to={`/${game.slug}`}>{game.name}</Link>{chronicle && <> / {chronicle.label}</>}</div><div className="edition">{copy.edition}</div><h1 id="l2-world-title">{game.id === 'lineage2' ? <>Lineage <em>II</em></> : game.name}</h1>{chronicle ? <p className="chronicle-description">{chronicle.label} · {chronicle.tagline}</p> : <p>{copy.lead}</p>}<div className="metrics" aria-busy={!statsReady}><Link className="metric" to={`/catalog?game=${game.id}`}><strong>{statsReady ? formatNumber(servers.length) : '—'}</strong><small>серверов</small></Link><Link className="metric" to={`/openings?game=${game.id}`}><strong>{statsReady ? formatNumber(upcoming.length) : '—'}</strong><small>открытий</small></Link>{<Link className="metric" to={`/rating?game=${game.id}`} style={statsReady && known.length > 0 ? undefined : { visibility: 'hidden' }} aria-hidden={!(statsReady && known.length > 0)}><strong><i className="dot"/>{formatCompact(known.reduce((sum,s) => sum+s.online.current,0))}</strong><small>онлайн</small></Link>}</div></div><div className="hero-note">В каждом мире — своя история.<small>Выбери, где начнётся твоя.</small></div></section>
       <section className="discovery discovery--inline" aria-label={`Поиск серверов ${game.name}`}><div className="search-row l2-main-search"><form className="search-box" onSubmit={submit}><Search size={20} aria-hidden/><input type="search" name="q" value={query} onChange={e => setQuery(e.target.value)} aria-label="Поиск по названию или рейтам" placeholder={game.id === 'lineage2' ? 'Название сервера или рейты…' : 'Название сервера, версия или платформа…'} autoComplete="off"/><button className="find-btn" type="submit">Найти</button></form></div><InlineChroniclePicker game={game} chronicle={chronicle} /></section>
-      <section id="l2-catalog" aria-label={`Серверы ${game.name}`}><div className="catalog-toolbar"><span role="status">{demo ? 'Демонстрационные данные' : filtered ? `Найдено: ${formatNumber(visible.length)}` : 'Независимый каталог · открытые источники'}</span>{filtered && <button type="button" className="quiet-btn" onClick={() => {setQuery('')}} aria-label="Сбросить фильтры"><X size={15}/>Сбросить</button>}</div>{servers.some(s => s.rankingAvailability && !s.rankingAvailability.pending && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинг временно недоступен</p>}<div className="catalog-grid"><><LeaderBoard game={game} kind="support" rows={support} title="Лидеры поддержки" kicker="Топ серверов" sub={SHELF_SUB.support} loading={loading} error={error} reload={reload} emptyTitle="Рейтинг пока формируется" emptyText="Здесь появятся серверы, получившие поддержку за Coins." href={ratingHref('support')} filtered={filtered} isFav={has} toggleFav={toggle}/><LeaderBoard game={game} kind="opening" rows={openings} title="Скоро открытие" kicker="Новая глава" sub={SHELF_SUB.opening} loading={loading} error={error} reload={reload} emptyTitle="Ближайших открытий нет" emptyText="Как только проект объявит дату старта, он появится здесь." href={ratingHref('opening')} filtered={filtered} isFav={has} toggleFav={toggle}/><LeaderBoard game={game} kind="people" rows={people} title="Выбор игроков" kicker="Топ голосов" sub={SHELF_SUB.people} loading={loading} error={error} reload={reload} emptyTitle="Серверов пока нет" emptyText="Здесь появятся проекты и голоса игроков." href={ratingHref('people')} filtered={filtered} isFav={has} toggleFav={toggle}/></></div></section>
+      <section id="l2-catalog" aria-label={`Серверы ${game.name}`}><div className="catalog-toolbar"><span role="status">{demo ? 'Демонстрационные данные' : filtered ? `Найдено: ${formatNumber(visible.length)}` : 'Независимый каталог · открытые источники'}</span>{filtered && <button type="button" className="quiet-btn" onClick={() => {setQuery('')}} aria-label="Сбросить фильтры"><X size={15}/>Сбросить</button>}</div>{servers.some(s => s.rankingAvailability && !s.rankingAvailability.pending && (!s.rankingAvailability.votes || !s.rankingAvailability.support)) && <p className="gs-ranking-availability" role="status">Рейтинг временно недоступен</p>}<div className="catalog-grid"><><LeaderBoard game={game} kind="support" rows={visible} rotate="support" title="Лидеры поддержки" kicker="Топ серверов" sub={SHELF_SUB.support} loading={loading} error={error} reload={reload} emptyTitle="Рейтинг пока формируется" emptyText="Здесь появятся серверы, получившие поддержку за Coins." href={ratingHref('support')} filtered={filtered} isFav={has} toggleFav={toggle}/><LeaderBoard game={game} kind="opening" rows={openings} title="Скоро открытие" kicker="Новая глава" sub={SHELF_SUB.opening} loading={loading} error={error} reload={reload} emptyTitle="Ближайших открытий нет" emptyText="Как только проект объявит дату старта, он появится здесь." href={ratingHref('opening')} filtered={filtered} isFav={has} toggleFav={toggle}/><LeaderBoard game={game} kind="people" rows={visible} rotate="people" title="Выбор игроков" kicker="Топ голосов" sub={SHELF_SUB.people} loading={loading} error={error} reload={reload} emptyTitle="Серверов пока нет" emptyText="Здесь появятся проекты и голоса игроков." href={ratingHref('people')} filtered={filtered} isFav={has} toggleFav={toggle}/></></div></section>
       <section className="owner glass"><div><h3>Твой сервер в GameScout</h3></div><button className="outline-btn" type="button" onClick={() => navigate(`/add-server?game=${game.id}`)}>Добавить сервер<ArrowRight size={20}/></button></section>
     </div>
   </div>

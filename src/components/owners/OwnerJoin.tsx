@@ -1,3 +1,4 @@
+import { useRootClass } from '@/hooks/useRootClass'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, BadgeCheck, LayoutDashboard, Search } from 'lucide-react'
 import { getGame } from '@/data/games'
@@ -11,6 +12,7 @@ const STEPS = [
 
 /** «Твой сервер в GameScout»: how an owner gets a card today (new cards are not accepted yet). */
 export function OwnerJoin() {
+  useRootClass('gs-body-owner-join')
   const [params] = useSearchParams()
   const game = getGame(params.get('game') ?? 'lineage2')
   const art = worldArt('hero', game?.id)

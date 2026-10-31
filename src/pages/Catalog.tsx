@@ -1,6 +1,7 @@
 import type { Page, GameServer } from '@/models'
 import { SelectMenu } from '@/components/ui/SelectMenu'
-import { useRankingPeriod, useRankingRotation } from '@/hooks/useRankingRotation'
+import { useRootClass } from '@/hooks/useRootClass'
+import { useRankingRotation } from '@/hooks/useRankingRotation'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -28,6 +29,8 @@ import { useWorldNavigation } from '@/hooks/useWorldNavigation'
 
 // Design preview: the whole world list at once (API maximum 100; largest world has 54 servers).
 const PAGE_SIZE = 100
+/** Rows are built in portions: a phone draws 24 at once and the next ones as the list scrolls near them. */
+const RENDER_STEP = 24
 type View = 'list' | 'grid'
 const VIEW_KEY = 'gs.catalog.view'
 const COMPACT_SORT_LABELS: Record<SortKey, string> = {
@@ -35,6 +38,7 @@ const COMPACT_SORT_LABELS: Record<SortKey, string> = {
 }
 
 export default function Catalog() {
+  useRootClass('gs-body-search')
   const demo=useVisualDemo()
   const {game:world}=useWorldNavigation()
   useFacets(world?.id) // warm the filter sheet, so it opens already filled instead of growing
@@ -69,13 +73,12 @@ export default function Catalog() {
   useEffect(()=>{if(window.location.hash!=='#search')return;const t=setTimeout(()=>document.querySelector<HTMLInputElement>('.gs-catalog-search input')?.focus(),300);return()=>clearTimeout(t)},[])
 
   const rotateSupport = !!world && (sort === 'support' || sort === 'votes')
-  const rankingPeriod = useRankingPeriod()
   const query = useMemo(() => toServerQuery(filters, sort, rotateSupport ? Number.MAX_SAFE_INTEGER : visible), [filters, sort, visible, rotateSupport])
   const { data: page, loading, error, reload } = useAsync<Page<GameServer>>(
     publish => demo ? searchServers(query,true,publish) : privateCore && sort === 'votes' ? peopleSortedServers(query,publish)
       : privateCore && sort === 'support' ? supportSortedServers(query,publish)
         : searchServers(authLoading && sort === 'support' ? {...query,sort:'recommended'} : query,false,publish),
-    [JSON.stringify(query),privateCore,authLoading,demo,rankingPeriod], true)
+    [JSON.stringify(query),privateCore,authLoading,demo], true)
   const supportRows = useRankingRotation(page?.items ?? [], sort === 'votes' ? 'people' : 'support', rotateSupport)
   const results = rotateSupport ? supportRows.slice(0, visible) : page?.items ?? []
   const total = page?.total ?? 0
@@ -87,7 +90,17 @@ export default function Catalog() {
 
   useEffect(() => {
     setVisible(PAGE_SIZE)
+    setShown(RENDER_STEP)
   }, [filters, sort])
+  const [shown, setShown] = useState(RENDER_STEP)
+  const more = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const node = more.current
+    if (!node) return
+    const observer = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) setShown(count => count + RENDER_STEP) }, { rootMargin: '900px 0px' })
+    observer.observe(node)
+    return () => observer.disconnect()
+  })
 
   useEffect(() => {
     try {
@@ -112,12 +125,17 @@ export default function Catalog() {
     if (filters.verifiedOnly) next.set('verified', '1')
     if (sort !== 'recommended') next.set('sort', sort)
     ownWrite.current = next.toString()
-    setParams(next, { replace: true })
+    // An open server quick view (?server=) is not a filter: keep it.
+    const quickView = new URLSearchParams(window.location.search).get('server')
+    if (quickView) next.set('server', quickView)
+    setParams(next, { replace: true, state: window.history.state?.usr, preventScrollReset: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.query, filters.games, filters.modes, filters.versions, filters.verifiedOnly, sort])
 
   useEffect(() => {
-    const current = params.toString()
+    const own = new URLSearchParams(params)
+    own.delete('server')
+    const current = own.toString()
     if (current === ownWrite.current) return
     ownWrite.current = current
     setFilters((prev) => ({
@@ -248,7 +266,7 @@ export default function Catalog() {
               <>
               {podium && <CatalogPodium servers={rotateSupport ? supportRows : results} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
               <div className="gs-tile-grid grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
-                {results.map((server, index) => podium && index < 3 ? null : (
+                {results.slice(0, shown).map((server, index) => podium && index < 3 ? null : (
                   <Fragment key={server.slug}>
                     {index === 6 && (
                       <ThemeScope theme={adTheme} as="div" className="gs-tile-promo">
@@ -263,13 +281,14 @@ export default function Catalog() {
             ) : (
               <div className="space-y-1.5">
                 {podium && <CatalogPodium servers={rotateSupport ? supportRows : results} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} />}
-                {results.map((server, index) => podium && index < 3 ? null : (
+                {results.slice(0, shown).map((server, index) => podium && index < 3 ? null : (
                   <ServerRow key={server.slug} server={server} rank={ranked ? index+1 : undefined} metric={sort==='support'?'support':sort==='votes'?'votes':'auto'} showGame={!world} />
                 ))}
               </div>
             )}
 
-            {visible < total && (
+            {shown < results.length && <div ref={more} className="h-px" aria-hidden="true" />}
+            {shown >= results.length && visible < total && (
               <div className="mt-6 flex flex-col items-center gap-2">
                 <Button variant="secondary" size="lg" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
                   Показать ещё {Math.min(PAGE_SIZE, total - visible)}

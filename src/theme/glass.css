@@ -164,11 +164,11 @@ html[data-design="lobby"] body .l2a .scene:not(#lb):not(#gl)::before{background-
 html[data-design="lobby"] body .l2a .scene:not(#lb):not(#gl)::after{background:linear-gradient(90deg,rgba(8,10,14,.72) 0%,rgba(8,10,14,.28) 45%,rgba(8,10,14,.18) 100%),linear-gradient(0deg,rgba(8,10,14,.62),rgba(8,10,14,.30) 55%,rgba(8,10,14,.12))!important}
 html[data-design="lobby"] body .l2a:not(#lb):not(#gl){background:transparent!important}
 /* the footer and the space under a world page are glass over the same art */
-html[data-design="lobby"] body:has(.l2a) :is(.gs-site-footer,.gs-page-main,main):not(#lb):not(#gl){background:transparent!important}
-html[data-design="lobby"] body:has(.l2a) .gs-site-footer:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;border-top:1px solid rgba(255,255,255,.08)}
-html[data-design="lobby"] body:has(.l2a) :is(.gs-l2-aether-layout,#root > div):not(#lb):not(#gl){background:transparent!important}
-html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-account-btn{margin-left:auto!important}
-html[data-design="lobby"] body:has(.l2a) .gs-site-footer:not(#lb):not(#gl):not(#p){position:relative!important;z-index:5!important}
+html[data-design="lobby"] body.gs-body-l2a :is(.gs-site-footer,.gs-page-main,main):not(#lb):not(#gl){background:transparent!important}
+html[data-design="lobby"] body.gs-body-l2a .gs-site-footer:not(#lb):not(#gl){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;border-top:1px solid rgba(255,255,255,.08)}
+html[data-design="lobby"] body.gs-body-l2a :is(.gs-l2-aether-layout,#root > div):not(#lb):not(#gl){background:transparent!important}
+html[data-design="lobby"] body.gs-body-search .gs-site-header:not(#lb) .gs-account-btn{margin-left:auto!important}
+html[data-design="lobby"] body.gs-body-l2a .gs-site-footer:not(#lb):not(#gl):not(#p){position:relative!important;z-index:5!important}
 
 /* ---------- one headline font site-wide (the boards' Philosopher instead of Saira; the logo keeps its own) and warm greys ---------- */
 html[data-design="lobby"] body{--lb-display:'Philosopher','Noto Serif',Georgia,serif;--color-ink-300:#d3cdc1;--color-ink-400:#b9b3a8;--color-ink-500:#958f86}
@@ -222,9 +222,9 @@ html[data-design="lobby"] body .gs-games-menu.surface-raised:not(#lb):not(#gl):n
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > :first-child{opacity:0!important}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2){background:transparent!important}
 html[data-design="lobby"] body .gs-server-fullbg :is(.gt-hero,[class*="ThemePattern"]){display:none!important}
-html[data-design="lobby"] body:has(.gs-server-fullbg) :is(.gs-page-main,main,.gs-site-footer,.gs-l2-aether-layout,.gs-world-backdrop):not(#lb):not(#gl){background:transparent!important}
-html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-world-backdrop{display:none!important}
-html[data-design="lobby"] body:has(.gs-server-fullbg) .gs-site-footer:not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;position:relative;z-index:5}
+html[data-design="lobby"] body.gs-body-server-fullbg :is(.gs-page-main,main,.gs-site-footer,.gs-l2-aether-layout,.gs-world-backdrop):not(#lb):not(#gl){background:transparent!important}
+html[data-design="lobby"] body.gs-body-server-fullbg .gs-world-backdrop{display:none!important}
+html[data-design="lobby"] body.gs-body-server-fullbg .gs-site-footer:not(#lb):not(#gl):not(#p){background:linear-gradient(180deg,rgba(8,10,14,.35),rgba(8,10,14,.72))!important;position:relative;z-index:5}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2) > *:not(:has(nav,a)){display:none!important}
 html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2):not(#lb){height:64px!important}
 @media (max-width:767px){html[data-design="lobby"] body .gs-server-fullbg > div:nth-child(2):not(#lb){height:56px!important}}

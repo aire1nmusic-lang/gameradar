@@ -1,3 +1,4 @@
+import { useRootClass } from '@/hooks/useRootClass'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { WorldIcon } from '@/components/icons/WorldIcon'
@@ -27,6 +28,7 @@ export function GameHero({
   playersOnline: number
   openings?: number
 }) {
+  useRootClass('gs-body-search')
   const theme = useGameTheme()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')

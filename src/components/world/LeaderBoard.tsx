@@ -8,6 +8,7 @@ import { formatNumber } from '@/lib/format'
 import { LaunchCountdown } from '@/components/server/LaunchCountdown'
 import { ServerLogo } from '@/components/ui/ServerLogo'
 import { gamePlaceScene } from '@/data/podiumScenes'
+import { useRankingRotation } from '@/hooks/useRankingRotation'
 import type { RankingContext } from '@/services/rankingPresentation'
 import './leader-board.css'
 
@@ -15,15 +16,15 @@ export type BoardKind = 'support' | 'opening' | 'people'
 
 /* Place art is bound to the place, not to the server: only names and numbers move. */
 const PLACE: Record<number, { bg: string; hero?: string }> = {
-  1: { bg: '/media/ranks/l2-top1-bg-1600.webp', hero: '/media/ranks/l2-top3-hero-600.webp' },
-  2: { bg: '/media/ranks/l2-top2-1600.webp' },
-  3: { bg: '/media/ranks/l2-top3-1600.webp' },
+  1: { bg: '/media/ranks/l2-top1-bg-800.webp', hero: '/media/ranks/l2-top3-hero-600.webp' },
+  2: { bg: '/media/ranks/l2-top2-800.webp' },
+  3: { bg: '/media/ranks/l2-top3-800.webp' },
 }
 /* «Выбор игроков» has its own scenes for places 2 and 3, so the two boards differ at a glance. */
 const PEOPLE_PLACE: Record<number, { bg: string; hero?: string }> = {
-  1: { bg: '/media/ranks/l2-people1-1600.webp', hero: '/media/ranks/l2-people1-hero-600.webp' },
-  2: { bg: '/media/ranks/l2-people2-1600.webp' },
-  3: { bg: '/media/ranks/l2-people3-1600.webp' },
+  1: { bg: '/media/ranks/l2-people1-800.webp', hero: '/media/ranks/l2-people1-hero-600.webp' },
+  2: { bg: '/media/ranks/l2-people2-800.webp' },
+  3: { bg: '/media/ranks/l2-people3-800.webp' },
 }
 export type PlaceArt = 'support' | 'people'
 
@@ -37,15 +38,25 @@ function useFrost() {
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const apply = () => {
-      const d = shapePath(el.offsetWidth, el.offsetHeight)
+    let lastW = -1, lastH = -1
+    const apply = (w: number, h: number) => {
+      // Re-cut the outline only when the size really changed (images and fonts settle several times).
+      w = Math.round(w); h = Math.round(h)
+      if (w === lastW && h === lastH) return
+      lastW = w; lastH = h
+      const d = shapePath(w, h)
       const frost = el.querySelector<HTMLElement>('.gsb-frost')
       const edge = el.querySelector('.gsb-edge path')
       if (frost) frost.style.clipPath = `path('${d}')`
       edge?.setAttribute('d', d)
     }
-    apply()
-    const ro = new ResizeObserver(apply)
+    // No initial offsetWidth read: in a layout effect it forced the whole first page layout synchronously.
+    // The observer reports the first size itself, after the browser's own layout and before paint.
+    const ro = new ResizeObserver(([entry]) => {
+      const box = entry.borderBoxSize?.[0]
+      if (box) apply(box.inlineSize, box.blockSize)
+      else apply(entry.contentRect.width, entry.contentRect.height)
+    })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -72,10 +83,14 @@ export function PlacePlaque({ server: s, rank, meta, value, fav, art = 'support'
   </div>
 }
 
-export function LeaderBoard({ game, kind, title, rows, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
-  game: Game; kind: BoardKind; title: string; kicker?: string; sub?: string; rows: GameServer[]; loading: boolean; error: unknown; reload: () => void
+export function LeaderBoard({ game, kind, title, rows: sourceRows, rotate, loading, error, reload, emptyTitle, emptyText, href, filtered, isFav, toggleFav, showAll = false }: {
+  game: Game; kind: BoardKind; title: string; kicker?: string; sub?: string; rows: GameServer[]
+  /** order the rows by this rotating board here, so the rotation re-renders only this board */
+  rotate?: 'support' | 'people'; loading: boolean; error: unknown; reload: () => void
   emptyTitle: string; emptyText: string; href: string; filtered: boolean; isFav: (slug: string) => boolean; toggleFav: (slug: string) => void; showAll?: boolean
 }) {
+  const rotated = useRankingRotation(sourceRows, rotate ?? 'support', !!rotate)
+  const rows = rotate ? rotated : sourceRows
   const inner = useFrost()
   const navigate = useNavigate()
   const openSupport = (server: GameServer) => navigate(`/server/${server.slug}?support=1`)
@@ -110,7 +125,8 @@ export function LeaderBoard({ game, kind, title, rows, loading, error, reload, e
   </div>
   else if (!rows.length) body = <div className="gsb-empty"><b>{filtered ? 'Ничего не найдено' : emptyTitle}</b><span>{filtered ? 'Попробуй другой запрос или сбрось фильтр.' : emptyText}</span></div>
   else if (kind === 'opening') body = rows.map(s => <LaunchRow key={s.id} server={s} showGame={false}/>)
-  else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3).map((s, i) => row(s, i + 3))}</>
+  // Rows past the tenth are never shown on a board; building them only cost DOM and image decoding.
+  else body = <>{rows.slice(0, 3).map((s, i) => plaque(s, i + 1))}{rows.slice(3, showAll ? undefined : 10).map((s, i) => row(s, i + 3))}</>
 
   return <section className={`panel gsb gs-shelf-${kind} ${kind === 'opening' ? 'openings' : kind === 'people' ? 'players' : 'support'}`} aria-labelledby={`l2-${kind}`} data-game={game.id}>
     <div className="gsb-strip"><span className="gsb-label">{kind === 'support' ? <Coins className="gsb-label-ic" aria-hidden /> : kind === 'opening' ? <Hourglass className="gsb-label-ic" aria-hidden /> : <Crown className="gsb-label-ic" aria-hidden />}{title}</span></div>

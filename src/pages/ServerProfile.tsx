@@ -70,8 +70,11 @@ import { ServerList } from '@/components/server/ServerRow'
 import { breadcrumbs, gamePreviewImage, useSeo } from '@/lib/seo'
 import { SupportStudio } from '@/components/rating/SupportStudio'
 import '@/components/profile/profile-identity.css'
+import '@/components/profile/server-profile-v2.css'
 import { WorldIcon } from '@/components/icons/WorldIcon'
 import { discoveryServers, invalidateDiscoveryCache } from '@/services/catalogService'
+import { hasFreshOnline } from '@/services/discoveryRanking'
+import { useRootClass } from '@/hooks/useRootClass'
 import { useVisualDemo } from '@/hooks/useVisualDemo'
 
 /** "mc.hypixel.net" → clipboard. The address is what a player actually needs from this page. */
@@ -180,6 +183,8 @@ function Profile({ server: source }: { server: GameServer }) {
   const cover = server.gameId === 'lineage2' ? L2_SERVER_COVER : serverArt(server)
   // Showcase worlds get a full profile hero with the header laid over the art.
   const fullScene = ['lineage2', 'minecraft', 'gtarp'].includes(server.gameId)
+  useRootClass('gs-body-server')
+  useRootClass('gs-body-server-fullbg', fullScene)
   const profileArt = server.gameId === 'lineage2' ? L2_SERVER_COVER : worldArt('hero', server.gameId)
   const ordinarySceneStyle = profileArt ? { '--profile-art': `url("${artSrc(profileArt, 1600)}")`, '--profile-art-mobile': `url("${artSrc(profileArt, 800)}")`, '--profile-focus': profileArt.focus.desktop, '--profile-focus-mobile': profileArt.focus.mobile } as CSSProperties : undefined
   const showcase = !!cover && isShowcase(server.gameId)
@@ -196,7 +201,7 @@ function Profile({ server: source }: { server: GameServer }) {
   const { data: similar = [] } = useSimilarServers(server.slug, 3)
   const demo = useVisualDemo()
   const period = useRankingPeriod()
-  const { data: peerSource = [], loading: peersLoading } = useAsync<GameServer[]>(publish => discoveryServers({ gameId: server.gameId }, demo, publish), [server.gameId, demo, period], true)
+  const { data: peerSource = [], loading: peersLoading } = useAsync<GameServer[]>(publish => discoveryServers({ gameId: server.gameId }, demo, publish), [server.gameId, demo], true)
   const preferred = new URLSearchParams(profileSearch).get('ranking')
   const preferredBoard = preferred === 'support' || preferred === 'people' ? preferred : undefined
   const context = readRankingContext(profileNavigation?.rankingContext, server.gameId)
@@ -254,7 +259,7 @@ function Profile({ server: source }: { server: GameServer }) {
   }
 
   return (
-    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board} data-ranking-period={period} data-ranking-count={peers.length}>
+    <ThemeScope theme={theme} as="div" className={cn('gs-server-profile gs-sp2 pb-28 lg:pb-16', fullScene && 'gs-server-fullbg')} data-profile-place={profilePlace?.place} data-profile-board={profilePlace?.board} data-ranking-period={period} data-ranking-count={peers.length}>
       {/* Same full-page world scene and compact identity header in every primary game. */}
       {fullScene && <div aria-hidden className="gs-server-bg" style={sceneStyle} />}
       {/* hero: art of the server's world */}
@@ -321,7 +326,7 @@ function Profile({ server: source }: { server: GameServer }) {
                 <span>{game.name} · {chronicle?.label ?? server.version}</span>
                 {server.rates && <span>Рейты {server.rates}</span>}
                 {(server.country || server.region) && <span>{server.flag} {[server.country, server.region].filter(Boolean).join(' · ')}</span>}
-                <span><Rating value={server.rating} count={server.reviewsCount} size="sm" /></span>
+                {server.reviewsCount > 0 && <span><Rating value={server.rating} count={server.reviewsCount} size="sm" /></span>}
               </div>
             </div>
           </div>
@@ -383,7 +388,8 @@ function Profile({ server: source }: { server: GameServer }) {
             {/* The gallery is generated art: only DEMO fixtures may show it. */}
             {server.demo && <ServerMedia server={server} />}
             <InfoSection server={server} />
-            <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />
+            {/* An empty "reviews coming soon" box is noise: the section appears with the first review. */}
+            {server.reviews.length > 0 && <ReviewsSection server={server} onWrite={() => setReviewOpen(true)} />}
           </div>
 
           <aside className="min-w-0 space-y-4">
@@ -518,7 +524,13 @@ function OnlineSection({ server }: { server: GameServer }) {
   }
 
   if (!ONLINE_VERIFICATION_AVAILABLE || !server.online.playersKnown || server.online.checksPerDay <= 0) {
-    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2><p className="mt-3 text-[14px] text-ink-300">Точные данные об онлайне пока недоступны.</p></section>
+    // Our own checks are paused, but a named source's fresh number is still shown — the same number the catalog shows.
+    const sourced = hasFreshOnline(server)
+    return <section className="surface rounded-xl p-4 sm:p-6"><h2 className="text-[18px]">Онлайн</h2>{sourced ? <>
+      <div className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1"><span className="num font-display text-[40px] leading-none font-semibold tracking-tight text-ink-50 sm:text-[48px]">{formatPlayers(server.online)}</span><span className="pb-1.5 text-[14px] text-ink-400">игроков сейчас{server.online.maxKnown ? ` · из ${formatSlots(server.online)}` : ''}</span></div>
+      <div className="mt-2.5 flex flex-wrap items-center gap-3"><VerifiedLine online={server.online} launching={false} /></div>
+      <p className="mt-3 text-[13px] leading-relaxed text-ink-400">Число взято из источника, указанного выше. История онлайна появится, когда заработает собственная проверка GameScout.</p>
+    </> : <p className="mt-3 text-[14px] leading-relaxed text-ink-300">Источник пока не сообщил число игроков. Как только оно появится, покажем его здесь с подписью, кто посчитал.</p>}</section>
   }
 
   return (
@@ -631,13 +643,19 @@ function cleanDescription(text: string): string {
 
 function InfoSection({ server }: { server: GameServer }) {
   const game = getGame(server.gameId)
-  const specs: Array<[string, string]> = [
+  const region = [server.region, server.country].filter(Boolean).join(' · ')
+  // Empty facts are left out instead of a column of dashes.
+  const specs: Array<[string, string]> = ([
     ['Игра', game.name],
-    ['Версия / хроники', server.version || 'Не указана'],
-    ['Режимы', server.modes.join(' · ') || 'Не указаны'],
-    ['Регион', [server.region, server.country].filter(Boolean).join(' · ') || '—'],
-    ['Языки', server.languages.join(', ') || '—'],
-  ]
+    ['Версия / хроники', server.version],
+    ['Режимы', server.modes.join(' · ')],
+    ['Регион', region],
+    ['Языки', server.languages.join(', ')],
+  ] as Array<[string, string]>).filter(([, value]) => !!value)
+  // Without the project's own text, a short summary of the known facts reads better than "not added".
+  const summary = [`Сервер ${game.name}${server.version ? ` · ${server.version}` : ''}${server.rates ? `, рейты ${server.rates}` : ''}.`,
+    server.modes.length ? `Режимы: ${server.modes.join(', ')}.` : '',
+    server.languages.length ? `Язык: ${server.languages.join(', ')}.` : ''].filter(Boolean).join(' ')
   if (server.rates) specs.push(['Рейты', server.rates])
   if (server.nextWipeAt) specs.push(['Следующий вайп', formatDate(server.nextWipeAt)])
   // A future opening is shown by the launch block; "opened N months ago" would be false.
@@ -648,7 +666,8 @@ function InfoSection({ server }: { server: GameServer }) {
       <h2 className="text-[18px]">Информация</h2>
       <p id="description" className="mt-3 text-[14.5px] leading-relaxed text-ink-200">{server.descriptionRestricted
         ? 'Описание временно скрыто на время проверки обращения правообладателя.'
-        : cleanDescription(server.description) || 'Описание проекта не добавлено.'}</p>
+        : cleanDescription(server.description) || summary}</p>
+      {!server.descriptionRestricted && !cleanDescription(server.description) && <p className="mt-2 text-[12.5px] text-ink-400">Собрано GameScout по открытым данным. Владелец может добавить своё описание.</p>}
 
       <div className="mt-5 flex flex-wrap gap-2">
         {server.highlights.map((item) => (
@@ -848,6 +867,7 @@ function OwnerCard({ onClaim, owned }: { onClaim: () => void; owned: boolean }) 
 
 /** Support right on the card: the list is loaded once and kept while the dialog is open, closing returns to the card. */
 function ProfileSupportDialog({ server, onClose }: { server: GameServer; onClose: () => void }) {
+  useRootClass('gs-dialog-open', true, 'html')
   useLockBodyScroll(true)
   const demo = useVisualDemo()
   const ref = useRef<HTMLDialogElement>(null)
@@ -865,7 +885,7 @@ function ProfileSupportDialog({ server, onClose }: { server: GameServer; onClose
     <div className="gs-support-dialog-head"><h2>Поддержка сервера</h2><button type="button" aria-label="Закрыть и вернуться к серверу" onClick={close}><WorldIcon name="close" /></button></div>
     {failed && !servers ? <Notice tone="warn">Рейтинг поддержки сейчас недоступен. Попробуйте позже.</Notice>
       : !servers ? <p className="px-1 py-4 text-[13px] text-ink-400">Загружаем рейтинг…</p>
-      : <SupportStudio servers={servers} demo={demo} initialServer={server.id} onSupported={() => { invalidateDiscoveryCache() }} />}
+      : <SupportStudio servers={servers} demo={demo} initialServer={server.id} onSupported={() => { invalidateDiscoveryCache() }} onOpenServer={close} />}
   </dialog>
 }
 

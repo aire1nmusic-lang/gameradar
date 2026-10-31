@@ -418,3 +418,6 @@ html[data-design="lobby"] body .gsb[data-game="minecraft"] :is(.p2,.p3) .gsb-art
   .gs-rating-page .gsb-pair[data-active="support"]>.gs-shelf-people,
   .gs-rating-page .gsb-pair[data-active="people"]>.gs-shelf-support{display:none!important}
 }
+
+/* "Все →" is a real link: give it a finger-sized target */
+.gsb .gsb-more .l2-all{display:inline-flex;align-items:center;min-height:40px;padding:0 12px}

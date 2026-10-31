@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { waitForHomeVisuals } from '@/lib/bootVisuals'
 import { BrowserRouter } from 'react-router-dom'
 import { initializeRepositories } from '@/repositories'
+import { installSnapshotFetch } from '@/preview/snapshotFetch'
 import { AuthProvider } from '@/hooks/useAuth'
 import { AppearanceProvider, applyAppearance, applyColorMode, readAppearance, readColorMode } from '@/theme/appearance'
 import App from './App'
@@ -15,6 +16,10 @@ import '@/theme/glass.css'
 import '@/theme/discovery-controls.css'
 import '@/theme/surface-policy.css'
 import '@/theme/worldFonts'
+import '@/theme/performance.css'
+
+// Public preview build: API reads from the recorded snapshot (removed from normal builds).
+if (import.meta.env.VITE_SNAPSHOT === '1') installSnapshotFetch()
 
 // Design preview branch: the lobby look is on for everything except the hall.
 document.documentElement.dataset.design = 'lobby'

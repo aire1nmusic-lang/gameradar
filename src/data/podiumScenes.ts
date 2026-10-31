@@ -4,14 +4,14 @@ const root = '/media/ranks/'
 const scenes: Record<string, Record<'support' | 'people', Record<number, GamePlaceScene>>> = {
   lineage2: {
     support: {
-      1: { bg: root+'l2-top1-bg-1600.webp', hero: root+'l2-top3-hero-600.webp' },
-      2: { bg: root+'l2-top2-1600.webp' },
-      3: { bg: root+'l2-top3-1600.webp' },
+      1: { bg: root+'l2-top1-bg-800.webp', hero: root+'l2-top3-hero-600.webp' },
+      2: { bg: root+'l2-top2-800.webp' },
+      3: { bg: root+'l2-top3-800.webp' },
     },
     people: {
-      1: { bg: root+'l2-people1-1600.webp', hero: root+'l2-people1-hero-600.webp' },
-      2: { bg: root+'l2-people2-1600.webp' },
-      3: { bg: root+'l2-people3-1600.webp' },
+      1: { bg: root+'l2-people1-800.webp', hero: root+'l2-people1-hero-600.webp' },
+      2: { bg: root+'l2-people2-800.webp' },
+      3: { bg: root+'l2-people3-800.webp' },
     },
   },
   minecraft: {

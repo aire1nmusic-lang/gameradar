@@ -1,3 +1,5 @@
+/* Owner review overrides (31.10): declared first, so their !important rules beat the later gs-surfaces layer (earlier layer wins for !important). */
+@layer gs-owner;
 @import 'tailwindcss';
 
 /* ============================================================
@@ -81,15 +83,14 @@
     transform: rotate(360deg);
   }
 }
+/* Opacity only: a box-shadow pulse repainted every live dot in a list on every frame. */
 @keyframes pulse-dot {
   0%,
   100% {
     opacity: 1;
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-signal-400) 50%, transparent);
   }
   60% {
-    opacity: 0.9;
-    box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-signal-400) 0%, transparent);
+    opacity: 0.4;
   }
 }
 @keyframes shimmer {
@@ -696,11 +697,6 @@
 /* ── GameScout logo ─────────────────────────────────────────────────────────
    Two owner-approved palettes: "cyan" (silver G, cyan S) and "neon" (violet G,
    magenta S). Registered properties let the colours themselves animate. */
-@property --gs-a0 { syntax: '<color>'; inherits: true; initial-value: #f5f7fa; }
-@property --gs-a1 { syntax: '<color>'; inherits: true; initial-value: #8d96a3; }
-@property --gs-b0 { syntax: '<color>'; inherits: true; initial-value: #6ff7ff; }
-@property --gs-b1 { syntax: '<color>'; inherits: true; initial-value: #10c3e3; }
-@property --gs-glow { syntax: '<color>'; inherits: true; initial-value: rgb(24 217 242 / 0.55); }
 
 .gs-logo {
   /* Explicit defaults also work without CSS @property registration or animation. */
@@ -714,20 +710,19 @@
 .gs-logo__glow {
   filter: drop-shadow(0 0 5px var(--gs-glow));
 }
-/* A slow drift between the two palettes: cyan, then neon, then back. */
-.gs-logo--live {
-  animation: gs-palette 16s ease-in-out infinite;
-}
-@keyframes gs-palette {
-  0%, 38% { --gs-a0: #f5f7fa; --gs-a1: #8d96a3; --gs-b0: #6ff7ff; --gs-b1: #10c3e3; --gs-glow: rgb(24 217 242 / 0.55); }
-  50%, 88% { --gs-a0: #8b6bff; --gs-a1: #b44cff; --gs-b0: #ff5ae9; --gs-b1: #d81bff; --gs-glow: rgb(224 44 255 / 0.55); }
-  100% { --gs-a0: #f5f7fa; --gs-a1: #8d96a3; --gs-b0: #6ff7ff; --gs-b1: #10c3e3; --gs-glow: rgb(24 217 242 / 0.55); }
-}
+/* A slow drift between the two palettes: cyan, then neon, then back — as an opacity cross-fade of a neon copy
+   (compositor-only). Animating the registered colour variables restyled the page on every frame. */
+.gs-logo-stack { position: relative; display: inline-grid; }
+.gs-logo-stack > svg { grid-area: 1 / 1; }
+.gs-wordmark__scout-wrap { position: relative; display: inline-grid; }
+.gs-wordmark__scout-wrap > span { grid-area: 1 / 1; }
+.gs-logo-neon { opacity: 0; animation: gs-palette-fade 16s ease-in-out infinite; will-change: opacity; pointer-events: none; }
+@keyframes gs-palette-fade { 0%, 38% { opacity: 0; } 50%, 88% { opacity: 1; } 100% { opacity: 0; } }
 /* A theme can pin a palette: <html data-logo="neon"> or data-logo="cyan". */
-[data-logo='neon'] .gs-logo { --gs-a0: #8b6bff; --gs-a1: #b44cff; --gs-b0: #ff5ae9; --gs-b1: #d81bff; --gs-glow: rgb(224 44 255 / 0.55); animation: none; }
-[data-logo='cyan'] .gs-logo { animation: none; }
+[data-logo='neon'] .gs-logo { --gs-a0: #8b6bff; --gs-a1: #b44cff; --gs-b0: #ff5ae9; --gs-b1: #d81bff; --gs-glow: rgb(224 44 255 / 0.55); }
+[data-logo] .gs-logo-neon { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .gs-logo--live { animation: none; }
+  .gs-logo-neon { animation: none; display: none; }
 }
 
 /* ── Appearance variants (owner's /design panel) ───────────────────────────
@@ -1322,7 +1317,7 @@ html[data-color-mode='light'] .gs-support-login { color:color-mix(in srgb,var(--
 .gs-admin-premium .gs-admin-stat { padding:12px; border-radius:12px; }
 .gs-support-dialog { margin:auto; width:min(1100px,calc(100% - 24px)); max-height:calc(100dvh - 24px); overflow-y:auto; padding:14px; border:1px solid var(--gt-border,var(--color-ink-700)); border-radius:16px; color:var(--gt-text,var(--color-ink-50)); background:var(--gt-bg,var(--color-ink-950)); }
 .gs-support-dialog::backdrop { background:rgba(5,8,13,.78); backdrop-filter:blur(5px); }
-html:has(.gs-support-dialog[open]) { overflow:hidden; }
+html.gs-dialog-open { overflow:hidden; }
 .gs-support-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .gs-support-dialog-head button { width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--gt-border); border-radius:9px; }
 .gs-support-dialog .gs-support-form,.gs-support-dialog .gs-support-preview { padding:12px; background:var(--gt-surface); }

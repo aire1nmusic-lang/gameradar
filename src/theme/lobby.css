@@ -233,8 +233,8 @@ html[data-design="lobby"] body .gs-l2-aether-layout:not(#lb)::before { backgroun
 html[data-design="lobby"][data-color-mode="dark"] body .gs-l2-aether-layout:not(#lb) { background:transparent!important; }
 
 /* ---------- One search per page: hide the header search where the page has its own ---------- */
-html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
-html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
+html[data-design="lobby"] body.gs-body-search .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
+html[data-design="lobby"] body.gs-body-search .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
 
 /* ---------- Account chip in the header: compact, not a lime slab ---------- */
 html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn {
@@ -357,8 +357,8 @@ html[data-design="lobby"] body .gs-l2-aether-layout:not(#lb)::before { backgroun
 html[data-design="lobby"][data-color-mode="dark"] body .gs-l2-aether-layout:not(#lb) { background:transparent!important; }
 
 /* ---------- One search per page: hide the header search where the page has its own ---------- */
-html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
-html[data-design="lobby"] body:has(.l2a .search-box,.gs-world-search,.gs-catalog-page) .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
+html[data-design="lobby"] body.gs-body-search .gs-site-header:not(#lb) :is(.gs-header-searchbar,.gs-header-search) { display:none!important; }
+html[data-design="lobby"] body.gs-body-search .gs-site-header:not(#lb) .gs-theme-toggle { margin-left:auto!important; }
 
 /* ---------- Account chip in the header: compact, not a lime slab ---------- */
 html[data-design="lobby"] body .gs-site-header:not(.gs-hall-header):not(#lb) .gs-account-btn {
@@ -568,7 +568,7 @@ html[data-design="lobby"][data-color-mode="light"] .gs-world-backdrop::after {
 }
 html[data-design="lobby"] body .gs-page-main:not(#lb) { position:relative; z-index:1; }
 /* Pages that already have their own picture keep just one. */
-html[data-design="lobby"] body:has(.l2a,.gs-server-profile,.gs-owner-join,.gs-owners-page) .gs-world-backdrop { display:none; }
+html[data-design="lobby"] :is(body.gs-body-l2a,body.gs-body-server,body.gs-body-owner-join,body.gs-body-owners) .gs-world-backdrop { display:none; }
 html[data-design="lobby"] .gs-world-backdrop::after {
   background:linear-gradient(180deg,rgb(14 16 18 / .18) 0%,rgb(14 16 18 / .5) 34%,rgb(14 16 18 / .86) 68%,var(--lb-bg) 96%),
              linear-gradient(90deg,rgb(14 16 18 / .5),transparent 28%,transparent 72%,rgb(14 16 18 / .5))!important;
